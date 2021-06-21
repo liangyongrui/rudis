@@ -5,97 +5,32 @@ use bytes::Bytes;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, Mutex};
 
+use super::shared::Shared;
+use super::state::{Entry, State};
+
 /// Server state shared across all connections.
 ///
-/// `Db` contains a `HashMap` storing the key/value data and all
+/// `Slot` contains a `HashMap` storing the key/value data and all
 /// `broadcast::Sender` values for active pub/sub channels.
 ///
-/// A `Db` instance is a handle to shared state. Cloning `Db` is shallow and
+/// A `Slot` instance is a handle to shared state. Cloning `Slot` is shallow and
 /// only incurs an atomic ref count increment.
 ///
-/// When a `Db` value is created, a background task is spawned. This task is
+/// When a `Slot` value is created, a background task is spawned. This task is
 /// used to expire values after the requested duration has elapsed. The task
-/// runs until all instances of `Db` are dropped, at which point the task
+/// runs until all instances of `Slot` are dropped, at which point the task
 /// terminates.
 #[derive(Debug, Clone)]
-pub(crate) struct Db {
+pub(crate) struct Slot {
     /// Handle to shared state. The background task will also have an
     /// `Arc<Shared>`.
-    shared: Arc<Shared>,
+    pub shared: Arc<Shared>,
 }
 
-#[derive(Debug)]
-struct Shared {
-    /// The shared state is guarded by a mutex. This is a `std::sync::Mutex` and
-    /// not a Tokio mutex. This is because there are no asynchronous operations
-    /// being performed while holding the mutex. Additionally, the critical
-    /// sections are very small.
-    ///
-    /// A Tokio mutex is mostly intended to be used when locks need to be held
-    /// across `.await` yield points. All other cases are **usually** best
-    /// served by a std mutex. If the critical section does not include any
-    /// async operations but is long (CPU intensive or performing blocking
-    /// operations), then the entire operation, including waiting for the mutex,
-    /// is considered a "blocking" operation and `tokio::task::spawn_blocking`
-    /// should be used.
-    state: Mutex<State>,
-
-    /// Notifies the background task handling entry expiration. The background
-    /// task waits on this to be notified, then checks for expired values or the
-    /// shutdown signal.
-    background_task: Notify,
-}
-
-#[derive(Debug)]
-struct State {
-    /// The key-value data. We are not trying to do anything fancy so a
-    /// `std::collections::HashMap` works fine.
-    entries: HashMap<String, Entry>,
-
-    /// The pub/sub key-space. Redis uses a **separate** key space for key-value
-    /// and pub/sub. `mini-redis` handles this by using a separate `HashMap`.
-    pub_sub: HashMap<String, broadcast::Sender<Bytes>>,
-
-    /// Tracks key TTLs.
-    ///
-    /// A `BTreeMap` is used to maintain expirations sorted by when they expire.
-    /// This allows the background task to iterate this map to find the value
-    /// expiring next.
-    ///
-    /// While highly unlikely, it is possible for more than one expiration to be
-    /// created for the same instant. Because of this, the `Instant` is
-    /// insufficient for the key. A unique expiration identifier (`u64`) is used
-    /// to break these ties.
-    expirations: BTreeMap<(Instant, u64), String>,
-
-    /// Identifier to use for the next expiration. Each expiration is associated
-    /// with a unique identifier. See above for why.
-    next_id: u64,
-
-    /// True when the Db instance is shutting down. This happens when all `Db`
-    /// values drop. Setting this to `true` signals to the background task to
-    /// exit.
-    shutdown: bool,
-}
-
-/// Entry in the key-value store
-#[derive(Debug)]
-struct Entry {
-    /// Uniquely identifies this entry.
-    id: u64,
-
-    /// Stored data
-    data: Bytes,
-
-    /// Instant at which the entry expires and should be removed from the
-    /// database.
-    expires_at: Option<Instant>,
-}
-
-impl Db {
-    /// Create a new, empty, `Db` instance. Allocates shared state and spawns a
+impl Slot {
+    /// Create a new, empty, `Slot` instance. Allocates shared state and spawns a
     /// background task to manage key expiration.
-    pub(crate) fn new() -> Db {
+    pub(crate) fn new() -> Slot {
         let shared = Arc::new(Shared {
             state: Mutex::new(State {
                 entries: HashMap::new(),
@@ -110,7 +45,7 @@ impl Db {
         // Start the background task.
         tokio::spawn(purge_expired_tasks(shared.clone()));
 
-        Db { shared }
+        Slot { shared }
     }
 
     /// Get the value associated with a key.
@@ -246,13 +181,13 @@ impl Db {
     }
 }
 
-impl Drop for Db {
+impl Drop for Slot {
     fn drop(&mut self) {
-        // If this is the last active `Db` instance, the background task must be
+        // If this is the last active `Slot` instance, the background task must be
         // notified to shut down.
         //
-        // First, determine if this is the last `Db` instance. This is done by
-        // checking `strong_count`. The count will be 2. One for this `Db`
+        // First, determine if this is the last `Slot` instance. This is done by
+        // checking `strong_count`. The count will be 2. One for this `Slot`
         // instance and one for the handle held by the background task.
         if Arc::strong_count(&self.shared) == 2 {
             // The background task must be signaled to shutdown. This is done by
@@ -297,7 +232,6 @@ impl Shared {
                 // expires. The worker task will wait until this instant.
                 return Some(when);
             }
-
             // The key expired, remove it
             state.entries.remove(key);
             state.expirations.remove(&(when, id));
@@ -308,19 +242,10 @@ impl Shared {
 
     /// Returns `true` if the database is shutting down
     ///
-    /// The `shutdown` flag is set when all `Db` values have dropped, indicating
+    /// The `shutdown` flag is set when all `Slot` values have dropped, indicating
     /// that the shared state can no longer be accessed.
     fn is_shutdown(&self) -> bool {
         self.state.lock().unwrap().shutdown
-    }
-}
-
-impl State {
-    fn next_expiration(&self) -> Option<Instant> {
-        self.expirations
-            .keys()
-            .next()
-            .map(|expiration| expiration.0)
     }
 }
 

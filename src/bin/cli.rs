@@ -7,7 +7,7 @@ use std::time::Duration;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "mini-redis-cli", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "Issue Redis commands")]
+#[structopt(name = "rcc-cli", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "Issue Redis commands")]
 struct Cli {
     #[structopt(subcommand)]
     command: Command,
@@ -90,6 +90,7 @@ async fn main() -> rcc::Result<()> {
             value,
             expires: Some(expires),
         } => {
+            dbg!(&expires);
             client.set_expires(&key, value, expires).await?;
             println!("OK");
         }

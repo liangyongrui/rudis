@@ -1,5 +1,5 @@
 use crate::cmd::{Parse, ParseError};
-use crate::{Connection, Db, Frame};
+use crate::{Connection, Frame, Slot};
 
 use bytes::Bytes;
 use std::time::Duration;
@@ -104,7 +104,7 @@ impl Set {
                 let ms = parse.next_int()?;
                 expire = Some(Duration::from_millis(ms));
             }
-            // Currently, mini-redis does not support any of the other SET
+            // Currently, rcc does not support any of the other SET
             // options. An error here results in the connection being
             // terminated. Other connections will continue to operate normally.
             Ok(_) => return Err("currently `SET` only supports the expiration option".into()),
@@ -120,12 +120,12 @@ impl Set {
         Ok(Set { key, value, expire })
     }
 
-    /// Apply the `Set` command to the specified `Db` instance.
+    /// Apply the `Set` command to the specified `Slot` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub(crate) async fn apply(self, db: &Slot, dst: &mut Connection) -> crate::Result<()> {
         // Set the value in the shared database state.
         db.set(self.key, self.value, self.expire);
 

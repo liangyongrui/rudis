@@ -5,7 +5,7 @@ version = "0.1.0"
 edition = "2018"
 description = """
 rust cloud cache
-fork from https://github.com/tokio-rs/mini-redis
+fork from https://github.com/tokio-rs/rcc
 """
 
 [[bin]]
@@ -26,6 +26,7 @@ tokio-stream = "0.1"
 tracing = "0.1"
 tracing-futures = { version = "0.2" }
 tracing-subscriber = "0.2"
+nom = "6"
 
 [dev-dependencies]
 # Enable test-utilities in dev mode only. This is mostly for tests.

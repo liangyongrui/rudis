@@ -1,5 +1,5 @@
 use crate::cmd::{Parse, ParseError, Unknown};
-use crate::{Command, Connection, Db, Frame, Shutdown};
+use crate::{Command, Connection, Frame, Shutdown, Slot};
 
 use bytes::Bytes;
 use std::pin::Pin;
@@ -91,7 +91,7 @@ impl Subscribe {
         Ok(Subscribe { channels })
     }
 
-    /// Apply the `Subscribe` command to the specified `Db` instance.
+    /// Apply the `Subscribe` command to the specified `Slot` instance.
     ///
     /// This function is the entry point and includes the initial list of
     /// channels to subscribe to. Additional `subscribe` and `unsubscribe`
@@ -101,7 +101,7 @@ impl Subscribe {
     /// [here]: https://redis.io/topics/pubsub
     pub(crate) async fn apply(
         mut self,
-        db: &Db,
+        db: &Slot,
         dst: &mut Connection,
         shutdown: &mut Shutdown,
     ) -> crate::Result<()> {
@@ -172,7 +172,7 @@ impl Subscribe {
 async fn subscribe_to_channel(
     channel_name: String,
     subscriptions: &mut StreamMap<String, Messages>,
-    db: &Db,
+    db: &Slot,
     dst: &mut Connection,
 ) -> crate::Result<()> {
     let mut rx = db.subscribe(channel_name.clone());

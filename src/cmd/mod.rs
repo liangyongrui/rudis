@@ -13,7 +13,7 @@ pub use subscribe::{Subscribe, Unsubscribe};
 mod unknown;
 pub use unknown::Unknown;
 
-use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
+use crate::{Connection, Frame, Parse, ParseError, Shutdown, Slot};
 
 /// Enumeration of supported Redis commands.
 ///
@@ -31,7 +31,7 @@ pub enum Command {
 impl Command {
     /// Parse a command from a received frame.
     ///
-    /// The `Frame` must represent a Redis command supported by `mini-redis` and
+    /// The `Frame` must represent a Redis command supported by `rcc` and
     /// be the array variant.
     ///
     /// # Returns
@@ -78,13 +78,13 @@ impl Command {
         Ok(command)
     }
 
-    /// Apply the command to the specified `Db` instance.
+    /// Apply the command to the specified `Slot` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
     pub(crate) async fn apply(
         self,
-        db: &Db,
+        db: &Slot,
         dst: &mut Connection,
         shutdown: &mut Shutdown,
     ) -> crate::Result<()> {

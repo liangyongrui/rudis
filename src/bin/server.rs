@@ -1,4 +1,4 @@
-//! mini-redis server.
+//! rcc server.
 //!
 //! This file is the entry point for the server implemented in the library. It
 //! performs command line parsing and passes the arguments on to
@@ -28,7 +28,7 @@ pub async fn main() -> rcc::Result<()> {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "mini-redis-server", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "A Redis server")]
+#[structopt(name = "rcc-server", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "A Redis server")]
 struct Cli {
     #[structopt(name = "port", long = "--port")]
     port: Option<String>,

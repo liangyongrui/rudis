@@ -1,11 +1,11 @@
 //! Hello world server.
 //!
-//! A simple client that connects to a mini-redis server, sets key "hello" with value "world",
+//! A simple client that connects to a rcc server, sets key "hello" with value "world",
 //! and gets it from the server after
 //!
 //! You can test this out by running:
 //!
-//!     cargo run --bin mini-redis-server
+//!     cargo run --bin rcc-server
 //!
 //! And then in another terminal run:
 //!
@@ -17,7 +17,7 @@ use rcc::{client, Result};
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    // Open a connection to the mini-redis address.
+    // Open a connection to the rcc address.
     let mut client = client::connect("127.0.0.1:6379").await?;
 
     // Set the key "hello" with value "world"

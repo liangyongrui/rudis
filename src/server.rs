@@ -3,7 +3,7 @@
 //! Provides an async `run` function that listens for inbound connections,
 //! spawning a task per connection.
 
-use crate::{Command, Connection, Db, Shutdown};
+use crate::{Command, Connection, Shutdown, Slot};
 
 use std::future::Future;
 use std::sync::Arc;
@@ -23,7 +23,7 @@ struct Listener {
     ///
     /// This is a wrapper around an `Arc`. This enables `db` to be cloned and
     /// passed into the per connection state (`Handler`).
-    db: Db,
+    db: Slot,
 
     /// TCP listener supplied by the `run` caller.
     listener: TcpListener,
@@ -73,7 +73,7 @@ struct Handler {
     /// When a command is received from `connection`, it is applied with `db`.
     /// The implementation of the command is in the `cmd` module. Each command
     /// will need to interact with `db` in order to complete the work.
-    db: Db,
+    db: Slot,
 
     /// The TCP connection decorated with the redis protocol encoder / decoder
     /// implemented using a buffered `TcpStream`.
@@ -119,7 +119,7 @@ struct Handler {
 /// well).
 const MAX_CONNECTIONS: usize = 250;
 
-/// Run the mini-redis server.
+/// Run the rcc server.
 ///
 /// Accepts connections from the supplied listener. For each inbound connection,
 /// a task is spawned to handle that connection. The server runs until the
@@ -140,7 +140,7 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     // Initialize the listener state
     let mut server = Listener {
         listener,
-        db: Db::new(),
+        db: Slot::new(),
         limit_connections: Arc::new(Semaphore::new(MAX_CONNECTIONS)),
         notify_shutdown,
         shutdown_complete_tx,

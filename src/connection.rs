@@ -71,11 +71,11 @@ impl Connection {
                 // shutdown, there should be no data in the read buffer. If
                 // there is, this means that the peer closed the socket while
                 // sending a frame.
-                if self.buffer.is_empty() {
-                    return Ok(None);
+                return if self.buffer.is_empty() {
+                    Ok(None)
                 } else {
-                    return Err("connection reset by peer".into());
-                }
+                    Err("connection reset by peer".into())
+                };
             }
         }
     }
@@ -155,7 +155,7 @@ impl Connection {
     /// full, it is flushed to the underlying socket.
     pub async fn write_frame(&mut self, frame: &Frame) -> io::Result<()> {
         // Arrays are encoded by encoding each entry. All other frame types are
-        // considered literals. For now, mini-redis is not able to encode
+        // considered literals. For now, rcc is not able to encode
         // recursive frame structures. See below for more details.
         match frame {
             Frame::Array(val) => {
@@ -210,7 +210,7 @@ impl Connection {
             }
             // Encoding an `Array` from within a value cannot be done using a
             // recursive strategy. In general, async fns do not support
-            // recursion. Mini-redis has not needed to encode nested arrays yet,
+            // recursion. rcc has not needed to encode nested arrays yet,
             // so for now it is skipped.
             Frame::Array(_val) => unreachable!(),
         }
