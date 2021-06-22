@@ -13,7 +13,7 @@ pub use subscribe::{Subscribe, Unsubscribe};
 mod unknown;
 pub use unknown::Unknown;
 
-use crate::{Connection, Frame, Parse, ParseError, Shutdown, Slot};
+use crate::{Connection, Frame, Parse, ParseError, Shutdown, Db};
 
 /// Enumeration of supported Redis commands.
 ///
@@ -78,13 +78,13 @@ impl Command {
         Ok(command)
     }
 
-    /// Apply the command to the specified `Slot` instance.
+    /// Apply the command to the specified `Db` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
     pub(crate) async fn apply(
         self,
-        db: &Slot,
+        db: &Db,
         dst: &mut Connection,
         shutdown: &mut Shutdown,
     ) -> crate::Result<()> {

@@ -1,4 +1,4 @@
-use crate::{Connection, Frame, Parse, Slot};
+use crate::{Connection, Frame, Parse, Db};
 
 use bytes::Bytes;
 
@@ -60,11 +60,11 @@ impl Publish {
         Ok(Publish { channel, message })
     }
 
-    /// Apply the `Publish` command to the specified `Slot` instance.
+    /// Apply the `Publish` command to the specified `Db` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    pub(crate) async fn apply(self, db: &Slot, dst: &mut Connection) -> crate::Result<()> {
+    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         // The shared state contains the `tokio::sync::broadcast::Sender` for
         // all active channels. Calling `db.publish` dispatches the message into
         // the appropriate channel.

@@ -37,7 +37,7 @@ pub mod frame;
 pub use frame::Frame;
 
 mod db;
-use db::slot::Slot;
+use db::Db;
 
 mod parse;
 use parse::{Parse, ParseError};

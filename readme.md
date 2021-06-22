@@ -4,6 +4,7 @@ rust cloud cache
 
 ## todo
 
+1. [ ] 异步锁 
 1. [ ] 使用[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
 1. [ ] 多slot （shard)
     - 热key 单独 slot（加锁转移）
