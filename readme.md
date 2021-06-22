@@ -16,8 +16,14 @@ rust cloud cache
 
 ## 支持的命令
 
-1. set
-1. get
-1. psetex
-1. setex
-1. getset
+兼容 redis 6.2 命令
+
+1. [x] set
+1. [x] get
+1. [x] psetex
+1. [x] setex
+
+## 不支持的命令
+
+1. deprecated
+   - GETSET

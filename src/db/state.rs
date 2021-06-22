@@ -15,7 +15,7 @@ pub struct Entry {
 
     /// Instant at which the entry expires and should be removed from the
     /// database.
-    expires_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]

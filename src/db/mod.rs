@@ -50,8 +50,10 @@ impl Db {
         value: Bytes,
         nxxx: Option<bool>,
         expires_at: Option<DateTime<Utc>>,
+        keepttl: bool,
     ) -> Option<Bytes> {
-        self.get_slot(&key).set(key, value, nxxx, expires_at)
+        self.get_slot(&key)
+            .set(key, value, nxxx, expires_at, keepttl)
     }
 
     pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<Bytes> {

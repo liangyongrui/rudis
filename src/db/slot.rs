@@ -98,7 +98,8 @@ impl Slot {
         key: String,
         value: Bytes,
         nxxx: Option<bool>,
-        expires_at: Option<DateTime<Utc>>,
+        mut expires_at: Option<DateTime<Utc>>,
+        keepttl: bool,
     ) -> Option<Bytes> {
         let mut state = self.shared.state.lock().unwrap();
 
@@ -116,6 +117,9 @@ impl Slot {
         };
         if !need_update {
             return old_value;
+        }
+        if keepttl {
+            expires_at = state.entries.get(&key).and_then(|t| t.expires_at);
         }
         let mut notify = false;
         if let Some(expires_at) = expires_at {

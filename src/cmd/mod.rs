@@ -13,6 +13,12 @@ pub use subscribe::{Subscribe, Unsubscribe};
 mod unknown;
 pub use unknown::Unknown;
 
+mod psetex;
+pub use psetex::Psetex;
+
+mod setex;
+pub use setex::Setex;
+
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -22,6 +28,8 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 pub enum Command {
     Get(Get),
     Set(Set),
+    Psetex(Psetex),
+    Setex(Setex),
     Publish(Publish),
     Subscribe(Subscribe),
     Unsubscribe(Unsubscribe),
@@ -54,8 +62,10 @@ impl Command {
         // specific command.
         let command = match &command_name[..] {
             "get" => Command::Get(Get::parse_frames(&mut parse)?),
-            "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
             "set" => Command::Set(Set::parse_frames(&mut parse)?),
+            "psetex" => Command::Psetex(Psetex::parse_frames(&mut parse)?),
+            "setex" => Command::Setex(Setex::parse_frames(&mut parse)?),
+            "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
             "subscribe" => Command::Subscribe(Subscribe::parse_frames(&mut parse)?),
             "unsubscribe" => Command::Unsubscribe(Unsubscribe::parse_frames(&mut parse)?),
             _ => {
@@ -91,14 +101,16 @@ impl Command {
         use Command::*;
 
         match self {
+            // `Unsubscribe` cannot be applied. It may only be received from the
+            // context of a `Subscribe` command.
+            Unsubscribe(_) => Err("`Unsubscribe` is unsupported in this context".into()),
             Get(cmd) => cmd.apply(db, dst).await,
             Publish(cmd) => cmd.apply(db, dst).await,
             Set(cmd) => cmd.apply(db, dst).await,
             Subscribe(cmd) => cmd.apply(db, dst, shutdown).await,
             Unknown(cmd) => cmd.apply(dst).await,
-            // `Unsubscribe` cannot be applied. It may only be received from the
-            // context of a `Subscribe` command.
-            Unsubscribe(_) => Err("`Unsubscribe` is unsupported in this context".into()),
+            Psetex(cmd) => cmd.apply(db, dst).await,
+            Setex(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -111,6 +123,8 @@ impl Command {
             Command::Subscribe(_) => "subscribe",
             Command::Unsubscribe(_) => "unsubscribe",
             Command::Unknown(cmd) => cmd.get_name(),
+            Command::Psetex(_) => "psetex",
+            Command::Setex(_) => "setex",
         }
     }
 }
