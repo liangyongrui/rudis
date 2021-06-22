@@ -1,12 +1,38 @@
-use tokio::sync::{broadcast, Notify};
-use tokio::time::{self, Duration, Instant};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::{Arc, Mutex},
+};
 
 use bytes::Bytes;
-use std::collections::{BTreeMap, HashMap};
-use std::sync::{Arc, Mutex};
+use tokio::{
+    sync::{broadcast, Notify},
+    time::{self, Duration, Instant},
+};
+use tracing::debug;
 
-use super::shared::Shared;
 use super::state::{Entry, State};
+
+#[derive(Debug)]
+struct Shared {
+    /// The shared state is guarded by a mutex. This is a `std::sync::Mutex` and
+    /// not a Tokio mutex. This is because there are no asynchronous operations
+    /// being performed while holding the mutex. Additionally, the critical
+    /// sections are very small.
+    ///
+    /// A Tokio mutex is mostly intended to be used when locks need to be held
+    /// across `.await` yield points. All other cases are **usually** best
+    /// served by a std mutex. If the critical section does not include any
+    /// async operations but is long (CPU intensive or performing blocking
+    /// operations), then the entire operation, including waiting for the mutex,
+    /// is considered a "blocking" operation and `tokio::task::spawn_blocking`
+    /// should be used.
+    state: Mutex<State>,
+
+    /// Notifies the background task handling entry expiration. The background
+    /// task waits on this to be notified, then checks for expired values or the
+    /// shutdown signal.
+    background_task: Notify,
+}
 
 /// Server state shared across all connections.
 ///
@@ -24,7 +50,7 @@ use super::state::{Entry, State};
 pub(crate) struct Slot {
     /// Handle to shared state. The background task will also have an
     /// `Arc<Shared>`.
-    pub shared: Arc<Shared>,
+    shared: Arc<Shared>,
 }
 
 impl Slot {
@@ -43,7 +69,7 @@ impl Slot {
         });
 
         // Start the background task.
-        tokio::spawn(purge_expired_tasks(shared.clone()));
+        tokio::spawn(purge_expired_tasks(Arc::clone(&shared)));
 
         Slot { shared }
     }
@@ -232,6 +258,7 @@ impl Shared {
                 // expires. The worker task will wait until this instant.
                 return Some(when);
             }
+            debug!("purge_expired_keys: {}", key);
             // The key expired, remove it
             state.entries.remove(key);
             state.expirations.remove(&(when, id));

@@ -1,11 +1,13 @@
-use crate::cmd::{Parse, ParseError, Unknown};
-use crate::{Command, Connection, Db, Frame, Shutdown};
+use std::pin::Pin;
 
 use bytes::Bytes;
-use std::pin::Pin;
-use tokio::select;
-use tokio::sync::broadcast;
+use tokio::{select, sync::broadcast};
 use tokio_stream::{Stream, StreamExt, StreamMap};
+
+use crate::{
+    cmd::{Parse, ParseError, Unknown},
+    Command, Connection, Db, Frame, Shutdown,
+};
 
 /// Subscribes the client to one or more channels.
 ///

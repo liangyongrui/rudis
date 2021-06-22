@@ -1,9 +1,12 @@
-use crate::cmd::{Parse, ParseError};
-use crate::{Connection, Db, Frame};
+use std::time::Duration;
 
 use bytes::Bytes;
-use std::time::Duration;
 use tracing::{debug, instrument};
+
+use crate::{
+    cmd::{Parse, ParseError},
+    Connection, Db, Frame,
+};
 
 /// Set `key` to hold the string `value`.
 ///

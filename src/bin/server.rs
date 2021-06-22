@@ -7,16 +7,18 @@
 //! The `clap` crate is used for parsing arguments.
 
 use rcc::{server, DEFAULT_PORT};
-
 use structopt::StructOpt;
-use tokio::net::TcpListener;
-use tokio::signal;
+use tokio::{net::TcpListener, signal};
+use tracing::Level;
 
 #[tokio::main]
 pub async fn main() -> rcc::Result<()> {
     // enable logging
     // see https://docs.rs/tracing for more info
-    tracing_subscriber::fmt::try_init()?;
+    // tracing_subscriber::fmt::try_init()?;
+    tracing_subscriber::fmt::Subscriber::builder()
+        .with_max_level(Level::DEBUG)
+        .try_init()?;
 
     let cli = Cli::from_args();
     let port = cli.port.as_deref().unwrap_or(DEFAULT_PORT);

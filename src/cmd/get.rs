@@ -1,7 +1,7 @@
-use crate::{Connection, Frame, Parse, Db};
-
 use bytes::Bytes;
 use tracing::{debug, instrument};
+
+use crate::{Connection, Db, Frame, Parse};
 
 /// Get the value of key.
 ///

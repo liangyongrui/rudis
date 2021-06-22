@@ -13,7 +13,7 @@ pub use subscribe::{Subscribe, Unsubscribe};
 mod unknown;
 pub use unknown::Unknown;
 
-use crate::{Connection, Frame, Parse, ParseError, Shutdown, Db};
+use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
 ///
@@ -21,8 +21,8 @@ use crate::{Connection, Frame, Parse, ParseError, Shutdown, Db};
 #[derive(Debug)]
 pub enum Command {
     Get(Get),
-    Publish(Publish),
     Set(Set),
+    Publish(Publish),
     Subscribe(Subscribe),
     Unsubscribe(Unsubscribe),
     Unknown(Unknown),

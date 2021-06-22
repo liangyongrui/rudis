@@ -3,14 +3,16 @@
 //! Provides an async `run` function that listens for inbound connections,
 //! spawning a task per connection.
 
-use crate::{Command, Connection, Shutdown, Db};
+use std::{future::Future, sync::Arc};
 
-use std::future::Future;
-use std::sync::Arc;
-use tokio::net::{TcpListener, TcpStream};
-use tokio::sync::{broadcast, mpsc, Semaphore};
-use tokio::time::{self, Duration};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    sync::{broadcast, mpsc, Semaphore},
+    time::{self, Duration},
+};
 use tracing::{debug, error, info, instrument};
+
+use crate::{Command, Connection, Db, Shutdown};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.

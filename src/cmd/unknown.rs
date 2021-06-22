@@ -1,6 +1,6 @@
-use crate::{Connection, Frame};
-
 use tracing::{debug, instrument};
+
+use crate::{Connection, Frame};
 
 /// Represents an "unknown" command. This is not a real `Redis` command.
 #[derive(Debug)]

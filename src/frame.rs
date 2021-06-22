@@ -1,14 +1,15 @@
 //! Provides a type representing a Redis protocol frame as well as utilities for
 //! parsing frames from a byte array.
+//!
+//! 目前使用的是 RESP2
+//! todo 支持 RESP3
+
+use std::{convert::TryInto, fmt, io::Cursor, num::TryFromIntError, string::FromUtf8Error};
 
 use bytes::{Buf, Bytes};
-use std::convert::TryInto;
-use std::fmt;
-use std::io::Cursor;
-use std::num::TryFromIntError;
-use std::string::FromUtf8Error;
 
 /// A frame in the Redis protocol.
+///
 #[derive(Clone, Debug)]
 pub enum Frame {
     Simple(String),
@@ -105,6 +106,7 @@ impl Frame {
     /// The message has already been validated with `check`.
     pub fn parse(src: &mut Cursor<&[u8]>) -> Result<Frame, Error> {
         match get_u8(src)? {
+            // simple string
             b'+' => {
                 // Read the line and convert it to `Vec<u8>`
                 let line = get_line(src)?.to_vec();
@@ -114,6 +116,7 @@ impl Frame {
 
                 Ok(Frame::Simple(string))
             }
+            // simple error
             b'-' => {
                 // Read the line and convert it to `Vec<u8>`
                 let line = get_line(src)?.to_vec();
@@ -123,10 +126,12 @@ impl Frame {
 
                 Ok(Frame::Error(string))
             }
+            // number
             b':' => {
                 let len = get_decimal(src)?;
                 Ok(Frame::Integer(len))
             }
+            // blob string
             b'$' => {
                 if b'-' == peek_u8(src)? {
                     let line = get_line(src)?;
@@ -153,6 +158,7 @@ impl Frame {
                     Ok(Frame::Bulk(data))
                 }
             }
+            // array
             b'*' => {
                 let len = get_decimal(src)?.try_into()?;
                 let mut out = Vec::with_capacity(len);

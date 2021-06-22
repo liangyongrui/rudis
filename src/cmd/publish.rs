@@ -1,6 +1,6 @@
-use crate::{Connection, Frame, Parse, Db};
-
 use bytes::Bytes;
+
+use crate::{Connection, Db, Frame, Parse};
 
 /// Posts a message to the given channel.
 ///

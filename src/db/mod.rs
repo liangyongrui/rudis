@@ -6,12 +6,10 @@ use std::{
 };
 
 use bytes::Bytes;
-
 use tokio::sync::broadcast;
 
 use self::slot::Slot;
 
-mod shared;
 mod slot;
 mod state;
 

@@ -1,0 +1,5 @@
+imports_granularity = "Crate"
+use_field_init_shorthand = true
+format_strings = true
+group_imports = "StdExternalCrate"
+use_try_shorthand = true

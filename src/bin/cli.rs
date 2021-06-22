@@ -1,9 +1,7 @@
-use rcc::{client, DEFAULT_PORT};
+use std::{num::ParseIntError, str, time::Duration};
 
 use bytes::Bytes;
-use std::num::ParseIntError;
-use std::str;
-use std::time::Duration;
+use rcc::{client, DEFAULT_PORT};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]

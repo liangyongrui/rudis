@@ -1,7 +1,8 @@
-use crate::Frame;
+use std::{fmt, str, vec};
 
 use bytes::Bytes;
-use std::{fmt, str, vec};
+
+use crate::Frame;
 
 /// Utility for parsing a command
 ///

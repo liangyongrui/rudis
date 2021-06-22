@@ -2,16 +2,21 @@
 //!
 //! Provides an async connect and methods for issuing the supported commands.
 
-use crate::cmd::{Get, Publish, Set, Subscribe, Unsubscribe};
-use crate::{Connection, Frame};
+use std::{
+    io::{Error, ErrorKind},
+    time::Duration,
+};
 
 use async_stream::try_stream;
 use bytes::Bytes;
-use std::io::{Error, ErrorKind};
-use std::time::Duration;
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tokio_stream::Stream;
 use tracing::{debug, instrument};
+
+use crate::{
+    cmd::{Get, Publish, Set, Subscribe, Unsubscribe},
+    Connection, Frame,
+};
 
 /// Established connection with a Redis server.
 ///

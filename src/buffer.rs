@@ -1,9 +1,10 @@
-use crate::client::Client;
-use crate::Result;
-
 use bytes::Bytes;
-use tokio::sync::mpsc::{channel, Receiver, Sender};
-use tokio::sync::oneshot;
+use tokio::sync::{
+    mpsc::{channel, Receiver, Sender},
+    oneshot,
+};
+
+use crate::{client::Client, Result};
 
 /// Create a new client request buffer
 ///

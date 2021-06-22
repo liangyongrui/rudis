@@ -1,9 +1,13 @@
-use crate::frame::{self, Frame};
+use std::io::{self, Cursor};
 
 use bytes::{Buf, BytesMut};
-use std::io::{self, Cursor};
-use tokio::io::{AsyncReadExt, AsyncWriteExt, BufWriter};
-use tokio::net::TcpStream;
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt, BufWriter},
+    net::TcpStream,
+};
+use tracing::debug;
+
+use crate::frame::{self, Frame};
 
 /// Send and receive `Frame` values from a remote peer.
 ///
@@ -92,7 +96,10 @@ impl Connection {
         // which provides a number of helpful utilities for working
         // with bytes.
         let mut buf = Cursor::new(&self.buffer[..]);
-
+        debug!(
+            "parse_frame, raw buf: {}",
+            std::str::from_utf8(&self.buffer[..]).unwrap()
+        );
         // The first step is to check if enough data has been buffered to parse
         // a single frame. This step is usually much faster than doing a full
         // parse of the frame, and allows us to skip allocating data structures
