@@ -21,7 +21,7 @@ pub async fn main() -> Result<()> {
     let mut client = client::connect("127.0.0.1:6379").await?;
 
     // Set the key "hello" with value "world"
-    client.set("hello", "world".into()).await?;
+    client.set("hello", "world".into(), None, None).await?;
 
     // Get key "hello"
     let result = client.get("hello").await?;

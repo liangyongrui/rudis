@@ -2,10 +2,10 @@ use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
     sync::Arc,
-    time::Duration,
 };
 
 use bytes::Bytes;
+use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 
 use self::slot::Slot;
@@ -44,8 +44,14 @@ impl Db {
         self.get_slot(key).get(key)
     }
 
-    pub(crate) fn set(&self, key: String, value: Bytes, expire: Option<Duration>) {
-        self.get_slot(&key).set(key, value, expire)
+    pub(crate) fn set(
+        &self,
+        key: String,
+        value: Bytes,
+        nxxx: Option<bool>,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Option<Bytes> {
+        self.get_slot(&key).set(key, value, nxxx, expires_at)
     }
 
     pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<Bytes> {

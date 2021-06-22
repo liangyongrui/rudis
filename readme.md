@@ -13,3 +13,11 @@ rust cloud cache
 1. [ ] pipeline(停止服务器的时候，处理干净 pipeline)
 1. [ ] 异步锁 (shutdown 改成原子的可能就好了)
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
+
+## 支持的命令
+
+1. set
+1. get
+1. psetex
+1. setex
+1. getset

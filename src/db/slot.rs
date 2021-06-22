@@ -4,13 +4,14 @@ use std::{
 };
 
 use bytes::Bytes;
+use chrono::{DateTime, Utc};
 use tokio::{
     sync::{broadcast, Notify},
-    time::{self, Duration, Instant},
+    time,
 };
 use tracing::debug;
 
-use super::state::{Entry, State};
+use super::state::State;
 
 #[derive(Debug)]
 struct Shared {
@@ -92,58 +93,42 @@ impl Slot {
     /// Duration.
     ///
     /// If a value is already associated with the key, it is removed.
-    pub(crate) fn set(&self, key: String, value: Bytes, expire: Option<Duration>) {
+    pub(crate) fn set(
+        &self,
+        key: String,
+        value: Bytes,
+        nxxx: Option<bool>,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Option<Bytes> {
         let mut state = self.shared.state.lock().unwrap();
 
         // Get and increment the next insertion ID. Guarded by the lock, this
         // ensures a unique identifier is associated with each `set` operation.
         let id = state.next_id;
         state.next_id += 1;
-
-        // If this `set` becomes the key that expires **next**, the background
-        // task needs to be notified so it can update its state.
-        //
-        // Whether or not the task needs to be notified is computed during the
-        // `set` routine.
+        let mut old_value = None;
+        let need_update = if let Some(nx) = nxxx {
+            old_value = state.entries.get(&key).map(|t| t.data.to_owned());
+            let c = old_value.is_some();
+            (nx && !c) || (!nx && c)
+        } else {
+            true
+        };
+        if !need_update {
+            return old_value;
+        }
         let mut notify = false;
-
-        let expires_at = expire.map(|duration| {
-            // `Instant` at which the key expires.
-            let when = Instant::now() + duration;
-
-            // Only notify the worker task if the newly inserted expiration is the
-            // **next** key to evict. In this case, the worker needs to be woken up
-            // to update its state.
+        if let Some(expires_at) = expires_at {
             notify = state
                 .next_expiration()
-                .map(|expiration| expiration > when)
+                .map(|expiration| expiration > expires_at)
                 .unwrap_or(true);
 
             // Track the expiration.
-            state.expirations.insert((when, id), key.clone());
-            when
-        });
-
-        // Insert the entry into the `HashMap`.
-        let prev = state.entries.insert(
-            key,
-            Entry {
-                id,
-                data: value,
-                expires_at,
-            },
-        );
-
-        // If there was a value previously associated with the key **and** it
-        // had an expiration time. The associated entry in the `expirations` map
-        // must also be removed. This avoids leaking data.
-        if let Some(prev) = prev {
-            if let Some(when) = prev.expires_at {
-                // clear expiration
-                state.expirations.remove(&(when, prev.id));
-            }
+            state.expirations.insert((expires_at, id), key.clone());
         }
 
+        old_value = state.update(key, id, value, expires_at);
         // Release the mutex before notifying the background task. This helps
         // reduce contention by avoiding the background task waking up only to
         // be unable to acquire the mutex due to this function still holding it.
@@ -154,6 +139,7 @@ impl Slot {
             // its state to reflect a new expiration.
             self.shared.background_task.notify_one();
         }
+        old_value
     }
 
     /// Returns a `Receiver` for the requested channel.
@@ -233,7 +219,7 @@ impl Drop for Slot {
 impl Shared {
     /// Purge all expired keys and return the `Instant` at which the **next**
     /// key will expire. The background task will sleep until this instant.
-    fn purge_expired_keys(&self) -> Option<Instant> {
+    fn purge_expired_keys(&self) -> Option<DateTime<Utc>> {
         let mut state = self.state.lock().unwrap();
 
         if state.shutdown {
@@ -250,7 +236,7 @@ impl Shared {
         let state = &mut *state;
 
         // Find all keys scheduled to expire **before** now.
-        let now = Instant::now();
+        let now = Utc::now();
 
         while let Some((&(when, id), key)) = state.expirations.iter().next() {
             if when > now {
@@ -292,7 +278,7 @@ async fn purge_expired_tasks(shared: Arc<Shared>) {
             // state as new keys have been set to expire early. This is done by
             // looping.
             tokio::select! {
-                _ = time::sleep_until(when) => {}
+                _ = time::sleep((when - Utc::now()).to_std().unwrap()) =>{}
                 _ = shared.background_task.notified() => {}
             }
         } else {

@@ -1,20 +1,21 @@
 use std::collections::{BTreeMap, HashMap};
 
 use bytes::Bytes;
-use tokio::{sync::broadcast, time::Instant};
+use chrono::{DateTime, Utc};
+use tokio::sync::broadcast;
 
 /// Entry in the key-value store
 #[derive(Debug)]
 pub struct Entry {
     /// Uniquely identifies this entry.
-    pub id: u64,
+    id: u64,
 
     /// Stored data
     pub data: Bytes,
 
     /// Instant at which the entry expires and should be removed from the
     /// database.
-    pub expires_at: Option<Instant>,
+    expires_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]
@@ -37,7 +38,7 @@ pub struct State {
     /// created for the same instant. Because of this, the `Instant` is
     /// insufficient for the key. A unique expiration identifier (`u64`) is used
     /// to break these ties.
-    pub expirations: BTreeMap<(Instant, u64), String>,
+    pub expirations: BTreeMap<(DateTime<Utc>, u64), String>,
 
     /// Identifier to use for the next expiration. Each expiration is associated
     /// with a unique identifier. See above for why.
@@ -50,10 +51,35 @@ pub struct State {
 }
 
 impl State {
-    pub fn next_expiration(&self) -> Option<Instant> {
+    pub fn next_expiration(&self) -> Option<DateTime<Utc>> {
         self.expirations
             .keys()
             .next()
             .map(|expiration| expiration.0)
+    }
+
+    /// get old data and update
+    pub fn update(
+        &mut self,
+        key: String,
+        id: u64,
+        value: Bytes,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Option<Bytes> {
+        let prev = self.entries.insert(
+            key,
+            Entry {
+                id,
+                data: value,
+                expires_at,
+            },
+        );
+        prev.map(|prev| {
+            if let Some(when) = prev.expires_at {
+                // clear expiration
+                self.expirations.remove(&(when, prev.id));
+            }
+            prev.data
+        })
     }
 }

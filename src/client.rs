@@ -2,13 +2,11 @@
 //!
 //! Provides an async connect and methods for issuing the supported commands.
 
-use std::{
-    io::{Error, ErrorKind},
-    time::Duration,
-};
+use std::io::{Error, ErrorKind};
 
 use async_stream::try_stream;
 use bytes::Bytes;
+use chrono::{DateTime, Utc};
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tokio_stream::Stream;
 use tracing::{debug, instrument};
@@ -161,64 +159,17 @@ impl Client {
     /// }
     /// ```
     #[instrument(skip(self))]
-    pub async fn set(&mut self, key: &str, value: Bytes) -> crate::Result<()> {
-        // Create a `Set` command and pass it to `set_cmd`. A separate method is
-        // used to set a value with an expiration. The common parts of both
-        // functions are implemented by `set_cmd`.
-        self.set_cmd(Set::new(key, value, None)).await
-    }
-
-    /// Set `key` to hold the given `value`. The value expires after `expiration`
-    ///
-    /// The `value` is associated with `key` until one of the following:
-    /// - it expires.
-    /// - it is overwritten by the next call to `set`.
-    /// - it is removed.
-    ///
-    /// If key already holds a value, it is overwritten. Any previous time to
-    /// live associated with the key is discarded on a successful SET operation.
-    ///
-    /// # Examples
-    ///
-    /// Demonstrates basic usage. This example is not **guaranteed** to always
-    /// work as it relies on time based logic and assumes the client and server
-    /// stay relatively synchronized in time. The real world tends to not be so
-    /// favorable.
-    ///
-    /// ```no_run
-    /// use rcc::client;
-    /// use tokio::time;
-    /// use std::time::Duration;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let ttl = Duration::from_millis(500);
-    ///     let mut client = client::connect("localhost:6379").await.unwrap();
-    ///
-    ///     client.set_expires("foo", "bar".into(), ttl).await.unwrap();
-    ///
-    ///     // Getting the value immediately works
-    ///     let val = client.get("foo").await.unwrap().unwrap();
-    ///     assert_eq!(val, "bar");
-    ///
-    ///     // Wait for the TTL to expire
-    ///     time::sleep(ttl).await;
-    ///
-    ///     let val = client.get("foo").await.unwrap();
-    ///     assert!(val.is_some());
-    /// }
-    /// ```
-    #[instrument(skip(self))]
-    pub async fn set_expires(
+    pub async fn set(
         &mut self,
         key: &str,
         value: Bytes,
-        expiration: Duration,
+        nxxx: Option<bool>,
+        expires_at: Option<DateTime<Utc>>,
     ) -> crate::Result<()> {
         // Create a `Set` command and pass it to `set_cmd`. A separate method is
         // used to set a value with an expiration. The common parts of both
         // functions are implemented by `set_cmd`.
-        self.set_cmd(Set::new(key, value, Some(expiration))).await
+        self.set_cmd(Set::new(key, value, nxxx, expires_at)).await
     }
 
     /// The core `SET` logic, used by both `set` and `set_expires.
@@ -262,7 +213,7 @@ impl Client {
     /// }
     /// ```
     #[instrument(skip(self))]
-    pub async fn publish(&mut self, channel: &str, message: Bytes) -> crate::Result<u64> {
+    pub async fn publish(&mut self, channel: &str, message: Bytes) -> crate::Result<i64> {
         // Convert the `Publish` command into a frame
         let frame = Publish::new(channel, message).into_frame();
 

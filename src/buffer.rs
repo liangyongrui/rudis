@@ -60,7 +60,7 @@ async fn run(mut client: Client, mut rx: Receiver<Message>) {
         // The command is forwarded to the connection
         let response = match cmd {
             Command::Get(key) => client.get(&key).await,
-            Command::Set(key, value) => client.set(&key, value).await.map(|_| None),
+            Command::Set(key, value) => client.set(&key, value, None, None).await.map(|_| None),
         };
 
         // Send the response back to the caller.
