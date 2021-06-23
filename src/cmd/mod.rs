@@ -37,6 +37,9 @@ pub use expire::Expire;
 mod pexpire;
 pub use pexpire::Pexpire;
 
+mod incrby;
+pub use incrby::Incrby;
+
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -44,6 +47,7 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Incrby(Incrby),
     Get(Get),
     Set(Set),
     Del(Del),
@@ -85,6 +89,7 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "incrby" => Command::Incrby(Incrby::parse_frames(&mut parse)?),
             "get" => Command::Get(Get::parse_frames(&mut parse)?),
             "set" => Command::Set(Set::parse_frames(&mut parse)?),
             "del" => Command::Del(Del::parse_frames(&mut parse)?),
@@ -147,6 +152,7 @@ impl Command {
             Expireat(cmd) => cmd.apply(db, dst).await,
             Expire(cmd) => cmd.apply(db, dst).await,
             Pexpire(cmd) => cmd.apply(db, dst).await,
+            Incrby(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -167,6 +173,7 @@ impl Command {
             Command::Expireat(_) => "expireat",
             Command::Expire(_) => "expire",
             Command::Pexpire(_) => "pexpire",
+            Command::Incrby(_) => "incrby",
         }
     }
 }

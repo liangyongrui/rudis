@@ -1,4 +1,5 @@
 mod data;
+mod result;
 mod slot;
 mod state;
 
@@ -14,7 +15,7 @@ use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 
 pub use self::data::Data;
-use self::slot::Slot;
+use self::{result::Result, slot::Slot};
 
 const SIZE: usize = 1024;
 
@@ -43,8 +44,12 @@ impl Db {
         }
     }
 
-    pub(crate) fn pexpireat(&self, key: String, expires_at: DateTime<Utc>) -> bool {
-        self.get_slot(&key).pexpireat(key, expires_at)
+    pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
+        self.get_slot(&key).incr_by(key, value)
+    }
+
+    pub(crate) fn expire_at(&self, key: String, expires_at: DateTime<Utc>) -> bool {
+        self.get_slot(&key).pexpire_at(key, expires_at)
     }
     pub(crate) fn exists(&self, keys: Vec<String>) -> usize {
         keys.into_iter()

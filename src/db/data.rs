@@ -2,6 +2,7 @@ use bytes::Bytes;
 
 #[derive(Debug, Clone)]
 pub enum Data {
+    // bytes 一定是 set 进来的
     Bytes(Bytes),
     Number(i64),
     // todo

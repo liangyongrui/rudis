@@ -7,7 +7,7 @@ use tokio::{
     time,
 };
 
-use super::{data::Data, state::State};
+use super::{data::Data, result::Result, state::State};
 
 #[derive(Debug)]
 struct Shared {
@@ -89,9 +89,14 @@ impl Slot {
         state.exists(key)
     }
 
-    pub(crate) fn pexpireat(&self, key: String, expires_at: DateTime<Utc>) -> bool {
+    pub(crate) fn pexpire_at(&self, key: String, expires_at: DateTime<Utc>) -> bool {
         let mut state = self.shared.state.lock().unwrap();
         state.set_expires_at(key, expires_at).0
+    }
+
+    pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
+        let mut state = self.shared.state.lock().unwrap();
+        state.incr_by(key, value)
     }
 
     // 删除，返回原来的值

@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 use tracing::debug;
 
-use super::data::Data;
+use super::{data::Data, result::Result};
 
 /// Entry in the key-value store
 #[derive(Debug)]
@@ -196,5 +196,46 @@ impl State {
             }
             prev.data
         })
+    }
+
+    pub(crate) fn incr_by(&mut self, key: String, value: i64) -> Result<i64> {
+        let (old_value, new_entry) = if let Some(old) = self.entries.get(&key) {
+            match &old.data {
+                Data::Bytes(b) => {
+                    let old_value = std::str::from_utf8(&b[..])
+                        .map_err(|e| e.to_string())
+                        .and_then(|x| x.parse::<i64>().map_err(|e| e.to_string()))?;
+                    (
+                        old_value,
+                        Entry {
+                            id: old.id,
+                            expires_at: old.expires_at,
+                            data: Data::Number(value + old_value),
+                        },
+                    )
+                }
+                Data::Number(i) => (
+                    *i,
+                    Entry {
+                        id: old.id,
+                        expires_at: old.expires_at,
+                        data: Data::Number(value + i),
+                    },
+                ),
+                _ => return Err("type not support".to_owned()),
+            }
+        } else {
+            let id = self.next_id();
+            (
+                0,
+                Entry {
+                    id,
+                    data: Data::Number(value),
+                    expires_at: None,
+                },
+            )
+        };
+        self.entries.insert(key, new_entry);
+        Ok(old_value)
     }
 }

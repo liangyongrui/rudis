@@ -23,7 +23,7 @@ impl Expire {
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res =
             if let Some(ea) = Utc::now().checked_add_signed(Duration::seconds(self.seconds as _)) {
-                db.pexpireat(self.key, ea)
+                db.expire_at(self.key, ea)
             } else {
                 false
             };
