@@ -2,7 +2,11 @@ use bytes::Bytes;
 use chrono::{Duration, Utc};
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{
+    db::{Data, Db},
+    parse::Parse,
+    Connection, Frame,
+};
 
 #[derive(Debug)]
 pub struct Psetex {
@@ -31,7 +35,7 @@ impl Psetex {
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         db.set(
             self.key,
-            self.value,
+            Data::parse_from_bytes(self.value),
             None,
             Utc::now().checked_add_signed(Duration::milliseconds(self.milliseconds as i64)),
             false,

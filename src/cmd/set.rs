@@ -4,6 +4,7 @@ use tracing::{debug, instrument};
 
 use crate::{
     cmd::{Parse, ParseError},
+    db::Data,
     Connection, Db, Frame,
 };
 
@@ -167,7 +168,7 @@ impl Set {
         let response = if self.get {
             match db.set(
                 self.key,
-                self.value,
+                Data::parse_from_bytes(self.value),
                 self.nxxx,
                 self.expires_at,
                 self.keepttl,

@@ -1,3 +1,7 @@
+mod data;
+mod slot;
+mod state;
+
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
@@ -9,10 +13,8 @@ use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 
+pub use self::data::Data;
 use self::slot::Slot;
-
-mod slot;
-mod state;
 
 const SIZE: usize = 1024;
 
@@ -61,13 +63,20 @@ impl Db {
     pub(crate) fn set(
         &self,
         key: String,
-        value: Bytes,
+        value: Data,
         nxxx: Option<bool>,
         expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
     ) -> Option<Bytes> {
-        self.get_slot(&key)
+        match self
+            .get_slot(&key)
             .set(key, value, nxxx, expires_at, keepttl)
+        {
+            Some(Data::Bytes(bytes)) => Some(bytes),
+            Some(Data::Number(n)) => Some(Bytes::copy_from_slice(n.to_string().as_bytes())),
+            Some(_) => todo!("报错"),
+            None => None,
+        }
     }
 
     pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<Bytes> {

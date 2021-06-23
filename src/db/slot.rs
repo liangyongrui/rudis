@@ -7,7 +7,7 @@ use tokio::{
     time,
 };
 
-use super::state::State;
+use super::{data::Data, state::State};
 
 #[derive(Debug)]
 struct Shared {
@@ -76,7 +76,12 @@ impl Slot {
         // Because data is stored using `Bytes`, a clone here is a shallow
         // clone. Data is not copied.
         let state = self.shared.state.lock().unwrap();
-        state.get_data(key).cloned()
+        match state.get_data(key) {
+            Some(&Data::Bytes(ref bytes)) => Some(bytes.clone()),
+            Some(&Data::Number(n)) => Some(Bytes::copy_from_slice(n.to_string().as_bytes())),
+            Some(_) => todo!("报错"),
+            None => None,
+        }
     }
 
     pub(crate) fn exists(&self, key: &str) -> bool {
@@ -90,7 +95,7 @@ impl Slot {
     }
 
     // 删除，返回原来的值
-    pub(crate) fn del(&self, key: &str) -> Option<Bytes> {
+    pub(crate) fn del(&self, key: &str) -> Option<Data> {
         let mut state = self.shared.state.lock().unwrap();
         state.remove(key)
     }
@@ -101,11 +106,11 @@ impl Slot {
     pub(crate) fn set(
         &self,
         key: String,
-        value: Bytes,
+        value: Data,
         nxxx: Option<bool>,
         mut expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
-    ) -> Option<Bytes> {
+    ) -> Option<Data> {
         let mut state = self.shared.state.lock().unwrap();
 
         let mut old_value = None;

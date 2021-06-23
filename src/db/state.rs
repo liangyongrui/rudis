@@ -5,6 +5,8 @@ use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 use tracing::debug;
 
+use super::data::Data;
+
 /// Entry in the key-value store
 #[derive(Debug)]
 struct Entry {
@@ -12,7 +14,7 @@ struct Entry {
     id: u64,
 
     /// Stored data
-    data: Bytes,
+    data: Data,
 
     /// Instant at which the entry expires and should be removed from the
     /// database.
@@ -84,7 +86,7 @@ impl State {
         self.entries.get(key).and_then(|t| t.expires_at)
     }
 
-    pub fn get_data(&self, key: &str) -> Option<&Bytes> {
+    pub fn get_data(&self, key: &str) -> Option<&Data> {
         self.entries.get(key).map(|t| &t.data)
     }
 
@@ -152,9 +154,9 @@ impl State {
     pub fn update(
         &mut self,
         key: String,
-        value: Bytes,
+        value: Data,
         expires_at: Option<DateTime<Utc>>,
-    ) -> (Option<Bytes>, bool) {
+    ) -> (Option<Data>, bool) {
         let id = self.next_id();
         let notify = if let Some(expires_at) = expires_at {
             let res = self
@@ -186,7 +188,7 @@ impl State {
         (old_value, notify)
     }
 
-    pub fn remove(&mut self, key: &str) -> Option<Bytes> {
+    pub fn remove(&mut self, key: &str) -> Option<Data> {
         self.entries.remove(key).map(|prev| {
             if let Some(when) = prev.expires_at {
                 // clear expiration

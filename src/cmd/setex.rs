@@ -2,11 +2,14 @@ use bytes::Bytes;
 use chrono::{Duration, Utc};
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{
+    db::{Data, Db},
+    parse::Parse,
+    Connection, Frame,
+};
 
 #[derive(Debug)]
 pub struct Setex {
-    /// Name of the key to get
     key: String,
     seconds: u64,
     value: Bytes,
@@ -23,15 +26,11 @@ impl Setex {
         })
     }
 
-    /// Apply the `Set` command to the specified `Db` instance.
-    ///
-    /// The response is written to `dst`. This is called by the server in order
-    /// to execute a received command.
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         db.set(
             self.key,
-            self.value,
+            Data::parse_from_bytes(self.value),
             None,
             Utc::now().checked_add_signed(Duration::seconds(self.seconds as i64)),
             false,
