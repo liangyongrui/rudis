@@ -82,4 +82,14 @@ impl State {
             prev.data
         })
     }
+
+    pub fn remove(&mut self, key: &str) -> Option<Bytes> {
+        self.entries.remove(key).map(|prev| {
+            if let Some(when) = prev.expires_at {
+                // clear expiration
+                self.expirations.remove(&(when, prev.id));
+            }
+            prev.data
+        })
+    }
 }

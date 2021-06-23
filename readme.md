@@ -16,14 +16,24 @@ rust cloud cache
 
 ## 支持的命令
 
-兼容 redis 6.2 命令
+所有已经实现的命令都是兼容 redis 6.2 的版本
 
 1. [x] set
 1. [x] get
 1. [x] psetex
 1. [x] setex
-
-## 不支持的命令
-
-1. deprecated
-   - GETSET
+1. [x] del
+1. [x] exists
+1. [ ] pexpire
+1. [ ] pexpireAt
+1. [ ] hgetAll
+1. [ ] hset
+1. [ ] incr
+1. [ ] incrby
+1. [ ] rpush
+1. [ ] sismember
+1. [ ] sadd
+1. [ ] hsetnx
+1. [ ] hdel
+1. [ ] smembers
+1. [ ] lrange

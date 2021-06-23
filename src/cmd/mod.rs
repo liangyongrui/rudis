@@ -19,6 +19,12 @@ pub use psetex::Psetex;
 mod setex;
 pub use setex::Setex;
 
+mod del;
+pub use del::Del;
+
+mod exists;
+pub use exists::Exists;
+
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -28,6 +34,8 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 pub enum Command {
     Get(Get),
     Set(Set),
+    Del(Del),
+    Exists(Exists),
     Psetex(Psetex),
     Setex(Setex),
     Publish(Publish),
@@ -63,6 +71,8 @@ impl Command {
         let command = match &command_name[..] {
             "get" => Command::Get(Get::parse_frames(&mut parse)?),
             "set" => Command::Set(Set::parse_frames(&mut parse)?),
+            "del" => Command::Del(Del::parse_frames(&mut parse)?),
+            "exists" => Command::Exists(Exists::parse_frames(&mut parse)?),
             "psetex" => Command::Psetex(Psetex::parse_frames(&mut parse)?),
             "setex" => Command::Setex(Setex::parse_frames(&mut parse)?),
             "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
@@ -111,6 +121,8 @@ impl Command {
             Unknown(cmd) => cmd.apply(dst).await,
             Psetex(cmd) => cmd.apply(db, dst).await,
             Setex(cmd) => cmd.apply(db, dst).await,
+            Del(cmd) => cmd.apply(db, dst).await,
+            Exists(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -125,6 +137,8 @@ impl Command {
             Command::Unknown(cmd) => cmd.get_name(),
             Command::Psetex(_) => "psetex",
             Command::Setex(_) => "setex",
+            Command::Del(_) => "del",
+            Command::Exists(_) => "exists",
         }
     }
 }

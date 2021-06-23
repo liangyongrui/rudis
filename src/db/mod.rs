@@ -2,6 +2,7 @@ use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
     sync::Arc,
+    usize,
 };
 
 use bytes::Bytes;
@@ -39,11 +40,20 @@ impl Db {
             slots: Arc::new(slots),
         }
     }
+    pub(crate) fn exists(&self, keys: Vec<String>) -> usize {
+        keys.into_iter()
+            .filter(|key| self.get_slot(key).exists(key))
+            .count()
+    }
 
     pub(crate) fn get(&self, key: &str) -> Option<Bytes> {
         self.get_slot(key).get(key)
     }
-
+    pub(crate) fn del(&self, keys: Vec<String>) -> usize {
+        keys.into_iter()
+            .filter(|key| self.get_slot(key).del(key).is_some())
+            .count()
+    }
     pub(crate) fn set(
         &self,
         key: String,

@@ -88,7 +88,20 @@ impl Slot {
         let state = self.shared.state.lock().unwrap();
         state.entries.get(key).map(|entry| entry.data.clone())
     }
+    pub(crate) fn exists(&self, key: &str) -> bool {
+        // Acquire the lock, get the entry and clone the value.
+        //
+        // Because data is stored using `Bytes`, a clone here is a shallow
+        // clone. Data is not copied.
+        let state = self.shared.state.lock().unwrap();
+        state.entries.get(key).is_some()
+    }
 
+    // 删除，返回原来的值
+    pub(crate) fn del(&self, key: &str) -> Option<Bytes> {
+        let mut state = self.shared.state.lock().unwrap();
+        state.remove(key)
+    }
     /// Set the value associated with a key along with an optional expiration
     /// Duration.
     ///
