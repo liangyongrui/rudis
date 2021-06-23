@@ -28,6 +28,15 @@ pub use exists::Exists;
 mod pexpireat;
 pub use pexpireat::Pexpireat;
 
+mod expireat;
+pub use expireat::Expireat;
+
+mod expire;
+pub use expire::Expire;
+
+mod pexpire;
+pub use pexpire::Pexpire;
+
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -42,6 +51,9 @@ pub enum Command {
     Psetex(Psetex),
     Setex(Setex),
     Pexpireat(Pexpireat),
+    Expireat(Expireat),
+    Expire(Expire),
+    Pexpire(Pexpire),
     Publish(Publish),
     Subscribe(Subscribe),
     Unsubscribe(Unsubscribe),
@@ -79,7 +91,10 @@ impl Command {
             "exists" => Command::Exists(Exists::parse_frames(&mut parse)?),
             "psetex" => Command::Psetex(Psetex::parse_frames(&mut parse)?),
             "setex" => Command::Setex(Setex::parse_frames(&mut parse)?),
-            "pexpireat" =>Command::Pexpireat(Pexpireat::parse_frames(&mut parse)?),
+            "pexpireat" => Command::Pexpireat(Pexpireat::parse_frames(&mut parse)?),
+            "expireat" => Command::Expireat(Expireat::parse_frames(&mut parse)?),
+            "expire" => Command::Expire(Expire::parse_frames(&mut parse)?),
+            "pexpire" => Command::Pexpire(Pexpire::parse_frames(&mut parse)?),
             "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
             "subscribe" => Command::Subscribe(Subscribe::parse_frames(&mut parse)?),
             "unsubscribe" => Command::Unsubscribe(Unsubscribe::parse_frames(&mut parse)?),
@@ -129,23 +144,29 @@ impl Command {
             Del(cmd) => cmd.apply(db, dst).await,
             Exists(cmd) => cmd.apply(db, dst).await,
             Pexpireat(cmd) => cmd.apply(db, dst).await,
+            Expireat(cmd) => cmd.apply(db, dst).await,
+            Expire(cmd) => cmd.apply(db, dst).await,
+            Pexpire(cmd) => cmd.apply(db, dst).await,
         }
     }
 
     /// Returns the command name
     pub(crate) fn get_name(&self) -> &str {
         match self {
+            Command::Unknown(cmd) => cmd.get_name(),
             Command::Get(_) => "get",
             Command::Publish(_) => "pub",
             Command::Set(_) => "set",
             Command::Subscribe(_) => "subscribe",
             Command::Unsubscribe(_) => "unsubscribe",
-            Command::Unknown(cmd) => cmd.get_name(),
             Command::Psetex(_) => "psetex",
             Command::Setex(_) => "setex",
             Command::Del(_) => "del",
             Command::Exists(_) => "exists",
             Command::Pexpireat(_) => "pexpireat",
+            Command::Expireat(_) => "expireat",
+            Command::Expire(_) => "expire",
+            Command::Pexpire(_) => "pexpire",
         }
     }
 }

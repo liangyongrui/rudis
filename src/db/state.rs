@@ -131,7 +131,7 @@ impl State {
     }
 
     /// return (old value exist, notify)
-  pub  fn set_expires_at(&mut self, key: String, expires_at: DateTime<Utc>) -> (bool, bool) {
+    pub fn set_expires_at(&mut self, key: String, expires_at: DateTime<Utc>) -> (bool, bool) {
         let notify = self
             .next_expiration()
             .map(|expiration| expiration > expires_at)

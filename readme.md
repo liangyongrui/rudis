@@ -2,6 +2,11 @@
 
 rust cloud cache
 
+## 特点
+
+1. 异步删除（不会再阻塞 get）
+1. 并发
+
 ## todo
 
 1. [x] 多 slot (shard)
@@ -24,12 +29,14 @@ rust cloud cache
 1. [x] setex
 1. [x] del
 1. [x] exists
-1. [x] pexpireAt
-1. [ ] pexpire
-1. [ ] hgetAll
-1. [ ] hset
+1. [x] pexpireat
+1. [x] expireat
+1. [x] expire
+1. [x] pexpire
 1. [ ] incr
 1. [ ] incrby
+1. [ ] hgetAll
+1. [ ] hset
 1. [ ] rpush
 1. [ ] sismember
 1. [ ] sadd
