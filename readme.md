@@ -23,6 +23,8 @@ rust cloud cache
 
 所有已经实现的命令都是兼容 redis 6.2 的版本
 
+base
+
 1. [x] set
 1. [x] get
 1. [x] psetex
@@ -33,14 +35,38 @@ rust cloud cache
 1. [x] expireat
 1. [x] expire
 1. [x] pexpire
-1. [ ] incr
-1. [ ] incrby
+1. [x] incr
+1. [x] incrby
+1. [x] decr
+1. [x] decrby
+
+list
+
+1. [ ] rpush
+1. [ ] lpush
+1. [ ] lrange
+1. [ ] lpop
+1. [ ] rpop
+1. [ ] llen
+
+hash
+
 1. [ ] hgetAll
 1. [ ] hset
-1. [ ] rpush
-1. [ ] sismember
-1. [ ] sadd
 1. [ ] hsetnx
 1. [ ] hdel
+
+set
+
+1. [ ] sismember
+1. [ ] sadd
+1. [ ] srem
 1. [ ] smembers
-1. [ ] lrange
+
+zset
+
+1. [ ] zrange
+1. [ ] zrevrank
+1. [ ] zadd
+1. [ ] zremrangebyrank
+1. [ ] zrevrangebyscore

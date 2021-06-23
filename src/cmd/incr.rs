@@ -2,22 +2,20 @@ use tracing::instrument;
 
 use crate::{db::Db, parse::Parse, Connection, Frame};
 
-/// https://redis.io/commands/incrby
+/// https://redis.io/commands/incr
 #[derive(Debug)]
-pub struct Incrby {
+pub struct Incr {
     key: String,
-    value: i64,
 }
-impl Incrby {
+impl Incr {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_string()?;
-        let value = parse.next_int()?;
-        Ok(Self { key, value })
+        Ok(Self { key })
     }
 
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let response = match db.incr_by(self.key, self.value) {
+        let response = match db.incr_by(self.key, 1) {
             Ok(i) => Frame::Integer(i),
             Err(e) => Frame::Error(e),
         };

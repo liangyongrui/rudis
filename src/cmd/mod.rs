@@ -39,6 +39,12 @@ pub use pexpire::Pexpire;
 
 mod incrby;
 pub use incrby::Incrby;
+mod incr;
+pub use incr::Incr;
+mod decr;
+pub use decr::Decr;
+mod decrby;
+pub use decrby::Decrby;
 
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
@@ -48,6 +54,9 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 #[derive(Debug)]
 pub enum Command {
     Incrby(Incrby),
+    Incr(Incr),
+    Decr(Decr),
+    Decrby(Decrby),
     Get(Get),
     Set(Set),
     Del(Del),
@@ -90,6 +99,9 @@ impl Command {
         // specific command.
         let command = match &command_name[..] {
             "incrby" => Command::Incrby(Incrby::parse_frames(&mut parse)?),
+            "incr" => Command::Incr(Incr::parse_frames(&mut parse)?),
+            "decrby" => Command::Decrby(Decrby::parse_frames(&mut parse)?),
+            "decr" => Command::Decr(Decr::parse_frames(&mut parse)?),
             "get" => Command::Get(Get::parse_frames(&mut parse)?),
             "set" => Command::Set(Set::parse_frames(&mut parse)?),
             "del" => Command::Del(Del::parse_frames(&mut parse)?),
@@ -153,6 +165,9 @@ impl Command {
             Expire(cmd) => cmd.apply(db, dst).await,
             Pexpire(cmd) => cmd.apply(db, dst).await,
             Incrby(cmd) => cmd.apply(db, dst).await,
+            Incr(cmd) => cmd.apply(db, dst).await,
+            Decr(cmd) => cmd.apply(db, dst).await,
+            Decrby(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -174,6 +189,9 @@ impl Command {
             Command::Expire(_) => "expire",
             Command::Pexpire(_) => "pexpire",
             Command::Incrby(_) => "incrby",
+            Command::Incr(_) => "incr",
+            Command::Decr(_) => "decr",
+            Command::Decrby(_) => "decrby",
         }
     }
 }
