@@ -24,8 +24,8 @@ rust cloud cache
 1. [x] setex
 1. [x] del
 1. [x] exists
+1. [x] pexpireAt
 1. [ ] pexpire
-1. [ ] pexpireAt
 1. [ ] hgetAll
 1. [ ] hset
 1. [ ] incr

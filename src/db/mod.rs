@@ -40,6 +40,10 @@ impl Db {
             slots: Arc::new(slots),
         }
     }
+
+    pub(crate) fn pexpireat(&self, key: String, expires_at: DateTime<Utc>) -> bool {
+        self.get_slot(&key).pexpireat(key, expires_at)
+    }
     pub(crate) fn exists(&self, keys: Vec<String>) -> usize {
         keys.into_iter()
             .filter(|key| self.get_slot(key).exists(key))

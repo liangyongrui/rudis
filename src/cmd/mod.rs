@@ -25,6 +25,9 @@ pub use del::Del;
 mod exists;
 pub use exists::Exists;
 
+mod pexpireat;
+pub use pexpireat::Pexpireat;
+
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -38,6 +41,7 @@ pub enum Command {
     Exists(Exists),
     Psetex(Psetex),
     Setex(Setex),
+    Pexpireat(Pexpireat),
     Publish(Publish),
     Subscribe(Subscribe),
     Unsubscribe(Unsubscribe),
@@ -75,6 +79,7 @@ impl Command {
             "exists" => Command::Exists(Exists::parse_frames(&mut parse)?),
             "psetex" => Command::Psetex(Psetex::parse_frames(&mut parse)?),
             "setex" => Command::Setex(Setex::parse_frames(&mut parse)?),
+            "pexpireat" =>Command::Pexpireat(Pexpireat::parse_frames(&mut parse)?),
             "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
             "subscribe" => Command::Subscribe(Subscribe::parse_frames(&mut parse)?),
             "unsubscribe" => Command::Unsubscribe(Unsubscribe::parse_frames(&mut parse)?),
@@ -123,6 +128,7 @@ impl Command {
             Setex(cmd) => cmd.apply(db, dst).await,
             Del(cmd) => cmd.apply(db, dst).await,
             Exists(cmd) => cmd.apply(db, dst).await,
+            Pexpireat(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -139,6 +145,7 @@ impl Command {
             Command::Setex(_) => "setex",
             Command::Del(_) => "del",
             Command::Exists(_) => "exists",
+            Command::Pexpireat(_) => "pexpireat",
         }
     }
 }

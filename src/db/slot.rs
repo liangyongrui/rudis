@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
@@ -9,7 +6,6 @@ use tokio::{
     sync::{broadcast, Notify},
     time,
 };
-use tracing::debug;
 
 use super::state::State;
 
@@ -59,13 +55,7 @@ impl Slot {
     /// background task to manage key expiration.
     pub(crate) fn new() -> Slot {
         let shared = Arc::new(Shared {
-            state: Mutex::new(State {
-                entries: HashMap::new(),
-                pub_sub: HashMap::new(),
-                expirations: BTreeMap::new(),
-                next_id: 0,
-                shutdown: false,
-            }),
+            state: Mutex::new(State::new()),
             background_task: Notify::new(),
         });
 
@@ -86,15 +76,17 @@ impl Slot {
         // Because data is stored using `Bytes`, a clone here is a shallow
         // clone. Data is not copied.
         let state = self.shared.state.lock().unwrap();
-        state.entries.get(key).map(|entry| entry.data.clone())
+        state.get_data(key).cloned()
     }
+
     pub(crate) fn exists(&self, key: &str) -> bool {
-        // Acquire the lock, get the entry and clone the value.
-        //
-        // Because data is stored using `Bytes`, a clone here is a shallow
-        // clone. Data is not copied.
         let state = self.shared.state.lock().unwrap();
-        state.entries.get(key).is_some()
+        state.exists(key)
+    }
+
+    pub(crate) fn pexpireat(&self, key: String, expires_at: DateTime<Utc>) -> bool {
+        let mut state = self.shared.state.lock().unwrap();
+        state.set_expires_at(key, expires_at).0
     }
 
     // 删除，返回原来的值
@@ -116,13 +108,9 @@ impl Slot {
     ) -> Option<Bytes> {
         let mut state = self.shared.state.lock().unwrap();
 
-        // Get and increment the next insertion ID. Guarded by the lock, this
-        // ensures a unique identifier is associated with each `set` operation.
-        let id = state.next_id;
-        state.next_id += 1;
         let mut old_value = None;
         let need_update = if let Some(nx) = nxxx {
-            old_value = state.entries.get(&key).map(|t| t.data.to_owned());
+            old_value = state.get_data(&key).cloned();
             let c = old_value.is_some();
             (nx && !c) || (!nx && c)
         } else {
@@ -132,20 +120,10 @@ impl Slot {
             return old_value;
         }
         if keepttl {
-            expires_at = state.entries.get(&key).and_then(|t| t.expires_at);
+            expires_at = state.get_expires_at(&key);
         }
-        let mut notify = false;
-        if let Some(expires_at) = expires_at {
-            notify = state
-                .next_expiration()
-                .map(|expiration| expiration > expires_at)
-                .unwrap_or(true);
-
-            // Track the expiration.
-            state.expirations.insert((expires_at, id), key.clone());
-        }
-
-        old_value = state.update(key, id, value, expires_at);
+        let (ov, notify) = state.update(key, value, expires_at);
+        old_value = ov;
         // Release the mutex before notifying the background task. This helps
         // reduce contention by avoiding the background task waking up only to
         // be unable to acquire the mutex due to this function still holding it.
@@ -222,7 +200,7 @@ impl Drop for Slot {
             // The background task must be signaled to shutdown. This is done by
             // setting `State::shutdown` to `true` and signalling the task.
             let mut state = self.shared.state.lock().unwrap();
-            state.shutdown = true;
+            state.shutdown(true);
 
             // Drop the lock before signalling the background task. This helps
             // reduce lock contention by ensuring the background task doesn't
@@ -238,36 +216,7 @@ impl Shared {
     /// key will expire. The background task will sleep until this instant.
     fn purge_expired_keys(&self) -> Option<DateTime<Utc>> {
         let mut state = self.state.lock().unwrap();
-
-        if state.shutdown {
-            // The database is shutting down. All handles to the shared state
-            // have dropped. The background task should exit.
-            return None;
-        }
-
-        // This is needed to make the borrow checker happy. In short, `lock()`
-        // returns a `MutexGuard` and not a `&mut State`. The borrow checker is
-        // not able to see "through" the mutex guard and determine that it is
-        // safe to access both `state.expirations` and `state.entries` mutably,
-        // so we get a "real" mutable reference to `State` outside of the loop.
-        let state = &mut *state;
-
-        // Find all keys scheduled to expire **before** now.
-        let now = Utc::now();
-
-        while let Some((&(when, id), key)) = state.expirations.iter().next() {
-            if when > now {
-                // Done purging, `when` is the instant at which the next key
-                // expires. The worker task will wait until this instant.
-                return Some(when);
-            }
-            debug!("purge_expired_keys: {}", key);
-            // The key expired, remove it
-            state.entries.remove(key);
-            state.expirations.remove(&(when, id));
-        }
-
-        None
+        state.purge_expired_keys()
     }
 
     /// Returns `true` if the database is shutting down
@@ -275,7 +224,7 @@ impl Shared {
     /// The `shutdown` flag is set when all `Slot` values have dropped, indicating
     /// that the shared state can no longer be accessed.
     fn is_shutdown(&self) -> bool {
-        self.state.lock().unwrap().shutdown
+        self.state.lock().unwrap().is_shutdown()
     }
 }
 
