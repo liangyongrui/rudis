@@ -47,9 +47,9 @@ list
 1. [x] rpushx
 1. [x] lpushx
 1. [x] lrange
-1. [ ] lpop
-1. [ ] rpop
-1. [ ] llen
+1. [x] lpop
+1. [x] rpop
+1. [x] llen
 1. [ ] ltrim
 1. [ ] lset
 1. [ ] lindex

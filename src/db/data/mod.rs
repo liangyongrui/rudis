@@ -18,11 +18,5 @@ pub enum Data {
     // todo
     Set,
     // todo
-    Zset,
+    SortedSet,
 }
-
-// impl Data {
-//     pub fn parse_from_bytes(bytes: Bytes) -> Self {
-//         Self::Bytes(bytes)
-//     }
-// }

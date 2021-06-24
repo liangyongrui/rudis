@@ -7,6 +7,8 @@ mod expireat;
 mod get;
 mod incr;
 mod incrby;
+mod llen;
+mod lpop;
 mod lpush;
 mod lpushx;
 mod lrange;
@@ -14,6 +16,7 @@ mod pexpire;
 mod pexpireat;
 mod psetex;
 mod publish;
+mod rpop;
 mod rpush;
 mod rpushx;
 mod set;
@@ -30,6 +33,8 @@ pub use expireat::Expireat;
 pub use get::Get;
 pub use incr::Incr;
 pub use incrby::Incrby;
+pub use llen::Llen;
+pub use lpop::Lpop;
 pub use lpush::Lpush;
 pub use lpushx::Lpushx;
 pub use lrange::Lrange;
@@ -37,6 +42,7 @@ pub use pexpire::Pexpire;
 pub use pexpireat::Pexpireat;
 pub use psetex::Psetex;
 pub use publish::Publish;
+pub use rpop::Rpop;
 pub use rpush::Rpush;
 pub use rpushx::Rpushx;
 pub use set::Set;
@@ -51,6 +57,9 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Lpop(Lpop),
+    Llen(Llen),
+    Rpop(Rpop),
     Lrange(Lrange),
     Lpush(Lpush),
     Rpush(Rpush),
@@ -101,6 +110,9 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "llen" => Command::Llen(Llen::parse_frames(&mut parse)?),
+            "rpop" => Command::Rpop(Rpop::parse_frames(&mut parse)?),
+            "lpop" => Command::Lpop(Lpop::parse_frames(&mut parse)?),
             "lrange" => Command::Lrange(Lrange::parse_frames(&mut parse)?),
             "lpush" => Command::Lpush(Lpush::parse_frames(&mut parse)?),
             "rpush" => Command::Rpush(Rpush::parse_frames(&mut parse)?),
@@ -181,6 +193,9 @@ impl Command {
             Lpushx(cmd) => cmd.apply(db, dst).await,
             Rpushx(cmd) => cmd.apply(db, dst).await,
             Lrange(cmd) => cmd.apply(db, dst).await,
+            Lpop(cmd) => cmd.apply(db, dst).await,
+            Llen(cmd) => cmd.apply(db, dst).await,
+            Rpop(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -210,6 +225,9 @@ impl Command {
             Command::Lpushx(_) => "lpushx",
             Command::Rpushx(_) => "rpushx",
             Command::Lrange(_) => "lrange",
+            Command::Lpop(_) => "lpop",
+            Command::Llen(_) => "llen",
+            Command::Rpop(_) => "rpop",
         }
     }
 }

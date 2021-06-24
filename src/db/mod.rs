@@ -66,6 +66,15 @@ impl Db {
     pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
         self.get_state(key).rpushx(key, values)
     }
+    pub(crate) fn llen(&self, key: &str) -> Result<usize> {
+        self.get_state(key).llen(key)
+    }
+    pub(crate) fn lpop(&self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
+        self.get_state(key).lpop(key, count)
+    }
+    pub(crate) fn rpop(&self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
+        self.get_state(key).rpop(key, count)
+    }
     pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
         self.get_state(&key).incr_by(key, value)
     }
