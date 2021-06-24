@@ -6,7 +6,7 @@ mod state;
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
-    sync::Arc,
+    sync::{Arc, MutexGuard},
     usize,
 };
 
@@ -14,7 +14,7 @@ use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 
 pub use self::data::Data;
-use self::{data::Bytes, result::Result, slot::Slot};
+use self::{data::Bytes, result::Result, slot::Slot, state::State};
 
 const SIZE: usize = 1024;
 
@@ -25,6 +25,14 @@ pub(crate) struct Db {
 
 impl Db {
     /// 获取 需要操作的Slot
+    fn get_state(&self, key: &str) -> MutexGuard<'_, State> {
+        // todo 更完善的分片策略
+        let mut s = DefaultHasher::new();
+        key.hash(&mut s);
+        let i = s.finish() % SIZE as u64;
+        self.slots[i as usize].get_state()
+    }
+
     fn get_slot(&self, key: &str) -> &Slot {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();
@@ -44,30 +52,30 @@ impl Db {
     }
 
     pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
-        self.get_slot(key).lrange(key, start, stop)
+        self.get_state(key).lrange(key, start, stop)
     }
     pub(crate) fn lpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
-        self.get_slot(&key).lpush(key, values)
+        self.get_state(&key).lpush(key, values)
     }
     pub(crate) fn rpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
-        self.get_slot(&key).rpush(key, values)
+        self.get_state(&key).rpush(key, values)
     }
     pub(crate) fn lpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
-        self.get_slot(key).lpushx(key, values)
+        self.get_state(key).lpushx(key, values)
     }
     pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
-        self.get_slot(key).rpushx(key, values)
+        self.get_state(key).rpushx(key, values)
     }
     pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
-        self.get_slot(&key).incr_by(key, value)
+        self.get_state(&key).incr_by(key, value)
     }
 
     pub(crate) fn expire_at(&self, key: String, expires_at: DateTime<Utc>) -> bool {
-        self.get_slot(&key).pexpire_at(key, expires_at)
+        self.get_state(&key).set_expires_at(key, expires_at).0
     }
     pub(crate) fn exists(&self, keys: Vec<String>) -> usize {
         keys.into_iter()
-            .filter(|key| self.get_slot(key).exists(key))
+            .filter(|key| self.get_state(key).exists(key))
             .count()
     }
 
@@ -76,7 +84,7 @@ impl Db {
     }
     pub(crate) fn del(&self, keys: Vec<String>) -> usize {
         keys.into_iter()
-            .filter(|key| self.get_slot(key).del(key).is_some())
+            .filter(|key| self.get_state(key).remove(key).is_some())
             .count()
     }
     pub(crate) fn set(

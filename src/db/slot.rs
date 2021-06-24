@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use chrono::{DateTime, Utc};
 use tokio::{
@@ -6,11 +6,7 @@ use tokio::{
     time,
 };
 
-use super::{
-    data::{Bytes, Data},
-    result::Result,
-    state::State,
-};
+use super::{data::Data, state::State};
 
 #[derive(Debug)]
 struct Shared {
@@ -54,6 +50,9 @@ pub(crate) struct Slot {
 }
 
 impl Slot {
+    pub(crate) fn get_state(&self) -> MutexGuard<'_, State> {
+        self.shared.state.lock().unwrap()
+    }
     /// Create a new, empty, `Slot` instance. Allocates shared state and spawns a
     /// background task to manage key expiration.
     pub(crate) fn new() -> Slot {
@@ -89,26 +88,6 @@ impl Slot {
         }
     }
 
-    pub(crate) fn exists(&self, key: &str) -> bool {
-        let state = self.shared.state.lock().unwrap();
-        state.exists(key)
-    }
-
-    pub(crate) fn pexpire_at(&self, key: String, expires_at: DateTime<Utc>) -> bool {
-        let mut state = self.shared.state.lock().unwrap();
-        state.set_expires_at(key, expires_at).0
-    }
-
-    pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
-        let mut state = self.shared.state.lock().unwrap();
-        state.incr_by(key, value)
-    }
-
-    // 删除，返回原来的值
-    pub(crate) fn del(&self, key: &str) -> Option<Data> {
-        let mut state = self.shared.state.lock().unwrap();
-        state.remove(key)
-    }
     /// Set the value associated with a key along with an optional expiration
     /// Duration.
     ///
@@ -200,22 +179,6 @@ impl Slot {
             // If there is no entry for the channel key, then there are no
             // subscribers. In this case, return `0`.
             .unwrap_or(0)
-    }
-    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
-        self.shared.state.lock().unwrap().lrange(key, start, stop)
-    }
-    pub(crate) fn lpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
-        self.shared.state.lock().unwrap().lpush(key, values)
-    }
-    pub(crate) fn lpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
-        self.shared.state.lock().unwrap().lpushx(key, values)
-    }
-    pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
-        self.shared.state.lock().unwrap().rpushx(key, values)
-    }
-
-    pub(crate) fn rpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
-        self.shared.state.lock().unwrap().rpush(key, values)
     }
 }
 
