@@ -1,13 +1,16 @@
 use std::sync::{Arc, Mutex};
 
-use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use tokio::{
     sync::{broadcast, Notify},
     time,
 };
 
-use super::{data::Data, result::Result, state::State};
+use super::{
+    data::{Bytes, Data},
+    result::Result,
+    state::State,
+};
 
 #[derive(Debug)]
 struct Shared {
@@ -70,15 +73,17 @@ impl Slot {
     /// Returns `None` if there is no value associated with the key. This may be
     /// due to never having assigned a value to the key or a previously assigned
     /// value expired.
-    pub(crate) fn get(&self, key: &str) -> Option<Bytes> {
+    pub(crate) fn get(&self, key: &str) -> Option<bytes::Bytes> {
         // Acquire the lock, get the entry and clone the value.
         //
         // Because data is stored using `Bytes`, a clone here is a shallow
         // clone. Data is not copied.
         let state = self.shared.state.lock().unwrap();
         match state.get_data(key) {
-            Some(&Data::Bytes(ref bytes)) => Some(bytes.clone()),
-            Some(&Data::Number(n)) => Some(Bytes::copy_from_slice(n.to_string().as_bytes())),
+            Some(&Data::Bytes(ref bytes)) => Some(bytes.get_inner_clone()),
+            Some(&Data::Number(ref n)) => {
+                Some(bytes::Bytes::copy_from_slice(n.to_string().as_bytes()))
+            }
             Some(_) => todo!("报错"),
             None => None,
         }
@@ -151,7 +156,7 @@ impl Slot {
     ///
     /// The returned `Receiver` is used to receive values broadcast by `PUBLISH`
     /// commands.
-    pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<Bytes> {
+    pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<bytes::Bytes> {
         use std::collections::hash_map::Entry;
 
         // Acquire the mutex
@@ -182,7 +187,7 @@ impl Slot {
 
     /// Publish a message to the channel. Returns the number of subscribers
     /// listening on the channel.
-    pub(crate) fn publish(&self, key: &str, value: Bytes) -> usize {
+    pub(crate) fn publish(&self, key: &str, value: bytes::Bytes) -> usize {
         let state = self.shared.state.lock().unwrap();
 
         state
@@ -195,6 +200,22 @@ impl Slot {
             // If there is no entry for the channel key, then there are no
             // subscribers. In this case, return `0`.
             .unwrap_or(0)
+    }
+    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
+        self.shared.state.lock().unwrap().lrange(key, start, stop)
+    }
+    pub(crate) fn lpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
+        self.shared.state.lock().unwrap().lpush(key, values)
+    }
+    pub(crate) fn lpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+        self.shared.state.lock().unwrap().lpushx(key, values)
+    }
+    pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+        self.shared.state.lock().unwrap().rpushx(key, values)
+    }
+
+    pub(crate) fn rpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
+        self.shared.state.lock().unwrap().rpush(key, values)
     }
 }
 

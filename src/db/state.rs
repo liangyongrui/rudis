@@ -5,27 +5,27 @@ use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 use tracing::debug;
 
-use super::{data::Data, result::Result};
+use super::data::Data;
 
 /// Entry in the key-value store
 #[derive(Debug)]
-struct Entry {
+pub struct Entry {
     /// Uniquely identifies this entry.
-    id: u64,
+    pub id: u64,
 
     /// Stored data
-    data: Data,
+    pub data: Data,
 
     /// Instant at which the entry expires and should be removed from the
     /// database.
-    expires_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug)]
 pub struct State {
     /// The key-value data. We are not trying to do anything fancy so a
     /// `std::collections::HashMap` works fine.
-    entries: HashMap<String, Entry>,
+    pub entries: HashMap<String, Entry>,
 
     /// The pub/sub key-space. Redis uses a **separate** key space for key-value
     /// and pub/sub. `rcc` handles this by using a separate `HashMap`.
@@ -62,6 +62,23 @@ impl State {
             next_id: 0,
             shutdown: false,
         }
+    }
+
+    pub fn get_or_insert_entry(
+        &mut self,
+        key: &str,
+        f: fn() -> (Data, Option<DateTime<Utc>>),
+    ) -> &mut Entry {
+        if !self.entries.contains_key(key) {
+            let (data, expires_at) = f();
+            let e = Entry {
+                id: self.next_id(),
+                data,
+                expires_at,
+            };
+            self.entries.insert(key.to_owned(), e);
+        }
+        self.entries.get_mut(key).unwrap()
     }
 
     /// Get and increment the next insertion ID.
@@ -196,46 +213,5 @@ impl State {
             }
             prev.data
         })
-    }
-
-    pub(crate) fn incr_by(&mut self, key: String, value: i64) -> Result<i64> {
-        let (old_value, new_entry) = if let Some(old) = self.entries.get(&key) {
-            match &old.data {
-                Data::Bytes(b) => {
-                    let old_value = std::str::from_utf8(&b[..])
-                        .map_err(|e| e.to_string())
-                        .and_then(|x| x.parse::<i64>().map_err(|e| e.to_string()))?;
-                    (
-                        old_value,
-                        Entry {
-                            id: old.id,
-                            expires_at: old.expires_at,
-                            data: Data::Number(value + old_value),
-                        },
-                    )
-                }
-                Data::Number(i) => (
-                    *i,
-                    Entry {
-                        id: old.id,
-                        expires_at: old.expires_at,
-                        data: Data::Number(value + i),
-                    },
-                ),
-                _ => return Err("type not support".to_owned()),
-            }
-        } else {
-            let id = self.next_id();
-            (
-                0,
-                Entry {
-                    id,
-                    data: Data::Number(value),
-                    expires_at: None,
-                },
-            )
-        };
-        self.entries.insert(key, new_entry);
-        Ok(old_value)
     }
 }

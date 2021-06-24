@@ -10,7 +10,7 @@ rust cloud cache
 ## todo
 
 1. [x] 多 slot (shard)
-   - [ ] 热 key 单独 slot（加锁转移）
+   - [ ] 热 key 单独 slot（加锁转移），动态计算持有锁的时间
 1. [ ] 复杂数据结构(大 key), 持久化数据结构 mvcc
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
@@ -42,12 +42,17 @@ base
 
 list
 
-1. [ ] rpush
-1. [ ] lpush
+1. [x] lpush
+1. [x] rpush
+1. [ ] rpushx
+1. [ ] lpushx
 1. [ ] lrange
 1. [ ] lpop
 1. [ ] rpop
 1. [ ] llen
+1. [ ] ltrim
+1. [ ] lset
+1. [ ] lindex
 
 hash
 

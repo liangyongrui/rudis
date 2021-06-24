@@ -1,50 +1,48 @@
-mod get;
-pub use get::Get;
-
-mod publish;
-pub use publish::Publish;
-
-mod set;
-pub use set::Set;
-
-mod subscribe;
-pub use subscribe::{Subscribe, Unsubscribe};
-
-mod unknown;
-pub use unknown::Unknown;
-
-mod psetex;
-pub use psetex::Psetex;
-
-mod setex;
-pub use setex::Setex;
-
-mod del;
-pub use del::Del;
-
-mod exists;
-pub use exists::Exists;
-
-mod pexpireat;
-pub use pexpireat::Pexpireat;
-
-mod expireat;
-pub use expireat::Expireat;
-
-mod expire;
-pub use expire::Expire;
-
-mod pexpire;
-pub use pexpire::Pexpire;
-
-mod incrby;
-pub use incrby::Incrby;
-mod incr;
-pub use incr::Incr;
 mod decr;
-pub use decr::Decr;
 mod decrby;
+mod del;
+mod exists;
+mod expire;
+mod expireat;
+mod get;
+mod incr;
+mod incrby;
+mod lpush;
+mod lpushx;
+mod lrange;
+mod pexpire;
+mod pexpireat;
+mod psetex;
+mod publish;
+mod rpush;
+mod rpushx;
+mod set;
+mod setex;
+mod subscribe;
+mod unknown;
+
+pub use decr::Decr;
 pub use decrby::Decrby;
+pub use del::Del;
+pub use exists::Exists;
+pub use expire::Expire;
+pub use expireat::Expireat;
+pub use get::Get;
+pub use incr::Incr;
+pub use incrby::Incrby;
+pub use lpush::Lpush;
+pub use lpushx::Lpushx;
+pub use lrange::Lrange;
+pub use pexpire::Pexpire;
+pub use pexpireat::Pexpireat;
+pub use psetex::Psetex;
+pub use publish::Publish;
+pub use rpush::Rpush;
+pub use rpushx::Rpushx;
+pub use set::Set;
+pub use setex::Setex;
+pub use subscribe::{Subscribe, Unsubscribe};
+pub use unknown::Unknown;
 
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
@@ -53,6 +51,11 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Lrange(Lrange),
+    Lpush(Lpush),
+    Rpush(Rpush),
+    Lpushx(Lpushx),
+    Rpushx(Rpushx),
     Incrby(Incrby),
     Incr(Incr),
     Decr(Decr),
@@ -98,6 +101,11 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "lrange" => Command::Lrange(Lrange::parse_frames(&mut parse)?),
+            "lpush" => Command::Lpush(Lpush::parse_frames(&mut parse)?),
+            "rpush" => Command::Rpush(Rpush::parse_frames(&mut parse)?),
+            "lpushx" => Command::Lpushx(Lpushx::parse_frames(&mut parse)?),
+            "rpushx" => Command::Rpushx(Rpushx::parse_frames(&mut parse)?),
             "incrby" => Command::Incrby(Incrby::parse_frames(&mut parse)?),
             "incr" => Command::Incr(Incr::parse_frames(&mut parse)?),
             "decrby" => Command::Decrby(Decrby::parse_frames(&mut parse)?),
@@ -168,6 +176,11 @@ impl Command {
             Incr(cmd) => cmd.apply(db, dst).await,
             Decr(cmd) => cmd.apply(db, dst).await,
             Decrby(cmd) => cmd.apply(db, dst).await,
+            Lpush(cmd) => cmd.apply(db, dst).await,
+            Rpush(cmd) => cmd.apply(db, dst).await,
+            Lpushx(cmd) => cmd.apply(db, dst).await,
+            Rpushx(cmd) => cmd.apply(db, dst).await,
+            Lrange(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -192,6 +205,11 @@ impl Command {
             Command::Incr(_) => "incr",
             Command::Decr(_) => "decr",
             Command::Decrby(_) => "decrby",
+            Command::Lpush(_) => "lpush",
+            Command::Rpush(_) => "rpush",
+            Command::Lpushx(_) => "lpushx",
+            Command::Rpushx(_) => "rpushx",
+            Command::Lrange(_) => "lrange",
         }
     }
 }

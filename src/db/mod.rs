@@ -1,4 +1,4 @@
-mod data;
+pub mod data;
 mod result;
 mod slot;
 mod state;
@@ -10,12 +10,11 @@ use std::{
     usize,
 };
 
-use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 
 pub use self::data::Data;
-use self::{result::Result, slot::Slot};
+use self::{data::Bytes, result::Result, slot::Slot};
 
 const SIZE: usize = 1024;
 
@@ -44,6 +43,21 @@ impl Db {
         }
     }
 
+    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
+        self.get_slot(key).lrange(key, start, stop)
+    }
+    pub(crate) fn lpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
+        self.get_slot(&key).lpush(key, values)
+    }
+    pub(crate) fn rpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
+        self.get_slot(&key).rpush(key, values)
+    }
+    pub(crate) fn lpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+        self.get_slot(key).lpushx(key, values)
+    }
+    pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+        self.get_slot(key).rpushx(key, values)
+    }
     pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
         self.get_slot(&key).incr_by(key, value)
     }
@@ -57,7 +71,7 @@ impl Db {
             .count()
     }
 
-    pub(crate) fn get(&self, key: &str) -> Option<Bytes> {
+    pub(crate) fn get(&self, key: &str) -> Option<bytes::Bytes> {
         self.get_slot(key).get(key)
     }
     pub(crate) fn del(&self, keys: Vec<String>) -> usize {
@@ -72,23 +86,23 @@ impl Db {
         nxxx: Option<bool>,
         expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
-    ) -> Option<Bytes> {
+    ) -> Option<bytes::Bytes> {
         match self
             .get_slot(&key)
             .set(key, value, nxxx, expires_at, keepttl)
         {
-            Some(Data::Bytes(bytes)) => Some(bytes),
-            Some(Data::Number(n)) => Some(Bytes::copy_from_slice(n.to_string().as_bytes())),
+            Some(Data::Bytes(bytes)) => Some(bytes.get_inner_clone()),
+            Some(Data::Number(n)) => Some(bytes::Bytes::copy_from_slice(n.to_string().as_bytes())),
             Some(_) => todo!("报错"),
             None => None,
         }
     }
 
-    pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<Bytes> {
+    pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<bytes::Bytes> {
         self.get_slot(&key).subscribe(key)
     }
 
-    pub(crate) fn publish(&self, key: &str, value: Bytes) -> usize {
+    pub(crate) fn publish(&self, key: &str, value: bytes::Bytes) -> usize {
         self.get_slot(&key).publish(key, value)
     }
 }

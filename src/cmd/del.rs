@@ -11,7 +11,7 @@ pub struct Del {
 
 impl Del {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Del> {
-        let mut keys = vec![];
+        let mut keys = vec![parse.next_string()?];
         loop {
             match parse.next_string() {
                 Ok(key) => keys.push(key),
