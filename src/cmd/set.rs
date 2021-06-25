@@ -4,6 +4,7 @@ use tracing::{debug, instrument};
 
 use crate::{
     cmd::{Parse, ParseError},
+    db::data_type::SimpleType,
     Connection, Db, Frame,
 };
 
@@ -172,8 +173,12 @@ impl Set {
                 self.expires_at,
                 self.keepttl,
             ) {
-                Some(b) => Frame::Bulk(b),
-                None => Frame::Null,
+                Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value.get_inner()),
+                Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
+                Ok(Some(SimpleType::Number(value))) => Frame::Integer(value.0),
+                Ok(Some(_)) => Frame::Error("未实现".to_owned()),
+                Ok(None) => Frame::Null,
+                Err(e) => Frame::Error(e),
             }
         } else {
             // Create a success response and write it to `dst`.

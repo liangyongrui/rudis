@@ -1,13 +1,13 @@
 use std::ops::Deref;
 
-use super::Data;
+use super::{DataType, SimpleType};
 use crate::db::{
     result::Result,
     state::{Entry, State},
 };
 
 #[derive(Debug, Clone)]
-pub struct Number(i64);
+pub struct Number(pub i64);
 
 impl Deref for Number {
     type Target = i64;
@@ -29,9 +29,15 @@ impl Number {
     }
 }
 
-impl From<i64> for Data {
+impl From<i64> for DataType {
     fn from(n: i64) -> Self {
-        Data::Number(Number(n))
+        DataType::SimpleType(SimpleType::Number(Number(n)))
+    }
+}
+
+impl From<i64> for SimpleType {
+    fn from(n: i64) -> Self {
+        SimpleType::Number(Number(n))
     }
 }
 
@@ -39,10 +45,8 @@ impl State {
     pub(crate) fn incr_by(&mut self, key: String, value: i64) -> Result<i64> {
         if let Some(old) = self.entries.get(&key) {
             let (old_value, new_entry) = match &old.data {
-                Data::Bytes(b) => {
-                    let old_value = std::str::from_utf8(&b[..])
-                        .map_err(|e| e.to_string())
-                        .and_then(|x| x.parse::<i64>().map_err(|e| e.to_string()))?;
+                DataType::SimpleType(SimpleType::SimpleString(s)) => {
+                    let old_value = s.parse::<i64>().map_err(|e| e.to_string())?;
                     (
                         old_value,
                         Entry {
@@ -52,7 +56,7 @@ impl State {
                         },
                     )
                 }
-                Data::Number(Number(i)) => (
+                DataType::SimpleType(SimpleType::Number(Number(i))) => (
                     *i,
                     Entry {
                         id: old.id,

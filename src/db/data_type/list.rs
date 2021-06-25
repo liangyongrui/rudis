@@ -4,7 +4,7 @@ use std::{
     usize,
 };
 
-use super::{bytes::Bytes, Data};
+use super::{blob::Blob, AggregateType, DataType};
 use crate::db::{result::Result, state::State};
 
 /// redis list 中元素顺序 和  VecDeque 的内存顺序关系
@@ -12,10 +12,10 @@ use crate::db::{result::Result, state::State};
 /// front.....back
 
 #[derive(Debug, Clone)]
-pub struct List(VecDeque<Bytes>);
+pub struct List(VecDeque<Blob>);
 
 impl Deref for List {
-    type Target = VecDeque<Bytes>;
+    type Target = VecDeque<Blob>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -50,28 +50,33 @@ impl List {
 }
 impl State {
     fn get_or_new_list(&mut self, key: String) -> Result<&mut List> {
-        let entry = self.get_or_insert_entry(&key, || (Data::List(List(VecDeque::new())), None));
+        let entry = self.get_or_insert_entry(&key, || {
+            (
+                DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
+                None,
+            )
+        });
         match entry.data {
-            Data::List(ref mut list) => Ok(list),
+            DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
             _ => Err("the value stored at key is not a list.".to_owned()),
         }
     }
 
     fn get_list(&self, key: &str) -> Option<Result<&List>> {
         self.entries.get(key).map(|e| match e.data {
-            Data::List(ref list) => Ok(list),
+            DataType::AggregateType(AggregateType::List(ref list)) => Ok(list),
             _ => Err("the value stored at key is not a list.".to_owned()),
         })
     }
 
     fn get_list_mut(&mut self, key: &str) -> Option<Result<&mut List>> {
         self.entries.get_mut(key).map(|e| match e.data {
-            Data::List(ref mut list) => Ok(list),
+            DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
             _ => Err("the value stored at key is not a list.".to_owned()),
         })
     }
 
-    pub(crate) fn lpushx(&mut self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn lpushx(&mut self, key: &str, values: Vec<Blob>) -> Result<usize> {
         match self.get_list_mut(key) {
             Some(r) => {
                 let list = r?;
@@ -84,7 +89,7 @@ impl State {
         }
     }
 
-    pub(crate) fn rpushx(&mut self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn rpushx(&mut self, key: &str, values: Vec<Blob>) -> Result<usize> {
         match self.get_list_mut(key) {
             Some(r) => {
                 let list = r?;
@@ -96,7 +101,7 @@ impl State {
             None => Ok(0),
         }
     }
-    pub(crate) fn lpush(&mut self, key: String, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn lpush(&mut self, key: String, values: Vec<Blob>) -> Result<usize> {
         let list = self.get_or_new_list(key)?;
         for v in values {
             list.push_front(v)
@@ -104,7 +109,7 @@ impl State {
         Ok(list.len())
     }
 
-    pub(crate) fn rpush(&mut self, key: String, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn rpush(&mut self, key: String, values: Vec<Blob>) -> Result<usize> {
         let list = self.get_or_new_list(key)?;
         for v in values {
             list.push_back(v)
@@ -112,7 +117,7 @@ impl State {
         Ok(list.len())
     }
 
-    pub(crate) fn lpop(&mut self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
+    pub(crate) fn lpop(&mut self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
         match self.get_list_mut(key) {
             Some(r) => {
                 let list = r?;
@@ -130,7 +135,7 @@ impl State {
         }
     }
 
-    pub(crate) fn rpop(&mut self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
+    pub(crate) fn rpop(&mut self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
         match self.get_list_mut(key) {
             Some(r) => {
                 let list = r?;
@@ -148,7 +153,7 @@ impl State {
         }
     }
 
-    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
+    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Blob>> {
         match self.get_list(key) {
             Some(e) => {
                 let list = e?;

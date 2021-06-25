@@ -1,12 +1,12 @@
 use tracing::{debug, instrument};
 
-use crate::{db::data::Bytes, parse::ParseError, Connection, Db, Frame, Parse};
+use crate::{db::data_type::Blob, parse::ParseError, Connection, Db, Frame, Parse};
 
 /// https://redis.io/commands/rpush
 #[derive(Debug)]
 pub struct Rpush {
     key: String,
-    values: Vec<Bytes>,
+    values: Vec<Blob>,
 }
 
 impl Rpush {

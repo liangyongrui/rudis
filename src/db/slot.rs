@@ -6,7 +6,7 @@ use tokio::{
     time,
 };
 
-use super::{data::Data, state::State};
+use super::{data_type::SimpleType, result::Result, state::State};
 
 #[derive(Debug)]
 struct Shared {
@@ -67,26 +67,26 @@ impl Slot {
         Slot { shared }
     }
 
-    /// Get the value associated with a key.
-    ///
-    /// Returns `None` if there is no value associated with the key. This may be
-    /// due to never having assigned a value to the key or a previously assigned
-    /// value expired.
-    pub(crate) fn get(&self, key: &str) -> Option<bytes::Bytes> {
-        // Acquire the lock, get the entry and clone the value.
-        //
-        // Because data is stored using `Bytes`, a clone here is a shallow
-        // clone. Data is not copied.
-        let state = self.shared.state.lock().unwrap();
-        match state.get_data(key) {
-            Some(&Data::Bytes(ref bytes)) => Some(bytes.get_inner_clone()),
-            Some(&Data::Number(ref n)) => {
-                Some(bytes::Bytes::copy_from_slice(n.to_string().as_bytes()))
-            }
-            Some(_) => todo!("报错"),
-            None => None,
-        }
-    }
+    // /// Get the value associated with a key.
+    // ///
+    // /// Returns `None` if there is no value associated with the key. This may be
+    // /// due to never having assigned a value to the key or a previously assigned
+    // /// value expired.
+    // pub(crate) fn get(&self, key: &str) -> Option<bytes::Bytes> {
+    //     // Acquire the lock, get the entry and clone the value.
+    //     //
+    //     // Because data is stored using `Bytes`, a clone here is a shallow
+    //     // clone. Data is not copied.
+    //     let state = self.shared.state.lock().unwrap();
+    //     match state.get_data(key) {
+    //         Some(&DataType::Bytes(ref bytes)) => Some(bytes.get_inner_clone()),
+    //         Some(&DataType::Number(ref n)) => {
+    //             Some(bytes::Bytes::copy_from_slice(n.to_string().as_bytes()))
+    //         }
+    //         Some(_) => todo!("报错"),
+    //         None => None,
+    //     }
+    // }
 
     /// Set the value associated with a key along with an optional expiration
     /// Duration.
@@ -95,28 +95,28 @@ impl Slot {
     pub(crate) fn set(
         &self,
         key: String,
-        value: Data,
+        value: SimpleType,
         nxxx: Option<bool>,
         mut expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
-    ) -> Option<Data> {
+    ) -> Result<Option<SimpleType>> {
         let mut state = self.shared.state.lock().unwrap();
 
-        let mut old_value = None;
+        let mut old_value = state.get_simple(&key)?.cloned();
         let need_update = if let Some(nx) = nxxx {
-            old_value = state.get_data(&key).cloned();
+            // old_value = state.get_data(&key).cloned();
             let c = old_value.is_some();
             (nx && !c) || (!nx && c)
         } else {
             true
         };
         if !need_update {
-            return old_value;
+            return Ok(old_value);
         }
         if keepttl {
             expires_at = state.get_expires_at(&key);
         }
-        let (ov, notify) = state.update(key, value, expires_at);
+        let (ov, notify) = state.update_simple(key, value, expires_at);
         old_value = ov;
         // Release the mutex before notifying the background task. This helps
         // reduce contention by avoiding the background task waking up only to
@@ -128,7 +128,7 @@ impl Slot {
             // its state to reflect a new expiration.
             self.shared.background_task.notify_one();
         }
-        old_value
+        Ok(old_value)
     }
 
     /// Returns a `Receiver` for the requested channel.

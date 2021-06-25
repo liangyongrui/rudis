@@ -56,10 +56,14 @@ list
 
 hash
 
+1. [ ] hget
+1. [ ] hmget
 1. [ ] hgetAll
 1. [ ] hset
 1. [ ] hsetnx
 1. [ ] hdel
+1. [ ] hexists
+1. [ ] hincrby
 
 set
 

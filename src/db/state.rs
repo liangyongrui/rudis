@@ -1,11 +1,17 @@
-use std::collections::{BTreeMap, HashMap};
+use std::{
+    collections::{BTreeMap, HashMap},
+    convert::TryInto,
+};
 
 use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use tokio::sync::broadcast;
 use tracing::debug;
 
-use super::data::Data;
+use super::{
+    data_type::{DataType, SimpleType},
+    result::Result,
+};
 
 /// Entry in the key-value store
 #[derive(Debug)]
@@ -14,7 +20,7 @@ pub struct Entry {
     pub id: u64,
 
     /// Stored data
-    pub data: Data,
+    pub data: DataType,
 
     /// Instant at which the entry expires and should be removed from the
     /// database.
@@ -64,10 +70,21 @@ impl State {
         }
     }
 
+    pub fn get_simple(&self, key: &str) -> Result<Option<&SimpleType>> {
+        match self.entries.get(key) {
+            Some(Entry {
+                data: DataType::SimpleType(s),
+                ..
+            }) => Ok(Some(s)),
+            Some(_) => Err("类型错误".to_string()),
+            None => Ok(None),
+        }
+    }
+
     pub fn get_or_insert_entry(
         &mut self,
         key: &str,
-        f: fn() -> (Data, Option<DateTime<Utc>>),
+        f: fn() -> (DataType, Option<DateTime<Utc>>),
     ) -> &mut Entry {
         if !self.entries.contains_key(key) {
             let (data, expires_at) = f();
@@ -101,10 +118,6 @@ impl State {
 
     pub fn get_expires_at(&self, key: &str) -> Option<DateTime<Utc>> {
         self.entries.get(key).and_then(|t| t.expires_at)
-    }
-
-    pub fn get_data(&self, key: &str) -> Option<&Data> {
-        self.entries.get(key).map(|t| &t.data)
     }
 
     /// Purge all expired keys and return the `Instant` at which the **next**
@@ -167,13 +180,13 @@ impl State {
         }
     }
 
-    /// get old data and update
-    pub fn update(
+    /// 调用之前需要自己保证原始值的value 为 simpleType 或 不存在
+    pub fn update_simple(
         &mut self,
         key: String,
-        value: Data,
+        value: SimpleType,
         expires_at: Option<DateTime<Utc>>,
-    ) -> (Option<Data>, bool) {
+    ) -> (Option<SimpleType>, bool) {
         let id = self.next_id();
         let notify = if let Some(expires_at) = expires_at {
             let res = self
@@ -191,7 +204,7 @@ impl State {
             key,
             Entry {
                 id,
-                data: value,
+                data: value.into(),
                 expires_at,
             },
         );
@@ -202,10 +215,10 @@ impl State {
             }
             prev.data
         });
-        (old_value, notify)
+        (old_value.map(|t| t.try_into().unwrap()), notify)
     }
 
-    pub fn remove(&mut self, key: &str) -> Option<Data> {
+    pub fn remove(&mut self, key: &str) -> Option<DataType> {
         self.entries.remove(key).map(|prev| {
             if let Some(when) = prev.expires_at {
                 // clear expiration
