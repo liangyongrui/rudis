@@ -1,7 +1,7 @@
 use bytes::Bytes;
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
+use crate::{Connection, Db, Frame, Parse};
 
 /// Get the value of key.
 ///
@@ -63,15 +63,11 @@ impl Get {
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         // Get the value from the shared database state
-        let response = match db.get(&self.key) {
-            Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value.get_inner()),
-            Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
-            Ok(Some(SimpleType::Number(value))) => Frame::Integer(value.0),
-            Ok(Some(_)) => Frame::Error("未实现".to_owned()),
-            Ok(None) => Frame::Null,
-            Err(e) => Frame::Error(e),
-        };
 
+        let response = db
+            .get(&self.key)
+            .map(|t| t.map(|x| x.into()).unwrap_or_else(|| Frame::Null))
+            .unwrap_or_else(Frame::Error);
         debug!(?response);
 
         // Write the response back to the client

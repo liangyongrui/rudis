@@ -47,7 +47,7 @@ impl Parse {
 
     /// Return the next entry. Array frames are arrays of frames, so the next
     /// entry is a frame.
-    fn next(&mut self) -> Result<Frame, ParseError> {
+    pub fn next(&mut self) -> Result<Frame, ParseError> {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 

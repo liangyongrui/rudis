@@ -16,7 +16,7 @@ pub struct Set {
     /// the lookup key
     key: String,
     /// the value to be stored
-    value: Bytes,
+    value: SimpleType,
     // None not set, true nx, false xx
     nxxx: Option<bool>,
     /// When to expire the key
@@ -31,7 +31,7 @@ impl Set {
     /// Create a new `Set` command which sets `key` to `value`.
     pub fn new(
         key: impl ToString,
-        value: Bytes,
+        value: SimpleType,
         nxxx: Option<bool>,
         expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
@@ -74,7 +74,17 @@ impl Set {
         let key = parse.next_string()?;
 
         // Read the value to set. This is a required field.
-        let value = parse.next_bytes()?;
+        let value = match { parse.next()? } {
+            Frame::Simple(s) => SimpleType::SimpleString(s),
+            Frame::Bulk(data) => data.into(),
+            frame => {
+                return Err(format!(
+                    "protocol error; expected simple frame or bulk frame, got {:?}",
+                    frame
+                )
+                .into())
+            }
+        };
 
         // The expiration is optional. If nothing else follows, then it is
         // `None`.
@@ -169,7 +179,7 @@ impl Set {
             match db
                 .set(
                     self.key,
-                    self.value.into(),
+                    self.value,
                     self.nxxx,
                     self.expires_at,
                     self.keepttl,
@@ -201,7 +211,7 @@ impl Set {
         let mut frame = Frame::array();
         frame.push_bulk(Bytes::from("set".as_bytes()));
         frame.push_bulk(Bytes::from(self.key.into_bytes()));
-        frame.push_bulk(self.value);
+        frame.push_bulk(self.value.into());
         if let Some(nx) = self.nxxx {
             frame.push_bulk(Bytes::from(if nx { "NX" } else { "XX" }.as_bytes()));
         }
