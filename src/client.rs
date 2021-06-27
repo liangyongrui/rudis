@@ -169,7 +169,6 @@ impl Client {
         // Create a `Set` command and pass it to `set_cmd`. A separate method is
         // used to set a value with an expiration. The common parts of both
         // functions are implemented by `set_cmd`.
-        // todo
         self.set_cmd(Set::new(key, value, nxxx, expires_at, false, false))
             .await
     }

@@ -51,21 +51,7 @@ impl List {
         (start as usize, stop as usize + 1)
     }
 }
-// #[macro_export]
-// macro_rules! get_or_new_list2 {
-//     ($self:ident, $key:expr) => {{
-//         let mut entry = $self.get_or_insert_entry($key, || {
-//             (
-//                 DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
-//                 None,
-//             )
-//         });
-//         match entry.data {
-//             DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
-//             _ => Err("the value stored at key is not a list.".to_owned()),
-//         }
-//     }};
-// }
+
 impl Slot {
     fn process_list<T, F: FnOnce(&List) -> T>(
         &self,
@@ -122,26 +108,6 @@ impl Slot {
             _ => Err("the value stored at key is not a list.".to_owned()),
         }
     }
-
-    // fn get_or_new_list(&self, key: &str) -> Result<&mut List> {
-    //     let mut entry = self.get_or_insert_entry(key, || {
-    //         (
-    //             DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
-    //             None,
-    //         )
-    //     });
-    //     match entry.data {
-    //         DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
-    //         _ => Err("the value stored at key is not a list.".to_owned()),
-    //     }
-    // }
-
-    // fn get_list_mut(&self, key: &str) -> Option<Result<&mut List>> {
-    //     self.entries.get_mut(key).map(|mut e| match e.data {
-    //         DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
-    //         _ => Err("the value stored at key is not a list.".to_owned()),
-    //     })
-    // }
 
     pub(crate) fn lpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
         self.mut_process_list(

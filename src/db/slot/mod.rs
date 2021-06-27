@@ -61,7 +61,6 @@ impl Slot {
         }
     }
 
-    // pub fn del(&mut self, key)
     pub fn get_simple(&self, key: &str) -> Result<Option<SimpleType>> {
         match self.entries.get(key) {
             Some(s) => match s.value() {
@@ -98,13 +97,6 @@ impl Slot {
             .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
     }
 
-    // fn next_expiration(&self) -> Option<DateTime<Utc>> {
-    //     self.expirations
-    //         .keys()
-    //         .next()
-    //         .map(|expiration| expiration.0)
-    // }
-
     pub fn exists(&self, key: &str) -> bool {
         self.entries.contains_key(key)
     }
@@ -113,57 +105,12 @@ impl Slot {
         self.entries.get(key).and_then(|t| t.expires_at)
     }
 
-    /// Purge all expired keys and return the `Instant` at which the **next**
-    /// key will expire. The background task will sleep until this instant.
-    // pub fn purge_expired_keys(&mut self) -> Option<DateTime<Utc>> {
-    //     if self.shutdown {
-    //         // The database is shutting down. All handles to the shared state
-    //         // have dropped. The background task should exit.
-    //         return None;
-    //     }
-
-    //     // This is needed to make the borrow checker happy. In short, `lock()`
-    //     // returns a `MutexGuard` and not a `&mut State`. The borrow checker is
-    //     // not able to see "through" the mutex guard and determine that it is
-    //     // safe to access both `state.expirations` and `state.entries` mutably,
-    //     // so we get a "real" mutable reference to `State` outside of the loop.
-    //     // let state = &mut *state;
-
-    //     // Find all keys scheduled to expire **before** now.
-    //     let now = Utc::now();
-
-    //     // 因为只需要处理头部元素，所有这里每次产生一个新的迭代器是安全的, 等first_entry stable 可以替换
-    //     while let Some((&(when, id), key)) = self.expirations.iter().next() {
-    //         if when > now {
-    //             // Done purging, `when` is the instant at which the next key
-    //             // expires. The worker task will wait until this instant.
-    //             return Some(when);
-    //         }
-    //         debug!("purge_expired_keys: {}", key);
-    //         // The key expired, remove it
-    //         self.entries.remove(key);
-    //         self.expirations.remove(&(when, id));
-    //     }
-    //     None
-    // }
-
-    /// return (old value exist, notify)
-    pub fn set_expires_at(&self, key: String, expires_at: DateTime<Utc>) -> (bool, bool) {
-        todo!()
-        // let notify = self
-        //     .next_expiration()
-        //     .map(|expiration| expiration > expires_at)
-        //     .unwrap_or(true);
-        // if let Some(entry) = self.entries.get_mut(&key) {
-        //     if let Some(old_when) = entry.expires_at {
-        //         self.expirations.remove(&(old_when, entry.id));
-        //         self.expirations.insert((expires_at, entry.id), key);
-        //     }
-        //     entry.expires_at = Some(expires_at);
-        //     (true, notify)
-        // } else {
-        //     (false, notify)
-        // }
+    pub fn set_expires_at(&self, key: String, new_time: DateTime<Utc>) -> bool {
+        self.entries
+            .get(&key)
+            .and_then(|t| t.expires_at.map(|p| (p, t.id)))
+            .map(|(pre_time, id)| self.expirations.update(id, pre_time, new_time))
+            .unwrap_or(false)
     }
 
     /// 调用之前需要自己保证原始值的value 为 simpleType 或 不存在
@@ -229,7 +176,7 @@ impl Slot {
     ///
     /// The returned `Receiver` is used to receive values broadcast by `PUBLISH`
     /// commands.
-    pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<bytes::Bytes> {
+    pub(crate) fn subscribe(&self, _key: String) -> broadcast::Receiver<bytes::Bytes> {
         todo!()
         // use std::collections::hash_map::Entry;
         // // If there is no entry for the requested channel, then create a new

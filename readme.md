@@ -4,7 +4,7 @@ rust cloud cache
 
 ## 特点
 
-1. 异步删除（不会再阻塞 get）
+1. 异步删除
 1. 并发
 
 ## todo

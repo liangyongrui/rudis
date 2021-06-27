@@ -74,7 +74,7 @@ impl Db {
     }
 
     pub(crate) fn expires_at(&self, key: String, expires_at: DateTime<Utc>) -> bool {
-        self.get_slot(&key).set_expires_at(key, expires_at).0
+        self.get_slot(&key).set_expires_at(key, expires_at)
     }
     pub(crate) fn exists(&self, keys: Vec<String>) -> usize {
         keys.into_iter()

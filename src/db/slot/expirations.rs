@@ -21,10 +21,12 @@ pub struct ExpirationEntry {
     pub key: String,
     pub expires_at: DateTime<Utc>,
 }
+
 #[derive(Debug)]
 pub struct Expiration {
     pub sender: Sender<ExpirationEntry>,
     data: Arc<Mutex<Data>>,
+    notify: Arc<Notify>,
 }
 
 #[derive(Debug)]
@@ -53,11 +55,15 @@ impl Expiration {
             receiver,
         ));
         tokio::spawn(Expiration::purge_expired_tasks(
-            notify,
+            Arc::clone(&notify),
             Arc::clone(&data),
             entry,
         ));
-        Self { sender, data }
+        Self {
+            sender,
+            data,
+            notify,
+        }
     }
 
     fn is_shutdown(data: &Mutex<Data>) -> bool {
@@ -90,13 +96,40 @@ impl Expiration {
         data.lock().unwrap().shutdown = true;
     }
 
+    /// fixme: 这个操作是同步的，不过在对底层 对性能影响不大
+    pub fn update(&self, id: u64, pre_time: DateTime<Utc>, new_time: DateTime<Utc>) -> bool {
+        let mut data = self.data.lock().unwrap();
+        data.expirations
+            .keys()
+            .next()
+            .map(|expiration| expiration.0 > new_time)
+            .unwrap_or(true);
+        let key = data.expirations.get(&(pre_time, id)).cloned();
+        let (res, need_notify) = if let Some(key) = key {
+            let need_notify = data
+                .expirations
+                .keys()
+                .next()
+                .map(|expiration| expiration.0 > new_time)
+                .unwrap_or(true);
+            data.expirations.insert((new_time, id), key);
+            (true, need_notify)
+        } else {
+            (false, false)
+        };
+        drop(data);
+        if need_notify {
+            self.notify.notify_one();
+        }
+        res
+    }
     async fn purge_expired_tasks(
         notify: Arc<Notify>,
         data: Arc<Mutex<Data>>,
         entry: Arc<DashMap<String, Entry>>,
     ) {
         while !Expiration::is_shutdown(&data) {
-            if let Some(when) = Expiration::purge_expired_keys(&data, &entry).await {
+            if let Some(when) = Expiration::purge_expired_keys(&data, &entry) {
                 tokio::select! {
                     _ = time::sleep((when - Utc::now()).to_std().unwrap()) =>{}
                     _ = notify.notified() => {}
@@ -109,7 +142,7 @@ impl Expiration {
         }
     }
 
-    pub async fn purge_expired_keys(
+    fn purge_expired_keys(
         data: &Mutex<Data>,
         entry: &DashMap<String, Entry>,
     ) -> Option<DateTime<Utc>> {
@@ -120,9 +153,12 @@ impl Expiration {
             if when > now {
                 return Some(when);
             }
-            debug!("purge_expired_keys: {}", key);
-            // todo 判断id 是不是最新版
-            entry.remove(key);
+            if let Some(e) = entry.get(key) {
+                if e.id == id {
+                    debug!("purge_expired_keys: {}", key);
+                    entry.remove(key);
+                }
+            }
             data.expirations.remove(&(when, id));
         }
         None
