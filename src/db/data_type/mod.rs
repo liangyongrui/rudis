@@ -44,6 +44,7 @@ impl TryFrom<DataType> for SimpleType {
         }
     }
 }
+
 impl From<SimpleType> for DataType {
     fn from(s: SimpleType) -> Self {
         DataType::SimpleType(s)

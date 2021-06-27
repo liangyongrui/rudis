@@ -29,13 +29,16 @@ impl Psetex {
     /// to execute a received command.
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let response = if let Err(e) = db.set(
-            self.key,
-            self.value.into(),
-            None,
-            Utc::now().checked_add_signed(Duration::milliseconds(self.milliseconds as i64)),
-            false,
-        ) {
+        let response = if let Err(e) = db
+            .set(
+                self.key,
+                self.value.into(),
+                None,
+                Utc::now().checked_add_signed(Duration::milliseconds(self.milliseconds as i64)),
+                false,
+            )
+            .await
+        {
             Frame::Error(e)
         } else {
             Frame::Simple("OK".to_string())

@@ -14,13 +14,20 @@ use tokio::{
 };
 use tracing::debug;
 
-use crate::db::DataType;
+use super::Entry;
 
+pub struct ExpirationEntry {
+    pub id: u64,
+    pub key: String,
+    pub expires_at: DateTime<Utc>,
+}
+#[derive(Debug)]
 pub struct Expiration {
-    sender: Sender<(DateTime<Utc>, u64, String)>,
+    pub sender: Sender<ExpirationEntry>,
     data: Arc<Mutex<Data>>,
 }
 
+#[derive(Debug)]
 pub struct Data {
     expirations: BTreeMap<(DateTime<Utc>, u64), String>,
     shutdown: bool,
@@ -36,7 +43,7 @@ impl Data {
 }
 
 impl Expiration {
-    pub fn new(entry: Arc<DashMap<String, DataType>>) -> Self {
+    pub fn new(entry: Arc<DashMap<String, Entry>>) -> Self {
         let notify = Arc::new(Notify::new());
         let data = Arc::new(Mutex::new(Data::new()));
         let (sender, receiver) = mpsc::channel(100);
@@ -59,17 +66,22 @@ impl Expiration {
     async fn receiver_listener(
         notify: Arc<Notify>,
         data: Arc<Mutex<Data>>,
-        mut receiver: Receiver<(DateTime<Utc>, u64, String)>,
+        mut receiver: Receiver<ExpirationEntry>,
     ) {
-        while let Some((time, id, key)) = receiver.recv().await {
+        while let Some(ExpirationEntry {
+            id,
+            key,
+            expires_at,
+        }) = receiver.recv().await
+        {
             let mut data = data.lock().unwrap();
             let need_notify = data
                 .expirations
                 .keys()
                 .next()
-                .map(|expiration| expiration.0 > time)
+                .map(|expiration| expiration.0 > expires_at)
                 .unwrap_or(true);
-            data.expirations.insert((time, id), key);
+            data.expirations.insert((expires_at, id), key);
             drop(data);
             if need_notify {
                 notify.notify_one();
@@ -81,7 +93,7 @@ impl Expiration {
     async fn purge_expired_tasks(
         notify: Arc<Notify>,
         data: Arc<Mutex<Data>>,
-        entry: Arc<DashMap<String, DataType>>,
+        entry: Arc<DashMap<String, Entry>>,
     ) {
         while !Expiration::is_shutdown(&data) {
             if let Some(when) = Expiration::purge_expired_keys(&data, &entry).await {
@@ -99,7 +111,7 @@ impl Expiration {
 
     pub async fn purge_expired_keys(
         data: &Mutex<Data>,
-        entry: &DashMap<String, DataType>,
+        entry: &DashMap<String, Entry>,
     ) -> Option<DateTime<Utc>> {
         let now = Utc::now();
         let mut data = data.lock().unwrap();
@@ -109,6 +121,7 @@ impl Expiration {
                 return Some(when);
             }
             debug!("purge_expired_keys: {}", key);
+            // todo 判断id 是不是最新版
             entry.remove(key);
             data.expirations.remove(&(when, id));
         }

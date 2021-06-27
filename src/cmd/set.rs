@@ -166,13 +166,16 @@ impl Set {
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         // Set the value in the shared database state.
         let response = if self.get {
-            match db.set(
-                self.key,
-                self.value.into(),
-                self.nxxx,
-                self.expires_at,
-                self.keepttl,
-            ) {
+            match db
+                .set(
+                    self.key,
+                    self.value.into(),
+                    self.nxxx,
+                    self.expires_at,
+                    self.keepttl,
+                )
+                .await
+            {
                 Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value.get_inner()),
                 Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
                 Ok(Some(SimpleType::Number(value))) => Frame::Integer(value.0),

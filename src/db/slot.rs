@@ -1,98 +1,206 @@
-use std::sync::{Arc, Mutex, MutexGuard};
+mod expirations;
 
-use chrono::{DateTime, Utc};
-use tokio::{
-    sync::{broadcast, Notify},
-    time,
+use std::{
+    collections::HashMap,
+    convert::TryInto,
+    sync::{atomic::AtomicU64, Arc},
 };
 
-use super::{data_type::SimpleType, result::Result, state::State};
+use bytes::Bytes;
+use chrono::{DateTime, Utc};
+use dashmap::DashMap;
+use tokio::sync::broadcast;
 
+use self::expirations::{Expiration, ExpirationEntry};
+use super::{
+    data_type::{DataType, SimpleType},
+    result::Result,
+};
+
+/// Entry in the key-value store
 #[derive(Debug)]
-struct Shared {
-    /// The shared state is guarded by a mutex. This is a `std::sync::Mutex` and
-    /// not a Tokio mutex. This is because there are no asynchronous operations
-    /// being performed while holding the mutex. Additionally, the critical
-    /// sections are very small.
-    ///
-    /// A Tokio mutex is mostly intended to be used when locks need to be held
-    /// across `.await` yield points. All other cases are **usually** best
-    /// served by a std mutex. If the critical section does not include any
-    /// async operations but is long (CPU intensive or performing blocking
-    /// operations), then the entire operation, including waiting for the mutex,
-    /// is considered a "blocking" operation and `tokio::task::spawn_blocking`
-    /// should be used.
-    state: Mutex<State>,
+pub struct Entry {
+    /// Uniquely identifies this entry.
+    pub id: u64,
 
-    /// Notifies the background task handling entry expiration. The background
-    /// task waits on this to be notified, then checks for expired values or the
-    /// shutdown signal.
-    background_task: Notify,
+    /// Stored data
+    pub data: DataType,
+
+    /// Instant at which the entry expires and should be removed from the
+    /// database.
+    pub expires_at: Option<DateTime<Utc>>,
 }
 
-/// Server state shared across all connections.
-///
-/// `Slot` contains a `HashMap` storing the key/value data and all
-/// `broadcast::Sender` values for active pub/sub channels.
-///
-/// A `Slot` instance is a handle to shared state. Cloning `Slot` is shallow and
-/// only incurs an atomic ref count increment.
-///
-/// When a `Slot` value is created, a background task is spawned. This task is
-/// used to expire values after the requested duration has elapsed. The task
-/// runs until all instances of `Slot` are dropped, at which point the task
-/// terminates.
-#[derive(Debug, Clone)]
-pub(crate) struct Slot {
-    /// Handle to shared state. The background task will also have an
-    /// `Arc<Shared>`.
-    shared: Arc<Shared>,
+#[derive(Debug)]
+pub struct Slot {
+    /// The key-value data. We are not trying to do anything fancy so a
+    /// `std::collections::HashMap` works fine.
+    pub entries: Arc<DashMap<String, Entry>>,
+
+    /// The pub/sub key-space. Redis uses a **separate** key space for key-value
+    /// and pub/sub. `rcc` handles this by using a separate `HashMap`.
+    pub pub_sub: HashMap<String, broadcast::Sender<Bytes>>,
+
+    /// Tracks key TTLs.
+    expirations: Expiration,
+
+    /// Identifier to use for the next expiration. Each expiration is associated
+    /// with a unique identifier. See above for why.
+    next_id: AtomicU64,
 }
 
 impl Slot {
-    pub(crate) fn get_state(&self) -> MutexGuard<'_, State> {
-        self.shared.state.lock().unwrap()
-    }
-    /// Create a new, empty, `Slot` instance. Allocates shared state and spawns a
-    /// background task to manage key expiration.
-    pub(crate) fn new() -> Slot {
-        let shared = Arc::new(Shared {
-            state: Mutex::new(State::new()),
-            background_task: Notify::new(),
-        });
-
-        // Start the background task.
-        tokio::spawn(purge_expired_tasks(Arc::clone(&shared)));
-
-        Slot { shared }
+    pub fn new() -> Self {
+        let entries = Arc::new(DashMap::new());
+        let expirations = Expiration::new(Arc::clone(&entries));
+        Self {
+            entries,
+            pub_sub: HashMap::new(),
+            expirations,
+            next_id: AtomicU64::new(0),
+        }
     }
 
-    // /// Get the value associated with a key.
-    // ///
-    // /// Returns `None` if there is no value associated with the key. This may be
-    // /// due to never having assigned a value to the key or a previously assigned
-    // /// value expired.
-    // pub(crate) fn get(&self, key: &str) -> Option<bytes::Bytes> {
-    //     // Acquire the lock, get the entry and clone the value.
-    //     //
-    //     // Because data is stored using `Bytes`, a clone here is a shallow
-    //     // clone. Data is not copied.
-    //     let state = self.shared.state.lock().unwrap();
-    //     match state.get_data(key) {
-    //         Some(&DataType::Bytes(ref bytes)) => Some(bytes.get_inner_clone()),
-    //         Some(&DataType::Number(ref n)) => {
-    //             Some(bytes::Bytes::copy_from_slice(n.to_string().as_bytes()))
-    //         }
-    //         Some(_) => todo!("报错"),
-    //         None => None,
-    //     }
+    // pub fn del(&mut self, key)
+    pub fn get_simple(&self, key: &str) -> Result<Option<SimpleType>> {
+        match self.entries.get(key) {
+            Some(s) => match s.value() {
+                Entry {
+                    data: DataType::SimpleType(st),
+                    ..
+                } => Ok(Some(st.clone())),
+                _ => Err("类型错误".to_string()),
+            },
+            None => Ok(None),
+        }
+    }
+
+    pub fn get_or_insert_entry(
+        &self,
+        key: &str,
+        f: fn() -> (DataType, Option<DateTime<Utc>>),
+    ) -> dashmap::mapref::one::RefMut<'_, String, Entry> {
+        if !self.entries.contains_key(key) {
+            let (data, expires_at) = f();
+            let e = Entry {
+                id: self.next_id(),
+                data,
+                expires_at,
+            };
+            self.entries.insert(key.to_owned(), e);
+        }
+        self.entries.get_mut(key).unwrap()
+    }
+
+    /// Get and increment the next insertion ID.
+    pub fn next_id(&self) -> u64 {
+        self.next_id
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+    }
+
+    // fn next_expiration(&self) -> Option<DateTime<Utc>> {
+    //     self.expirations
+    //         .keys()
+    //         .next()
+    //         .map(|expiration| expiration.0)
     // }
 
-    /// Set the value associated with a key along with an optional expiration
-    /// Duration.
-    ///
-    /// If a value is already associated with the key, it is removed.
-    pub(crate) fn set(
+    pub fn exists(&self, key: &str) -> bool {
+        self.entries.contains_key(key)
+    }
+
+    pub fn get_expires_at(&self, key: &str) -> Option<DateTime<Utc>> {
+        self.entries.get(key).and_then(|t| t.expires_at)
+    }
+
+    /// Purge all expired keys and return the `Instant` at which the **next**
+    /// key will expire. The background task will sleep until this instant.
+    // pub fn purge_expired_keys(&mut self) -> Option<DateTime<Utc>> {
+    //     if self.shutdown {
+    //         // The database is shutting down. All handles to the shared state
+    //         // have dropped. The background task should exit.
+    //         return None;
+    //     }
+
+    //     // This is needed to make the borrow checker happy. In short, `lock()`
+    //     // returns a `MutexGuard` and not a `&mut State`. The borrow checker is
+    //     // not able to see "through" the mutex guard and determine that it is
+    //     // safe to access both `state.expirations` and `state.entries` mutably,
+    //     // so we get a "real" mutable reference to `State` outside of the loop.
+    //     // let state = &mut *state;
+
+    //     // Find all keys scheduled to expire **before** now.
+    //     let now = Utc::now();
+
+    //     // 因为只需要处理头部元素，所有这里每次产生一个新的迭代器是安全的, 等first_entry stable 可以替换
+    //     while let Some((&(when, id), key)) = self.expirations.iter().next() {
+    //         if when > now {
+    //             // Done purging, `when` is the instant at which the next key
+    //             // expires. The worker task will wait until this instant.
+    //             return Some(when);
+    //         }
+    //         debug!("purge_expired_keys: {}", key);
+    //         // The key expired, remove it
+    //         self.entries.remove(key);
+    //         self.expirations.remove(&(when, id));
+    //     }
+    //     None
+    // }
+
+    /// return (old value exist, notify)
+    pub fn set_expires_at(&self, key: String, expires_at: DateTime<Utc>) -> (bool, bool) {
+        todo!()
+        // let notify = self
+        //     .next_expiration()
+        //     .map(|expiration| expiration > expires_at)
+        //     .unwrap_or(true);
+        // if let Some(entry) = self.entries.get_mut(&key) {
+        //     if let Some(old_when) = entry.expires_at {
+        //         self.expirations.remove(&(old_when, entry.id));
+        //         self.expirations.insert((expires_at, entry.id), key);
+        //     }
+        //     entry.expires_at = Some(expires_at);
+        //     (true, notify)
+        // } else {
+        //     (false, notify)
+        // }
+    }
+
+    /// 调用之前需要自己保证原始值的value 为 simpleType 或 不存在
+    pub async fn update_simple(
+        &self,
+        key: String,
+        value: SimpleType,
+        expires_at: Option<DateTime<Utc>>,
+    ) -> Option<SimpleType> {
+        let id = self.next_id();
+        if let Some(expires_at) = expires_at {
+            let _ = self
+                .expirations
+                .sender
+                .send(ExpirationEntry {
+                    id,
+                    key: key.clone(),
+                    expires_at,
+                })
+                .await;
+        }
+        let prev = self.entries.insert(
+            key,
+            Entry {
+                id,
+                data: value.into(),
+                expires_at,
+            },
+        );
+        prev.map(|t| t.data.try_into().unwrap())
+    }
+
+    pub fn remove(&self, key: &str) -> Option<DataType> {
+        self.entries.remove(key).map(|prev| prev.1.data)
+    }
+
+    pub(crate) async fn set(
         &self,
         key: String,
         value: SimpleType,
@@ -100,9 +208,7 @@ impl Slot {
         mut expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
     ) -> Result<Option<SimpleType>> {
-        let mut state = self.shared.state.lock().unwrap();
-
-        let mut old_value = state.get_simple(&key)?.cloned();
+        let old_value = self.get_simple(&key)?;
         let need_update = if let Some(nx) = nxxx {
             // old_value = state.get_data(&key).cloned();
             let c = old_value.is_some();
@@ -114,21 +220,9 @@ impl Slot {
             return Ok(old_value);
         }
         if keepttl {
-            expires_at = state.get_expires_at(&key);
+            expires_at = self.get_expires_at(&key);
         }
-        let (ov, notify) = state.update_simple(key, value, expires_at);
-        old_value = ov;
-        // Release the mutex before notifying the background task. This helps
-        // reduce contention by avoiding the background task waking up only to
-        // be unable to acquire the mutex due to this function still holding it.
-        drop(state);
-
-        if notify {
-            // Finally, only notify the background task if it needs to update
-            // its state to reflect a new expiration.
-            self.shared.background_task.notify_one();
-        }
-        Ok(old_value)
+        Ok(self.update_simple(key, value, expires_at).await)
     }
 
     /// Returns a `Receiver` for the requested channel.
@@ -136,40 +230,35 @@ impl Slot {
     /// The returned `Receiver` is used to receive values broadcast by `PUBLISH`
     /// commands.
     pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<bytes::Bytes> {
-        use std::collections::hash_map::Entry;
-
-        // Acquire the mutex
-        let mut state = self.shared.state.lock().unwrap();
-
-        // If there is no entry for the requested channel, then create a new
-        // broadcast channel and associate it with the key. If one already
-        // exists, return an associated receiver.
-        match state.pub_sub.entry(key) {
-            Entry::Occupied(e) => e.get().subscribe(),
-            Entry::Vacant(e) => {
-                // No broadcast channel exists yet, so create one.
-                //
-                // The channel is created with a capacity of `1024` messages. A
-                // message is stored in the channel until **all** subscribers
-                // have seen it. This means that a slow subscriber could result
-                // in messages being held indefinitely.
-                //
-                // When the channel's capacity fills up, publishing will result
-                // in old messages being dropped. This prevents slow consumers
-                // from blocking the entire system.
-                let (tx, rx) = broadcast::channel(1024);
-                e.insert(tx);
-                rx
-            }
-        }
+        todo!()
+        // use std::collections::hash_map::Entry;
+        // // If there is no entry for the requested channel, then create a new
+        // // broadcast channel and associate it with the key. If one already
+        // // exists, return an associated receiver.
+        // match self.pub_sub.entry(key) {
+        //     Entry::Occupied(e) => e.get().subscribe(),
+        //     Entry::Vacant(e) => {
+        //         // No broadcast channel exists yet, so create one.
+        //         //
+        //         // The channel is created with a capacity of `1024` messages. A
+        //         // message is stored in the channel until **all** subscribers
+        //         // have seen it. This means that a slow subscriber could result
+        //         // in messages being held indefinitely.
+        //         //
+        //         // When the channel's capacity fills up, publishing will result
+        //         // in old messages being dropped. This prevents slow consumers
+        //         // from blocking the entire system.
+        //         let (tx, rx) = broadcast::channel(1024);
+        //         e.insert(tx);
+        //         rx
+        //     }
+        // }
     }
 
     /// Publish a message to the channel. Returns the number of subscribers
     /// listening on the channel.
     pub(crate) fn publish(&self, key: &str, value: bytes::Bytes) -> usize {
-        let state = self.shared.state.lock().unwrap();
-
-        state
+        self
             .pub_sub
             .get(key)
             // On a successful message send on the broadcast channel, the number
@@ -179,72 +268,5 @@ impl Slot {
             // If there is no entry for the channel key, then there are no
             // subscribers. In this case, return `0`.
             .unwrap_or(0)
-    }
-}
-
-impl Drop for Slot {
-    fn drop(&mut self) {
-        // If this is the last active `Slot` instance, the background task must be
-        // notified to shut down.
-        //
-        // First, determine if this is the last `Slot` instance. This is done by
-        // checking `strong_count`. The count will be 2. One for this `Slot`
-        // instance and one for the handle held by the background task.
-        if Arc::strong_count(&self.shared) == 2 {
-            // The background task must be signaled to shutdown. This is done by
-            // setting `State::shutdown` to `true` and signalling the task.
-            let mut state = self.shared.state.lock().unwrap();
-            state.shutdown(true);
-
-            // Drop the lock before signalling the background task. This helps
-            // reduce lock contention by ensuring the background task doesn't
-            // wake up only to be unable to acquire the mutex.
-            drop(state);
-            self.shared.background_task.notify_one();
-        }
-    }
-}
-
-impl Shared {
-    /// Purge all expired keys and return the `Instant` at which the **next**
-    /// key will expire. The background task will sleep until this instant.
-    fn purge_expired_keys(&self) -> Option<DateTime<Utc>> {
-        let mut state = self.state.lock().unwrap();
-        state.purge_expired_keys()
-    }
-
-    /// Returns `true` if the database is shutting down
-    ///
-    /// The `shutdown` flag is set when all `Slot` values have dropped, indicating
-    /// that the shared state can no longer be accessed.
-    fn is_shutdown(&self) -> bool {
-        self.state.lock().unwrap().is_shutdown()
-    }
-}
-
-/// Routine executed by the background task.
-///
-/// Wait to be notified. On notification, purge any expired keys from the shared
-/// state handle. If `shutdown` is set, terminate the task.
-async fn purge_expired_tasks(shared: Arc<Shared>) {
-    // If the shutdown flag is set, then the task should exit.
-    while !shared.is_shutdown() {
-        // Purge all keys that are expired. The function returns the instant at
-        // which the **next** key will expire. The worker should wait until the
-        // instant has passed then purge again.
-        if let Some(when) = shared.purge_expired_keys() {
-            // Wait until the next key expires **or** until the background task
-            // is notified. If the task is notified, then it must reload its
-            // state as new keys have been set to expire early. This is done by
-            // looping.
-            tokio::select! {
-                _ = time::sleep((when - Utc::now()).to_std().unwrap()) =>{}
-                _ = shared.background_task.notified() => {}
-            }
-        } else {
-            // There are no keys expiring in the future. Wait until the task is
-            // notified.
-            shared.background_task.notified().await;
-        }
     }
 }

@@ -5,7 +5,10 @@ use std::{
 };
 
 use super::{blob::Blob, AggregateType, DataType};
-use crate::db::{result::Result, state::State};
+use crate::db::{
+    result::Result,
+    slot::{Entry, Slot},
+};
 
 /// redis list 中元素顺序 和  VecDeque 的内存顺序关系
 /// L.....R
@@ -48,79 +51,145 @@ impl List {
         (start as usize, stop as usize + 1)
     }
 }
-impl State {
-    fn get_or_new_list(&mut self, key: String) -> Result<&mut List> {
-        let entry = self.get_or_insert_entry(&key, || {
+// #[macro_export]
+// macro_rules! get_or_new_list2 {
+//     ($self:ident, $key:expr) => {{
+//         let mut entry = $self.get_or_insert_entry($key, || {
+//             (
+//                 DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
+//                 None,
+//             )
+//         });
+//         match entry.data {
+//             DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
+//             _ => Err("the value stored at key is not a list.".to_owned()),
+//         }
+//     }};
+// }
+impl Slot {
+    fn process_list<T, F: FnOnce(&List) -> T>(
+        &self,
+        key: &str,
+        f: F,
+        none_value: fn() -> T,
+    ) -> Result<T> {
+        match self.entries.get(key) {
+            Some(v) => match v.value() {
+                Entry {
+                    data: DataType::AggregateType(AggregateType::List(list)),
+                    ..
+                } => Ok(f(list)),
+                _ => Err("the value stored at key is not a list.".to_owned()),
+            },
+            None => Ok(none_value()),
+        }
+    }
+
+    fn mut_process_list<T, F: FnOnce(&mut List) -> T>(
+        &self,
+        key: &str,
+        f: F,
+        none_value: fn() -> T,
+    ) -> Result<T> {
+        match self.entries.get_mut(key) {
+            Some(mut v) => match v.value_mut() {
+                Entry {
+                    data: DataType::AggregateType(AggregateType::List(list)),
+                    ..
+                } => Ok(f(list)),
+                _ => Err("the value stored at key is not a list.".to_owned()),
+            },
+            None => Ok(none_value()),
+        }
+    }
+
+    fn mut_process_exists_or_new_list<T, F: FnOnce(&mut List) -> T>(
+        &self,
+        key: &str,
+        f: F,
+    ) -> Result<T> {
+        let mut entry = self.get_or_insert_entry(key, || {
             (
                 DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
                 None,
             )
         });
-        match entry.data {
-            DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
+        match entry.value_mut() {
+            Entry {
+                data: DataType::AggregateType(AggregateType::List(list)),
+                ..
+            } => Ok(f(list)),
             _ => Err("the value stored at key is not a list.".to_owned()),
         }
     }
 
-    fn get_list(&self, key: &str) -> Option<Result<&List>> {
-        self.entries.get(key).map(|e| match e.data {
-            DataType::AggregateType(AggregateType::List(ref list)) => Ok(list),
-            _ => Err("the value stored at key is not a list.".to_owned()),
-        })
-    }
+    // fn get_or_new_list(&self, key: &str) -> Result<&mut List> {
+    //     let mut entry = self.get_or_insert_entry(key, || {
+    //         (
+    //             DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
+    //             None,
+    //         )
+    //     });
+    //     match entry.data {
+    //         DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
+    //         _ => Err("the value stored at key is not a list.".to_owned()),
+    //     }
+    // }
 
-    fn get_list_mut(&mut self, key: &str) -> Option<Result<&mut List>> {
-        self.entries.get_mut(key).map(|e| match e.data {
-            DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
-            _ => Err("the value stored at key is not a list.".to_owned()),
-        })
-    }
+    // fn get_list_mut(&self, key: &str) -> Option<Result<&mut List>> {
+    //     self.entries.get_mut(key).map(|mut e| match e.data {
+    //         DataType::AggregateType(AggregateType::List(ref mut list)) => Ok(list),
+    //         _ => Err("the value stored at key is not a list.".to_owned()),
+    //     })
+    // }
 
-    pub(crate) fn lpushx(&mut self, key: &str, values: Vec<Blob>) -> Result<usize> {
-        match self.get_list_mut(key) {
-            Some(r) => {
-                let list = r?;
+    pub(crate) fn lpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
+        self.mut_process_list(
+            key,
+            |list| {
                 for v in values {
                     list.push_front(v)
                 }
-                Ok(list.len())
-            }
-            None => Ok(0),
-        }
+                list.len()
+            },
+            || 0,
+        )
     }
 
-    pub(crate) fn rpushx(&mut self, key: &str, values: Vec<Blob>) -> Result<usize> {
-        match self.get_list_mut(key) {
-            Some(r) => {
-                let list = r?;
+    pub(crate) fn rpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
+        self.mut_process_list(
+            key,
+            |list| {
                 for v in values {
                     list.push_back(v)
                 }
-                Ok(list.len())
+                list.len()
+            },
+            || 0,
+        )
+    }
+    pub(crate) fn lpush(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
+        self.mut_process_exists_or_new_list(key, |list| {
+            for v in values {
+                list.push_front(v)
             }
-            None => Ok(0),
-        }
-    }
-    pub(crate) fn lpush(&mut self, key: String, values: Vec<Blob>) -> Result<usize> {
-        let list = self.get_or_new_list(key)?;
-        for v in values {
-            list.push_front(v)
-        }
-        Ok(list.len())
+            list.len()
+        })
     }
 
-    pub(crate) fn rpush(&mut self, key: String, values: Vec<Blob>) -> Result<usize> {
-        let list = self.get_or_new_list(key)?;
-        for v in values {
-            list.push_back(v)
-        }
-        Ok(list.len())
+    pub(crate) fn rpush(&self, key: String, values: Vec<Blob>) -> Result<usize> {
+        self.mut_process_exists_or_new_list(&key, |list| {
+            for v in values {
+                list.push_back(v)
+            }
+            list.len()
+        })
     }
 
-    pub(crate) fn lpop(&mut self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
-        match self.get_list_mut(key) {
-            Some(r) => {
-                let list = r?;
+    pub(crate) fn lpop(&self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
+        self.mut_process_list(
+            key,
+            |list| {
                 let mut res = vec![];
                 for _ in 0..count {
                     if let Some(v) = list.pop_front() {
@@ -129,16 +198,16 @@ impl State {
                         break;
                     }
                 }
-                Ok(Some(res))
-            }
-            None => Ok(None),
-        }
+                Some(res)
+            },
+            || None,
+        )
     }
 
-    pub(crate) fn rpop(&mut self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
-        match self.get_list_mut(key) {
-            Some(r) => {
-                let list = r?;
+    pub(crate) fn rpop(&self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
+        self.mut_process_list(
+            key,
+            |list| {
                 let mut res = vec![];
                 for _ in 0..count {
                     if let Some(v) = list.pop_back() {
@@ -147,31 +216,28 @@ impl State {
                         break;
                     }
                 }
-                Ok(Some(res))
-            }
-            None => Ok(None),
-        }
+                Some(res)
+            },
+            || None,
+        )
     }
 
     pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Blob>> {
-        match self.get_list(key) {
-            Some(e) => {
-                let list = e?;
+        self.process_list(
+            key,
+            |list| {
                 let (begin, end) = list.shape(start, stop);
                 let mut res = vec![];
                 for i in begin..end {
                     res.push(list[i].clone())
                 }
-                Ok(res)
-            }
-            None => Ok(vec![]),
-        }
+                res
+            },
+            Vec::new,
+        )
     }
 
     pub(crate) fn llen(&self, key: &str) -> Result<usize> {
-        match self.get_list(key) {
-            Some(e) => Ok(e?.len()),
-            None => Ok(0),
-        }
+        self.process_list(key, |list| list.len(), || 0)
     }
 }

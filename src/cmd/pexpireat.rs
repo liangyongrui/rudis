@@ -25,7 +25,7 @@ impl Pexpireat {
     /// to execute a received command.
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let res = db.expire_at(
+        let res = db.expires_at(
             self.key,
             DateTime::<Utc>::from_utc(
                 NaiveDateTime::from_timestamp(self.ms_timestamp as i64 / 1000, 0),
