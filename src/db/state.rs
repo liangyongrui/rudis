@@ -1,3 +1,5 @@
+mod expirations;
+
 use std::{
     collections::{BTreeMap, HashMap},
     convert::TryInto,
@@ -70,6 +72,7 @@ impl State {
         }
     }
 
+    // pub fn del(&mut self, key)
     pub fn get_simple(&self, key: &str) -> Result<Option<&SimpleType>> {
         match self.entries.get(key) {
             Some(Entry {

@@ -12,15 +12,7 @@ use self::list::List;
 #[derive(Debug, Clone)]
 pub enum DataType {
     SimpleType(SimpleType),
-    AggregateType(AggregateType), // Bytes(Blob),
-                                  // Number(Number),
-                                  // List(List),
-                                  // // todo
-                                  // Hash,
-                                  // // todo
-                                  // Set,
-                                  // // todo
-                                  // SortedSet
+    AggregateType(AggregateType),
 }
 #[derive(Debug, Clone)]
 pub enum SimpleType {
