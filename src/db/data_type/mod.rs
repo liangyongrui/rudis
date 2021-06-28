@@ -1,16 +1,15 @@
 mod blob;
+mod hash;
+mod list;
+mod number;
 use std::convert::TryFrom;
 
 use bytes::Bytes;
+pub use hash::HashEntry;
 
 pub use self::blob::Blob;
+use self::{hash::Hash, list::List, number::Number};
 use crate::Frame;
-
-mod number;
-use self::number::Number;
-
-mod list;
-use self::list::List;
 
 #[derive(Debug, Clone)]
 pub enum DataType {
@@ -32,7 +31,7 @@ pub enum SimpleType {
 #[derive(Debug, Clone)]
 pub enum AggregateType {
     List(List),
-    Map,
+    Hash(Hash),
     Set,
     SortedSet,
 }
@@ -48,6 +47,16 @@ impl TryFrom<DataType> for SimpleType {
     }
 }
 
+impl TryFrom<SimpleType> for String {
+    type Error = &'static str;
+
+    fn try_from(value: SimpleType) -> Result<Self, Self::Error> {
+        match value {
+            SimpleType::SimpleString(s) => Ok(s),
+            _ => Err("类型不对"),
+        }
+    }
+}
 impl From<SimpleType> for DataType {
     fn from(s: SimpleType) -> Self {
         DataType::SimpleType(s)

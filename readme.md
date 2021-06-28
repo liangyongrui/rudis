@@ -4,13 +4,12 @@ rust cloud cache
 
 ## 特点
 
+1. 完全并发
 1. 异步删除
-1. 并发
 
 ## todo
 
 1. [x] 多 slot (shard)
-   - [ ] 热 key 单独 slot（加锁转移），动态计算持有锁的时间
 1. [ ] 复杂数据结构(大 key), 持久化数据结构 mvcc
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
@@ -56,10 +55,10 @@ list
 
 hash
 
-1. [ ] hget
-1. [ ] hmget
-1. [ ] hgetAll
-1. [ ] hset
+1. [x] hget
+1. [x] hmget
+1. [x] hgetAll
+1. [x] hset
 1. [ ] hsetnx
 1. [ ] hdel
 1. [ ] hexists

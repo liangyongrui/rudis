@@ -14,7 +14,7 @@ use tokio::sync::broadcast;
 
 pub use self::data_type::DataType;
 use self::{
-    data_type::{Blob, SimpleType},
+    data_type::{Blob, HashEntry, SimpleType},
     result::Result,
     slot::Slot,
 };
@@ -44,7 +44,20 @@ impl Db {
             slots: Arc::new(slots),
         }
     }
-
+    pub(crate) fn hget(&self, key: &str, field: String) -> Result<Option<SimpleType>> {
+        self.get_slot(&key)
+            .hmget(key, vec![field])
+            .map(|x| x[0].clone())
+    }
+    pub(crate) fn hmget(&self, key: &str, fields: Vec<String>) -> Result<Vec<Option<SimpleType>>> {
+        self.get_slot(&key).hmget(key, fields)
+    }
+    pub(crate) fn hset(&self, key: String, pairs: Vec<HashEntry>) -> Result<usize> {
+        self.get_slot(&key).hset(key, pairs)
+    }
+    pub(crate) fn hgetall(&self, key: &str) -> Result<Vec<HashEntry>> {
+        self.get_slot(key).hgetall(key)
+    }
     pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Blob>> {
         self.get_slot(key).lrange(key, start, stop)
     }

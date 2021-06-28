@@ -5,20 +5,14 @@ mod exists;
 mod expire;
 mod expireat;
 mod get;
+mod hash;
 mod incr;
 mod incrby;
-mod llen;
-mod lpop;
-mod lpush;
-mod lpushx;
-mod lrange;
+mod list;
 mod pexpire;
 mod pexpireat;
 mod psetex;
 mod publish;
-mod rpop;
-mod rpush;
-mod rpushx;
 mod set;
 mod setex;
 mod subscribe;
@@ -33,23 +27,22 @@ pub use expireat::Expireat;
 pub use get::Get;
 pub use incr::Incr;
 pub use incrby::Incrby;
-pub use llen::Llen;
-pub use lpop::Lpop;
-pub use lpush::Lpush;
-pub use lpushx::Lpushx;
-pub use lrange::Lrange;
 pub use pexpire::Pexpire;
 pub use pexpireat::Pexpireat;
 pub use psetex::Psetex;
 pub use publish::Publish;
-pub use rpop::Rpop;
-pub use rpush::Rpush;
-pub use rpushx::Rpushx;
 pub use set::Set;
 pub use setex::Setex;
 pub use subscribe::{Subscribe, Unsubscribe};
 pub use unknown::Unknown;
 
+use self::{
+    hash::{hget::Hget, hgetall::Hgetall, hmget::Hmget, hset::Hset},
+    list::{
+        llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
+        rpush::Rpush, rpushx::Rpushx,
+    },
+};
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -57,6 +50,10 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Hget(Hget),
+    Hmget(Hmget),
+    Hset(Hset),
+    Hgetall(Hgetall),
     Lpop(Lpop),
     Llen(Llen),
     Rpop(Rpop),
@@ -110,6 +107,10 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "hget" => Command::Hget(Hget::parse_frames(&mut parse)?),
+            "hmget" => Command::Hmget(Hmget::parse_frames(&mut parse)?),
+            "hset" => Command::Hset(Hset::parse_frames(&mut parse)?),
+            "hgetall" => Command::Hgetall(Hgetall::parse_frames(&mut parse)?),
             "llen" => Command::Llen(Llen::parse_frames(&mut parse)?),
             "rpop" => Command::Rpop(Rpop::parse_frames(&mut parse)?),
             "lpop" => Command::Lpop(Lpop::parse_frames(&mut parse)?),
@@ -196,6 +197,10 @@ impl Command {
             Lpop(cmd) => cmd.apply(db, dst).await,
             Llen(cmd) => cmd.apply(db, dst).await,
             Rpop(cmd) => cmd.apply(db, dst).await,
+            Hset(cmd) => cmd.apply(db, dst).await,
+            Hgetall(cmd) => cmd.apply(db, dst).await,
+            Hget(cmd) => cmd.apply(db, dst).await,
+            Hmget(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -228,6 +233,10 @@ impl Command {
             Command::Lpop(_) => "lpop",
             Command::Llen(_) => "llen",
             Command::Rpop(_) => "rpop",
+            Command::Hset(_) => "hset",
+            Command::Hgetall(_) => "hgetall",
+            Command::Hget(_) => "hget",
+            Command::Hmget(_) => "hmget",
         }
     }
 }
