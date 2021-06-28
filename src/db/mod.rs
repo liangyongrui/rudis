@@ -44,6 +44,18 @@ impl Db {
             slots: Arc::new(slots),
         }
     }
+    pub fn hincrby(&self, key: &str, field: String, value: i64) -> Result<i64> {
+        self.get_slot(&key).hincrby(key, field, value)
+    }
+    pub fn hexists(&self, key: &str, field: String) -> Result<usize> {
+        self.get_slot(&key).hexists(key, field)
+    }
+    pub(crate) fn hdel(&self, key: &str, fields: Vec<String>) -> Result<usize> {
+        self.get_slot(&key).hdel(key, fields)
+    }
+    pub(crate) fn hsetnx(&self, key: &str, field: String, value: SimpleType) -> Result<usize> {
+        self.get_slot(&key).hsetnx(key, field, value)
+    }
     pub(crate) fn hget(&self, key: &str, field: String) -> Result<Option<SimpleType>> {
         self.get_slot(&key)
             .hmget(key, vec![field])

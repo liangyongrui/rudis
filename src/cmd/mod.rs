@@ -37,7 +37,10 @@ pub use subscribe::{Subscribe, Unsubscribe};
 pub use unknown::Unknown;
 
 use self::{
-    hash::{hget::Hget, hgetall::Hgetall, hmget::Hmget, hset::Hset},
+    hash::{
+        hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,
+        hset::Hset, hsetnx::Hsetnx,
+    },
     list::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
@@ -50,6 +53,10 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Hincrby(Hincrby),
+    Hexists(Hexists),
+    Hdel(Hdel),
+    Hsetnx(Hsetnx),
     Hget(Hget),
     Hmget(Hmget),
     Hset(Hset),
@@ -107,6 +114,10 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "hincrby" => Command::Hincrby(Hincrby::parse_frames(&mut parse)?),
+            "hexist" => Command::Hexists(Hexists::parse_frames(&mut parse)?),
+            "hdel" => Command::Hdel(Hdel::parse_frames(&mut parse)?),
+            "hsetnx" => Command::Hsetnx(Hsetnx::parse_frames(&mut parse)?),
             "hget" => Command::Hget(Hget::parse_frames(&mut parse)?),
             "hmget" => Command::Hmget(Hmget::parse_frames(&mut parse)?),
             "hset" => Command::Hset(Hset::parse_frames(&mut parse)?),
@@ -201,6 +212,10 @@ impl Command {
             Hgetall(cmd) => cmd.apply(db, dst).await,
             Hget(cmd) => cmd.apply(db, dst).await,
             Hmget(cmd) => cmd.apply(db, dst).await,
+            Hdel(cmd) => cmd.apply(db, dst).await,
+            Hsetnx(cmd) => cmd.apply(db, dst).await,
+            Hincrby(cmd) => cmd.apply(db, dst).await,
+            Hexists(cmd) => cmd.apply(db, dst).await,
         }
     }
 
@@ -237,6 +252,10 @@ impl Command {
             Command::Hgetall(_) => "hgetall",
             Command::Hget(_) => "hget",
             Command::Hmget(_) => "hmget",
+            Command::Hdel(_) => "hdel",
+            Command::Hsetnx(_) => "hsetnx",
+            Command::Hincrby(_) => "hincrby",
+            Command::Hexists(_) => "hexists",
         }
     }
 }

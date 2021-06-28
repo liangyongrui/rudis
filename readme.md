@@ -10,7 +10,7 @@ rust cloud cache
 ## todo
 
 1. [x] 多 slot (shard)
-1. [ ] 复杂数据结构(大 key), 持久化数据结构 mvcc
+1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
 1. [ ] 主备
@@ -59,10 +59,10 @@ hash
 1. [x] hmget
 1. [x] hgetAll
 1. [x] hset
-1. [ ] hsetnx
-1. [ ] hdel
-1. [ ] hexists
-1. [ ] hincrby
+1. [x] hsetnx
+1. [x] hdel
+1. [x] hexists
+1. [x] hincrby
 
 set
 
