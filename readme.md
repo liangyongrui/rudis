@@ -66,11 +66,11 @@ hash
 
 set
 
-1. [ ] smismember
-1. [ ] sismember
-1. [ ] sadd
-1. [ ] srem
-1. [ ] smembers
+1. [x] smismember
+1. [x] sismember
+1. [x] sadd
+1. [x] srem
+1. [x] smembers
 
 zset
 
