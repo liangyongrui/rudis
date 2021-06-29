@@ -1,42 +1,15 @@
-mod decr;
-mod decrby;
-mod del;
-mod exists;
-mod expire;
-mod expireat;
-mod get;
+mod base;
 mod hash;
-mod incr;
-mod incrby;
 mod list;
-mod pexpire;
-mod pexpireat;
-mod psetex;
-mod publish;
 mod set;
-mod setex;
-mod subscribe;
-mod unknown;
 
-pub use decr::Decr;
-pub use decrby::Decrby;
-pub use del::Del;
-pub use exists::Exists;
-pub use expire::Expire;
-pub use expireat::Expireat;
-pub use get::Get;
-pub use incr::Incr;
-pub use incrby::Incrby;
-pub use pexpire::Pexpire;
-pub use pexpireat::Pexpireat;
-pub use psetex::Psetex;
-pub use publish::Publish;
-pub use set::Set;
-pub use setex::Setex;
-pub use subscribe::{Subscribe, Unsubscribe};
-pub use unknown::Unknown;
-
+pub use self::base::{get::Get, set::Set, setex::Setex};
 use self::{
+    base::{
+        decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
+        incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat, psetex::Psetex,
+        unknown::Unknown,
+    },
     hash::{
         hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,
         hset::Hset, hsetnx::Hsetnx,
@@ -44,6 +17,9 @@ use self::{
     list::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
+    },
+    set::{
+        sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
 };
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
@@ -53,6 +29,11 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Sadd(Sadd),
+    Sismember(Sismember),
+    Smembers(Smembers),
+    Smismember(Smismember),
+    Srem(Srem),
     Hincrby(Hincrby),
     Hexists(Hexists),
     Hdel(Hdel),
@@ -83,9 +64,6 @@ pub enum Command {
     Expireat(Expireat),
     Expire(Expire),
     Pexpire(Pexpire),
-    Publish(Publish),
-    Subscribe(Subscribe),
-    Unsubscribe(Unsubscribe),
     Unknown(Unknown),
 }
 
@@ -114,6 +92,11 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "sadd" => Command::Sadd(Sadd::parse_frames(&mut parse)?),
+            "sismember" => Command::Sismember(Sismember::parse_frames(&mut parse)?),
+            "smismember" => Command::Smismember(Smismember::parse_frames(&mut parse)?),
+            "smembers" => Command::Smembers(Smembers::parse_frames(&mut parse)?),
+            "srem" => Command::Srem(Srem::parse_frames(&mut parse)?),
             "hincrby" => Command::Hincrby(Hincrby::parse_frames(&mut parse)?),
             "hexist" => Command::Hexists(Hexists::parse_frames(&mut parse)?),
             "hdel" => Command::Hdel(Hdel::parse_frames(&mut parse)?),
@@ -144,9 +127,6 @@ impl Command {
             "expireat" => Command::Expireat(Expireat::parse_frames(&mut parse)?),
             "expire" => Command::Expire(Expire::parse_frames(&mut parse)?),
             "pexpire" => Command::Pexpire(Pexpire::parse_frames(&mut parse)?),
-            "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
-            "subscribe" => Command::Subscribe(Subscribe::parse_frames(&mut parse)?),
-            "unsubscribe" => Command::Unsubscribe(Unsubscribe::parse_frames(&mut parse)?),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -175,18 +155,13 @@ impl Command {
         self,
         db: &Db,
         dst: &mut Connection,
-        shutdown: &mut Shutdown,
+        _shutdown: &mut Shutdown,
     ) -> crate::Result<()> {
         use Command::*;
 
         match self {
-            // `Unsubscribe` cannot be applied. It may only be received from the
-            // context of a `Subscribe` command.
-            Unsubscribe(_) => Err("`Unsubscribe` is unsupported in this context".into()),
             Get(cmd) => cmd.apply(db, dst).await,
-            Publish(cmd) => cmd.apply(db, dst).await,
             Set(cmd) => cmd.apply(db, dst).await,
-            Subscribe(cmd) => cmd.apply(db, dst, shutdown).await,
             Unknown(cmd) => cmd.apply(dst).await,
             Psetex(cmd) => cmd.apply(db, dst).await,
             Setex(cmd) => cmd.apply(db, dst).await,
@@ -216,46 +191,11 @@ impl Command {
             Hsetnx(cmd) => cmd.apply(db, dst).await,
             Hincrby(cmd) => cmd.apply(db, dst).await,
             Hexists(cmd) => cmd.apply(db, dst).await,
-        }
-    }
-
-    /// Returns the command name
-    pub(crate) fn get_name(&self) -> &str {
-        match self {
-            Command::Unknown(cmd) => cmd.get_name(),
-            Command::Get(_) => "get",
-            Command::Publish(_) => "pub",
-            Command::Set(_) => "set",
-            Command::Subscribe(_) => "subscribe",
-            Command::Unsubscribe(_) => "unsubscribe",
-            Command::Psetex(_) => "psetex",
-            Command::Setex(_) => "setex",
-            Command::Del(_) => "del",
-            Command::Exists(_) => "exists",
-            Command::Pexpireat(_) => "pexpireat",
-            Command::Expireat(_) => "expireat",
-            Command::Expire(_) => "expire",
-            Command::Pexpire(_) => "pexpire",
-            Command::Incrby(_) => "incrby",
-            Command::Incr(_) => "incr",
-            Command::Decr(_) => "decr",
-            Command::Decrby(_) => "decrby",
-            Command::Lpush(_) => "lpush",
-            Command::Rpush(_) => "rpush",
-            Command::Lpushx(_) => "lpushx",
-            Command::Rpushx(_) => "rpushx",
-            Command::Lrange(_) => "lrange",
-            Command::Lpop(_) => "lpop",
-            Command::Llen(_) => "llen",
-            Command::Rpop(_) => "rpop",
-            Command::Hset(_) => "hset",
-            Command::Hgetall(_) => "hgetall",
-            Command::Hget(_) => "hget",
-            Command::Hmget(_) => "hmget",
-            Command::Hdel(_) => "hdel",
-            Command::Hsetnx(_) => "hsetnx",
-            Command::Hincrby(_) => "hincrby",
-            Command::Hexists(_) => "hexists",
+            Sadd(cmd) => cmd.apply(db, dst).await,
+            Sismember(cmd) => cmd.apply(db, dst).await,
+            Smembers(cmd) => cmd.apply(db, dst).await,
+            Smismember(cmd) => cmd.apply(db, dst).await,
+            Srem(cmd) => cmd.apply(db, dst).await,
         }
     }
 }

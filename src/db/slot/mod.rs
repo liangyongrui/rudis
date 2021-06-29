@@ -171,49 +171,4 @@ impl Slot {
         }
         Ok(self.update_simple(key, value, expires_at).await)
     }
-
-    /// Returns a `Receiver` for the requested channel.
-    ///
-    /// The returned `Receiver` is used to receive values broadcast by `PUBLISH`
-    /// commands.
-    pub(crate) fn subscribe(&self, _key: String) -> broadcast::Receiver<bytes::Bytes> {
-        todo!()
-        // use std::collections::hash_map::Entry;
-        // // If there is no entry for the requested channel, then create a new
-        // // broadcast channel and associate it with the key. If one already
-        // // exists, return an associated receiver.
-        // match self.pub_sub.entry(key) {
-        //     Entry::Occupied(e) => e.get().subscribe(),
-        //     Entry::Vacant(e) => {
-        //         // No broadcast channel exists yet, so create one.
-        //         //
-        //         // The channel is created with a capacity of `1024` messages. A
-        //         // message is stored in the channel until **all** subscribers
-        //         // have seen it. This means that a slow subscriber could result
-        //         // in messages being held indefinitely.
-        //         //
-        //         // When the channel's capacity fills up, publishing will result
-        //         // in old messages being dropped. This prevents slow consumers
-        //         // from blocking the entire system.
-        //         let (tx, rx) = broadcast::channel(1024);
-        //         e.insert(tx);
-        //         rx
-        //     }
-        // }
-    }
-
-    /// Publish a message to the channel. Returns the number of subscribers
-    /// listening on the channel.
-    pub(crate) fn publish(&self, key: &str, value: bytes::Bytes) -> usize {
-        self
-            .pub_sub
-            .get(key)
-            // On a successful message send on the broadcast channel, the number
-            // of subscribers is returned. An error indicates there are no
-            // receivers, in which case, `0` should be returned.
-            .map(|tx| tx.send(value).unwrap_or(0))
-            // If there is no entry for the channel key, then there are no
-            // subscribers. In this case, return `0`.
-            .unwrap_or(0)
-    }
 }

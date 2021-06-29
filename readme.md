@@ -15,7 +15,7 @@ rust cloud cache
 1. [ ] 持久化
 1. [ ] 主备
 1. [ ] pipeline(停止服务器的时候，处理干净 pipeline)
-1. [ ] 异步锁 (shutdown 改成原子的可能就好了)
+1. [ ] 自定义插件
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
 
 ## 支持的命令
@@ -66,6 +66,7 @@ hash
 
 set
 
+1. [ ] smismember
 1. [ ] sismember
 1. [ ] sadd
 1. [ ] srem

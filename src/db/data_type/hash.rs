@@ -1,4 +1,4 @@
-use std::{ops::Deref, sync::Arc, usize};
+use std::{ops::Deref, sync::Arc};
 
 use rpds::HashTrieMapSync;
 
@@ -151,17 +151,12 @@ impl Slot {
         self.mut_process_hash(
             key,
             |hash| {
-                let mut count = 0;
+                let old_len = hash.size();
                 let mut new: Option<HashTrieMapSync<String, SimpleType>> = None;
                 for field in fields {
                     if let Some(ref mut n) = new {
-                        if n.remove_mut(&field) {
-                            count += 1
-                        }
+                        n.remove_mut(&field);
                     } else {
-                        if hash.contains_key(&field) {
-                            count += 1;
-                        }
                         new = Some(hash.remove(&field));
                     }
                 }
@@ -169,7 +164,7 @@ impl Slot {
                     hash.version += 1;
                     hash.value = Arc::new(n);
                 }
-                count
+                hash.size() - old_len
             },
             || 0,
         )

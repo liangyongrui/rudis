@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use super::{DataType, SimpleType};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Blob(bytes::Bytes);
 
 impl Deref for Blob {

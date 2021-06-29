@@ -2,13 +2,14 @@ mod blob;
 mod hash;
 mod list;
 mod number;
+mod set;
 use std::convert::TryFrom;
 
 use bytes::Bytes;
 pub use hash::HashEntry;
 
 pub use self::blob::Blob;
-use self::{hash::Hash, list::List, number::Number};
+use self::{hash::Hash, list::List, number::Number, set::Set};
 use crate::Frame;
 
 #[derive(Debug, Clone)]
@@ -16,7 +17,7 @@ pub enum DataType {
     SimpleType(SimpleType),
     AggregateType(AggregateType),
 }
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimpleType {
     Blob(Blob),
     SimpleString(String),
@@ -32,7 +33,7 @@ pub enum SimpleType {
 pub enum AggregateType {
     List(List),
     Hash(Hash),
-    Set,
+    Set(Set),
     SortedSet,
 }
 

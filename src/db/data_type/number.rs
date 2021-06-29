@@ -6,7 +6,7 @@ use crate::db::{
     slot::{Entry, Slot},
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Number(pub i64);
 
 impl Deref for Number {

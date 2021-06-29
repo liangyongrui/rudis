@@ -18,7 +18,7 @@ impl Unknown {
     }
 
     /// Returns the command name
-    pub(crate) fn get_name(&self) -> &str {
+    pub(crate) fn _get_name(&self) -> &str {
         &self.command_name
     }
 

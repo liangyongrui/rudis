@@ -10,7 +10,7 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
-use tokio::sync::broadcast;
+use rpds::HashTrieSetSync;
 
 pub use self::data_type::DataType;
 use self::{
@@ -43,6 +43,23 @@ impl Db {
         Self {
             slots: Arc::new(slots),
         }
+    }
+    pub fn smembers(&self, key: &str) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
+        self.get_slot(&key).smembers(key)
+    }
+    pub fn srem(&self, key: &str, values: Vec<&SimpleType>) -> Result<usize> {
+        self.get_slot(&key).srem(key, values)
+    }
+    pub fn sismember(&self, key: &str, value: &SimpleType) -> Result<bool> {
+        self.get_slot(&key)
+            .smismember(key, vec![value])
+            .map(|t| t[0])
+    }
+    pub fn smismember(&self, key: &str, values: Vec<&SimpleType>) -> Result<Vec<bool>> {
+        self.get_slot(&key).smismember(key, values)
+    }
+    pub fn sadd(&self, key: String, values: Vec<SimpleType>) -> Result<usize> {
+        self.get_slot(&key).sadd(key, values)
     }
     pub fn hincrby(&self, key: &str, field: String, value: i64) -> Result<i64> {
         self.get_slot(&key).hincrby(key, field, value)
@@ -126,13 +143,5 @@ impl Db {
         self.get_slot(&key)
             .set(key, value, nxxx, expires_at, keepttl)
             .await
-    }
-
-    pub(crate) fn subscribe(&self, key: String) -> broadcast::Receiver<bytes::Bytes> {
-        self.get_slot(&key).subscribe(key)
-    }
-
-    pub(crate) fn publish(&self, key: &str, value: bytes::Bytes) -> usize {
-        self.get_slot(&key).publish(key, value)
     }
 }
