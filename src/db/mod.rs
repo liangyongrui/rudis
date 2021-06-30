@@ -12,6 +12,8 @@ use std::{
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
 
+use crate::options::NxXx;
+
 pub use self::data_type::DataType;
 use self::{
     data_type::{Blob, HashEntry, SimpleType},
@@ -136,12 +138,12 @@ impl Db {
         &self,
         key: String,
         value: SimpleType,
-        nxxx: Option<bool>,
+        nx_xx: NxXx,
         expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
     ) -> Result<Option<SimpleType>> {
         self.get_slot(&key)
-            .set(key, value, nxxx, expires_at, keepttl)
+            .set(key, value, nx_xx, expires_at, keepttl)
             .await
     }
 }

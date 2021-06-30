@@ -2,7 +2,7 @@ use std::{num::ParseIntError, str, time::Duration};
 
 use bytes::Bytes;
 use chrono::Utc;
-use rcc::{client, DEFAULT_PORT};
+use rcc::{client, options::NxXx, DEFAULT_PORT};
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
@@ -34,8 +34,6 @@ enum Command {
         #[structopt(parse(from_str = bytes_from_str))]
         value: Bytes,
 
-        /// nx or xx
-        nxxx: Option<String>,
         /// Expire the value after specified amount of time
         #[structopt(parse(try_from_str = duration_from_ms_str))]
         expires: Option<Duration>,
@@ -81,14 +79,13 @@ async fn main() -> rcc::Result<()> {
         Command::Set {
             key,
             value,
-            nxxx,
             expires,
         } => {
             client
                 .set(
                     &key,
                     value,
-                    nxxx.map(|t| t == "NX"),
+                    NxXx::None,
                     expires.and_then(|t| {
                         Utc::now().checked_add_signed(chrono::Duration::from_std(t).unwrap())
                     }),

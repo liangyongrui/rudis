@@ -2,7 +2,7 @@ use bytes::Bytes;
 use chrono::{Duration, Utc};
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{db::Db, options::NxXx, parse::Parse, Connection, Frame};
 
 #[derive(Debug)]
 pub struct Setex {
@@ -28,7 +28,7 @@ impl Setex {
             .set(
                 self.key,
                 self.value.into(),
-                None,
+                NxXx::None,
                 Utc::now().checked_add_signed(Duration::seconds(self.seconds as i64)),
                 false,
             )

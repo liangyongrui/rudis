@@ -5,6 +5,7 @@ use tracing::{debug, instrument};
 use crate::{
     cmd::{Parse, ParseError},
     db::data_type::SimpleType,
+    options::NxXx,
     Connection, Db, Frame,
 };
 
@@ -18,7 +19,7 @@ pub struct Set {
     /// the value to be stored
     value: SimpleType,
     // None not set, true nx, false xx
-    nxxx: Option<bool>,
+    nx_xx: NxXx,
     /// When to expire the key
     ///
     /// unix timestatmp ms
@@ -32,7 +33,7 @@ impl Set {
     pub fn new(
         key: impl ToString,
         value: SimpleType,
-        nxxx: Option<bool>,
+        nx_xx: NxXx,
         expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
         get: bool,
@@ -40,7 +41,7 @@ impl Set {
         Set {
             key: key.to_string(),
             value,
-            nxxx,
+            nx_xx,
             expires_at,
             keepttl,
             get,
@@ -89,7 +90,7 @@ impl Set {
         // The expiration is optional. If nothing else follows, then it is
         // `None`.
         let mut expires_at = None;
-        let mut nxxx = None;
+        let mut nx_xx = NxXx::None;
         let mut keepttl = false;
         let mut get = false;
         loop {
@@ -98,16 +99,16 @@ impl Set {
                 Ok(s) => {
                     match &s.to_uppercase()[..] {
                         "NX" => {
-                            if nxxx.is_some() {
+                            if !nx_xx.is_none() {
                                 return Err("`NX` or `XX` already set".into());
                             }
-                            nxxx = Some(true);
+                            nx_xx = NxXx::Nx
                         }
                         "XX" => {
-                            if nxxx.is_some() {
+                            if !nx_xx.is_none() {
                                 return Err("`NX` or `XX` already set".into());
                             }
-                            nxxx = Some(false);
+                            nx_xx = NxXx::Xx
                         }
                         "EX" => {
                             if expires_at.is_some() {
@@ -165,7 +166,7 @@ impl Set {
             }
         }
 
-        Ok(Self::new(key, value, nxxx, expires_at, keepttl, get))
+        Ok(Self::new(key, value, nx_xx, expires_at, keepttl, get))
     }
 
     /// Apply the `Set` command to the specified `Db` instance.
@@ -180,7 +181,7 @@ impl Set {
                 .set(
                     self.key,
                     self.value,
-                    self.nxxx,
+                    self.nx_xx,
                     self.expires_at,
                     self.keepttl,
                 )
@@ -188,7 +189,7 @@ impl Set {
             {
                 Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value.get_inner()),
                 Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
-                Ok(Some(SimpleType::Number(value))) => Frame::Integer(value.0),
+                Ok(Some(SimpleType::Integer(value))) => Frame::Integer(value.0),
                 Ok(Some(_)) => Frame::Error("未实现".to_owned()),
                 Ok(None) => Frame::Null,
                 Err(e) => Frame::Error(e),
@@ -212,8 +213,8 @@ impl Set {
         frame.push_bulk(Bytes::from("set".as_bytes()));
         frame.push_bulk(Bytes::from(self.key.into_bytes()));
         frame.push_bulk(self.value.into());
-        if let Some(nx) = self.nxxx {
-            frame.push_bulk(Bytes::from(if nx { "NX" } else { "XX" }.as_bytes()));
+        if let Some(nx_xx) = self.nx_xx.into() {
+            frame.push_bulk(nx_xx);
         }
         if let Some(ms) = self.expires_at {
             // Expirations in Redis procotol can be specified in two ways

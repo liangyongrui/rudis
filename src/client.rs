@@ -9,10 +9,7 @@ use chrono::{DateTime, Utc};
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tracing::{debug, instrument};
 
-use crate::{
-    cmd::{Get, Set},
-    Connection, Frame,
-};
+use crate::{Connection, Frame, cmd::{Get, Set}, options::NxXx};
 
 /// Established connection with a Redis server.
 ///
@@ -140,13 +137,13 @@ impl Client {
         &mut self,
         key: &str,
         value: Bytes,
-        nxxx: Option<bool>,
+        nx_xx: NxXx,
         expires_at: Option<DateTime<Utc>>,
     ) -> crate::Result<()> {
         // Create a `Set` command and pass it to `set_cmd`. A separate method is
         // used to set a value with an expiration. The common parts of both
         // functions are implemented by `set_cmd`.
-        self.set_cmd(Set::new(key, value.into(), nxxx, expires_at, false, false))
+        self.set_cmd(Set::new(key, value.into(), nx_xx, expires_at, false, false))
             .await
     }
 

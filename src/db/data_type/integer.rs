@@ -7,9 +7,9 @@ use crate::db::{
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Number(pub i64);
+pub struct Integer(pub i64);
 
-impl Deref for Number {
+impl Deref for Integer {
     type Target = i64;
 
     fn deref(&self) -> &Self::Target {
@@ -17,7 +17,7 @@ impl Deref for Number {
     }
 }
 
-impl Number {
+impl Integer {
     fn insert_new(state: &Slot, key: String, value: i64) {
         let id = state.next_id();
         let e = Entry {
@@ -31,13 +31,13 @@ impl Number {
 
 impl From<i64> for DataType {
     fn from(n: i64) -> Self {
-        DataType::SimpleType(SimpleType::Number(Number(n)))
+        DataType::SimpleType(SimpleType::Integer(Integer(n)))
     }
 }
 
 impl From<i64> for SimpleType {
     fn from(n: i64) -> Self {
-        SimpleType::Number(Number(n))
+        SimpleType::Integer(Integer(n))
     }
 }
 
@@ -56,7 +56,7 @@ impl Slot {
                         },
                     )
                 }
-                DataType::SimpleType(SimpleType::Number(Number(i))) => (
+                DataType::SimpleType(SimpleType::Integer(Integer(i))) => (
                     *i,
                     Entry {
                         id: old.id,
@@ -69,7 +69,7 @@ impl Slot {
             self.entries.insert(key, new_entry);
             Ok(old_value)
         } else {
-            Number::insert_new(self, key, value);
+            Integer::insert_new(self, key, value);
             Ok(0)
         }
     }

@@ -16,6 +16,7 @@ use super::{
     data_type::{DataType, SimpleType},
     result::Result,
 };
+use crate::options::NxXx;
 
 /// Entry in the key-value store
 #[derive(Debug)]
@@ -151,17 +152,15 @@ impl Slot {
         &self,
         key: String,
         value: SimpleType,
-        nxxx: Option<bool>,
+        nx_xx: NxXx,
         mut expires_at: Option<DateTime<Utc>>,
         keepttl: bool,
     ) -> Result<Option<SimpleType>> {
         let old_value = self.get_simple(&key)?;
-        let need_update = if let Some(nx) = nxxx {
-            // old_value = state.get_data(&key).cloned();
-            let c = old_value.is_some();
-            (nx && !c) || (!nx && c)
-        } else {
-            true
+        let need_update = match nx_xx {
+            NxXx::Nx => !old_value.is_some(),
+            NxXx::Xx => old_value.is_some(),
+            NxXx::None => true,
         };
         if !need_update {
             return Ok(old_value);

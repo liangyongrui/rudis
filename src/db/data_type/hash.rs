@@ -2,7 +2,7 @@ use std::{ops::Deref, sync::Arc};
 
 use rpds::HashTrieMapSync;
 
-use super::{number::Number, AggregateType, DataType, SimpleType};
+use super::{integer::Integer, AggregateType, DataType, SimpleType};
 use crate::db::{
     result::Result,
     slot::{Entry, Slot},
@@ -188,13 +188,13 @@ impl Slot {
         self.mut_process_exists_or_new_hash(&key, |hash| {
             let old_value = match hash.get(&field) {
                 Some(SimpleType::SimpleString(s)) => s.parse::<i64>().map_err(|e| e.to_string())?,
-                Some(SimpleType::Number(i)) => (i.0),
+                Some(SimpleType::Integer(i)) => (i.0),
                 Some(_) => return Err("type not support".to_owned()),
                 None => 0,
             };
             let nv = old_value + value;
             hash.version += 1;
-            hash.value = Arc::new(hash.insert(field, SimpleType::Number(Number(nv))));
+            hash.value = Arc::new(hash.insert(field, SimpleType::Integer(Integer(nv))));
             Ok(nv)
         })
     }

@@ -2,7 +2,7 @@ use bytes::Bytes;
 use chrono::{Duration, Utc};
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{db::Db, options::NxXx, parse::Parse, Connection, Frame};
 
 #[derive(Debug)]
 pub struct Psetex {
@@ -33,7 +33,7 @@ impl Psetex {
             .set(
                 self.key,
                 self.value.into(),
-                None,
+                NxXx::None,
                 Utc::now().checked_add_signed(Duration::milliseconds(self.milliseconds as i64)),
                 false,
             )
