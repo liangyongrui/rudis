@@ -94,18 +94,12 @@ impl Slot {
     pub fn hset(&self, key: String, pairs: Vec<HashEntry>) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, &key, |hash| {
             let len = pairs.len();
-            let mut new: Option<HashTrieMapSync<String, SimpleType>> = None;
+            let mut new = (*hash.value).clone();
             for HashEntry { field, value } in pairs.into_iter() {
-                if let Some(ref mut n) = new {
-                    n.insert_mut(field, value);
-                } else {
-                    new = Some(hash.insert(field, value));
-                }
+                new.insert_mut(field, value);
             }
-            if let Some(n) = new {
-                hash.version += 1;
-                hash.value = Arc::new(n);
-            }
+            hash.version += 1;
+            hash.value = Arc::new(new);
             Ok(len)
         })
     }
@@ -155,18 +149,12 @@ impl Slot {
             key,
             |hash| {
                 let old_len = hash.size();
-                let mut new: Option<HashTrieMapSync<String, SimpleType>> = None;
+                let mut new = (*hash.value).clone();
                 for field in fields {
-                    if let Some(ref mut n) = new {
-                        n.remove_mut(&field);
-                    } else {
-                        new = Some(hash.remove(&field));
-                    }
+                    new.remove_mut(&field);
                 }
-                if let Some(n) = new {
-                    hash.version += 1;
-                    hash.value = Arc::new(n);
-                }
+                hash.version += 1;
+                hash.value = Arc::new(new);
                 hash.size() - old_len
             },
             || 0,

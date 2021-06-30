@@ -1,6 +1,6 @@
 use bytes::Bytes;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum NxXx {
     Nx,
     Xx,
@@ -18,12 +18,14 @@ impl From<NxXx> for Option<Bytes> {
 }
 
 impl NxXx {
-    pub fn is_none(&self) -> bool {
-        *self == NxXx::None
+    #[inline]
+    #[must_use]
+    pub const fn is_none(self) -> bool {
+        matches!(self, NxXx::None)
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum GtLt {
     Gt,
     Lt,

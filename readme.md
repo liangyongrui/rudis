@@ -74,8 +74,8 @@ set
 
 zset
 
+1. [ ] zadd
 1. [ ] zrange
 1. [ ] zrevrank
-1. [ ] zadd
 1. [ ] zremrangebyrank
 1. [ ] zrevrangebyscore

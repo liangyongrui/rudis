@@ -14,19 +14,23 @@ use crate::{
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node {
     score: f64,
-    value: String,
+    key: String,
 }
 impl Eq for Node {}
 impl PartialOrd for Node {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.score.partial_cmp(&other.score)
+        self.score.partial_cmp(&other.score).map(|x| {
+            if x.is_eq() {
+                self.key.cmp(&other.key)
+            } else {
+                x
+            }
+        })
     }
 }
 impl Ord for Node {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.score
-            .partial_cmp(&other.score)
-            .expect("f64 can not Nan")
+        self.partial_cmp(&other).expect("f64 can not Nan")
     }
 }
 
@@ -35,6 +39,48 @@ pub struct SortedSet {
     version: u64,
     hash: HashMap<String, Node>,
     value: Arc<RedBlackTreeSetSync<Node>>,
+}
+
+impl SortedSet {
+    fn contains_key(&self, key: &str) -> bool {
+        self.hash.contains_key(key)
+    }
+    fn get(&self, key: &str) -> Option<&Node> {
+        self.hash.get(key)
+    }
+    fn can_update(&self, node: &Node, nx_xx: NxXx, gt_lt: GtLt) -> bool {
+        match (nx_xx, gt_lt) {
+            (NxXx::None, GtLt::None) => true,
+            (NxXx::Nx, GtLt::None) => !self.contains_key(&node.key),
+            (NxXx::Nx, _) => false,
+            (NxXx::Xx, GtLt::None) => self.contains_key(&node.key),
+            (_, GtLt::Gt) => self
+                .get(&node.key)
+                .filter(|n| node.score > n.score)
+                .is_some(),
+            (_, GtLt::Lt) => self
+                .get(&node.key)
+                .filter(|n| node.score < n.score)
+                .is_some(),
+        }
+    }
+    fn add(&mut self, values: Vec<Node>, nx_xx: NxXx, gt_lt: GtLt, ch: bool, incr: bool) -> usize {
+        let old_len = self.value.size();
+        let mut new = (*self.value).clone();
+        for mut v in values {
+            if self.can_update(&v, nx_xx, gt_lt) {
+                if let Some(ov) = self.hash.remove(&v.key) {
+                    new.remove_mut(&ov);
+                    if incr {
+                        v.score += ov.score;
+                    }
+                }
+                self.hash.insert(v.key.clone(), v.clone());
+                new.insert_mut(v)
+            }
+        }
+        self.value.size() - if ch { 0 } else { old_len }
+    }
 }
 
 impl SortedSet {
@@ -49,7 +95,7 @@ impl SortedSet {
             value: Arc::new(RedBlackTreeSetSync::new_sync()),
         }
     }
-    
+
     fn mut_process_exists_or_new<T, F: FnOnce(&mut SortedSet) -> Result<T>>(
         slot: &Slot,
         key: &str,
@@ -113,6 +159,8 @@ impl Slot {
         ch: bool,
         incr: bool,
     ) -> Result<usize> {
-        SortedSet::mut_process_exists_or_new(self, &key, |set| todo!())
+        SortedSet::mut_process_exists_or_new(self, &key, |set| {
+            Ok(set.add(values, nx_xx, gt_lt, ch, incr))
+        })
     }
 }

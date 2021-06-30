@@ -88,18 +88,12 @@ impl Slot {
     pub fn sadd(&self, key: String, values: Vec<SimpleType>) -> Result<usize> {
         Set::mut_process_exists_or_new(self, &key, |set| {
             let old_len = set.size();
-            let mut new: Option<HashTrieSetSync<SimpleType>> = None;
+            let mut new = (*set.value).clone();
             for v in values {
-                if let Some(ref mut n) = new {
-                    n.insert_mut(v)
-                } else {
-                    new = Some(set.insert(v))
-                }
+                new.insert_mut(v)
             }
-            if let Some(n) = new {
-                set.version += 1;
-                set.value = Arc::new(n);
-            }
+            set.version += 1;
+            set.value = Arc::new(new);
             Ok(set.size() - old_len)
         })
     }
@@ -129,18 +123,12 @@ impl Slot {
             key,
             |set| {
                 let old_len = set.size();
-                let mut new: Option<HashTrieSetSync<SimpleType>> = None;
+                let mut new = (*set.value).clone();
                 for v in values {
-                    if let Some(ref mut n) = new {
-                        n.remove_mut(v);
-                    } else {
-                        new = Some(set.remove(v))
-                    }
+                    new.remove_mut(v);
                 }
-                if let Some(n) = new {
-                    set.version += 1;
-                    set.value = Arc::new(n);
-                }
+                set.version += 1;
+                set.value = Arc::new(new);
                 set.size() - old_len
             },
             || 0,
