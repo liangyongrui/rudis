@@ -31,15 +31,13 @@ impl Set {
             value: Arc::new(HashTrieSetSync::new_sync()),
         }
     }
-}
-impl Slot {
-    fn process_set<T, F: FnOnce(&Set) -> T>(
-        &self,
+    fn process<T, F: FnOnce(&Set) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = self.entries.get(key);
+        let entry = slot.entries.get(key);
         match entry {
             Some(e) => match e.value() {
                 Entry {
@@ -52,13 +50,13 @@ impl Slot {
         }
     }
 
-    fn mut_process_set<T, F: FnOnce(&mut Set) -> T>(
-        &self,
+    fn mut_process<T, F: FnOnce(&mut Set) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = self.entries.get_mut(key);
+        let entry = slot.entries.get_mut(key);
         match entry {
             Some(mut e) => match e.value_mut() {
                 Entry {
@@ -71,12 +69,12 @@ impl Slot {
         }
     }
 
-    fn mut_process_exists_or_new_set<T, F: FnOnce(&mut Set) -> Result<T>>(
-        &self,
+    fn mut_process_exists_or_new<T, F: FnOnce(&mut Set) -> Result<T>>(
+        slot: &Slot,
         key: &str,
         f: F,
     ) -> Result<T> {
-        let mut entry = self.get_or_insert_entry(&key, || (Set::new_data_type(), None));
+        let mut entry = slot.get_or_insert_entry(&key, || (Set::new_data_type(), None));
         match entry.value_mut() {
             Entry {
                 data: DataType::AggregateType(AggregateType::Set(set)),
@@ -85,9 +83,10 @@ impl Slot {
             _ => Err("the value stored at key is not a set.".to_owned()),
         }
     }
-
+}
+impl Slot {
     pub fn sadd(&self, key: String, values: Vec<SimpleType>) -> Result<usize> {
-        self.mut_process_exists_or_new_set(&key, |set| {
+        Set::mut_process_exists_or_new(self, &key, |set| {
             let old_len = set.size();
             let mut new: Option<HashTrieSetSync<SimpleType>> = None;
             for v in values {
@@ -106,7 +105,8 @@ impl Slot {
     }
 
     pub fn smismember(&self, key: &str, values: Vec<&SimpleType>) -> Result<Vec<bool>> {
-        let set = self.process_set(
+        let set = Set::process(
+            self,
             key,
             |set| Arc::clone(&set.value),
             || Arc::new(HashTrieSetSync::new_sync()),
@@ -115,7 +115,8 @@ impl Slot {
     }
 
     pub fn smembers(&self, key: &str) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
-        self.process_set(
+        Set::process(
+            self,
             key,
             |set| Arc::clone(&set.value),
             || Arc::new(HashTrieSetSync::new_sync()),
@@ -123,7 +124,8 @@ impl Slot {
     }
 
     pub fn srem(&self, key: &str, values: Vec<&SimpleType>) -> Result<usize> {
-        self.mut_process_set(
+        Set::mut_process(
+            self,
             key,
             |set| {
                 let old_len = set.size();

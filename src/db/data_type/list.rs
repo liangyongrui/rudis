@@ -50,16 +50,13 @@ impl List {
         }
         (start as usize, stop as usize + 1)
     }
-}
-
-impl Slot {
-    fn process_list<T, F: FnOnce(&List) -> T>(
-        &self,
+    fn process<T, F: FnOnce(&List) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        match self.entries.get(key) {
+        match slot.entries.get(key) {
             Some(v) => match v.value() {
                 Entry {
                     data: DataType::AggregateType(AggregateType::List(list)),
@@ -71,13 +68,13 @@ impl Slot {
         }
     }
 
-    fn mut_process_list<T, F: FnOnce(&mut List) -> T>(
-        &self,
+    fn mut_process<T, F: FnOnce(&mut List) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        match self.entries.get_mut(key) {
+        match slot.entries.get_mut(key) {
             Some(mut v) => match v.value_mut() {
                 Entry {
                     data: DataType::AggregateType(AggregateType::List(list)),
@@ -89,12 +86,12 @@ impl Slot {
         }
     }
 
-    fn mut_process_exists_or_new_list<T, F: FnOnce(&mut List) -> T>(
-        &self,
+    fn mut_process_exists_or_new<T, F: FnOnce(&mut List) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
     ) -> Result<T> {
-        let mut entry = self.get_or_insert_entry(key, || {
+        let mut entry = slot.get_or_insert_entry(key, || {
             (
                 DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
                 None,
@@ -108,9 +105,12 @@ impl Slot {
             _ => Err("the value stored at key is not a list.".to_owned()),
         }
     }
+}
 
+impl Slot {
     pub(crate) fn lpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
-        self.mut_process_list(
+        List::mut_process(
+            self,
             key,
             |list| {
                 for v in values {
@@ -123,7 +123,8 @@ impl Slot {
     }
 
     pub(crate) fn rpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
-        self.mut_process_list(
+        List::mut_process(
+            self,
             key,
             |list| {
                 for v in values {
@@ -135,7 +136,7 @@ impl Slot {
         )
     }
     pub(crate) fn lpush(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
-        self.mut_process_exists_or_new_list(key, |list| {
+        List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_front(v)
             }
@@ -144,7 +145,7 @@ impl Slot {
     }
 
     pub(crate) fn rpush(&self, key: String, values: Vec<Blob>) -> Result<usize> {
-        self.mut_process_exists_or_new_list(&key, |list| {
+        List::mut_process_exists_or_new(self, &key, |list| {
             for v in values {
                 list.push_back(v)
             }
@@ -153,7 +154,8 @@ impl Slot {
     }
 
     pub(crate) fn lpop(&self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
-        self.mut_process_list(
+        List::mut_process(
+            self,
             key,
             |list| {
                 let mut res = vec![];
@@ -171,7 +173,8 @@ impl Slot {
     }
 
     pub(crate) fn rpop(&self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
-        self.mut_process_list(
+        List::mut_process(
+            self,
             key,
             |list| {
                 let mut res = vec![];
@@ -189,7 +192,8 @@ impl Slot {
     }
 
     pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Blob>> {
-        self.process_list(
+        List::process(
+            self,
             key,
             |list| {
                 let (begin, end) = list.shape(start, stop);
@@ -204,6 +208,6 @@ impl Slot {
     }
 
     pub(crate) fn llen(&self, key: &str) -> Result<usize> {
-        self.process_list(key, |list| list.len(), || 0)
+        List::process(self, key, |list| list.len(), || 0)
     }
 }

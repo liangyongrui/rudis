@@ -49,9 +49,7 @@ impl SortedSet {
             value: Arc::new(RedBlackTreeSetSync::new_sync()),
         }
     }
-}
-
-impl SortedSet {
+    
     fn mut_process_exists_or_new<T, F: FnOnce(&mut SortedSet) -> Result<T>>(
         slot: &Slot,
         key: &str,
@@ -66,7 +64,7 @@ impl SortedSet {
             _ => Err("the value stored at key is not a sorted set.".to_owned()),
         }
     }
-    fn process_sorted_set<T, F: FnOnce(&SortedSet) -> T>(
+    fn process<T, F: FnOnce(&SortedSet) -> T>(
         slot: &Slot,
         key: &str,
         f: F,
@@ -85,7 +83,7 @@ impl SortedSet {
         }
     }
 
-    fn mut_process_sorted_set<T, F: FnOnce(&mut SortedSet) -> T>(
+    fn mut_process<T, F: FnOnce(&mut SortedSet) -> T>(
         slot: &Slot,
         key: &str,
         f: F,

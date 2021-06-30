@@ -36,15 +36,14 @@ impl Hash {
             value: Arc::new(HashTrieMapSync::new_sync()),
         }
     }
-}
-impl Slot {
-    fn process_hash<T, F: FnOnce(&Hash) -> T>(
-        &self,
+
+    fn process<T, F: FnOnce(&Hash) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = self.entries.get(key);
+        let entry = slot.entries.get(key);
         match entry {
             Some(e) => match e.value() {
                 Entry {
@@ -57,13 +56,13 @@ impl Slot {
         }
     }
 
-    fn mut_process_hash<T, F: FnOnce(&mut Hash) -> T>(
-        &self,
+    fn mut_process<T, F: FnOnce(&mut Hash) -> T>(
+        slot: &Slot,
         key: &str,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = self.entries.get_mut(key);
+        let entry = slot.entries.get_mut(key);
         match entry {
             Some(mut e) => match e.value_mut() {
                 Entry {
@@ -76,12 +75,12 @@ impl Slot {
         }
     }
 
-    fn mut_process_exists_or_new_hash<T, F: FnOnce(&mut Hash) -> Result<T>>(
-        &self,
+    fn mut_process_exists_or_new<T, F: FnOnce(&mut Hash) -> Result<T>>(
+        slot: &Slot,
         key: &str,
         f: F,
     ) -> Result<T> {
-        let mut entry = self.get_or_insert_entry(&key, || (Hash::new_data_type(), None));
+        let mut entry = slot.get_or_insert_entry(&key, || (Hash::new_data_type(), None));
         match entry.value_mut() {
             Entry {
                 data: DataType::AggregateType(AggregateType::Hash(hash)),
@@ -90,9 +89,10 @@ impl Slot {
             _ => Err("the value stored at key is not a hash.".to_owned()),
         }
     }
-
+}
+impl Slot {
     pub fn hset(&self, key: String, pairs: Vec<HashEntry>) -> Result<usize> {
-        self.mut_process_exists_or_new_hash(&key, |hash| {
+        Hash::mut_process_exists_or_new(self, &key, |hash| {
             let len = pairs.len();
             let mut new: Option<HashTrieMapSync<String, SimpleType>> = None;
             for HashEntry { field, value } in pairs.into_iter() {
@@ -111,7 +111,7 @@ impl Slot {
     }
 
     pub fn hsetnx(&self, key: &str, field: String, value: SimpleType) -> Result<usize> {
-        self.mut_process_exists_or_new_hash(&key, |hash| {
+        Hash::mut_process_exists_or_new(self, &key, |hash| {
             if hash.contains_key(&field) {
                 Ok(0)
             } else {
@@ -123,7 +123,8 @@ impl Slot {
     }
 
     pub fn hgetall(&self, key: &str) -> Result<Vec<HashEntry>> {
-        self.process_hash(
+        Hash::process(
+            self,
             key,
             |hash| Arc::clone(&hash.value),
             || Arc::new(HashTrieMapSync::new_sync()),
@@ -139,7 +140,8 @@ impl Slot {
     }
 
     pub fn hmget(&self, key: &str, fields: Vec<String>) -> Result<Vec<Option<SimpleType>>> {
-        self.process_hash(
+        Hash::process(
+            self,
             key,
             |hash| Arc::clone(&hash.value),
             || Arc::new(HashTrieMapSync::new_sync()),
@@ -148,7 +150,8 @@ impl Slot {
     }
 
     pub fn hdel(&self, key: &str, fields: Vec<String>) -> Result<usize> {
-        self.mut_process_hash(
+        Hash::mut_process(
+            self,
             key,
             |hash| {
                 let old_len = hash.size();
@@ -171,7 +174,8 @@ impl Slot {
     }
 
     pub fn hexists(&self, key: &str, field: String) -> Result<usize> {
-        self.process_hash(
+        Hash::process(
+            self,
             key,
             |hash| {
                 if hash.value.contains_key(&field) {
@@ -185,7 +189,7 @@ impl Slot {
     }
 
     pub fn hincrby(&self, key: &str, field: String, value: i64) -> Result<i64> {
-        self.mut_process_exists_or_new_hash(&key, |hash| {
+        Hash::mut_process_exists_or_new(self, &key, |hash| {
             let old_value = match hash.get(&field) {
                 Some(SimpleType::SimpleString(s)) => s.parse::<i64>().map_err(|e| e.to_string())?,
                 Some(SimpleType::Integer(i)) => (i.0),
