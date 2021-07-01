@@ -76,6 +76,7 @@ zset
 
 1. [ ] zadd
 1. [ ] zrange
+    - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
 1. [ ] zrevrank
 1. [ ] zremrangebyrank
 1. [ ] zrevrangebyscore

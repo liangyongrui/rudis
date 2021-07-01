@@ -26,7 +26,7 @@
 //!   representation.
 
 pub mod options;
-
+mod utils;
 pub mod client;
 
 pub mod cmd;

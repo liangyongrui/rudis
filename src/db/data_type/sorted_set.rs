@@ -1,6 +1,11 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    ops::{Bound, RangeBounds},
+    sync::Arc,
+};
 
 use rpds::RedBlackTreeSetSync;
+use tracing::debug;
 
 use super::{AggregateType, DataType};
 use crate::{
@@ -9,13 +14,21 @@ use crate::{
         slot::{Entry, Slot},
     },
     options::{GtLt, NxXx},
+    utils::BoundExt,
 };
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node {
-    score: f64,
     key: String,
+    score: f64,
 }
+
+pub enum RangeItem {
+    Rank((Bound<i64>, Bound<i64>)),
+    Socre((Bound<f64>, Bound<f64>)),
+    Lex((Bound<String>, Bound<String>)),
+}
+
 impl Eq for Node {}
 impl PartialOrd for Node {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
@@ -81,6 +94,83 @@ impl SortedSet {
         }
         self.value.size() - if ch { 0 } else { old_len }
     }
+}
+
+fn zrange_by_rank(
+    set: RedBlackTreeSetSync<Node>,
+    range: (Bound<i64>, Bound<i64>),
+    rev: bool,
+    limit: Option<(i64, i64)>,
+) -> Vec<Node> {
+    todo!()
+}
+
+fn zrange_by_score(
+    set: RedBlackTreeSetSync<Node>,
+    range: (Bound<f64>, Bound<f64>),
+    rev: bool,
+    limit: Option<(i64, i64)>,
+) -> Vec<Node> {
+    let set_range: (Bound<Node>, Bound<Node>) = if rev {
+        (
+            range.1.map(|t| Node {
+                key: "".to_owned(),
+                score: t - 0.1,
+            }),
+            range.0.map(|t| Node {
+                key: "".to_owned(),
+                score: t,
+            }),
+        )
+    } else {
+        (
+            range.0.map(|t| Node {
+                key: "".to_owned(),
+                score: t,
+            }),
+            range.1.map(|t| Node {
+                key: "".to_owned(),
+                score: t + 0.1,
+            }),
+        )
+    };
+    debug!(?range, ?set_range);
+    let (offset, count) = match limit {
+        Some((offset, count)) => (
+            if offset < 0 { 0 } else { offset as usize },
+            if count < 0 {
+                set.size()
+            } else {
+                count as usize
+            },
+        ),
+        None => (0, set.size()),
+    };
+    if rev {
+        set.range(set_range)
+            .rev()
+            .filter(|t| range.contains(&t.score))
+            .take(count)
+            .skip(offset)
+            .cloned()
+            .collect()
+    } else {
+        set.range(set_range)
+            .filter(|t| range.contains(&t.score))
+            .take(count)
+            .skip(offset)
+            .cloned()
+            .collect()
+    }
+}
+
+fn zrange_by_lex(
+    set: RedBlackTreeSetSync<Node>,
+    range: (Bound<String>, Bound<String>),
+    rev: bool,
+    limit: Option<(i64, i64)>,
+) -> Vec<Node> {
+    todo!()
 }
 
 impl SortedSet {
@@ -163,4 +253,40 @@ impl Slot {
             Ok(set.add(values, nx_xx, gt_lt, ch, incr))
         })
     }
+
+    pub fn zrange(
+        &self,
+        key: &str,
+        range: RangeItem,
+        rev: bool,
+        limit: Option<(i64, i64)>,
+    ) -> Result<Vec<Node>> {
+        let res = SortedSet::process(self, &key, |set| Some((*set.value).clone()), || None)?;
+        match res {
+            Some(tree_set) => Ok(match range {
+                RangeItem::Rank(range) => zrange_by_rank(tree_set, range, rev, limit),
+                RangeItem::Socre(range) => zrange_by_score(tree_set, range, rev, limit),
+                RangeItem::Lex(range) => zrange_by_lex(tree_set, range, rev, limit),
+            }),
+            None => Ok(vec![]),
+        }
+    }
+}
+
+#[test]
+fn test_tree() {
+    let mut tree = RedBlackTreeSetSync::new_sync();
+    tree.insert_mut(1);
+    tree.insert_mut(5);
+    tree.insert_mut(7);
+    tree.insert_mut(2);
+    tree.iter().for_each(|t| println!("{}", t));
+    tree.range(2..6).for_each(|t| println!("{}", t));
+}
+
+#[test]
+fn test_iter() {
+    let v = vec![1, 2, 3, 4, 5, 6, 7];
+    let v2: Vec<_> = v.into_iter().filter(|t| *t > 2).take(4).skip(1).collect();
+    assert_eq!(v2, vec![4, 5, 6]);
 }
