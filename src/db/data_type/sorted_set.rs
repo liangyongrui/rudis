@@ -100,6 +100,19 @@ impl SortedSet {
         }
         self.value.size() - if ch { 0 } else { old_len }
     }
+
+    pub fn zrem(&mut self, values: Vec<String>) -> usize {
+        let old_len = self.value.size();
+        let mut set = (*self.value).clone();
+        for v in values {
+            if let Some(n) = self.hash.remove(&v) {
+                set.remove_mut(&n);
+            }
+        }
+        self.version += 1;
+        self.value = Arc::new(set);
+        self.value.size() - old_len
+    }
 }
 /// The indexes can also be negative numbers indicating offsets from the end of the sorted set,
 /// with -1 being the last element of the sorted set, -2 the penultimate element, and so on.
@@ -137,22 +150,7 @@ fn zrange_by_rank(
         shape_rank_index(set.size(), range.1, true),
     );
     let range = range.0..range.1;
-    let (offset, count) = match limit {
-        Some((mut offset, count)) => {
-            if offset < 0 {
-                offset = 0;
-            }
-            (
-                offset as usize,
-                if count < 0 {
-                    set.size()
-                } else {
-                    (offset + count) as usize
-                },
-            )
-        }
-        None => (0, set.size()),
-    };
+    let (offset, count) = sharp_limit(limit, set.size());
     if rev {
         set.iter()
             .rev()
@@ -193,23 +191,7 @@ fn zrange_by_score(
         }),
     );
     debug!(?range, ?set_range);
-    let (offset, count) = match limit {
-        Some((mut offset, count)) => {
-            if offset < 0 {
-                offset = 0;
-            }
-            (
-                offset as usize,
-                if count < 0 {
-                    set.size()
-                } else {
-                    (offset + count) as usize
-                },
-            )
-        }
-        None => (0, set.size()),
-    };
-    debug!(offset, count);
+    let (offset, count) = sharp_limit(limit, set.size());
     if rev {
         set.range(set_range)
             .rev()
@@ -230,11 +212,58 @@ fn zrange_by_score(
 
 fn zrange_by_lex(
     set: &RedBlackTreeSetSync<Node>,
-    range: (Bound<String>, Bound<String>),
+    mut range: (Bound<String>, Bound<String>),
     rev: bool,
     limit: Option<(i64, i64)>,
 ) -> Vec<Node> {
-    todo!()
+    let score = if let Some(t) = set.first() {
+        t.score
+    } else {
+        return vec![];
+    };
+    if rev {
+        range = (range.1, range.0)
+    }
+    let set_range: (Bound<Node>, Bound<Node>) = (
+        range.0.map(|key| Node { key, score }),
+        range.1.map(|key| Node { key, score }),
+    );
+    let (offset, count) = sharp_limit(limit, set.size());
+    debug!(offset, count);
+    if rev {
+        set.range(set_range)
+            .rev()
+            .take(count)
+            .skip(offset)
+            .cloned()
+            .collect()
+    } else {
+        set.range(set_range)
+            .take(count)
+            .skip(offset)
+            .cloned()
+            .collect()
+    }
+}
+
+fn sharp_limit(limit: Option<(i64, i64)>, len: usize) -> (usize, usize) {
+    let (offset, count) = match limit {
+        Some((mut offset, count)) => {
+            if offset < 0 {
+                offset = 0;
+            }
+            (
+                offset as usize,
+                if count < 0 {
+                    len
+                } else {
+                    (offset + count) as usize
+                },
+            )
+        }
+        None => (0, len),
+    };
+    (offset, count)
 }
 
 impl SortedSet {
@@ -318,6 +347,10 @@ impl Slot {
         })
     }
 
+    pub fn zrem(&self, key: String, values: Vec<String>) -> Result<usize> {
+        SortedSet::mut_process(self, &key, |set| set.zrem(values), || 0)
+    }
+
     pub fn zrange(
         &self,
         key: &str,
@@ -338,13 +371,10 @@ impl Slot {
 }
 
 mod test {
-    use std::ops::Bound;
 
     use rpds::{rbt_set_sync, RedBlackTreeSetSync};
-    use tracing::Level;
 
-    use super::{zrange_by_score, Node};
-    use crate::db::data_type::sorted_set::zrange_by_rank;
+    use super::*;
 
     #[test]
     fn test_tree() {
@@ -434,10 +464,6 @@ mod test {
 
     #[test]
     fn test_zrange_by_rank() {
-        // tracing_subscriber::fmt::Subscriber::builder()
-        //     .with_max_level(Level::DEBUG)
-        //     .try_init()
-        //     .unwrap();
         let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
             Node::new("n".to_owned(), 11.0),
             Node::new("m".to_owned(), 10.0),
@@ -498,6 +524,108 @@ mod test {
                 Node::new("g".to_owned(), 5.0),
                 Node::new("f".to_owned(), 2.0),
                 Node::new("e2".to_owned(), 2.0),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_zrange_by_lex() {
+        let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
+            Node::new("n".to_owned(), 1.0),
+            Node::new("m".to_owned(), 1.0),
+            Node::new("l".to_owned(), 1.0),
+            Node::new("k".to_owned(), 1.0),
+            Node::new("j".to_owned(), 1.0),
+            Node::new("i".to_owned(), 1.0),
+            Node::new("h".to_owned(), 1.0),
+            Node::new("g".to_owned(), 1.0),
+            Node::new("f".to_owned(), 1.0),
+            Node::new("e".to_owned(), 1.0),
+            Node::new("e2".to_owned(), 1.0),
+            Node::new("d".to_owned(), 1.0),
+            Node::new("c".to_owned(), 1.0),
+            Node::new("b".to_owned(), 1.0),
+            Node::new("a".to_owned(), 1.0)
+        ];
+        let res = zrange_by_lex(
+            &set,
+            (
+                Bound::Excluded("a".to_owned()),
+                Bound::Excluded("j".to_owned()),
+            ),
+            false,
+            None,
+        );
+        assert_eq!(
+            res,
+            vec![
+                Node::new("b".to_owned(), 1.0),
+                Node::new("c".to_owned(), 1.0),
+                Node::new("d".to_owned(), 1.0),
+                Node::new("e".to_owned(), 1.0),
+                Node::new("e2".to_owned(), 1.0),
+                Node::new("f".to_owned(), 1.0),
+                Node::new("g".to_owned(), 1.0),
+                Node::new("h".to_owned(), 1.0),
+                Node::new("i".to_owned(), 1.0),
+            ]
+        );
+        let res = zrange_by_lex(
+            &set,
+            (
+                Bound::Excluded("j".to_owned()),
+                Bound::Included("d".to_owned()),
+            ),
+            true,
+            None,
+        );
+        assert_eq!(
+            res,
+            vec![
+                Node::new("i".to_owned(), 1.0),
+                Node::new("h".to_owned(), 1.0),
+                Node::new("g".to_owned(), 1.0),
+                Node::new("f".to_owned(), 1.0),
+                Node::new("e2".to_owned(), 1.0),
+                Node::new("e".to_owned(), 1.0),
+                Node::new("d".to_owned(), 1.0),
+            ]
+        );
+
+        let res = zrange_by_lex(
+            &set,
+            (
+                Bound::Excluded("j".to_owned()),
+                Bound::Included("d".to_owned()),
+            ),
+            true,
+            Some((2, 4)),
+        );
+        assert_eq!(
+            res,
+            vec![
+                Node::new("g".to_owned(), 1.0),
+                Node::new("f".to_owned(), 1.0),
+                Node::new("e2".to_owned(), 1.0),
+                Node::new("e".to_owned(), 1.0),
+            ]
+        );
+
+        let res = zrange_by_lex(
+            &set,
+            (Bound::Unbounded, Bound::Included("i".to_owned())),
+            false,
+            Some((2, 6)),
+        );
+        assert_eq!(
+            res,
+            vec![
+                Node::new("c".to_owned(), 1.0),
+                Node::new("d".to_owned(), 1.0),
+                Node::new("e".to_owned(), 1.0),
+                Node::new("e2".to_owned(), 1.0),
+                Node::new("f".to_owned(), 1.0),
+                Node::new("g".to_owned(), 1.0),
             ]
         );
     }
