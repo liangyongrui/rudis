@@ -17,6 +17,7 @@ rust cloud cache
 1. [ ] pipeline(停止服务器的时候，处理干净 pipeline)
 1. [ ] 自定义插件
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
+1. [ ] 注释中加测试
 
 ## 支持的命令
 
@@ -76,7 +77,7 @@ zset
 
 1. [ ] zadd
 1. [ ] zrange
-    - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
+   - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
 1. [ ] zrevrank
 1. [ ] zremrangebyrank
 1. [ ] zrevrangebyscore

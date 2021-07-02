@@ -114,24 +114,6 @@ impl Client {
     /// If key already holds a value, it is overwritten. Any previous time to
     /// live associated with the key is discarded on successful SET operation.
     ///
-    /// # Examples
-    ///
-    /// Demonstrates basic usage.
-    ///
-    /// ```no_run
-    /// use rcc::client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = client::connect("localhost:6379").await.unwrap();
-    ///
-    ///     client.set("foo", "bar".into()).await.unwrap();
-    ///
-    ///     // Getting the value immediately works
-    ///     let val = client.get("foo").await.unwrap().unwrap();
-    ///     assert_eq!(val, "bar");
-    /// }
-    /// ```
     #[instrument(skip(self))]
     pub async fn set(
         &mut self,
@@ -165,28 +147,6 @@ impl Client {
             frame => Err(frame.to_error()),
         }
     }
-
-    /// Posts `message` to the given `channel`.
-    ///
-    /// Returns the number of subscribers currently listening on the channel.
-    /// There is no guarantee that these subscribers receive the message as they
-    /// may disconnect at any time.
-    ///
-    /// # Examples
-    ///
-    /// Demonstrates basic usage.
-    ///
-    /// ```no_run
-    /// use rcc::client;
-    ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let mut client = client::connect("localhost:6379").await.unwrap();
-    ///
-    ///     let val = client.publish("foo", "bar".into()).await.unwrap();
-    ///     println!("Got = {:?}", val);
-    /// }
-    /// ```
 
     /// Reads a response frame from the socket.
     ///

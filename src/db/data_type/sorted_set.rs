@@ -23,8 +23,14 @@ pub struct Node {
     score: f64,
 }
 
+impl Node {
+    fn new(key: String, score: f64) -> Self {
+        Self { key, score }
+    }
+}
+
 pub enum RangeItem {
-    Rank((Bound<i64>, Bound<i64>)),
+    Rank((i64, i64)),
     Socre((Bound<f64>, Bound<f64>)),
     Lex((Bound<String>, Bound<String>)),
 }
@@ -95,57 +101,115 @@ impl SortedSet {
         self.value.size() - if ch { 0 } else { old_len }
     }
 }
+/// The indexes can also be negative numbers indicating offsets from the end of the sorted set,
+/// with -1 being the last element of the sorted set, -2 the penultimate element, and so on.
+///
+/// Out of range indexes do not produce an error.
+///
+/// If <min> is greater than either the end index of the sorted set or <max>, an empty list is returned.
+///
+/// If <max> is greater than the end index of the sorted set, Redis will use the last element of the sorted set.
+fn shape_rank_index(len: usize, mut index: i64, max: bool) -> usize {
+    if index < 0 {
+        index += len as i64;
+    }
+    if max {
+        index += 1;
+    }
+    if index < 0 {
+        index = 0;
+    }
+    let mut index = index as usize;
+    if index > len {
+        index = len
+    }
+    index
+}
 
 fn zrange_by_rank(
-    set: RedBlackTreeSetSync<Node>,
-    range: (Bound<i64>, Bound<i64>),
+    set: &RedBlackTreeSetSync<Node>,
+    range: (i64, i64),
     rev: bool,
     limit: Option<(i64, i64)>,
 ) -> Vec<Node> {
-    todo!()
+    let range = (
+        shape_rank_index(set.size(), range.0, false),
+        shape_rank_index(set.size(), range.1, true),
+    );
+    let range = range.0..range.1;
+    let (offset, count) = match limit {
+        Some((mut offset, count)) => {
+            if offset < 0 {
+                offset = 0;
+            }
+            (
+                offset as usize,
+                if count < 0 {
+                    set.size()
+                } else {
+                    (offset + count) as usize
+                },
+            )
+        }
+        None => (0, set.size()),
+    };
+    if rev {
+        set.iter()
+            .rev()
+            .enumerate()
+            .filter(|(index, _)| range.contains(index))
+            .take(count)
+            .skip(offset)
+            .map(|(_, node)| node.clone())
+            .collect()
+    } else {
+        set.iter()
+            .enumerate()
+            .filter(|(index, _)| range.contains(index))
+            .take(count)
+            .skip(offset)
+            .map(|(_, node)| node.clone())
+            .collect()
+    }
 }
 
 fn zrange_by_score(
-    set: RedBlackTreeSetSync<Node>,
-    range: (Bound<f64>, Bound<f64>),
+    set: &RedBlackTreeSetSync<Node>,
+    mut range: (Bound<f64>, Bound<f64>),
     rev: bool,
     limit: Option<(i64, i64)>,
 ) -> Vec<Node> {
-    let set_range: (Bound<Node>, Bound<Node>) = if rev {
-        (
-            range.1.map(|t| Node {
-                key: "".to_owned(),
-                score: t - 0.1,
-            }),
-            range.0.map(|t| Node {
-                key: "".to_owned(),
-                score: t,
-            }),
-        )
-    } else {
-        (
-            range.0.map(|t| Node {
-                key: "".to_owned(),
-                score: t,
-            }),
-            range.1.map(|t| Node {
-                key: "".to_owned(),
-                score: t + 0.1,
-            }),
-        )
-    };
+    if rev {
+        range = (range.1, range.0)
+    }
+    let set_range: (Bound<Node>, Bound<Node>) = (
+        range.0.map(|t| Node {
+            key: "".to_owned(),
+            score: t,
+        }),
+        range.1.map(|t| Node {
+            key: "".to_owned(),
+            score: t + 0.1,
+        }),
+    );
     debug!(?range, ?set_range);
     let (offset, count) = match limit {
-        Some((offset, count)) => (
-            if offset < 0 { 0 } else { offset as usize },
-            if count < 0 {
-                set.size()
-            } else {
-                count as usize
-            },
-        ),
+        Some((mut offset, count)) => {
+            if offset < 0 {
+                offset = 0;
+            }
+            (
+                offset as usize,
+                if count < 0 {
+                    set.size()
+                } else {
+                    (offset + count) as usize
+                },
+            )
+        }
         None => (0, set.size()),
     };
+    debug!(offset, count);
     if rev {
         set.range(set_range)
             .rev()
@@ -165,7 +229,7 @@ fn zrange_by_score(
 }
 
 fn zrange_by_lex(
-    set: RedBlackTreeSetSync<Node>,
+    set: &RedBlackTreeSetSync<Node>,
     range: (Bound<String>, Bound<String>),
     rev: bool,
     limit: Option<(i64, i64)>,
@@ -264,29 +328,177 @@ impl Slot {
         let res = SortedSet::process(self, &key, |set| Some((*set.value).clone()), || None)?;
         match res {
             Some(tree_set) => Ok(match range {
-                RangeItem::Rank(range) => zrange_by_rank(tree_set, range, rev, limit),
-                RangeItem::Socre(range) => zrange_by_score(tree_set, range, rev, limit),
-                RangeItem::Lex(range) => zrange_by_lex(tree_set, range, rev, limit),
+                RangeItem::Rank(range) => zrange_by_rank(&tree_set, range, rev, limit),
+                RangeItem::Socre(range) => zrange_by_score(&tree_set, range, rev, limit),
+                RangeItem::Lex(range) => zrange_by_lex(&tree_set, range, rev, limit),
             }),
             None => Ok(vec![]),
         }
     }
 }
 
-#[test]
-fn test_tree() {
-    let mut tree = RedBlackTreeSetSync::new_sync();
-    tree.insert_mut(1);
-    tree.insert_mut(5);
-    tree.insert_mut(7);
-    tree.insert_mut(2);
-    tree.iter().for_each(|t| println!("{}", t));
-    tree.range(2..6).for_each(|t| println!("{}", t));
-}
+mod test {
+    use std::ops::Bound;
 
-#[test]
-fn test_iter() {
-    let v = vec![1, 2, 3, 4, 5, 6, 7];
-    let v2: Vec<_> = v.into_iter().filter(|t| *t > 2).take(4).skip(1).collect();
-    assert_eq!(v2, vec![4, 5, 6]);
+    use rpds::{rbt_set_sync, RedBlackTreeSetSync};
+    use tracing::Level;
+
+    use super::{zrange_by_score, Node};
+    use crate::db::data_type::sorted_set::zrange_by_rank;
+
+    #[test]
+    fn test_tree() {
+        let mut tree = RedBlackTreeSetSync::new_sync();
+        tree.insert_mut(1);
+        tree.insert_mut(5);
+        tree.insert_mut(7);
+        tree.insert_mut(2);
+        tree.iter().for_each(|t| println!("{}", t));
+        tree.range(2..6).for_each(|t| println!("{}", t));
+    }
+
+    #[test]
+    fn test_iter() {
+        let v = vec![1, 2, 3, 4, 5, 6, 7];
+        let v2: Vec<_> = v.into_iter().filter(|t| *t > 2).take(4).skip(1).collect();
+        assert_eq!(v2, vec![4, 5, 6]);
+    }
+
+    #[test]
+    fn test_zrange_by_score() {
+        let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
+            Node::new("n".to_owned(), 11.0),
+            Node::new("m".to_owned(), 10.0),
+            Node::new("l".to_owned(), 1.0),
+            Node::new("k".to_owned(), 9.0),
+            Node::new("j".to_owned(), 8.0),
+            Node::new("i".to_owned(), 7.0),
+            Node::new("h".to_owned(), 6.0),
+            Node::new("g".to_owned(), 5.0),
+            Node::new("f".to_owned(), 2.0),
+            Node::new("e".to_owned(), 2.0),
+            Node::new("e2".to_owned(), 2.0),
+            Node::new("d".to_owned(), 2.0),
+            Node::new("c".to_owned(), 1.0),
+            Node::new("b".to_owned(), 1.0),
+            Node::new("a".to_owned(), 1.0)
+        ];
+        let range = (Bound::Excluded(1.0), Bound::Included(10.0));
+        let res = zrange_by_score(&set, range, false, None);
+        assert_eq!(
+            res,
+            vec![
+                Node::new("d".to_owned(), 2.0),
+                Node::new("e".to_owned(), 2.0),
+                Node::new("e2".to_owned(), 2.0),
+                Node::new("f".to_owned(), 2.0),
+                Node::new("g".to_owned(), 5.0),
+                Node::new("h".to_owned(), 6.0),
+                Node::new("i".to_owned(), 7.0),
+                Node::new("j".to_owned(), 8.0),
+                Node::new("k".to_owned(), 9.0),
+                Node::new("m".to_owned(), 10.0),
+            ]
+        );
+        let range = (Bound::Excluded(10.0), Bound::Excluded(1.0));
+        let res = zrange_by_score(&set, range, true, None);
+        assert_eq!(
+            res,
+            vec![
+                Node::new("k".to_owned(), 9.0),
+                Node::new("j".to_owned(), 8.0),
+                Node::new("i".to_owned(), 7.0),
+                Node::new("h".to_owned(), 6.0),
+                Node::new("g".to_owned(), 5.0),
+                Node::new("f".to_owned(), 2.0),
+                Node::new("e2".to_owned(), 2.0),
+                Node::new("e".to_owned(), 2.0),
+                Node::new("d".to_owned(), 2.0),
+            ]
+        );
+
+        let range = (Bound::Excluded(10.0), Bound::Excluded(1.0));
+        let res = zrange_by_score(&set, range, true, Some((2, 6)));
+        assert_eq!(
+            res,
+            vec![
+                Node::new("i".to_owned(), 7.0),
+                Node::new("h".to_owned(), 6.0),
+                Node::new("g".to_owned(), 5.0),
+                Node::new("f".to_owned(), 2.0),
+                Node::new("e2".to_owned(), 2.0),
+                Node::new("e".to_owned(), 2.0),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_zrange_by_rank() {
+        // tracing_subscriber::fmt::Subscriber::builder()
+        //     .with_max_level(Level::DEBUG)
+        //     .try_init()
+        //     .unwrap();
+        let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
+            Node::new("n".to_owned(), 11.0),
+            Node::new("m".to_owned(), 10.0),
+            Node::new("l".to_owned(), 1.0),
+            Node::new("k".to_owned(), 9.0),
+            Node::new("j".to_owned(), 8.0),
+            Node::new("i".to_owned(), 7.0),
+            Node::new("h".to_owned(), 6.0),
+            Node::new("g".to_owned(), 5.0),
+            Node::new("f".to_owned(), 2.0),
+            Node::new("e".to_owned(), 2.0),
+            Node::new("e2".to_owned(), 2.0),
+            Node::new("d".to_owned(), 2.0),
+            Node::new("c".to_owned(), 1.0),
+            Node::new("b".to_owned(), 1.0),
+            Node::new("a".to_owned(), 1.0)
+        ];
+        let res = zrange_by_rank(&set, (1, 10), false, None);
+        assert_eq!(
+            res,
+            vec![
+                Node::new("b".to_owned(), 1.0),
+                Node::new("c".to_owned(), 1.0),
+                Node::new("l".to_owned(), 1.0),
+                Node::new("d".to_owned(), 2.0),
+                Node::new("e".to_owned(), 2.0),
+                Node::new("e2".to_owned(), 2.0),
+                Node::new("f".to_owned(), 2.0),
+                Node::new("g".to_owned(), 5.0),
+                Node::new("h".to_owned(), 6.0),
+                Node::new("i".to_owned(), 7.0),
+            ]
+        );
+        let res = zrange_by_rank(&set, (1, 10), true, None);
+        assert_eq!(
+            res,
+            vec![
+                Node::new("m".to_owned(), 10.0),
+                Node::new("k".to_owned(), 9.0),
+                Node::new("j".to_owned(), 8.0),
+                Node::new("i".to_owned(), 7.0),
+                Node::new("h".to_owned(), 6.0),
+                Node::new("g".to_owned(), 5.0),
+                Node::new("f".to_owned(), 2.0),
+                Node::new("e2".to_owned(), 2.0),
+                Node::new("e".to_owned(), 2.0),
+                Node::new("d".to_owned(), 2.0),
+            ]
+        );
+
+        let res = zrange_by_rank(&set, (1, 10), true, Some((2, 6)));
+        assert_eq!(
+            res,
+            vec![
+                Node::new("j".to_owned(), 8.0),
+                Node::new("i".to_owned(), 7.0),
+                Node::new("h".to_owned(), 6.0),
+                Node::new("g".to_owned(), 5.0),
+                Node::new("f".to_owned(), 2.0),
+                Node::new("e2".to_owned(), 2.0),
+            ]
+        );
+    }
 }
