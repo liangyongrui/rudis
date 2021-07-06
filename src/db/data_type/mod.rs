@@ -1,7 +1,7 @@
 mod blob;
 mod hash;
-mod list;
 mod integer;
+mod list;
 mod set;
 mod sorted_set;
 
@@ -11,7 +11,7 @@ use bytes::Bytes;
 pub use hash::HashEntry;
 
 pub use self::blob::Blob;
-use self::{hash::Hash, list::List, integer::Integer, set::Set, sorted_set::SortedSet};
+use self::{hash::Hash, integer::Integer, list::List, set::Set, sorted_set::SortedSet};
 use crate::Frame;
 
 #[derive(Debug, Clone)]

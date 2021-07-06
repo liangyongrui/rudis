@@ -9,7 +9,11 @@ use chrono::{DateTime, Utc};
 use tokio::net::{TcpStream, ToSocketAddrs};
 use tracing::{debug, instrument};
 
-use crate::{Connection, Frame, cmd::{Get, Set}, options::NxXx};
+use crate::{
+    cmd::{Get, Set},
+    options::NxXx,
+    Connection, Frame,
+};
 
 /// Established connection with a Redis server.
 ///

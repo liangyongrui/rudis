@@ -113,6 +113,18 @@ impl SortedSet {
         self.value = Arc::new(set);
         self.value.size() - old_len
     }
+
+    pub fn zremrangebyrank(&mut self, range: (i64, i64)) -> usize {
+        let mut n = (*self.value).clone();
+        let old_size = n.size();
+        let range = n.zrange_by_rank(range, false, None);
+        for i in range {
+            n.remove_mut(&i);
+            self.hash.remove(&i.key);
+        }
+        self.value = Arc::new(n);
+        old_size - self.value.size()
+    }
 }
 /// The indexes can also be negative numbers indicating offsets from the end of the sorted set,
 /// with -1 being the last element of the sorted set, -2 the penultimate element, and so on.
@@ -139,110 +151,150 @@ fn shape_rank_index(len: usize, mut index: i64, max: bool) -> usize {
     index
 }
 
-fn zrange_by_rank(
-    set: &RedBlackTreeSetSync<Node>,
-    range: (i64, i64),
-    rev: bool,
-    limit: Option<(i64, i64)>,
-) -> Vec<Node> {
-    let range = (
-        shape_rank_index(set.size(), range.0, false),
-        shape_rank_index(set.size(), range.1, true),
-    );
-    let range = range.0..range.1;
-    let (offset, count) = sharp_limit(limit, set.size());
-    if rev {
-        set.iter()
-            .rev()
-            .enumerate()
-            .filter(|(index, _)| range.contains(index))
-            .take(count)
-            .skip(offset)
-            .map(|(_, node)| node.clone())
-            .collect()
-    } else {
-        set.iter()
-            .enumerate()
-            .filter(|(index, _)| range.contains(index))
-            .take(count)
-            .skip(offset)
-            .map(|(_, node)| node.clone())
-            .collect()
-    }
-}
+trait TreeSetExt {
+    fn zrank(&self, value: &Node, rev: bool) -> Option<usize>;
 
-fn zrange_by_score(
-    set: &RedBlackTreeSetSync<Node>,
-    mut range: (Bound<f64>, Bound<f64>),
-    rev: bool,
-    limit: Option<(i64, i64)>,
-) -> Vec<Node> {
-    if rev {
-        range = (range.1, range.0)
-    }
-    let set_range: (Bound<Node>, Bound<Node>) = (
-        range.0.map(|t| Node {
-            key: "".to_owned(),
-            score: t,
-        }),
-        range.1.map(|t| Node {
-            key: "".to_owned(),
-            score: t + 0.1,
-        }),
-    );
-    debug!(?range, ?set_range);
-    let (offset, count) = sharp_limit(limit, set.size());
-    if rev {
-        set.range(set_range)
-            .rev()
-            .filter(|t| range.contains(&t.score))
-            .take(count)
-            .skip(offset)
-            .cloned()
-            .collect()
-    } else {
-        set.range(set_range)
-            .filter(|t| range.contains(&t.score))
-            .take(count)
-            .skip(offset)
-            .cloned()
-            .collect()
-    }
-}
+    fn zrange_by_rank(&self, range: (i64, i64), rev: bool, limit: Option<(i64, i64)>) -> Vec<Node>;
 
-fn zrange_by_lex(
-    set: &RedBlackTreeSetSync<Node>,
-    mut range: (Bound<String>, Bound<String>),
-    rev: bool,
-    limit: Option<(i64, i64)>,
-) -> Vec<Node> {
-    let score = if let Some(t) = set.first() {
-        t.score
-    } else {
-        return vec![];
-    };
-    if rev {
-        range = (range.1, range.0)
+    fn zrange_by_score(
+        &self,
+        range: (Bound<f64>, Bound<f64>),
+        rev: bool,
+        limit: Option<(i64, i64)>,
+    ) -> Vec<Node>;
+
+    fn zrange_by_lex(
+        &self,
+        range: (Bound<String>, Bound<String>),
+        rev: bool,
+        limit: Option<(i64, i64)>,
+    ) -> Vec<Node>;
+}
+impl TreeSetExt for RedBlackTreeSetSync<Node> {
+    fn zrange_by_rank(&self, range: (i64, i64), rev: bool, limit: Option<(i64, i64)>) -> Vec<Node> {
+        let range = (
+            shape_rank_index(self.size(), range.0, false),
+            shape_rank_index(self.size(), range.1, true),
+        );
+        let range = range.0..range.1;
+        let (offset, count) = sharp_limit(limit, self.size());
+        if rev {
+            self.iter()
+                .rev()
+                .enumerate()
+                .filter(|(index, _)| range.contains(index))
+                .take(count)
+                .skip(offset)
+                .map(|(_, node)| node.clone())
+                .collect()
+        } else {
+            self.iter()
+                .enumerate()
+                .filter(|(index, _)| range.contains(index))
+                .take(count)
+                .skip(offset)
+                .map(|(_, node)| node.clone())
+                .collect()
+        }
     }
-    let set_range: (Bound<Node>, Bound<Node>) = (
-        range.0.map(|key| Node { key, score }),
-        range.1.map(|key| Node { key, score }),
-    );
-    let (offset, count) = sharp_limit(limit, set.size());
-    debug!(offset, count);
-    if rev {
-        set.range(set_range)
-            .rev()
-            .take(count)
-            .skip(offset)
-            .cloned()
-            .collect()
-    } else {
-        set.range(set_range)
-            .take(count)
-            .skip(offset)
-            .cloned()
-            .collect()
+
+    fn zrange_by_score(
+        &self,
+        mut range: (Bound<f64>, Bound<f64>),
+        rev: bool,
+        limit: Option<(i64, i64)>,
+    ) -> Vec<Node> {
+        if rev {
+            range = (range.1, range.0)
+        }
+        let set_range: (Bound<Node>, Bound<Node>) = (
+            range.0.map(|t| Node {
+                key: "".to_owned(),
+                score: t,
+            }),
+            range.1.map(|t| Node {
+                key: "".to_owned(),
+                score: t + 0.1,
+            }),
+        );
+        debug!(?range, ?set_range);
+        let (offset, count) = sharp_limit(limit, self.size());
+        if rev {
+            self.range(set_range)
+                .rev()
+                .filter(|t| range.contains(&t.score))
+                .take(count)
+                .skip(offset)
+                .cloned()
+                .collect()
+        } else {
+            self.range(set_range)
+                .filter(|t| range.contains(&t.score))
+                .take(count)
+                .skip(offset)
+                .cloned()
+                .collect()
+        }
+    }
+
+    fn zrange_by_lex(
+        &self,
+        mut range: (Bound<String>, Bound<String>),
+        rev: bool,
+        limit: Option<(i64, i64)>,
+    ) -> Vec<Node> {
+        let score = if let Some(t) = self.first() {
+            t.score
+        } else {
+            return vec![];
+        };
+        if rev {
+            range = (range.1, range.0)
+        }
+        let set_range: (Bound<Node>, Bound<Node>) = (
+            range.0.map(|key| Node { key, score }),
+            range.1.map(|key| Node { key, score }),
+        );
+        let (offset, count) = sharp_limit(limit, self.size());
+        debug!(offset, count);
+        if rev {
+            self.range(set_range)
+                .rev()
+                .take(count)
+                .skip(offset)
+                .cloned()
+                .collect()
+        } else {
+            self.range(set_range)
+                .take(count)
+                .skip(offset)
+                .cloned()
+                .collect()
+        }
+    }
+
+    fn zrank(&self, value: &Node, rev: bool) -> Option<usize> {
+        let ans = 0;
+        if rev {
+            for n in self.iter().rev() {
+                if n.key == value.key {
+                    return Some(ans);
+                }
+                if n.score < value.score {
+                    return None;
+                }
+            }
+        } else {
+            for n in self.iter() {
+                if n.key == value.key {
+                    return Some(ans);
+                }
+                if n.score > value.score {
+                    return None;
+                }
+            }
+        }
+        None
     }
 }
 
@@ -361,9 +413,9 @@ impl Slot {
         let res = SortedSet::process(self, &key, |set| Some((*set.value).clone()), || None)?;
         match res {
             Some(tree_set) => Ok(match range {
-                RangeItem::Rank(range) => zrange_by_rank(&tree_set, range, rev, limit),
-                RangeItem::Socre(range) => zrange_by_score(&tree_set, range, rev, limit),
-                RangeItem::Lex(range) => zrange_by_lex(&tree_set, range, rev, limit),
+                RangeItem::Rank(range) => tree_set.zrange_by_rank(range, rev, limit),
+                RangeItem::Socre(range) => tree_set.zrange_by_score(range, rev, limit),
+                RangeItem::Lex(range) => tree_set.zrange_by_lex(range, rev, limit),
             }),
             None => Ok(vec![]),
         }
@@ -414,7 +466,7 @@ mod test {
             Node::new("a".to_owned(), 1.0)
         ];
         let range = (Bound::Excluded(1.0), Bound::Included(10.0));
-        let res = zrange_by_score(&set, range, false, None);
+        let res: Vec<_> = set.zrange_by_score(range, false, None);
         assert_eq!(
             res,
             vec![
@@ -431,7 +483,7 @@ mod test {
             ]
         );
         let range = (Bound::Excluded(10.0), Bound::Excluded(1.0));
-        let res = zrange_by_score(&set, range, true, None);
+        let res: Vec<_> = set.zrange_by_score(range, true, None);
         assert_eq!(
             res,
             vec![
@@ -448,7 +500,7 @@ mod test {
         );
 
         let range = (Bound::Excluded(10.0), Bound::Excluded(1.0));
-        let res = zrange_by_score(&set, range, true, Some((2, 6)));
+        let res: Vec<_> = set.zrange_by_score(range, true, Some((2, 6)));
         assert_eq!(
             res,
             vec![
@@ -481,7 +533,7 @@ mod test {
             Node::new("b".to_owned(), 1.0),
             Node::new("a".to_owned(), 1.0)
         ];
-        let res = zrange_by_rank(&set, (1, 10), false, None);
+        let res: Vec<_> = set.zrange_by_rank((1, 10), false, None);
         assert_eq!(
             res,
             vec![
@@ -497,7 +549,7 @@ mod test {
                 Node::new("i".to_owned(), 7.0),
             ]
         );
-        let res = zrange_by_rank(&set, (1, 10), true, None);
+        let res: Vec<_> = set.zrange_by_rank((1, 10), true, None);
         assert_eq!(
             res,
             vec![
@@ -514,7 +566,7 @@ mod test {
             ]
         );
 
-        let res = zrange_by_rank(&set, (1, 10), true, Some((2, 6)));
+        let res: Vec<_> = set.zrange_by_rank((1, 10), true, Some((2, 6)));
         assert_eq!(
             res,
             vec![
@@ -547,8 +599,7 @@ mod test {
             Node::new("b".to_owned(), 1.0),
             Node::new("a".to_owned(), 1.0)
         ];
-        let res = zrange_by_lex(
-            &set,
+        let res = set.zrange_by_lex(
             (
                 Bound::Excluded("a".to_owned()),
                 Bound::Excluded("j".to_owned()),
@@ -570,8 +621,7 @@ mod test {
                 Node::new("i".to_owned(), 1.0),
             ]
         );
-        let res = zrange_by_lex(
-            &set,
+        let res = set.zrange_by_lex(
             (
                 Bound::Excluded("j".to_owned()),
                 Bound::Included("d".to_owned()),
@@ -592,8 +642,7 @@ mod test {
             ]
         );
 
-        let res = zrange_by_lex(
-            &set,
+        let res = set.zrange_by_lex(
             (
                 Bound::Excluded("j".to_owned()),
                 Bound::Included("d".to_owned()),
@@ -611,8 +660,7 @@ mod test {
             ]
         );
 
-        let res = zrange_by_lex(
-            &set,
+        let res = set.zrange_by_lex(
             (Bound::Unbounded, Bound::Included("i".to_owned())),
             false,
             Some((2, 6)),

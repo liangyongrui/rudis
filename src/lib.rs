@@ -25,9 +25,9 @@
 //!   intermediate representation between a "command" and the byte
 //!   representation.
 
+pub mod client;
 pub mod options;
 mod utils;
-pub mod client;
 
 pub mod cmd;
 pub use cmd::Command;

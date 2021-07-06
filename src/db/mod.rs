@@ -12,14 +12,13 @@ use std::{
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
 
-use crate::options::NxXx;
-
 pub use self::data_type::DataType;
 use self::{
     data_type::{Blob, HashEntry, SimpleType},
     result::Result,
     slot::Slot,
 };
+use crate::options::NxXx;
 
 const SIZE: usize = 1024;
 
