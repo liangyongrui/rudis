@@ -44,6 +44,8 @@ use db::Db;
 mod parse;
 use parse::{Parse, ParseError};
 
+mod parse2;
+
 pub mod server;
 
 mod buffer;

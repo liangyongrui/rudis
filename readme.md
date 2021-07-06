@@ -11,6 +11,8 @@ rust cloud cache
 
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
+1. [ ] nom parse
+1. [ ] 错误处理
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
 1. [ ] 主备
@@ -76,7 +78,7 @@ set
 
 zset
 
-1. [ ] zadd
+1. [x] zadd
 1. [ ] zrange
    - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
 1. [ ] zrevrank

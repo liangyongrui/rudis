@@ -12,3 +12,13 @@ impl<T> BoundExt<T> for Bound<T> {
         }
     }
 }
+
+pub fn u8_to_string(data: &[u8]) -> String {
+    std::str::from_utf8(&data[..])
+        .map(|s| s.to_string())
+        .expect("protocol error; invalid string")
+}
+
+pub fn u8_to_i64(data: &[u8]) -> i64 {
+    atoi::atoi::<i64>(data).expect("protocol error; invalid number")
+}

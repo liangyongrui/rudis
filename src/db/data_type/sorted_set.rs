@@ -114,10 +114,22 @@ impl SortedSet {
         self.value.size() - old_len
     }
 
-    pub fn zremrangebyrank(&mut self, range: (i64, i64)) -> usize {
+    pub fn zremrange_by_rank(&mut self, range: (i64, i64)) -> usize {
         let mut n = (*self.value).clone();
         let old_size = n.size();
         let range = n.zrange_by_rank(range, false, None);
+        for i in range {
+            n.remove_mut(&i);
+            self.hash.remove(&i.key);
+        }
+        self.value = Arc::new(n);
+        old_size - self.value.size()
+    }
+
+    pub fn zremrange_by_score(&mut self, range: (Bound<f64>, Bound<f64>)) -> usize {
+        let mut n = (*self.value).clone();
+        let old_size = n.size();
+        let range = n.zrange_by_score(range, false, None);
         for i in range {
             n.remove_mut(&i);
             self.hash.remove(&i.key);

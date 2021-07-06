@@ -30,6 +30,7 @@ chrono = "0.4"
 automod = "1"
 dashmap = "4"
 rpds = "0.9"
+nom = "6"
 
 [dev-dependencies]
 # Enable test-utilities in dev mode only. This is mostly for tests.

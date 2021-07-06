@@ -9,6 +9,7 @@ use std::convert::TryFrom;
 
 use bytes::Bytes;
 pub use hash::HashEntry;
+pub use sorted_set::Node as SortedSetNode;
 
 pub use self::blob::Blob;
 use self::{hash::Hash, integer::Integer, list::List, set::Set, sorted_set::SortedSet};
