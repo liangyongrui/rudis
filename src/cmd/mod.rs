@@ -22,6 +22,7 @@ use self::{
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
+    sorted_set::{zadd::Zadd, zrange::Zrange},
 };
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
@@ -30,6 +31,8 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Zrange(Zrange),
+    Zadd(Zadd),
     Sadd(Sadd),
     Sismember(Sismember),
     Smembers(Smembers),
@@ -93,6 +96,8 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "zrange" => Command::Zrange(Zrange::parse_frames(&mut parse)?),
+            "zadd" => Command::Zadd(Zadd::parse_frames(&mut parse)?),
             "sadd" => Command::Sadd(Sadd::parse_frames(&mut parse)?),
             "sismember" => Command::Sismember(Sismember::parse_frames(&mut parse)?),
             "smismember" => Command::Smismember(Smismember::parse_frames(&mut parse)?),
@@ -197,6 +202,8 @@ impl Command {
             Smembers(cmd) => cmd.apply(db, dst).await,
             Smismember(cmd) => cmd.apply(db, dst).await,
             Srem(cmd) => cmd.apply(db, dst).await,
+            Zrange(cmd) => cmd.apply(db, dst).await,
+            Zadd(cmd) => cmd.apply(db, dst).await,
         }
     }
 }

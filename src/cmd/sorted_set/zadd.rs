@@ -7,7 +7,7 @@ use crate::{
     Connection, Db, Frame, Parse,
 };
 
-/// https://redis.io/commands/hset
+/// https://redis.io/commands/zadd
 #[derive(Debug)]
 pub struct Zadd {
     key: String,

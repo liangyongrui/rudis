@@ -19,6 +19,7 @@ rust cloud cache
 1. [ ] pipeline(停止服务器的时候，处理干净 pipeline)
 1. [ ] 自定义插件
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
+1. [ ] 完备的测试
 1. [ ] 注释中加测试
 1. [ ] 带 size 的持久化红黑树/btree/b+tree
 
@@ -79,7 +80,7 @@ set
 zset
 
 1. [x] zadd
-1. [ ] zrange
+1. [x] zrange
    - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
 1. [ ] zrevrank
    - O(n)

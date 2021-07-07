@@ -19,8 +19,8 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node {
-    key: String,
-    score: f64,
+    pub key: String,
+    pub score: f64,
 }
 
 impl Node {
@@ -29,6 +29,7 @@ impl Node {
     }
 }
 
+#[derive(Debug)]
 pub enum RangeItem {
     Rank((i64, i64)),
     Socre((Bound<f64>, Bound<f64>)),

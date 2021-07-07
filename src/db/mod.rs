@@ -12,7 +12,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
 
-pub use self::data_type::{DataType, SortedSetNode};
+pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
 use self::{
     data_type::{Blob, HashEntry, SimpleType},
     result::Result,
@@ -44,6 +44,15 @@ impl Db {
         Self {
             slots: Arc::new(slots),
         }
+    }
+    pub fn zrange(
+        &self,
+        key: &str,
+        range: ZrangeItem,
+        rev: bool,
+        limit: Option<(i64, i64)>,
+    ) -> Result<Vec<SortedSetNode>> {
+        self.get_slot(&key).zrange(key, range, rev, limit)
     }
     pub fn zadd(
         &self,
