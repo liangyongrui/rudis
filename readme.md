@@ -11,8 +11,8 @@ rust cloud cache
 
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
-1. [ ] nom parse
-1. [ ] 错误处理
+1. [x] nom parse
+1. [ ] 整体梳理错误处理
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
 1. [ ] 主备

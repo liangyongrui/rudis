@@ -24,7 +24,7 @@ pub struct Node {
 }
 
 impl Node {
-    fn new(key: String, score: f64) -> Self {
+    pub fn new(key: String, score: f64) -> Self {
         Self { key, score }
     }
 }

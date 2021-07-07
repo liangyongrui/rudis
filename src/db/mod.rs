@@ -12,13 +12,13 @@ use std::{
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
 
-pub use self::data_type::DataType;
+pub use self::data_type::{DataType, SortedSetNode};
 use self::{
     data_type::{Blob, HashEntry, SimpleType},
     result::Result,
     slot::Slot,
 };
-use crate::options::NxXx;
+use crate::options::{GtLt, NxXx};
 
 const SIZE: usize = 1024;
 
@@ -44,6 +44,18 @@ impl Db {
         Self {
             slots: Arc::new(slots),
         }
+    }
+    pub fn zadd(
+        &self,
+        key: String,
+        values: Vec<SortedSetNode>,
+        nx_xx: NxXx,
+        gt_lt: GtLt,
+        ch: bool,
+        incr: bool,
+    ) -> Result<usize> {
+        self.get_slot(&key)
+            .zadd(key, values, nx_xx, gt_lt, ch, incr)
     }
     pub fn smembers(&self, key: &str) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
         self.get_slot(&key).smembers(key)

@@ -8,17 +8,9 @@ use std::{convert::TryInto, fmt, io::Cursor, num::TryFromIntError, string::FromU
 
 use bytes::{Buf, Bytes};
 
-/// A frame in the Redis protocol.
-///
-#[derive(Clone, Debug)]
-pub enum Frame {
-    Simple(String),
-    Error(String),
-    Integer(i64),
-    Bulk(Bytes),
-    Null,
-    Array(Vec<Frame>),
-}
+use crate::parse2;
+
+pub type Frame = parse2::Frame;
 
 #[derive(Debug)]
 pub enum Error {

@@ -2,6 +2,7 @@ mod base;
 mod hash;
 mod list;
 mod set;
+mod sorted_set;
 
 pub use self::base::{get::Get, set::Set, setex::Setex};
 use self::{
