@@ -84,10 +84,10 @@ impl SortedSet {
                 .is_some(),
         }
     }
-    fn add(&mut self, values: Vec<Node>, nx_xx: NxXx, gt_lt: GtLt, ch: bool, incr: bool) -> usize {
+    fn add(&mut self, nodes: Vec<Node>, nx_xx: NxXx, gt_lt: GtLt, ch: bool, incr: bool) -> usize {
         let old_len = self.value.size();
         let mut new = (*self.value).clone();
-        for mut v in values {
+        for mut v in nodes {
             if self.can_update(&v, nx_xx, gt_lt) {
                 if let Some(ov) = self.hash.remove(&v.key) {
                     new.remove_mut(&ov);
@@ -102,10 +102,10 @@ impl SortedSet {
         self.value.size() - if ch { 0 } else { old_len }
     }
 
-    pub fn zrem(&mut self, values: Vec<String>) -> usize {
+    pub fn zrem(&mut self, members: Vec<String>) -> usize {
         let old_len = self.value.size();
         let mut set = (*self.value).clone();
-        for v in values {
+        for v in members {
             if let Some(n) = self.hash.remove(&v) {
                 set.remove_mut(&n);
             }
@@ -401,19 +401,28 @@ impl Slot {
     pub fn zadd(
         &self,
         key: String,
-        values: Vec<Node>,
+        nodes: Vec<Node>,
         nx_xx: NxXx,
         gt_lt: GtLt,
         ch: bool,
         incr: bool,
     ) -> Result<usize> {
         SortedSet::mut_process_exists_or_new(self, &key, |set| {
-            Ok(set.add(values, nx_xx, gt_lt, ch, incr))
+            Ok(set.add(nodes, nx_xx, gt_lt, ch, incr))
         })
     }
 
-    pub fn zrem(&self, key: String, values: Vec<String>) -> Result<usize> {
-        SortedSet::mut_process(self, &key, |set| set.zrem(values), || 0)
+    pub fn zrem(&self, key: &str, members: Vec<String>) -> Result<usize> {
+        SortedSet::mut_process(self, key, |set| set.zrem(members), || 0)
+    }
+
+    pub fn zrank(&self, key: &str, member: &str, rev: bool) -> Result<Option<usize>> {
+        SortedSet::process(
+            self,
+            key,
+            |set| set.get(member).and_then(|n| set.value.zrank(n, rev)),
+            || None,
+        )
     }
 
     pub fn zrange(
@@ -432,6 +441,14 @@ impl Slot {
             }),
             None => Ok(vec![]),
         }
+    }
+
+    pub fn zremrange_by_rank(&self, key: &str, range: (i64, i64)) -> Result<usize> {
+        SortedSet::mut_process(self, key, |set| set.zremrange_by_rank(range), || 0)
+    }
+
+    pub fn zremrange_by_score(&self, key: &str, range: (Bound<f64>, Bound<f64>)) -> Result<usize> {
+        SortedSet::mut_process(self, key, |set| set.zremrange_by_score(range), || 0)
     }
 }
 

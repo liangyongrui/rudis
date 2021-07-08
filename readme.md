@@ -82,10 +82,15 @@ zset
 1. [x] zadd
 1. [x] zrange
    - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
-1. [ ] zrevrank
+1. [x] zrevrank
    - O(n)
-1. [ ] zrank
+1. [x] zrank
    - O(n)
-1. [ ] zrem
-1. [ ] zremrangebyrank
-1. [ ] zrevrangebyscore
+1. [x] zrem
+1. [x] zrevrange
+1. [x] zrangebyscore
+1. [x] zrevrangebyscore
+1. [x] zrangebylex
+1. [x] zrevrangebylex
+1. [x] zremrangebyrank
+1. [ ] zremrangebyscore

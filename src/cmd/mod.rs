@@ -5,25 +5,19 @@ mod set;
 mod sorted_set;
 
 pub use self::base::{get::Get, set::Set, setex::Setex};
-use self::{
-    base::{
+use self::{base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
         incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat, psetex::Psetex,
         unknown::Unknown,
-    },
-    hash::{
+    }, hash::{
         hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,
         hset::Hset, hsetnx::Hsetnx,
-    },
-    list::{
+    }, list::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
-    },
-    set::{
+    }, set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
-    },
-    sorted_set::{zadd::Zadd, zrange::Zrange},
-};
+    }, sorted_set::{zadd::Zadd, zrange::Zrange, zrangebylex::Zrangebylex, zrangebyscore::Zrangebyscore, zrank::Zrank}};
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -31,6 +25,12 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Zrangebylex(Zrangebylex),
+    zrangebyscore(Zrangebyscore),
+    Zrank(Zrank),
+    Zrem(Zrem),
+    Zremrangebyrank(Zremrangebyrank),
+    Zremrangebyscore(Zremrangebyscore),
     Zrange(Zrange),
     Zadd(Zadd),
     Sadd(Sadd),

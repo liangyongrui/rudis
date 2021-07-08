@@ -1,2 +1,12 @@
 pub mod zadd;
 pub mod zrange;
+pub mod zrangebyscore;
+pub mod zrank;
+pub mod zrem;
+pub mod zrevrange;
+pub mod zrevrangebyscore;
+pub mod zrevrank;
+pub mod zrangebylex;
+pub mod zrevrangebylex;
+pub mod zremrangebyrank;
+pub mod zremrangebyscore;

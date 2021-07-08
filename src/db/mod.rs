@@ -5,6 +5,7 @@ mod slot;
 use std::{
     collections::hash_map::DefaultHasher,
     hash::{Hash, Hasher},
+    ops::Bound,
     sync::Arc,
     usize,
 };
@@ -44,6 +45,19 @@ impl Db {
         Self {
             slots: Arc::new(slots),
         }
+    }
+    pub fn zremrange_by_rank(&self, key: &str, range: (i64, i64)) -> Result<usize> {
+        self.get_slot(&key).zremrange_by_rank(key, range)
+    }
+    pub fn zremrange_by_score(&self, key: &str, range: (Bound<f64>, Bound<f64>)) -> Result<usize> {
+        self.get_slot(&key).zremrange_by_score(key, range)
+    }
+
+    pub fn zrem(&self, key: &str, members: Vec<String>) -> Result<usize> {
+        self.get_slot(&key).zrem(key, members)
+    }
+    pub fn zrank(&self, key: &str, member: &str, rev: bool) -> Result<Option<usize>> {
+        self.get_slot(&key).zrank(key, member, rev)
     }
     pub fn zrange(
         &self,
