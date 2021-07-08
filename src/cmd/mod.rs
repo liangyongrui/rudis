@@ -5,19 +5,30 @@ mod set;
 mod sorted_set;
 
 pub use self::base::{get::Get, set::Set, setex::Setex};
-use self::{base::{
+use self::{
+    base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
         incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat, psetex::Psetex,
         unknown::Unknown,
-    }, hash::{
+    },
+    hash::{
         hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,
         hset::Hset, hsetnx::Hsetnx,
-    }, list::{
+    },
+    list::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
-    }, set::{
+    },
+    set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
-    }, sorted_set::{zadd::Zadd, zrange::Zrange, zrangebylex::Zrangebylex, zrangebyscore::Zrangebyscore, zrank::Zrank}};
+    },
+    sorted_set::{
+        zadd::Zadd, zrange::Zrange, zrangebylex::Zrangebylex, zrangebyscore::Zrangebyscore,
+        zrank::Zrank, zrem::Zrem, zremrangebyrank::Zremrangebyrank,
+        zremrangebyscore::Zremrangebyscore, zrevrange::Zrevrange, zrevrangebylex::Zrevrangebylex,
+        zrevrangebyscore::Zrevrangebyscore, zrevrank::Zrevrank,
+    },
+};
 use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
@@ -26,11 +37,15 @@ use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
 #[derive(Debug)]
 pub enum Command {
     Zrangebylex(Zrangebylex),
-    zrangebyscore(Zrangebyscore),
+    Zrangebyscore(Zrangebyscore),
     Zrank(Zrank),
     Zrem(Zrem),
     Zremrangebyrank(Zremrangebyrank),
     Zremrangebyscore(Zremrangebyscore),
+    Zrevrange(Zrevrange),
+    Zrevrangebylex(Zrevrangebylex),
+    Zrevrangebyscore(Zrevrangebyscore),
+    Zrevrank(Zrevrank),
     Zrange(Zrange),
     Zadd(Zadd),
     Sadd(Sadd),
@@ -96,6 +111,22 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "zrangebylex" => Command::Zrangebylex(Zrangebylex::parse_frames(&mut parse)?),
+            "zrangebyscore" => Command::Zrangebyscore(Zrangebyscore::parse_frames(&mut parse)?),
+            "zrank" => Command::Zrank(Zrank::parse_frames(&mut parse)?),
+            "zrem" => Command::Zrem(Zrem::parse_frames(&mut parse)?),
+            "zremrangebyrank" => {
+                Command::Zremrangebyrank(Zremrangebyrank::parse_frames(&mut parse)?)
+            }
+            "zremrangebyscore" => {
+                Command::Zremrangebyscore(Zremrangebyscore::parse_frames(&mut parse)?)
+            }
+            "zrevrange" => Command::Zrevrange(Zrevrange::parse_frames(&mut parse)?),
+            "zrevrangebylex" => Command::Zrevrangebylex(Zrevrangebylex::parse_frames(&mut parse)?),
+            "zrevrangebyscore" => {
+                Command::Zrevrangebyscore(Zrevrangebyscore::parse_frames(&mut parse)?)
+            }
+            "zrevrank" => Command::Zrevrank(Zrevrank::parse_frames(&mut parse)?),
             "zrange" => Command::Zrange(Zrange::parse_frames(&mut parse)?),
             "zadd" => Command::Zadd(Zadd::parse_frames(&mut parse)?),
             "sadd" => Command::Sadd(Sadd::parse_frames(&mut parse)?),
@@ -204,6 +235,16 @@ impl Command {
             Srem(cmd) => cmd.apply(db, dst).await,
             Zrange(cmd) => cmd.apply(db, dst).await,
             Zadd(cmd) => cmd.apply(db, dst).await,
+            Zrangebylex(cmd) => cmd.apply(db, dst).await,
+            Zrangebyscore(cmd) => cmd.apply(db, dst).await,
+            Zrank(cmd) => cmd.apply(db, dst).await,
+            Zrem(cmd) => cmd.apply(db, dst).await,
+            Zremrangebyrank(cmd) => cmd.apply(db, dst).await,
+            Zremrangebyscore(cmd) => cmd.apply(db, dst).await,
+            Zrevrange(cmd) => cmd.apply(db, dst).await,
+            Zrevrangebylex(cmd) => cmd.apply(db, dst).await,
+            Zrevrangebyscore(cmd) => cmd.apply(db, dst).await,
+            Zrevrank(cmd) => cmd.apply(db, dst).await,
         }
     }
 }

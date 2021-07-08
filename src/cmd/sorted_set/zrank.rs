@@ -10,7 +10,6 @@ pub struct Zrank {
 }
 
 impl Zrank {
-
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_string()?;
         let member = parse.next_string()?;
