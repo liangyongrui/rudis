@@ -1,5 +1,3 @@
-use std::convert::TryInto;
-
 use tracing::{debug, instrument};
 
 use crate::{
@@ -41,7 +39,7 @@ impl Hset {
         let mut pairs = vec![];
         for p in values.windows(2) {
             pairs.push(HashEntry {
-                field: p[0].clone().try_into()?,
+                field: p[0].clone(),
                 value: p[1].clone(),
             });
         }

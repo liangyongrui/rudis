@@ -179,6 +179,7 @@ impl Set {
                 Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value),
                 Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
                 Ok(Some(SimpleType::Integer(value))) => Frame::Integer(value),
+                Ok(Some(SimpleType::Null)) => Frame::Null,
                 Ok(None) => Frame::Null,
                 Err(e) => Frame::Error(e),
             }

@@ -29,7 +29,8 @@ impl Node {
     pub fn new(key: SimpleType, score: f64) -> Self {
         Self { key, score }
     }
-
+    
+    #[cfg(test)]
     pub fn new_str(key: &str, score: f64) -> Self {
         Self {
             key: SimpleType::SimpleString(key.to_owned()),
@@ -50,8 +51,7 @@ impl PartialOrd for Node {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.score.partial_cmp(&other.score).map(|x| {
             if x.is_eq() {
-                todo!()
-                // self.key.cmp(&other.key)
+                self.key.cmp(&other.key)
             } else {
                 x
             }
@@ -232,11 +232,11 @@ impl TreeSetExt for RedBlackTreeSetSync<Node> {
         }
         let set_range: (Bound<Node>, Bound<Node>) = (
             range.0.map(|t| Node {
-                key: SimpleType::get_min(),
+                key: SimpleType::Null,
                 score: t,
             }),
             range.1.map(|t| Node {
-                key: SimpleType::get_min(),
+                key: SimpleType::Null,
                 score: t + 0.1,
             }),
         );

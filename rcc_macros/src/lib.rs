@@ -96,6 +96,6 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
             }
         }
     };
-    eprintln!("{}", res);
+    // eprintln!("{}", res);
     Ok(res)
 }

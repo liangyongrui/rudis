@@ -9,6 +9,7 @@ use std::convert::TryFrom;
 
 use bytes::Bytes;
 pub use hash::HashEntry;
+use nom::AsBytes;
 pub use sorted_set::{Node as SortedSetNode, RangeItem as ZrangeItem};
 
 use self::{hash::Hash, list::List, set::Set, sorted_set::SortedSet};
@@ -25,6 +26,7 @@ pub enum SimpleType {
     Blob(bytes::Bytes),
     SimpleString(String),
     Integer(i64),
+    Null,
     // Bool(bool),
     // todo
     // VerbatimString,
@@ -32,9 +34,26 @@ pub enum SimpleType {
     // BigNumber,
 }
 
-impl SimpleType {
-    pub fn get_min() -> SimpleType {
-        todo!()
+impl PartialOrd for SimpleType {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match (self, other) {
+            (SimpleType::Blob(b1), SimpleType::Blob(b2)) => b1.partial_cmp(b2),
+            (SimpleType::Blob(_), _) => Some(std::cmp::Ordering::Greater),
+            (SimpleType::Null, SimpleType::Null) => Some(std::cmp::Ordering::Equal),
+            (SimpleType::Null, _) => Some(std::cmp::Ordering::Less),
+            (SimpleType::SimpleString(_), SimpleType::Blob(_)) => Some(std::cmp::Ordering::Less),
+            (SimpleType::SimpleString(s1), SimpleType::SimpleString(s2)) => s1.partial_cmp(s2),
+            (SimpleType::SimpleString(_), _) => Some(std::cmp::Ordering::Greater),
+            (SimpleType::Integer(_), SimpleType::Null) => Some(std::cmp::Ordering::Greater),
+            (SimpleType::Integer(i1), SimpleType::Integer(i2)) => i1.partial_cmp(i2),
+            (SimpleType::Integer(_), _) => Some(std::cmp::Ordering::Less),
+        }
+    }
+}
+
+impl Ord for SimpleType {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.partial_cmp(other).unwrap()
     }
 }
 
@@ -46,6 +65,22 @@ pub enum AggregateType {
     SortedSet(SortedSet),
 }
 
+impl TryFrom<&SimpleType> for f64 {
+    type Error = &'static str;
+
+    fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
+        match value {
+            SimpleType::SimpleString(s) => s.parse().map_err(|_| "类型不对"),
+            SimpleType::Blob(b) => {
+                let s = std::str::from_utf8(b.as_bytes()).map_err(|_| "类型不对")?;
+
+                s.parse().map_err(|_| "类型不对")
+            }
+            SimpleType::Integer(i) => Ok(*i as _),
+            SimpleType::Null => Ok(0.0),
+        }
+    }
+}
 impl TryFrom<DataType> for SimpleType {
     type Error = &'static str;
 
@@ -84,6 +119,7 @@ impl From<SimpleType> for Frame {
             SimpleType::Blob(bytes) => Frame::Bulk(bytes),
             SimpleType::SimpleString(s) => Frame::Simple(s),
             SimpleType::Integer(n) => Frame::Integer(n),
+            SimpleType::Null => Frame::Null,
         }
     }
 }
@@ -94,6 +130,7 @@ impl From<SimpleType> for Bytes {
             SimpleType::Blob(bytes) => bytes,
             SimpleType::SimpleString(s) => Bytes::from(s.into_bytes()),
             SimpleType::Integer(n) => Bytes::from(n.to_string().into_bytes()),
+            SimpleType::Null => Bytes::new(),
         }
     }
 }

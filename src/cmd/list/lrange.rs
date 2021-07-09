@@ -15,7 +15,7 @@ impl Lrange {
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.lrange(&self.key, self.start, self.stop) {
-            Ok(r) => Frame::Array(r.into_iter().map(Frame::Bulk).collect()),
+            Ok(r) => Frame::Array(r.into_iter().map(|t| t.into()).collect()),
             Err(e) => Frame::Error(e),
         };
         debug!(?response);

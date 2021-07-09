@@ -1,15 +1,12 @@
 mod expirations;
 
 use std::{
-    collections::HashMap,
     convert::TryInto,
     sync::{atomic::AtomicU64, Arc},
 };
 
-use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
-use tokio::sync::broadcast;
 
 use self::expirations::{Expiration, ExpirationEntry};
 use super::{
@@ -38,10 +35,6 @@ pub struct Slot {
     /// `std::collections::HashMap` works fine.
     pub entries: Arc<DashMap<SimpleType, Entry>>,
 
-    /// The pub/sub key-space. Redis uses a **separate** key space for key-value
-    /// and pub/sub. `rcc` handles this by using a separate `HashMap`.
-    pub pub_sub: HashMap<SimpleType, broadcast::Sender<Bytes>>,
-
     /// Tracks key TTLs.
     expirations: Expiration,
 
@@ -56,7 +49,6 @@ impl Slot {
         let expirations = Expiration::new(Arc::clone(&entries));
         Self {
             entries,
-            pub_sub: HashMap::new(),
             expirations,
             next_id: AtomicU64::new(0),
         }
