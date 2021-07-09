@@ -1,28 +1,16 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{parse::ParseError, Connection, Db, Frame, Parse};
+use crate::{Connection, Db, Frame};
 
 /// https://redis.io/commands/hdel
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Hdel {
     key: String,
     fields: Vec<String>,
 }
 
 impl Hdel {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let mut fields = vec![parse.next_string()?];
-        loop {
-            match parse.next_string() {
-                Ok(s) => fields.push(s),
-                Err(ParseError::EndOfStream) => break,
-                Err(err) => return Err(err.into()),
-            }
-        }
-        Ok(Self { key, fields })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hdel(&self.key, self.fields) {

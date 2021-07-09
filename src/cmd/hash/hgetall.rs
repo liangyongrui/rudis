@@ -1,19 +1,14 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
-
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hgetall
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Hgetall {
     key: String,
 }
 
 impl Hgetall {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        Ok(Self { key })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hgetall(&self.key) {

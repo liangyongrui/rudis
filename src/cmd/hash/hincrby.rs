@@ -1,9 +1,9 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame, Parse};
-
+use crate::{Connection, Db, Frame};
 /// https://redis.io/commands/hincrby
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Hincrby {
     key: String,
     field: String,
@@ -11,13 +11,6 @@ pub struct Hincrby {
 }
 
 impl Hincrby {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let field = parse.next_string()?;
-        let value = parse.next_int()?;
-        Ok(Self { key, field, value })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hincrby(&self.key, self.field, self.value) {

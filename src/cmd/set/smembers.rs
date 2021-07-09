@@ -1,19 +1,15 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame, Parse};
+use crate::{Connection, Db, Frame};
 
 /// https://redis.io/commands/smembers
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Smembers {
     key: String,
 }
 
 impl Smembers {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        Ok(Self { key })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.smembers(&self.key) {

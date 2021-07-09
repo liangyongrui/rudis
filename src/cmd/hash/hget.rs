@@ -1,21 +1,16 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame, Parse};
+use crate::{Connection, Db, Frame};
 
 /// https://redis.io/commands/hget
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Hget {
     key: String,
     field: String,
 }
 
 impl Hget {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let field = parse.next_string()?;
-        Ok(Hget { key, field })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hget(&self.key, self.field) {

@@ -1,9 +1,10 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame, Parse};
+use crate::{Connection, Db, Frame};
 
 /// https://redis.io/commands/lrange
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Lrange {
     key: String,
     start: i64,
@@ -11,13 +12,6 @@ pub struct Lrange {
 }
 
 impl Lrange {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let start = parse.next_int()?;
-        let stop = parse.next_int()?;
-        Ok(Self { key, start, stop })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.lrange(&self.key, self.start, self.stop) {
