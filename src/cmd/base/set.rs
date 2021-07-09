@@ -186,10 +186,9 @@ impl Set {
                 )
                 .await
             {
-                Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value.get_inner()),
+                Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value),
                 Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
-                Ok(Some(SimpleType::Integer(value))) => Frame::Integer(value.0),
-                Ok(Some(_)) => Frame::Error("未实现".to_owned()),
+                Ok(Some(SimpleType::Integer(value))) => Frame::Integer(value),
                 Ok(None) => Frame::Null,
                 Err(e) => Frame::Error(e),
             }

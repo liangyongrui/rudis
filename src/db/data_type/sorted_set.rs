@@ -453,7 +453,7 @@ impl Slot {
         SortedSet::mut_process(self, key, |set| set.zremrange_by_score(range), || 0)
     }
 }
-
+#[cfg(test)]
 mod test {
 
     use rpds::{rbt_set_sync, RedBlackTreeSetSync};

@@ -1,21 +1,22 @@
+use bytes::Bytes;
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::Blob, parse::ParseError, Connection, Db, Frame, Parse};
+use crate::{parse::ParseError, Connection, Db, Frame, Parse};
 
 /// https://redis.io/commands/lpush
 #[derive(Debug)]
 pub struct Lpush {
     key: String,
-    values: Vec<Blob>,
+    values: Vec<Bytes>,
 }
 
 impl Lpush {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_string()?;
-        let mut values = vec![parse.next_bytes()?.into()];
+        let mut values = vec![parse.next_bytes()?];
         loop {
             match parse.next_bytes() {
-                Ok(value) => values.push(value.into()),
+                Ok(value) => values.push(value),
                 Err(ParseError::EndOfStream) => break,
                 Err(err) => return Err(err.into()),
             }

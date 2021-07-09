@@ -4,7 +4,7 @@
 //! 目前使用的是 RESP2
 //! todo 支持 RESP3
 
-use std::{fmt, num::TryFromIntError, string::FromUtf8Error};
+use std::fmt;
 
 use bytes::Bytes;
 use nom::{
@@ -26,15 +26,6 @@ pub enum Frame {
     Bulk(Bytes),
     Null,
     Array(Vec<Frame>),
-}
-
-#[derive(Debug)]
-pub enum Error {
-    /// Not enough data is available to parse a message
-    Incomplete,
-
-    /// Invalid message encoding
-    Other(crate::Error),
 }
 
 impl PartialEq<&str> for Frame {
@@ -70,41 +61,6 @@ impl fmt::Display for Frame {
 
                 Ok(())
             }
-        }
-    }
-}
-
-impl From<String> for Error {
-    fn from(src: String) -> Error {
-        Error::Other(src.into())
-    }
-}
-
-impl From<&str> for Error {
-    fn from(src: &str) -> Error {
-        src.to_string().into()
-    }
-}
-
-impl From<FromUtf8Error> for Error {
-    fn from(_src: FromUtf8Error) -> Error {
-        "protocol error; invalid frame format".into()
-    }
-}
-
-impl From<TryFromIntError> for Error {
-    fn from(_src: TryFromIntError) -> Error {
-        "protocol error; invalid frame format".into()
-    }
-}
-
-impl std::error::Error for Error {}
-
-impl fmt::Display for Error {
-    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::Incomplete => "stream ended early".fmt(fmt),
-            Error::Other(err) => err.fmt(fmt),
         }
     }
 }
@@ -182,7 +138,7 @@ pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         parse_array,
     ))(i)
 }
-
+#[cfg(test)]
 mod test {
     use super::*;
 

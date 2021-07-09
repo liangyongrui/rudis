@@ -10,12 +10,13 @@ use std::{
     usize,
 };
 
+use bytes::Bytes;
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
 
 pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
 use self::{
-    data_type::{Blob, HashEntry, SimpleType},
+    data_type::{HashEntry, SimpleType},
     result::Result,
     slot::Slot,
 };
@@ -123,28 +124,28 @@ impl Db {
     pub(crate) fn hgetall(&self, key: &str) -> Result<Vec<HashEntry>> {
         self.get_slot(key).hgetall(key)
     }
-    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Blob>> {
+    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
         self.get_slot(key).lrange(key, start, stop)
     }
-    pub(crate) fn lpush(&self, key: String, values: Vec<Blob>) -> Result<usize> {
+    pub(crate) fn lpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
         self.get_slot(&key).lpush(&key, values)
     }
-    pub(crate) fn rpush(&self, key: String, values: Vec<Blob>) -> Result<usize> {
+    pub(crate) fn rpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
         self.get_slot(&key).rpush(key, values)
     }
-    pub(crate) fn lpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
+    pub(crate) fn lpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
         self.get_slot(key).lpushx(key, values)
     }
-    pub(crate) fn rpushx(&self, key: &str, values: Vec<Blob>) -> Result<usize> {
+    pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
         self.get_slot(key).rpushx(key, values)
     }
     pub(crate) fn llen(&self, key: &str) -> Result<usize> {
         self.get_slot(key).llen(key)
     }
-    pub(crate) fn lpop(&self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
+    pub(crate) fn lpop(&self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
         self.get_slot(key).lpop(key, count)
     }
-    pub(crate) fn rpop(&self, key: &str, count: usize) -> Result<Option<Vec<Blob>>> {
+    pub(crate) fn rpop(&self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
         self.get_slot(key).rpop(key, count)
     }
     pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {

@@ -13,7 +13,7 @@ rust cloud cache
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
 1. [x] macros
-1. [ ] 复杂数据结构里面的值，可能不仅仅是字符串
+1. [ ] 接收字符串的地方 都改成 基础类型(string, blob, i64, f64)
 1. [ ] 高可用
 1. [ ] 去掉过多的模板代码
 1. [ ] 优化 pipeline（去掉 flush）

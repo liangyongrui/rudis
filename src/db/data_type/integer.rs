@@ -1,43 +1,28 @@
-use std::ops::Deref;
-
 use super::{DataType, SimpleType};
 use crate::db::{
     result::Result,
     slot::{Entry, Slot},
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Integer(pub i64);
-
-impl Deref for Integer {
-    type Target = i64;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl Integer {
-    fn insert_new(state: &Slot, key: String, value: i64) {
-        let id = state.next_id();
-        let e = Entry {
-            id,
-            data: value.into(),
-            expires_at: None,
-        };
-        state.entries.insert(key, e);
-    }
+fn insert_new(state: &Slot, key: String, value: i64) {
+    let id = state.next_id();
+    let e = Entry {
+        id,
+        data: value.into(),
+        expires_at: None,
+    };
+    state.entries.insert(key, e);
 }
 
 impl From<i64> for DataType {
     fn from(n: i64) -> Self {
-        DataType::SimpleType(SimpleType::Integer(Integer(n)))
+        DataType::SimpleType(SimpleType::Integer(n))
     }
 }
 
 impl From<i64> for SimpleType {
     fn from(n: i64) -> Self {
-        SimpleType::Integer(Integer(n))
+        SimpleType::Integer(n)
     }
 }
 
@@ -56,7 +41,7 @@ impl Slot {
                         },
                     )
                 }
-                DataType::SimpleType(SimpleType::Integer(Integer(i))) => (
+                DataType::SimpleType(SimpleType::Integer(i)) => (
                     *i,
                     Entry {
                         id: old.id,
@@ -69,7 +54,7 @@ impl Slot {
             self.entries.insert(key, new_entry);
             Ok(old_value)
         } else {
-            Integer::insert_new(self, key, value);
+            insert_new(self, key, value);
             Ok(0)
         }
     }

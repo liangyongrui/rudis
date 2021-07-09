@@ -31,9 +31,7 @@ impl Lpop {
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.lpop(&self.key, self.count.unwrap_or(1) as _) {
-            Ok(Some(r)) => {
-                Frame::Array(r.into_iter().map(|t| Frame::Bulk(t.get_inner())).collect())
-            }
+            Ok(Some(r)) => Frame::Array(r.into_iter().map(Frame::Bulk).collect()),
             Ok(None) => Frame::Null,
             Err(e) => Frame::Error(e),
         };

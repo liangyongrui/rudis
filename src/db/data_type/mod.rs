@@ -11,8 +11,7 @@ use bytes::Bytes;
 pub use hash::HashEntry;
 pub use sorted_set::{Node as SortedSetNode, RangeItem as ZrangeItem};
 
-pub use self::blob::Blob;
-use self::{hash::Hash, integer::Integer, list::List, set::Set, sorted_set::SortedSet};
+use self::{hash::Hash, list::List, set::Set, sorted_set::SortedSet};
 use crate::Frame;
 
 #[derive(Debug, Clone)]
@@ -23,14 +22,14 @@ pub enum DataType {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimpleType {
-    Blob(Blob),
+    Blob(bytes::Bytes),
     SimpleString(String),
-    Integer(Integer),
+    Integer(i64),
     // Bool(bool),
     // todo
-    VerbatimString,
+    // VerbatimString,
     // todo
-    BigNumber,
+    // BigNumber,
 }
 
 #[derive(Debug, Clone)]
@@ -76,11 +75,9 @@ impl From<AggregateType> for DataType {
 impl From<SimpleType> for Frame {
     fn from(st: SimpleType) -> Self {
         match st {
-            SimpleType::Blob(bytes) => Frame::Bulk(bytes.get_inner()),
+            SimpleType::Blob(bytes) => Frame::Bulk(bytes),
             SimpleType::SimpleString(s) => Frame::Simple(s),
-            SimpleType::Integer(n) => Frame::Integer(n.0),
-            SimpleType::VerbatimString => todo!(),
-            SimpleType::BigNumber => todo!(),
+            SimpleType::Integer(n) => Frame::Integer(n),
         }
     }
 }
@@ -88,11 +85,9 @@ impl From<SimpleType> for Frame {
 impl From<SimpleType> for Bytes {
     fn from(st: SimpleType) -> Self {
         match st {
-            SimpleType::Blob(bytes) => bytes.get_inner(),
+            SimpleType::Blob(bytes) => bytes,
             SimpleType::SimpleString(s) => Bytes::from(s.into_bytes()),
             SimpleType::Integer(n) => Bytes::from(n.to_string().into_bytes()),
-            SimpleType::VerbatimString => todo!(),
-            SimpleType::BigNumber => todo!(),
         }
     }
 }

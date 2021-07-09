@@ -158,7 +158,7 @@ impl Slot {
     ) -> Result<Option<SimpleType>> {
         let old_value = self.get_simple(&key)?;
         let need_update = match nx_xx {
-            NxXx::Nx => !old_value.is_some(),
+            NxXx::Nx => old_value.is_none(),
             NxXx::Xx => old_value.is_some(),
             NxXx::None => true,
         };
