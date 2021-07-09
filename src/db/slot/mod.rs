@@ -36,11 +36,11 @@ pub struct Entry {
 pub struct Slot {
     /// The key-value data. We are not trying to do anything fancy so a
     /// `std::collections::HashMap` works fine.
-    pub entries: Arc<DashMap<String, Entry>>,
+    pub entries: Arc<DashMap<SimpleType, Entry>>,
 
     /// The pub/sub key-space. Redis uses a **separate** key space for key-value
     /// and pub/sub. `rcc` handles this by using a separate `HashMap`.
-    pub pub_sub: HashMap<String, broadcast::Sender<Bytes>>,
+    pub pub_sub: HashMap<SimpleType, broadcast::Sender<Bytes>>,
 
     /// Tracks key TTLs.
     expirations: Expiration,
@@ -62,7 +62,7 @@ impl Slot {
         }
     }
 
-    pub fn get_simple(&self, key: &str) -> Result<Option<SimpleType>> {
+    pub fn get_simple(&self, key: &SimpleType) -> Result<Option<SimpleType>> {
         match self.entries.get(key) {
             Some(s) => match s.value() {
                 Entry {
@@ -77,9 +77,9 @@ impl Slot {
 
     pub fn get_or_insert_entry(
         &self,
-        key: &str,
+        key: &SimpleType,
         f: fn() -> (DataType, Option<DateTime<Utc>>),
-    ) -> dashmap::mapref::one::RefMut<'_, String, Entry> {
+    ) -> dashmap::mapref::one::RefMut<'_, SimpleType, Entry> {
         if !self.entries.contains_key(key) {
             let (data, expires_at) = f();
             let e = Entry {
@@ -98,15 +98,15 @@ impl Slot {
             .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
     }
 
-    pub fn exists(&self, key: &str) -> bool {
+    pub fn exists(&self, key: &SimpleType) -> bool {
         self.entries.contains_key(key)
     }
 
-    pub fn get_expires_at(&self, key: &str) -> Option<DateTime<Utc>> {
+    pub fn get_expires_at(&self, key: &SimpleType) -> Option<DateTime<Utc>> {
         self.entries.get(key).and_then(|t| t.expires_at)
     }
 
-    pub fn set_expires_at(&self, key: String, new_time: DateTime<Utc>) -> bool {
+    pub fn set_expires_at(&self, key: SimpleType, new_time: DateTime<Utc>) -> bool {
         self.entries
             .get(&key)
             .and_then(|t| t.expires_at.map(|p| (p, t.id)))
@@ -117,7 +117,7 @@ impl Slot {
     /// 调用之前需要自己保证原始值的value 为 simpleType 或 不存在
     pub async fn update_simple(
         &self,
-        key: String,
+        key: SimpleType,
         value: SimpleType,
         expires_at: Option<DateTime<Utc>>,
     ) -> Option<SimpleType> {
@@ -144,13 +144,13 @@ impl Slot {
         prev.map(|t| t.data.try_into().unwrap())
     }
 
-    pub fn remove(&self, key: &str) -> Option<DataType> {
+    pub fn remove(&self, key: &SimpleType) -> Option<DataType> {
         self.entries.remove(key).map(|prev| prev.1.data)
     }
 
     pub(crate) async fn set(
         &self,
-        key: String,
+        key: SimpleType,
         value: SimpleType,
         nx_xx: NxXx,
         mut expires_at: Option<DateTime<Utc>>,

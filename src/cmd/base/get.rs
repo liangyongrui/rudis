@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// Get the value of key.
 ///
@@ -11,19 +11,19 @@ use crate::{Connection, Db, Frame};
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get
-    key: String,
+    key: SimpleType,
 }
 
 impl Get {
     /// Create a new `Get` command which fetches `key`.
     pub fn new(key: impl ToString) -> Get {
         Get {
-            key: key.to_string(),
+            key: SimpleType::SimpleString(key.to_string()),
         }
     }
 
     /// Get the key
-    pub fn key(&self) -> &str {
+    pub fn key(&self) -> &SimpleType {
         &self.key
     }
 

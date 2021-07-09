@@ -33,7 +33,7 @@ impl Set {
     }
     fn process<T, F: FnOnce(&Set) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -52,7 +52,7 @@ impl Set {
 
     fn mut_process<T, F: FnOnce(&mut Set) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -71,7 +71,7 @@ impl Set {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut Set) -> Result<T>>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
     ) -> Result<T> {
         let mut entry = slot.get_or_insert_entry(&key, || (Set::new_data_type(), None));
@@ -85,7 +85,7 @@ impl Set {
     }
 }
 impl Slot {
-    pub fn sadd(&self, key: String, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         Set::mut_process_exists_or_new(self, &key, |set| {
             let old_len = set.size();
             let mut new = (*set.value).clone();
@@ -98,7 +98,7 @@ impl Slot {
         })
     }
 
-    pub fn smismember(&self, key: &str, values: Vec<&SimpleType>) -> Result<Vec<bool>> {
+    pub fn smismember(&self, key: &SimpleType, values: Vec<&SimpleType>) -> Result<Vec<bool>> {
         let set = Set::process(
             self,
             key,
@@ -108,7 +108,7 @@ impl Slot {
         Ok(values.into_iter().map(|t| set.contains(t)).collect())
     }
 
-    pub fn smembers(&self, key: &str) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
+    pub fn smembers(&self, key: &SimpleType) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
         Set::process(
             self,
             key,
@@ -117,7 +117,7 @@ impl Slot {
         )
     }
 
-    pub fn srem(&self, key: &str, values: Vec<&SimpleType>) -> Result<usize> {
+    pub fn srem(&self, key: &SimpleType, values: Vec<&SimpleType>) -> Result<usize> {
         Set::mut_process(
             self,
             key,

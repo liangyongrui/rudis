@@ -11,13 +11,13 @@ use crate::{
 /// https://redis.io/commands/hset
 #[derive(Debug)]
 pub struct Hset {
-    key: String,
+    key: SimpleType,
     pairs: Vec<HashEntry>,
 }
 
 impl Hset {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
         let mut values = vec![];
         loop {
             match parse.next() {

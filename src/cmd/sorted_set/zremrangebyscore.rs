@@ -2,18 +2,18 @@ use std::ops::Bound;
 
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame, Parse};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug)]
 pub struct Zremrangebyscore {
-    key: String,
+    key: SimpleType,
     range: (Bound<f64>, Bound<f64>),
 }
 
 impl Zremrangebyscore {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let range = {

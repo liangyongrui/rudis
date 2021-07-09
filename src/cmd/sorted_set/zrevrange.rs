@@ -1,18 +1,22 @@
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::ZrangeItem, parse::ParseError, Connection, Db, Frame, Parse};
+use crate::{
+    db::data_type::{SimpleType, ZrangeItem},
+    parse::ParseError,
+    Connection, Db, Frame, Parse,
+};
 
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]
 pub struct Zrevrange {
-    key: String,
+    key: SimpleType,
     range: (i64, i64),
     withscores: bool,
 }
 
 impl Zrevrange {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let mut withscores = false;
@@ -40,7 +44,7 @@ impl Zrevrange {
             Ok(v) => {
                 let mut res = vec![];
                 for n in v {
-                    res.push(Frame::Simple(n.key));
+                    res.push(n.key.into());
                     if self.withscores {
                         res.push(Frame::Simple(n.score.to_string()));
                     }

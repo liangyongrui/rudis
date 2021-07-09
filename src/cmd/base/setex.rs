@@ -3,11 +3,15 @@ use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, utils::options::NxXx, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    utils::options::NxXx,
+    Connection, Frame,
+};
 
 #[derive(Debug, ParseFrames)]
 pub struct Setex {
-    key: String,
+    key: SimpleType,
     seconds: u64,
     value: Bytes,
 }

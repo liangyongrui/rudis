@@ -14,7 +14,7 @@ use crate::{
 #[derive(Debug)]
 pub struct Set {
     /// the lookup key
-    key: String,
+    key: SimpleType,
     /// the value to be stored
     value: SimpleType,
     // None not set, true nx, false xx
@@ -30,7 +30,7 @@ pub struct Set {
 impl Set {
     /// Create a new `Set` command which sets `key` to `value`.
     pub fn new(
-        key: impl ToString,
+        key: SimpleType,
         value: SimpleType,
         nx_xx: NxXx,
         expires_at: Option<DateTime<Utc>>,
@@ -38,7 +38,7 @@ impl Set {
         get: bool,
     ) -> Set {
         Set {
-            key: key.to_string(),
+            key,
             value,
             nx_xx,
             expires_at,
@@ -71,20 +71,10 @@ impl Set {
         use ParseError::EndOfStream;
 
         // Read the key to set. This is a required field
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
 
         // Read the value to set. This is a required field.
-        let value = match { parse.next()? } {
-            Frame::Simple(s) => SimpleType::SimpleString(s),
-            Frame::Bulk(data) => data.into(),
-            frame => {
-                return Err(format!(
-                    "protocol error; expected simple frame or bulk frame, got {:?}",
-                    frame
-                )
-                .into())
-            }
-        };
+        let value = parse.next_simple_type()?;
 
         // The expiration is optional. If nothing else follows, then it is
         // `None`.

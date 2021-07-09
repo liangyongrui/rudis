@@ -4,7 +4,7 @@ use crate::db::{
     slot::{Entry, Slot},
 };
 
-fn insert_new(state: &Slot, key: String, value: i64) {
+fn insert_new(state: &Slot, key: SimpleType, value: i64) {
     let id = state.next_id();
     let e = Entry {
         id,
@@ -27,7 +27,7 @@ impl From<i64> for SimpleType {
 }
 
 impl Slot {
-    pub(crate) fn incr_by(&self, key: String, value: i64) -> Result<i64> {
+    pub(crate) fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
         if let Some(old) = self.entries.get(&key) {
             let (old_value, new_entry) = match &old.data {
                 DataType::SimpleType(SimpleType::SimpleString(s)) => {

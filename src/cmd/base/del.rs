@@ -1,11 +1,11 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/del
 #[derive(Debug, ParseFrames)]
 pub struct Del {
-    keys: Vec<String>,
+    keys: Vec<SimpleType>,
 }
 
 impl Del {

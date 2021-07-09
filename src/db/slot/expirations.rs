@@ -15,10 +15,11 @@ use tokio::{
 use tracing::debug;
 
 use super::Entry;
+use crate::db::data_type::SimpleType;
 
 pub struct ExpirationEntry {
     pub id: u64,
-    pub key: String,
+    pub key: SimpleType,
     pub expires_at: DateTime<Utc>,
 }
 
@@ -31,7 +32,7 @@ pub struct Expiration {
 
 #[derive(Debug)]
 pub struct Data {
-    expirations: BTreeMap<(DateTime<Utc>, u64), String>,
+    expirations: BTreeMap<(DateTime<Utc>, u64), SimpleType>,
     shutdown: bool,
 }
 
@@ -45,7 +46,7 @@ impl Data {
 }
 
 impl Expiration {
-    pub fn new(entry: Arc<DashMap<String, Entry>>) -> Self {
+    pub fn new(entry: Arc<DashMap<SimpleType, Entry>>) -> Self {
         let notify = Arc::new(Notify::new());
         let data = Arc::new(Mutex::new(Data::new()));
         let (sender, receiver) = mpsc::channel(100);
@@ -126,7 +127,7 @@ impl Expiration {
     async fn purge_expired_tasks(
         notify: Arc<Notify>,
         data: Arc<Mutex<Data>>,
-        entry: Arc<DashMap<String, Entry>>,
+        entry: Arc<DashMap<SimpleType, Entry>>,
     ) {
         while !Expiration::is_shutdown(&data) {
             if let Some(when) = Expiration::purge_expired_keys(&data, &entry) {
@@ -144,7 +145,7 @@ impl Expiration {
 
     fn purge_expired_keys(
         data: &Mutex<Data>,
-        entry: &DashMap<String, Entry>,
+        entry: &DashMap<SimpleType, Entry>,
     ) -> Option<DateTime<Utc>> {
         let now = Utc::now();
         let mut data = data.lock().unwrap();
@@ -155,7 +156,7 @@ impl Expiration {
             }
             if let Some(e) = entry.get(key) {
                 if e.id == id {
-                    debug!("purge_expired_keys: {}", key);
+                    debug!("purge_expired_keys: {:?}", key);
                     entry.remove(key);
                 }
             }

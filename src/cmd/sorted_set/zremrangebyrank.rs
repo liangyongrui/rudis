@@ -1,17 +1,17 @@
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame, Parse};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug)]
 pub struct Zremrangebyrank {
-    key: String,
+    key: SimpleType,
     range: (i64, i64),
 }
 
 impl Zremrangebyrank {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
         let start = parse.next_int()?;
         let stop = parse.next_int()?;
         Ok(Self {

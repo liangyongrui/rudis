@@ -32,6 +32,12 @@ pub enum SimpleType {
     // BigNumber,
 }
 
+impl SimpleType {
+    pub fn get_min() -> SimpleType {
+        todo!()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum AggregateType {
     List(List),

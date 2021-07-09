@@ -7,7 +7,7 @@ use std::{
 use rpds::RedBlackTreeSetSync;
 use tracing::debug;
 
-use super::{AggregateType, DataType};
+use super::{AggregateType, DataType, SimpleType};
 use crate::{
     db::{
         result::Result,
@@ -21,13 +21,20 @@ use crate::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Node {
-    pub key: String,
+    pub key: SimpleType,
     pub score: f64,
 }
 
 impl Node {
-    pub fn new(key: String, score: f64) -> Self {
+    pub fn new(key: SimpleType, score: f64) -> Self {
         Self { key, score }
+    }
+
+    pub fn new_str(key: &str, score: f64) -> Self {
+        Self {
+            key: SimpleType::SimpleString(key.to_owned()),
+            score,
+        }
     }
 }
 
@@ -43,7 +50,8 @@ impl PartialOrd for Node {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.score.partial_cmp(&other.score).map(|x| {
             if x.is_eq() {
-                self.key.cmp(&other.key)
+                todo!()
+                // self.key.cmp(&other.key)
             } else {
                 x
             }
@@ -59,15 +67,15 @@ impl Ord for Node {
 #[derive(Debug, Clone)]
 pub struct SortedSet {
     version: u64,
-    hash: HashMap<String, Node>,
+    hash: HashMap<SimpleType, Node>,
     value: Arc<RedBlackTreeSetSync<Node>>,
 }
 
 impl SortedSet {
-    fn contains_key(&self, key: &str) -> bool {
+    fn contains_key(&self, key: &SimpleType) -> bool {
         self.hash.contains_key(key)
     }
-    fn get(&self, key: &str) -> Option<&Node> {
+    fn get(&self, key: &SimpleType) -> Option<&Node> {
         self.hash.get(key)
     }
     fn can_update(&self, node: &Node, nx_xx: NxXx, gt_lt: GtLt) -> bool {
@@ -104,7 +112,7 @@ impl SortedSet {
         self.value.size() - if ch { 0 } else { old_len }
     }
 
-    pub fn zrem(&mut self, members: Vec<String>) -> usize {
+    pub fn zrem(&mut self, members: Vec<SimpleType>) -> usize {
         let old_len = self.value.size();
         let mut set = (*self.value).clone();
         for v in members {
@@ -224,11 +232,11 @@ impl TreeSetExt for RedBlackTreeSetSync<Node> {
         }
         let set_range: (Bound<Node>, Bound<Node>) = (
             range.0.map(|t| Node {
-                key: "".to_owned(),
+                key: SimpleType::get_min(),
                 score: t,
             }),
             range.1.map(|t| Node {
-                key: "".to_owned(),
+                key: SimpleType::get_min(),
                 score: t + 0.1,
             }),
         );
@@ -267,8 +275,14 @@ impl TreeSetExt for RedBlackTreeSetSync<Node> {
             range = (range.1, range.0)
         }
         let set_range: (Bound<Node>, Bound<Node>) = (
-            range.0.map(|key| Node { key, score }),
-            range.1.map(|key| Node { key, score }),
+            range.0.map(|key| Node {
+                key: SimpleType::SimpleString(key),
+                score,
+            }),
+            range.1.map(|key| Node {
+                key: SimpleType::SimpleString(key),
+                score,
+            }),
         );
         let (offset, count) = sharp_limit(limit, self.size());
         debug!(offset, count);
@@ -348,7 +362,7 @@ impl SortedSet {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut SortedSet) -> Result<T>>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
     ) -> Result<T> {
         let mut entry = slot.get_or_insert_entry(&key, || (SortedSet::new_data_type(), None));
@@ -362,7 +376,7 @@ impl SortedSet {
     }
     fn process<T, F: FnOnce(&SortedSet) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -381,7 +395,7 @@ impl SortedSet {
 
     fn mut_process<T, F: FnOnce(&mut SortedSet) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -402,7 +416,7 @@ impl SortedSet {
 impl Slot {
     pub fn zadd(
         &self,
-        key: String,
+        key: SimpleType,
         nodes: Vec<Node>,
         nx_xx: NxXx,
         gt_lt: GtLt,
@@ -414,11 +428,11 @@ impl Slot {
         })
     }
 
-    pub fn zrem(&self, key: &str, members: Vec<String>) -> Result<usize> {
+    pub fn zrem(&self, key: &SimpleType, members: Vec<SimpleType>) -> Result<usize> {
         SortedSet::mut_process(self, key, |set| set.zrem(members), || 0)
     }
 
-    pub fn zrank(&self, key: &str, member: &str, rev: bool) -> Result<Option<usize>> {
+    pub fn zrank(&self, key: &SimpleType, member: &SimpleType, rev: bool) -> Result<Option<usize>> {
         SortedSet::process(
             self,
             key,
@@ -429,7 +443,7 @@ impl Slot {
 
     pub fn zrange(
         &self,
-        key: &str,
+        key: &SimpleType,
         range: RangeItem,
         rev: bool,
         limit: Option<(i64, i64)>,
@@ -445,11 +459,15 @@ impl Slot {
         }
     }
 
-    pub fn zremrange_by_rank(&self, key: &str, range: (i64, i64)) -> Result<usize> {
+    pub fn zremrange_by_rank(&self, key: &SimpleType, range: (i64, i64)) -> Result<usize> {
         SortedSet::mut_process(self, key, |set| set.zremrange_by_rank(range), || 0)
     }
 
-    pub fn zremrange_by_score(&self, key: &str, range: (Bound<f64>, Bound<f64>)) -> Result<usize> {
+    pub fn zremrange_by_score(
+        &self,
+        key: &SimpleType,
+        range: (Bound<f64>, Bound<f64>),
+    ) -> Result<usize> {
         SortedSet::mut_process(self, key, |set| set.zremrange_by_score(range), || 0)
     }
 }
@@ -481,37 +499,37 @@ mod test {
     #[test]
     fn test_zrange_by_score() {
         let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
-            Node::new("n".to_owned(), 11.0),
-            Node::new("m".to_owned(), 10.0),
-            Node::new("l".to_owned(), 1.0),
-            Node::new("k".to_owned(), 9.0),
-            Node::new("j".to_owned(), 8.0),
-            Node::new("i".to_owned(), 7.0),
-            Node::new("h".to_owned(), 6.0),
-            Node::new("g".to_owned(), 5.0),
-            Node::new("f".to_owned(), 2.0),
-            Node::new("e".to_owned(), 2.0),
-            Node::new("e2".to_owned(), 2.0),
-            Node::new("d".to_owned(), 2.0),
-            Node::new("c".to_owned(), 1.0),
-            Node::new("b".to_owned(), 1.0),
-            Node::new("a".to_owned(), 1.0)
+            Node::new_str("n", 11.0),
+            Node::new_str("m", 10.0),
+            Node::new_str("l", 1.0),
+            Node::new_str("k", 9.0),
+            Node::new_str("j", 8.0),
+            Node::new_str("i", 7.0),
+            Node::new_str("h", 6.0),
+            Node::new_str("g", 5.0),
+            Node::new_str("f", 2.0),
+            Node::new_str("e", 2.0),
+            Node::new_str("e2", 2.0),
+            Node::new_str("d", 2.0),
+            Node::new_str("c", 1.0),
+            Node::new_str("b", 1.0),
+            Node::new_str("a", 1.0)
         ];
         let range = (Bound::Excluded(1.0), Bound::Included(10.0));
         let res: Vec<_> = set.zrange_by_score(range, false, None);
         assert_eq!(
             res,
             vec![
-                Node::new("d".to_owned(), 2.0),
-                Node::new("e".to_owned(), 2.0),
-                Node::new("e2".to_owned(), 2.0),
-                Node::new("f".to_owned(), 2.0),
-                Node::new("g".to_owned(), 5.0),
-                Node::new("h".to_owned(), 6.0),
-                Node::new("i".to_owned(), 7.0),
-                Node::new("j".to_owned(), 8.0),
-                Node::new("k".to_owned(), 9.0),
-                Node::new("m".to_owned(), 10.0),
+                Node::new_str("d", 2.0),
+                Node::new_str("e", 2.0),
+                Node::new_str("e2", 2.0),
+                Node::new_str("f", 2.0),
+                Node::new_str("g", 5.0),
+                Node::new_str("h", 6.0),
+                Node::new_str("i", 7.0),
+                Node::new_str("j", 8.0),
+                Node::new_str("k", 9.0),
+                Node::new_str("m", 10.0),
             ]
         );
         let range = (Bound::Excluded(10.0), Bound::Excluded(1.0));
@@ -519,15 +537,15 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("k".to_owned(), 9.0),
-                Node::new("j".to_owned(), 8.0),
-                Node::new("i".to_owned(), 7.0),
-                Node::new("h".to_owned(), 6.0),
-                Node::new("g".to_owned(), 5.0),
-                Node::new("f".to_owned(), 2.0),
-                Node::new("e2".to_owned(), 2.0),
-                Node::new("e".to_owned(), 2.0),
-                Node::new("d".to_owned(), 2.0),
+                Node::new_str("k", 9.0),
+                Node::new_str("j", 8.0),
+                Node::new_str("i", 7.0),
+                Node::new_str("h", 6.0),
+                Node::new_str("g", 5.0),
+                Node::new_str("f", 2.0),
+                Node::new_str("e2", 2.0),
+                Node::new_str("e", 2.0),
+                Node::new_str("d", 2.0),
             ]
         );
 
@@ -536,12 +554,12 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("i".to_owned(), 7.0),
-                Node::new("h".to_owned(), 6.0),
-                Node::new("g".to_owned(), 5.0),
-                Node::new("f".to_owned(), 2.0),
-                Node::new("e2".to_owned(), 2.0),
-                Node::new("e".to_owned(), 2.0),
+                Node::new_str("i", 7.0),
+                Node::new_str("h", 6.0),
+                Node::new_str("g", 5.0),
+                Node::new_str("f", 2.0),
+                Node::new_str("e2", 2.0),
+                Node::new_str("e", 2.0),
             ]
         );
     }
@@ -549,52 +567,52 @@ mod test {
     #[test]
     fn test_zrange_by_rank() {
         let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
-            Node::new("n".to_owned(), 11.0),
-            Node::new("m".to_owned(), 10.0),
-            Node::new("l".to_owned(), 1.0),
-            Node::new("k".to_owned(), 9.0),
-            Node::new("j".to_owned(), 8.0),
-            Node::new("i".to_owned(), 7.0),
-            Node::new("h".to_owned(), 6.0),
-            Node::new("g".to_owned(), 5.0),
-            Node::new("f".to_owned(), 2.0),
-            Node::new("e".to_owned(), 2.0),
-            Node::new("e2".to_owned(), 2.0),
-            Node::new("d".to_owned(), 2.0),
-            Node::new("c".to_owned(), 1.0),
-            Node::new("b".to_owned(), 1.0),
-            Node::new("a".to_owned(), 1.0)
+            Node::new_str("n", 11.0),
+            Node::new_str("m", 10.0),
+            Node::new_str("l", 1.0),
+            Node::new_str("k", 9.0),
+            Node::new_str("j", 8.0),
+            Node::new_str("i", 7.0),
+            Node::new_str("h", 6.0),
+            Node::new_str("g", 5.0),
+            Node::new_str("f", 2.0),
+            Node::new_str("e", 2.0),
+            Node::new_str("e2", 2.0),
+            Node::new_str("d", 2.0),
+            Node::new_str("c", 1.0),
+            Node::new_str("b", 1.0),
+            Node::new_str("a", 1.0)
         ];
         let res: Vec<_> = set.zrange_by_rank((1, 10), false, None);
         assert_eq!(
             res,
             vec![
-                Node::new("b".to_owned(), 1.0),
-                Node::new("c".to_owned(), 1.0),
-                Node::new("l".to_owned(), 1.0),
-                Node::new("d".to_owned(), 2.0),
-                Node::new("e".to_owned(), 2.0),
-                Node::new("e2".to_owned(), 2.0),
-                Node::new("f".to_owned(), 2.0),
-                Node::new("g".to_owned(), 5.0),
-                Node::new("h".to_owned(), 6.0),
-                Node::new("i".to_owned(), 7.0),
+                Node::new_str("b", 1.0),
+                Node::new_str("c", 1.0),
+                Node::new_str("l", 1.0),
+                Node::new_str("d", 2.0),
+                Node::new_str("e", 2.0),
+                Node::new_str("e2", 2.0),
+                Node::new_str("f", 2.0),
+                Node::new_str("g", 5.0),
+                Node::new_str("h", 6.0),
+                Node::new_str("i", 7.0),
             ]
         );
         let res: Vec<_> = set.zrange_by_rank((1, 10), true, None);
         assert_eq!(
             res,
             vec![
-                Node::new("m".to_owned(), 10.0),
-                Node::new("k".to_owned(), 9.0),
-                Node::new("j".to_owned(), 8.0),
-                Node::new("i".to_owned(), 7.0),
-                Node::new("h".to_owned(), 6.0),
-                Node::new("g".to_owned(), 5.0),
-                Node::new("f".to_owned(), 2.0),
-                Node::new("e2".to_owned(), 2.0),
-                Node::new("e".to_owned(), 2.0),
-                Node::new("d".to_owned(), 2.0),
+                Node::new_str("m", 10.0),
+                Node::new_str("k", 9.0),
+                Node::new_str("j", 8.0),
+                Node::new_str("i", 7.0),
+                Node::new_str("h", 6.0),
+                Node::new_str("g", 5.0),
+                Node::new_str("f", 2.0),
+                Node::new_str("e2", 2.0),
+                Node::new_str("e", 2.0),
+                Node::new_str("d", 2.0),
             ]
         );
 
@@ -602,12 +620,12 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("j".to_owned(), 8.0),
-                Node::new("i".to_owned(), 7.0),
-                Node::new("h".to_owned(), 6.0),
-                Node::new("g".to_owned(), 5.0),
-                Node::new("f".to_owned(), 2.0),
-                Node::new("e2".to_owned(), 2.0),
+                Node::new_str("j", 8.0),
+                Node::new_str("i", 7.0),
+                Node::new_str("h", 6.0),
+                Node::new_str("g", 5.0),
+                Node::new_str("f", 2.0),
+                Node::new_str("e2", 2.0),
             ]
         );
     }
@@ -615,21 +633,21 @@ mod test {
     #[test]
     fn test_zrange_by_lex() {
         let set: RedBlackTreeSetSync<Node> = rbt_set_sync![
-            Node::new("n".to_owned(), 1.0),
-            Node::new("m".to_owned(), 1.0),
-            Node::new("l".to_owned(), 1.0),
-            Node::new("k".to_owned(), 1.0),
-            Node::new("j".to_owned(), 1.0),
-            Node::new("i".to_owned(), 1.0),
-            Node::new("h".to_owned(), 1.0),
-            Node::new("g".to_owned(), 1.0),
-            Node::new("f".to_owned(), 1.0),
-            Node::new("e".to_owned(), 1.0),
-            Node::new("e2".to_owned(), 1.0),
-            Node::new("d".to_owned(), 1.0),
-            Node::new("c".to_owned(), 1.0),
-            Node::new("b".to_owned(), 1.0),
-            Node::new("a".to_owned(), 1.0)
+            Node::new_str("n", 1.0),
+            Node::new_str("m", 1.0),
+            Node::new_str("l", 1.0),
+            Node::new_str("k", 1.0),
+            Node::new_str("j", 1.0),
+            Node::new_str("i", 1.0),
+            Node::new_str("h", 1.0),
+            Node::new_str("g", 1.0),
+            Node::new_str("f", 1.0),
+            Node::new_str("e", 1.0),
+            Node::new_str("e2", 1.0),
+            Node::new_str("d", 1.0),
+            Node::new_str("c", 1.0),
+            Node::new_str("b", 1.0),
+            Node::new_str("a", 1.0)
         ];
         let res = set.zrange_by_lex(
             (
@@ -642,15 +660,15 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("b".to_owned(), 1.0),
-                Node::new("c".to_owned(), 1.0),
-                Node::new("d".to_owned(), 1.0),
-                Node::new("e".to_owned(), 1.0),
-                Node::new("e2".to_owned(), 1.0),
-                Node::new("f".to_owned(), 1.0),
-                Node::new("g".to_owned(), 1.0),
-                Node::new("h".to_owned(), 1.0),
-                Node::new("i".to_owned(), 1.0),
+                Node::new_str("b", 1.0),
+                Node::new_str("c", 1.0),
+                Node::new_str("d", 1.0),
+                Node::new_str("e", 1.0),
+                Node::new_str("e2", 1.0),
+                Node::new_str("f", 1.0),
+                Node::new_str("g", 1.0),
+                Node::new_str("h", 1.0),
+                Node::new_str("i", 1.0),
             ]
         );
         let res = set.zrange_by_lex(
@@ -664,13 +682,13 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("i".to_owned(), 1.0),
-                Node::new("h".to_owned(), 1.0),
-                Node::new("g".to_owned(), 1.0),
-                Node::new("f".to_owned(), 1.0),
-                Node::new("e2".to_owned(), 1.0),
-                Node::new("e".to_owned(), 1.0),
-                Node::new("d".to_owned(), 1.0),
+                Node::new_str("i", 1.0),
+                Node::new_str("h", 1.0),
+                Node::new_str("g", 1.0),
+                Node::new_str("f", 1.0),
+                Node::new_str("e2", 1.0),
+                Node::new_str("e", 1.0),
+                Node::new_str("d", 1.0),
             ]
         );
 
@@ -685,10 +703,10 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("g".to_owned(), 1.0),
-                Node::new("f".to_owned(), 1.0),
-                Node::new("e2".to_owned(), 1.0),
-                Node::new("e".to_owned(), 1.0),
+                Node::new_str("g", 1.0),
+                Node::new_str("f", 1.0),
+                Node::new_str("e2", 1.0),
+                Node::new_str("e", 1.0),
             ]
         );
 
@@ -700,12 +718,12 @@ mod test {
         assert_eq!(
             res,
             vec![
-                Node::new("c".to_owned(), 1.0),
-                Node::new("d".to_owned(), 1.0),
-                Node::new("e".to_owned(), 1.0),
-                Node::new("e2".to_owned(), 1.0),
-                Node::new("f".to_owned(), 1.0),
-                Node::new("g".to_owned(), 1.0),
+                Node::new_str("c", 1.0),
+                Node::new_str("d", 1.0),
+                Node::new_str("e", 1.0),
+                Node::new_str("e2", 1.0),
+                Node::new_str("f", 1.0),
+                Node::new_str("g", 1.0),
             ]
         );
     }

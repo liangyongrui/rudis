@@ -1,33 +1,16 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/sismember
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Sismember {
-    key: String,
+    key: SimpleType,
     value: SimpleType,
 }
 
 impl Sismember {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let value = match parse.next() {
-            Ok(Frame::Simple(s)) => SimpleType::SimpleString(s),
-            Ok(Frame::Bulk(data)) => data.into(),
-            Ok(Frame::Integer(data)) => data.into(),
-            Ok(frame) => {
-                return Err(format!(
-                    "protocol error; expected simple frame or bulk frame, got {:?}",
-                    frame
-                )
-                .into())
-            }
-            Err(err) => return Err(err.into()),
-        };
-        Ok(Self { key, value })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.sismember(&self.key, &self.value) {

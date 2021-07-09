@@ -1,12 +1,15 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{db::Db, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    Connection, Frame,
+};
 
 /// https://redis.io/commands/llen
 #[derive(Debug, ParseFrames)]
 pub struct Llen {
-    key: String,
+    key: SimpleType,
 }
 impl Llen {
     #[instrument(skip(self, db, dst))]

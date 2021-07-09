@@ -1,13 +1,13 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/zrem
 #[derive(Debug, ParseFrames)]
 pub struct Zrem {
-    key: String,
-    members: Vec<String>,
+    key: SimpleType,
+    members: Vec<SimpleType>,
 }
 
 impl Zrem {

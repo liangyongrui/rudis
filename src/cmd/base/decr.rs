@@ -1,13 +1,17 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    Connection, Frame,
+};
 
 /// https://redis.io/commands/decr
 #[derive(Debug, ParseFrames)]
 pub struct Decr {
-    key: String,
+    key: SimpleType,
 }
+
 impl Decr {
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {

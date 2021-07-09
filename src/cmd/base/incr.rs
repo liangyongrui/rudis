@@ -1,12 +1,15 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    Connection, Frame,
+};
 
 /// https://redis.io/commands/incr
 #[derive(Debug, ParseFrames)]
 pub struct Incr {
-    key: String,
+    key: SimpleType,
 }
 impl Incr {
     #[instrument(skip(self, db, dst))]

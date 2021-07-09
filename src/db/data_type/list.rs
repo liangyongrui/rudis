@@ -6,7 +6,7 @@ use std::{
 
 use bytes::Bytes;
 
-use super::{AggregateType, DataType};
+use super::{AggregateType, DataType, SimpleType};
 use crate::db::{
     result::Result,
     slot::{Entry, Slot},
@@ -54,7 +54,7 @@ impl List {
     }
     fn process<T, F: FnOnce(&List) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -72,7 +72,7 @@ impl List {
 
     fn mut_process<T, F: FnOnce(&mut List) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -90,7 +90,7 @@ impl List {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut List) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
     ) -> Result<T> {
         let mut entry = slot.get_or_insert_entry(key, || {
@@ -110,7 +110,7 @@ impl List {
 }
 
 impl Slot {
-    pub(crate) fn lpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn lpushx(&self, key: &SimpleType, values: Vec<Bytes>) -> Result<usize> {
         List::mut_process(
             self,
             key,
@@ -124,7 +124,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn rpushx(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn rpushx(&self, key: &SimpleType, values: Vec<Bytes>) -> Result<usize> {
         List::mut_process(
             self,
             key,
@@ -137,7 +137,7 @@ impl Slot {
             || 0,
         )
     }
-    pub(crate) fn lpush(&self, key: &str, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn lpush(&self, key: &SimpleType, values: Vec<Bytes>) -> Result<usize> {
         List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_front(v)
@@ -146,7 +146,7 @@ impl Slot {
         })
     }
 
-    pub(crate) fn rpush(&self, key: String, values: Vec<Bytes>) -> Result<usize> {
+    pub(crate) fn rpush(&self, key: SimpleType, values: Vec<Bytes>) -> Result<usize> {
         List::mut_process_exists_or_new(self, &key, |list| {
             for v in values {
                 list.push_back(v)
@@ -155,7 +155,7 @@ impl Slot {
         })
     }
 
-    pub(crate) fn lpop(&self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
+    pub(crate) fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<Bytes>>> {
         List::mut_process(
             self,
             key,
@@ -174,7 +174,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn rpop(&self, key: &str, count: usize) -> Result<Option<Vec<Bytes>>> {
+    pub(crate) fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<Bytes>>> {
         List::mut_process(
             self,
             key,
@@ -193,7 +193,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn lrange(&self, key: &str, start: i64, stop: i64) -> Result<Vec<Bytes>> {
+    pub(crate) fn lrange(&self, key: &SimpleType, start: i64, stop: i64) -> Result<Vec<Bytes>> {
         List::process(
             self,
             key,
@@ -209,7 +209,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn llen(&self, key: &str) -> Result<usize> {
+    pub(crate) fn llen(&self, key: &SimpleType) -> Result<usize> {
         List::process(self, key, |list| list.len(), || 0)
     }
 }

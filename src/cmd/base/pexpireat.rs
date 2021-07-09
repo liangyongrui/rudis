@@ -2,12 +2,15 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    Connection, Frame,
+};
 
 /// https://redis.io/commands/pexpireat
 #[derive(Debug, ParseFrames)]
 pub struct Pexpireat {
-    key: String,
+    key: SimpleType,
     ms_timestamp: u64,
 }
 impl Pexpireat {

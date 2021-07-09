@@ -10,10 +10,10 @@ use crate::db::{
 #[derive(Debug, Clone)]
 pub struct Hash {
     version: u64,
-    value: Arc<HashTrieMapSync<String, SimpleType>>,
+    value: Arc<HashTrieMapSync<SimpleType, SimpleType>>,
 }
 impl Deref for Hash {
-    type Target = HashTrieMapSync<String, SimpleType>;
+    type Target = HashTrieMapSync<SimpleType, SimpleType>;
 
     fn deref(&self) -> &Self::Target {
         &self.value
@@ -21,7 +21,7 @@ impl Deref for Hash {
 }
 #[derive(Debug)]
 pub struct HashEntry {
-    pub field: String,
+    pub field: SimpleType,
     pub value: SimpleType,
 }
 
@@ -39,7 +39,7 @@ impl Hash {
 
     fn process<T, F: FnOnce(&Hash) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -58,7 +58,7 @@ impl Hash {
 
     fn mut_process<T, F: FnOnce(&mut Hash) -> T>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
@@ -77,7 +77,7 @@ impl Hash {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut Hash) -> Result<T>>(
         slot: &Slot,
-        key: &str,
+        key: &SimpleType,
         f: F,
     ) -> Result<T> {
         let mut entry = slot.get_or_insert_entry(&key, || (Hash::new_data_type(), None));
@@ -91,7 +91,7 @@ impl Hash {
     }
 }
 impl Slot {
-    pub fn hset(&self, key: String, pairs: Vec<HashEntry>) -> Result<usize> {
+    pub fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, &key, |hash| {
             let len = pairs.len();
             let mut new = (*hash.value).clone();
@@ -104,7 +104,7 @@ impl Slot {
         })
     }
 
-    pub fn hsetnx(&self, key: &str, field: String, value: SimpleType) -> Result<usize> {
+    pub fn hsetnx(&self, key: &SimpleType, field: SimpleType, value: SimpleType) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, &key, |hash| {
             if hash.contains_key(&field) {
                 Ok(0)
@@ -116,7 +116,7 @@ impl Slot {
         })
     }
 
-    pub fn hgetall(&self, key: &str) -> Result<Vec<HashEntry>> {
+    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<HashEntry>> {
         Hash::process(
             self,
             key,
@@ -133,7 +133,11 @@ impl Slot {
         })
     }
 
-    pub fn hmget(&self, key: &str, fields: Vec<String>) -> Result<Vec<Option<SimpleType>>> {
+    pub fn hmget(
+        &self,
+        key: &SimpleType,
+        fields: Vec<SimpleType>,
+    ) -> Result<Vec<Option<SimpleType>>> {
         Hash::process(
             self,
             key,
@@ -143,7 +147,7 @@ impl Slot {
         .map(|p| fields.into_iter().map(|x| p.get(&x).cloned()).collect())
     }
 
-    pub fn hdel(&self, key: &str, fields: Vec<String>) -> Result<usize> {
+    pub fn hdel(&self, key: &SimpleType, fields: Vec<SimpleType>) -> Result<usize> {
         Hash::mut_process(
             self,
             key,
@@ -161,7 +165,7 @@ impl Slot {
         )
     }
 
-    pub fn hexists(&self, key: &str, field: String) -> Result<usize> {
+    pub fn hexists(&self, key: &SimpleType, field: SimpleType) -> Result<usize> {
         Hash::process(
             self,
             key,
@@ -176,7 +180,7 @@ impl Slot {
         )
     }
 
-    pub fn hincrby(&self, key: &str, field: String, value: i64) -> Result<i64> {
+    pub fn hincrby(&self, key: &SimpleType, field: SimpleType, value: i64) -> Result<i64> {
         Hash::mut_process_exists_or_new(self, &key, |hash| {
             let old_value = match hash.get(&field) {
                 Some(SimpleType::SimpleString(s)) => s.parse::<i64>().map_err(|e| e.to_string())?,

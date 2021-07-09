@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/zrank
 #[derive(Debug, ParseFrames)]
 pub struct Zrank {
-    key: String,
-    member: String,
+    key: SimpleType,
+    member: SimpleType,
 }
 
 impl Zrank {

@@ -1,7 +1,7 @@
 use tracing::{debug, instrument};
 
 use crate::{
-    db::Db,
+    db::{data_type::SimpleType, Db},
     parse::{Parse, ParseError},
     Connection, Frame,
 };
@@ -9,12 +9,12 @@ use crate::{
 /// https://redis.io/commands/rpop
 #[derive(Debug)]
 pub struct Rpop {
-    key: String,
+    key: SimpleType,
     count: Option<i64>,
 }
 impl Rpop {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
         let count = match parse.next_int() {
             Ok(value) => {
                 if value <= 0 {

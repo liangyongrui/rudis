@@ -5,7 +5,7 @@ use std::{fmt, str, vec};
 use bytes::Bytes;
 pub use frame::parse;
 
-use crate::Frame;
+use crate::{db::data_type::SimpleType, Frame};
 
 /// Utility for parsing a command
 ///
@@ -54,6 +54,18 @@ impl Parse {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
+    pub fn next_simple_type(&mut self) -> Result<SimpleType, ParseError> {
+        match self.next()? {
+            Frame::Simple(s) => Ok(SimpleType::SimpleString(s)),
+            Frame::Integer(i) => Ok(SimpleType::Integer(i)),
+            Frame::Bulk(b) => Ok(SimpleType::Blob(b)),
+            frame => Err(format!(
+                "protocol error; expected simple frame or bulk frame, got {:?}",
+                frame
+            )
+            .into()),
+        }
+    }
     /// Return the next entry as a string.
     ///
     /// If the next entry cannot be represented as a String, then an error is returned.

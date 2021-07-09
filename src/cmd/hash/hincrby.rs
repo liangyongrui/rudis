@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hincrby
 #[derive(Debug, ParseFrames)]
 pub struct Hincrby {
-    key: String,
-    field: String,
+    key: SimpleType,
+    field: SimpleType,
     value: i64,
 }
 

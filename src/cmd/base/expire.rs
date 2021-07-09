@@ -2,12 +2,15 @@ use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    Connection, Frame,
+};
 
 /// https://redis.io/commands/expire
 #[derive(Debug, ParseFrames)]
 pub struct Expire {
-    key: String,
+    key: SimpleType,
     seconds: u64,
 }
 impl Expire {

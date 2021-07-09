@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/lrange
 #[derive(Debug, ParseFrames)]
 pub struct Lrange {
-    key: String,
+    key: SimpleType,
     start: i64,
     stop: i64,
 }

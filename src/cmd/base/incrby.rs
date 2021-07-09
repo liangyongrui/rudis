@@ -1,12 +1,15 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Connection, Frame};
+use crate::{
+    db::{data_type::SimpleType, Db},
+    Connection, Frame,
+};
 
 /// https://redis.io/commands/incrby
 #[derive(Debug, ParseFrames)]
 pub struct Incrby {
-    key: String,
+    key: SimpleType,
     value: i64,
 }
 impl Incrby {

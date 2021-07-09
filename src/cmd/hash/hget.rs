@@ -1,13 +1,13 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
-    key: String,
-    field: String,
+    key: SimpleType,
+    field: SimpleType,
 }
 
 impl Hget {

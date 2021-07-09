@@ -1,18 +1,18 @@
 use bytes::Bytes;
 use tracing::{debug, instrument};
 
-use crate::{parse::ParseError, Connection, Db, Frame, Parse};
+use crate::{db::data_type::SimpleType, parse::ParseError, Connection, Db, Frame, Parse};
 
 /// https://redis.io/commands/rpushx
 #[derive(Debug)]
 pub struct Rpushx {
-    key: String,
+    key: SimpleType,
     values: Vec<Bytes>,
 }
 
 impl Rpushx {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
+        let key = parse.next_simple_type()?;
         let mut values = vec![parse.next_bytes()?];
         loop {
             match parse.next_bytes() {
