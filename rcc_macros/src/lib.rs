@@ -40,11 +40,6 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                             let #field_name = parse.next_int()? as #field_type;
                         };
                     }
-                    if *ident == "Bytes" {
-                        return quote! {
-                            let #field_name = parse.next_bytes()? as #field_type;
-                        };
-                    }
                     if *ident == "Vec" {
                         if let syn::PathArguments::AngleBracketed(
                             syn::AngleBracketedGenericArguments { args, .. },

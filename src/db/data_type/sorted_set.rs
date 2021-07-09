@@ -29,7 +29,7 @@ impl Node {
     pub fn new(key: SimpleType, score: f64) -> Self {
         Self { key, score }
     }
-    
+
     #[cfg(test)]
     pub fn new_str(key: &str, score: f64) -> Self {
         Self {

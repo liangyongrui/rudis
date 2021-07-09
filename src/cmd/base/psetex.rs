@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -8,13 +7,13 @@ use crate::{
     utils::options::NxXx,
     Connection, Frame,
 };
-
+/// https://redis.io/commands/psetex
 #[derive(Debug, ParseFrames)]
 pub struct Psetex {
     /// Name of the key to get
     key: SimpleType,
     milliseconds: u64,
-    value: Bytes,
+    value: SimpleType,
 }
 impl Psetex {
     #[instrument(skip(self, db, dst))]
@@ -22,7 +21,7 @@ impl Psetex {
         let response = if let Err(e) = db
             .set(
                 self.key,
-                self.value.into(),
+                self.value,
                 NxXx::None,
                 Utc::now().checked_add_signed(Duration::milliseconds(self.milliseconds as i64)),
                 false,

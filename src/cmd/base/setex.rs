@@ -1,4 +1,3 @@
-use bytes::Bytes;
 use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -8,12 +7,12 @@ use crate::{
     utils::options::NxXx,
     Connection, Frame,
 };
-
+/// https://redis.io/commands/setex
 #[derive(Debug, ParseFrames)]
 pub struct Setex {
     key: SimpleType,
     seconds: u64,
-    value: Bytes,
+    value: SimpleType,
 }
 impl Setex {
     #[instrument(skip(self, db, dst))]
@@ -21,7 +20,7 @@ impl Setex {
         let response = if let Err(e) = db
             .set(
                 self.key,
-                self.value.into(),
+                self.value,
                 NxXx::None,
                 Utc::now().checked_add_signed(Duration::seconds(self.seconds as i64)),
                 false,
