@@ -24,7 +24,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                 ..
             }) = field.ty
             {
-                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                if let Some(syn::PathSegment { ident, arguments }) = segments.last() {
                     if *ident == "String" {
                         return quote! {
                             let #field_name = parse.next_string()?;
@@ -39,6 +39,33 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                         return quote! {
                             let #field_name = parse.next_bytes()? as #field_type;
                         };
+                    }
+                    if *ident == "Vec" {
+                        if let syn::PathArguments::AngleBracketed(
+                            syn::AngleBracketedGenericArguments { args, .. },
+                        ) = arguments
+                        {
+                            if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
+                                path: syn::Path { ref segments, .. },
+                                ..
+                            })) = args.first().unwrap()
+                            {
+                                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                                    if *ident == "String" {
+                                        return quote! {
+                                            let mut #field_name = vec![parse.next_string()?];
+                                            loop {
+                                                match parse.next_string() {
+                                                    Ok(key) => #field_name.push(key),
+                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(err) => return Err(err.into()),
+                                                }
+                                            }
+                                        };
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -64,5 +91,6 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
             }
         }
     };
+    eprintln!("{}", res);
     Ok(res)
 }

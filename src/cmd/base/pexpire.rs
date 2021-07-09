@@ -1,24 +1,16 @@
 use chrono::{Duration, Utc};
+use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{db::Db, Connection, Frame};
 
 /// https://redis.io/commands/pexpire
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Pexpire {
     key: String,
     milliseconds: u64,
 }
 impl Pexpire {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let milliseconds = parse.next_int()?;
-        Ok(Self {
-            key,
-            milliseconds: milliseconds as u64,
-        })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res = if let Some(ea) =

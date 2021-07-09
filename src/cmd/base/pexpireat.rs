@@ -1,24 +1,16 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
+use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{db::Db, Connection, Frame};
 
 /// https://redis.io/commands/pexpireat
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Pexpireat {
     key: String,
     ms_timestamp: u64,
 }
 impl Pexpireat {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let ms_timestamp = parse.next_int()?;
-        Ok(Self {
-            key,
-            ms_timestamp: ms_timestamp as u64,
-        })
-    }
-
     /// Apply the `Set` command to the specified `Db` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order

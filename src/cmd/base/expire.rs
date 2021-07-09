@@ -1,24 +1,16 @@
 use chrono::{Duration, Utc};
+use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, parse::Parse, Connection, Frame};
+use crate::{db::Db, Connection, Frame};
 
 /// https://redis.io/commands/expire
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct Expire {
     key: String,
     seconds: u64,
 }
 impl Expire {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_string()?;
-        let seconds = parse.next_int()?;
-        Ok(Self {
-            key,
-            seconds: seconds as u64,
-        })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res =
