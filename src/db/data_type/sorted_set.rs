@@ -13,8 +13,10 @@ use crate::{
         result::Result,
         slot::{Entry, Slot},
     },
-    options::{GtLt, NxXx},
-    utils::BoundExt,
+    utils::{
+        options::{GtLt, NxXx},
+        BoundExt,
+    },
 };
 
 #[derive(Debug, Clone, PartialEq)]

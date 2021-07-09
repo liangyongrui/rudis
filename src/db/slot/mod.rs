@@ -16,7 +16,7 @@ use super::{
     data_type::{DataType, SimpleType},
     result::Result,
 };
-use crate::options::NxXx;
+use crate::utils::options::NxXx;
 
 /// Entry in the key-value store
 #[derive(Debug)]

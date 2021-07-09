@@ -9,10 +9,6 @@ fork from https://github.com/tokio-rs/rcc
 """
 
 [[bin]]
-name = "cli"
-path = "src/bin/cli.rs"
-
-[[bin]]
 name = "server"
 path = "src/bin/server.rs"
 

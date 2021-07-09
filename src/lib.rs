@@ -25,8 +25,7 @@
 //!   intermediate representation between a "command" and the byte
 //!   representation.
 
-pub mod client;
-pub mod options;
+// pub mod client;
 mod utils;
 
 pub mod cmd;
@@ -34,22 +33,16 @@ pub use cmd::Command;
 
 mod connection;
 pub use connection::Connection;
-
-pub mod frame;
-pub use frame::Frame;
+pub use parse::frame::Frame;
 
 mod db;
 use db::Db;
 
 mod parse;
+pub use connection::server;
 use parse::{Parse, ParseError};
 
-mod parse2;
-
-pub mod server;
-
-mod buffer;
-pub use buffer::{buffer, Buffer};
+// pub use buffer::{buffer, Buffer};
 
 mod shutdown;
 use shutdown::Shutdown;

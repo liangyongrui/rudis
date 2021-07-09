@@ -1,6 +1,9 @@
+pub mod frame;
+
 use std::{fmt, str, vec};
 
 use bytes::Bytes;
+pub use frame::parse;
 
 use crate::Frame;
 

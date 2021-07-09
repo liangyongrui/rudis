@@ -1,3 +1,5 @@
+pub mod options;
+
 use std::ops::Bound;
 pub trait BoundExt<T> {
     fn map<O, F: FnOnce(T) -> O>(self, f: F) -> Bound<O>;
@@ -14,7 +16,7 @@ impl<T> BoundExt<T> for Bound<T> {
 }
 
 pub fn u8_to_string(data: &[u8]) -> String {
-    std::str::from_utf8(&data[..])
+    std::str::from_utf8(data)
         .map(|s| s.to_string())
         .expect("protocol error; invalid string")
 }

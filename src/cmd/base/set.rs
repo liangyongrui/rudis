@@ -1,11 +1,10 @@
-use bytes::Bytes;
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use tracing::{debug, instrument};
 
 use crate::{
     cmd::{Parse, ParseError},
     db::data_type::SimpleType,
-    options::NxXx,
+    utils::options::NxXx,
     Connection, Db, Frame,
 };
 
@@ -202,30 +201,5 @@ impl Set {
         dst.write_frame(&response).await?;
 
         Ok(())
-    }
-
-    /// Converts the command into an equivalent `Frame`.
-    ///
-    /// This is called by the client when encoding a `Set` command to send to
-    /// the server.
-    pub(crate) fn into_frame(self) -> Frame {
-        let mut frame = Frame::array();
-        frame.push_bulk(Bytes::from("set".as_bytes()));
-        frame.push_bulk(Bytes::from(self.key.into_bytes()));
-        frame.push_bulk(self.value.into());
-        if let Some(nx_xx) = self.nx_xx.into() {
-            frame.push_bulk(nx_xx);
-        }
-        if let Some(ms) = self.expires_at {
-            // Expirations in Redis procotol can be specified in two ways
-            // 1. SET key value EX seconds
-            // 2. SET key value PX milliseconds
-            // We the second option because it allows greater precision and
-            // src/bin/cli.rs parses the expiration argument as milliseconds
-            // in duration_from_ms_str()
-            frame.push_bulk(Bytes::from("PXAT".as_bytes()));
-            frame.push_int(ms.timestamp_millis());
-        }
-        frame
     }
 }

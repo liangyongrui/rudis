@@ -3,7 +3,7 @@ use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, options::NxXx, Connection, Frame};
+use crate::{db::Db, utils::options::NxXx, Connection, Frame};
 
 #[derive(Debug, ParseFrames)]
 pub struct Psetex {

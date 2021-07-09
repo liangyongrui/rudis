@@ -19,7 +19,7 @@ use self::{
     result::Result,
     slot::Slot,
 };
-use crate::options::{GtLt, NxXx};
+use crate::utils::options::{GtLt, NxXx};
 
 const SIZE: usize = 1024;
 

@@ -2,8 +2,8 @@ use tracing::{debug, instrument};
 
 use crate::{
     db::data_type::SortedSetNode,
-    options::{GtLt, NxXx},
     parse::ParseError,
+    utils::options::{GtLt, NxXx},
     Connection, Db, Frame, Parse,
 };
 

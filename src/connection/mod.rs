@@ -1,3 +1,5 @@
+pub mod server;
+
 use std::io::{self, Cursor};
 
 use bytes::{Buf, BytesMut};
@@ -6,7 +8,7 @@ use tokio::{
     net::TcpStream,
 };
 
-use crate::{frame::Frame, parse2};
+use crate::{parse, Frame};
 
 /// Send and receive `Frame` values from a remote peer.
 ///
@@ -85,7 +87,7 @@ impl Connection {
 
     fn parse_frame(&mut self) -> crate::Result<Option<Frame>> {
         let old_len = self.buffer.len();
-        match parse2::parse(&self.buffer[..]) {
+        match parse::parse(&self.buffer[..]) {
             Ok((left, frame)) => {
                 let len = old_len - left.len();
                 self.buffer.advance(len);

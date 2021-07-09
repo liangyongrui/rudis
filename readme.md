@@ -12,15 +12,16 @@ rust cloud cache
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
-1. [ ] macro 
+1. [x] macros
+1. [ ] 复杂数据结构里面的值，可能不仅仅是字符串
 1. [ ] 高可用
 1. [ ] 去掉过多的模板代码
-1. [ ] 优化pipeline（去掉flush）
+1. [ ] 优化 pipeline（去掉 flush）
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
 1. [ ] 主备
 1. [ ] 自定义插件
-1. [ ] lua脚本
+1. [ ] lua 脚本
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
 1. [ ] 整体梳理错误处理
 1. [ ] 完备的测试
