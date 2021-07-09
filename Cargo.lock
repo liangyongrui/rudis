@@ -453,6 +453,7 @@ dependencies = [
  "chrono",
  "dashmap",
  "nom",
+ "rcc_macros",
  "rpds",
  "structopt",
  "tokio",
@@ -460,6 +461,15 @@ dependencies = [
  "tracing",
  "tracing-futures",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "rcc_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

@@ -1,0 +1,12 @@
+[package]
+name = "rcc_macros"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1", features = ["derive", "extra-traits"] }
+proc-macro2 = "1"
+quote = "1"

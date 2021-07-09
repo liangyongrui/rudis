@@ -125,9 +125,7 @@ impl Connection {
             _ => self.write_value(frame).await?,
         }
 
-        // Ensure the encoded frame is written to the socket. The calls above
-        // are to the buffered stream and writes. Calling `flush` writes the
-        // remaining contents of the buffer to the socket.
+        // todo pipeline 延迟 flush
         self.stream.flush().await
     }
 

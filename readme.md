@@ -5,20 +5,24 @@ rust cloud cache
 ## 特点
 
 1. 完全并发
-1. 异步删除
+1. 过期异步删除
 
 ## todo
 
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
-1. [ ] 整体梳理错误处理
+1. [ ] macro 
+1. [ ] 高可用
+1. [ ] 去掉过多的模板代码
+1. [ ] 优化pipeline（去掉flush）
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化
 1. [ ] 主备
-1. [ ] pipeline(停止服务器的时候，处理干净 pipeline)
 1. [ ] 自定义插件
+1. [ ] lua脚本
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
+1. [ ] 整体梳理错误处理
 1. [ ] 完备的测试
 1. [ ] 注释中加测试
 1. [ ] 带 size 的持久化红黑树/btree/b+tree
@@ -54,9 +58,6 @@ list
 1. [x] lpop
 1. [x] rpop
 1. [x] llen
-1. [ ] ltrim
-1. [ ] lset
-1. [ ] lindex
 
 hash
 
@@ -93,4 +94,4 @@ zset
 1. [x] zrangebylex
 1. [x] zrevrangebylex
 1. [x] zremrangebyrank
-1. [ ] zremrangebyscore
+1. [x] zremrangebyscore
