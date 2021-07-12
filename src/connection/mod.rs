@@ -7,7 +7,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt, BufWriter},
     net::TcpStream,
 };
-use tracing::{debug, error};
+use tracing::error;
 
 use crate::{parse, Frame};
 

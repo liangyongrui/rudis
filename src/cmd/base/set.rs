@@ -164,18 +164,17 @@ impl Set {
     /// to execute a received command.
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        // Set the value in the shared database state.
+        let res = db
+            .set(
+                self.key,
+                self.value,
+                self.nx_xx,
+                self.expires_at,
+                self.keepttl,
+            )
+            .await;
         let response = if self.get {
-            match db
-                .set(
-                    self.key,
-                    self.value,
-                    self.nx_xx,
-                    self.expires_at,
-                    self.keepttl,
-                )
-                .await
-            {
+            match res {
                 Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value),
                 Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
                 Ok(Some(SimpleType::Integer(value))) => Frame::Integer(value),
@@ -184,7 +183,6 @@ impl Set {
                 Err(e) => Frame::Error(e),
             }
         } else {
-            // Create a success response and write it to `dst`.
             Frame::Simple("OK".to_string())
         };
         debug!(?response);
