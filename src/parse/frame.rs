@@ -9,7 +9,7 @@ use std::fmt;
 use bytes::Bytes;
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_while, take_while1, take_while_m_n},
+    bytes::streaming::{tag, take_while, take_while1, take_while_m_n},
     combinator::map,
     sequence::delimited,
 };

@@ -7,6 +7,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt, BufWriter},
     net::TcpStream,
 };
+use tracing::{debug, error};
 
 use crate::{parse, Frame};
 
@@ -94,7 +95,10 @@ impl Connection {
                 Ok(Some(frame))
             }
             Err(nom::Err::Incomplete(_)) => Ok(None),
-            Err(_) => Err("parse failed".into()),
+            Err(e) => {
+                error!(?e);
+                Err("parse failed".into())
+            }
         }
     }
 

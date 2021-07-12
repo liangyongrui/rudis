@@ -108,13 +108,13 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                     #self_token
                 })
             }
-            pub(crate) fn into_cmd(self) -> Vec<u8> {
+            pub fn into_cmd(self) -> Vec<u8> {
                 let mut cmd = #cmd
                 #cmd_args
                 cmd
             }
         }
     };
-    eprintln!("{}", res);
+    // eprintln!("{}", res);
     Ok(res)
 }

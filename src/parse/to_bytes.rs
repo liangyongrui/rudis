@@ -53,7 +53,9 @@ impl ToVecU8 for u64 {
 #[inline]
 pub fn build_cmd(cmd: String, args_len: usize) -> Vec<u8> {
     let mut res = vec![b'*'];
-    res.append(&mut (args_len as i64 + 1).into_vec_u8());
+    res.extend_from_slice((args_len + 1).to_string().as_bytes());
+    res.push(b'\r');
+    res.push(b'\n');
     res.append(&mut cmd.into_vec_u8());
     res
 }

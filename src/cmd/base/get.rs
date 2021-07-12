@@ -11,7 +11,7 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get
-    key: SimpleType,
+    pub key: SimpleType,
 }
 
 impl Get {

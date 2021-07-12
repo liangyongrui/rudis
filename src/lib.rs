@@ -36,12 +36,13 @@ pub use connection::Connection;
 pub use parse::frame::Frame;
 
 mod db;
+pub use db::data_type::SimpleType;
 use db::Db;
 
 mod parse;
 pub use connection::server;
+pub use parse::to_bytes::ToVecU8;
 use parse::{Parse, ParseError};
-
 // pub use buffer::{buffer, Buffer};
 
 mod shutdown;
