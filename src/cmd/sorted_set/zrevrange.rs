@@ -9,9 +9,9 @@ use crate::{
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]
 pub struct Zrevrange {
-    key: SimpleType,
-    range: (i64, i64),
-    withscores: bool,
+    pub key: SimpleType,
+    pub range: (i64, i64),
+    pub withscores: bool,
 }
 
 impl Zrevrange {

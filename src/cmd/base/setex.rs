@@ -10,9 +10,9 @@ use crate::{
 /// https://redis.io/commands/setex
 #[derive(Debug, ParseFrames)]
 pub struct Setex {
-    key: SimpleType,
-    seconds: u64,
-    value: SimpleType,
+    pub key: SimpleType,
+    pub seconds: u64,
+    pub value: SimpleType,
 }
 impl Setex {
     #[instrument(skip(self, db, dst))]

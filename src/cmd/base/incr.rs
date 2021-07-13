@@ -9,7 +9,7 @@ use crate::{
 /// https://redis.io/commands/incr
 #[derive(Debug, ParseFrames)]
 pub struct Incr {
-    key: SimpleType,
+    pub key: SimpleType,
 }
 impl Incr {
     #[instrument(skip(self, db, dst))]

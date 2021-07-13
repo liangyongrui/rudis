@@ -11,9 +11,9 @@ use crate::{
 /// https://redis.io/commands/zrangebylex
 #[derive(Debug)]
 pub struct Zrangebylex {
-    key: SimpleType,
-    range_item: ZrangeItem,
-    limit: Option<(i64, i64)>,
+    pub key: SimpleType,
+    pub range_item: ZrangeItem,
+    pub limit: Option<(i64, i64)>,
 }
 
 impl Zrangebylex {

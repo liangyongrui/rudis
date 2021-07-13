@@ -5,9 +5,9 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hincrby
 #[derive(Debug, ParseFrames)]
 pub struct Hincrby {
-    key: SimpleType,
-    field: SimpleType,
-    value: i64,
+    pub key: SimpleType,
+    pub field: SimpleType,
+    pub value: i64,
 }
 
 impl Hincrby {

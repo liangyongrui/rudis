@@ -5,8 +5,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug)]
 pub struct Zremrangebyrank {
-    key: SimpleType,
-    range: (i64, i64),
+    pub key: SimpleType,
+    pub range: (i64, i64),
 }
 
 impl Zremrangebyrank {

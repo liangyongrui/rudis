@@ -6,9 +6,9 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/lrange
 #[derive(Debug, ParseFrames)]
 pub struct Lrange {
-    key: SimpleType,
-    start: i64,
-    stop: i64,
+    pub key: SimpleType,
+    pub start: i64,
+    pub stop: i64,
 }
 
 impl Lrange {

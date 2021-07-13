@@ -6,8 +6,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
-    key: SimpleType,
-    field: SimpleType,
+    pub key: SimpleType,
+    pub field: SimpleType,
 }
 
 impl Hget {

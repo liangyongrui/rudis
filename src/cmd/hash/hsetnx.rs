@@ -6,9 +6,9 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hsetnx
 #[derive(Debug, ParseFrames)]
 pub struct Hsetnx {
-    key: SimpleType,
-    field: SimpleType,
-    value: SimpleType,
+    pub key: SimpleType,
+    pub field: SimpleType,
+    pub value: SimpleType,
 }
 
 impl Hsetnx {

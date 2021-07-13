@@ -17,11 +17,11 @@ enum By {
 /// https://redis.io/commands/zrange
 #[derive(Debug)]
 pub struct Zrange {
-    key: SimpleType,
-    range_item: ZrangeItem,
-    rev: bool,
-    limit: Option<(i64, i64)>,
-    withscores: bool,
+    pub key: SimpleType,
+    pub range_item: ZrangeItem,
+    pub rev: bool,
+    pub limit: Option<(i64, i64)>,
+    pub withscores: bool,
 }
 
 impl Zrange {

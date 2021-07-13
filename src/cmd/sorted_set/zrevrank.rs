@@ -5,8 +5,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/zrevrank
 #[derive(Debug, ParseFrames)]
 pub struct Zrevrank {
-    key: SimpleType,
-    member: SimpleType,
+    pub key: SimpleType,
+    pub member: SimpleType,
 }
 
 impl Zrevrank {

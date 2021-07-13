@@ -12,12 +12,12 @@ use crate::{
 /// https://redis.io/commands/zadd
 #[derive(Debug)]
 pub struct Zadd {
-    key: SimpleType,
-    nx_xx: NxXx,
-    gt_lt: GtLt,
-    ch: bool,
-    incr: bool,
-    nodes: Vec<SortedSetNode>,
+    pub key: SimpleType,
+    pub nx_xx: NxXx,
+    pub gt_lt: GtLt,
+    pub ch: bool,
+    pub incr: bool,
+    pub nodes: Vec<SortedSetNode>,
 }
 
 impl Zadd {

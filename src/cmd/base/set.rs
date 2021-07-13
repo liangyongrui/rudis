@@ -14,17 +14,17 @@ use crate::{
 #[derive(Debug)]
 pub struct Set {
     /// the lookup key
-    key: SimpleType,
+    pub key: SimpleType,
     /// the value to be stored
-    value: SimpleType,
+    pub value: SimpleType,
     // None not set, true nx, false xx
-    nx_xx: NxXx,
+    pub nx_xx: NxXx,
     /// When to expire the key
     ///
     /// unix timestatmp ms
-    expires_at: Option<DateTime<Utc>>,
-    keepttl: bool,
-    get: bool,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub keepttl: bool,
+    pub get: bool,
 }
 
 impl Set {

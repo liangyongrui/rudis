@@ -6,8 +6,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/sismember
 #[derive(Debug, ParseFrames)]
 pub struct Sismember {
-    key: SimpleType,
-    value: SimpleType,
+    pub key: SimpleType,
+    pub value: SimpleType,
 }
 
 impl Sismember {

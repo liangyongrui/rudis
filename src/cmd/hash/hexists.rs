@@ -6,8 +6,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hexists
 #[derive(Debug, ParseFrames)]
 pub struct Hexists {
-    key: SimpleType,
-    field: SimpleType,
+    pub key: SimpleType,
+    pub field: SimpleType,
 }
 
 impl Hexists {

@@ -6,7 +6,7 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/smembers
 #[derive(Debug, ParseFrames)]
 pub struct Smembers {
-    key: SimpleType,
+    pub key: SimpleType,
 }
 
 impl Smembers {

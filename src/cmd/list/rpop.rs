@@ -9,8 +9,8 @@ use crate::{
 /// https://redis.io/commands/rpop
 #[derive(Debug)]
 pub struct Rpop {
-    key: SimpleType,
-    count: Option<i64>,
+    pub key: SimpleType,
+    pub count: Option<i64>,
 }
 impl Rpop {
     pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {

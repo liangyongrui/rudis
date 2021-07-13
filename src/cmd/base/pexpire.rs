@@ -10,8 +10,8 @@ use crate::{
 /// https://redis.io/commands/pexpire
 #[derive(Debug, ParseFrames)]
 pub struct Pexpire {
-    key: SimpleType,
-    milliseconds: u64,
+    pub key: SimpleType,
+    pub milliseconds: u64,
 }
 impl Pexpire {
     #[instrument(skip(self, db, dst))]

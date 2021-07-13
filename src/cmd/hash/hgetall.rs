@@ -5,7 +5,7 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
-    key: SimpleType,
+    pub key: SimpleType,
 }
 
 impl Hgetall {

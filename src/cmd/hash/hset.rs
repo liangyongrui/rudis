@@ -9,8 +9,8 @@ use crate::{
 /// https://redis.io/commands/hset
 #[derive(Debug)]
 pub struct Hset {
-    key: SimpleType,
-    pairs: Vec<HashEntry>,
+    pub key: SimpleType,
+    pub pairs: Vec<HashEntry>,
 }
 
 impl Hset {

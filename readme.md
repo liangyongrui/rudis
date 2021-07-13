@@ -14,6 +14,7 @@ rust cloud cache
 1. [x] nom parse
 1. [x] macros
 1. [x] 接收字符串的地方 都改成 基础类型(string, blob, i64, f64)
+1. [ ] 多个建立连接同时请求报错
 1. [ ] 测试命令 demo
 1. [ ] 测试各个命令
 1. [ ] 高可用

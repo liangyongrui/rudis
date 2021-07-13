@@ -9,7 +9,7 @@ use crate::{
 /// https://redis.io/commands/llen
 #[derive(Debug, ParseFrames)]
 pub struct Llen {
-    key: SimpleType,
+    pub key: SimpleType,
 }
 impl Llen {
     #[instrument(skip(self, db, dst))]

@@ -185,7 +185,6 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
             info!("shutting down");
         }
     }
-
     // Extract the `shutdown_complete` receiver and transmitter
     // explicitly drop `shutdown_transmitter`. This is important, as the
     // `.await` below would otherwise never complete.

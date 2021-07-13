@@ -10,8 +10,8 @@ use crate::{
 /// https://redis.io/commands/expireat
 #[derive(Debug, ParseFrames)]
 pub struct Expireat {
-    key: SimpleType,
-    s_timestamp: u64,
+    pub key: SimpleType,
+    pub s_timestamp: u64,
 }
 impl Expireat {
     /// Apply the `Set` command to the specified `Db` instance.

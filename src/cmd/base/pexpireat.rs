@@ -10,14 +10,10 @@ use crate::{
 /// https://redis.io/commands/pexpireat
 #[derive(Debug, ParseFrames)]
 pub struct Pexpireat {
-    key: SimpleType,
-    ms_timestamp: u64,
+    pub key: SimpleType,
+    pub ms_timestamp: u64,
 }
 impl Pexpireat {
-    /// Apply the `Set` command to the specified `Db` instance.
-    ///
-    /// The response is written to `dst`. This is called by the server in order
-    /// to execute a received command.
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res = db.expires_at(

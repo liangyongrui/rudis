@@ -11,10 +11,10 @@ use crate::{
 /// https://redis.io/commands/zrangebyscore
 #[derive(Debug)]
 pub struct Zrangebyscore {
-    key: SimpleType,
-    range_item: ZrangeItem,
-    limit: Option<(i64, i64)>,
-    withscores: bool,
+    pub key: SimpleType,
+    pub range_item: ZrangeItem,
+    pub limit: Option<(i64, i64)>,
+    pub withscores: bool,
 }
 
 impl Zrangebyscore {

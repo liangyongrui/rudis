@@ -10,10 +10,9 @@ use crate::{
 /// https://redis.io/commands/psetex
 #[derive(Debug, ParseFrames)]
 pub struct Psetex {
-    /// Name of the key to get
-    key: SimpleType,
-    milliseconds: u64,
-    value: SimpleType,
+    pub key: SimpleType,
+    pub milliseconds: u64,
+    pub value: SimpleType,
 }
 impl Psetex {
     #[instrument(skip(self, db, dst))]

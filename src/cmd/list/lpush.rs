@@ -6,8 +6,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/lpush
 #[derive(Debug, ParseFrames)]
 pub struct Lpush {
-    key: SimpleType,
-    values: Vec<SimpleType>,
+    pub key: SimpleType,
+    pub values: Vec<SimpleType>,
 }
 
 impl Lpush {

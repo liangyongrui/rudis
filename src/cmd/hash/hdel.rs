@@ -6,8 +6,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hdel
 #[derive(Debug, ParseFrames)]
 pub struct Hdel {
-    key: SimpleType,
-    fields: Vec<SimpleType>,
+    pub key: SimpleType,
+    pub fields: Vec<SimpleType>,
 }
 
 impl Hdel {

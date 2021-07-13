@@ -1,68 +1,56 @@
-use std::net::SocketAddr;
+//! 每个命令简单测一下功能是否正常，无需关联
+//! 命令功能的详细测试，在db模块测
 
-use rcc::{cmd::Get, server, SimpleType};
+use rcc::{
+    cmd::{Decr, Get},
+    server, SimpleType,
+};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
 };
 use tracing::Level;
 
-async fn start_server() -> SocketAddr {
+async fn start_server() -> TcpStream {
     tracing_subscriber::fmt::Subscriber::builder()
         .with_max_level(Level::DEBUG)
         .try_init()
         .unwrap();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-
     tokio::spawn(async move { server::run(listener, tokio::signal::ctrl_c()).await });
-
-    addr
+    TcpStream::connect(addr).await.unwrap()
 }
 
 #[tokio::test]
-async fn key_value_get_set() {
-    let addr = start_server().await;
-    dbg!(addr);
-    // Establish a connection to the server
-    let mut stream = TcpStream::connect(addr).await.unwrap();
-    // Get a key, data is missing
+async fn decr() {
+    let mut stream = start_server().await;
+    let key = "decr_test".to_owned();
     let get = Get {
-        key: SimpleType::SimpleString("hello".to_string()),
+        key: SimpleType::SimpleString(key.clone()),
     };
     let cmd = &get.into_cmd()[..];
-    assert_eq!(b"*2\r\n$3\r\nGET\r\n$5\r\nhello\r\n", cmd);
     stream.write_all(cmd).await.unwrap();
-
     // Read nil response
     let mut response = [0; 5];
     stream.read_exact(&mut response).await.unwrap();
     assert_eq!(b"$-1\r\n", &response);
-
-    // Set a key
-    stream
-        .write_all(b"*3\r\n$3\r\nSET\r\n$5\r\nhello\r\n$5\r\nworld\r\n")
-        .await
-        .unwrap();
-
+    let decr = Decr {
+        key: SimpleType::SimpleString(key),
+    };
+    stream.write_all(&decr.into_cmd()[..]).await.unwrap();
     // Read OK
     let mut response = [0; 5];
     stream.read_exact(&mut response).await.unwrap();
     assert_eq!(b"+OK\r\n", &response);
-
-    // Get the key, data is present
-    let get = Get {
-        key: SimpleType::SimpleString("hello".to_string()),
-    };
-    stream.write_all(&get.into_cmd()[..]).await.unwrap();
-
+    stream.write_all(cmd).await.unwrap();
     // Shutdown the write half
     stream.shutdown().await.unwrap();
 
-    // Read "world" response
-    let mut response = [0; 11];
+    let ans = format!("${}\r\n{}\r\n", "-1".len(), "-1");
+    let mut response = vec![0; ans.len()];
     stream.read_exact(&mut response).await.unwrap();
-    assert_eq!(b"$5\r\nworld\r\n", &response);
+    assert_eq!(ans.as_bytes(), &response);
 
     // Receive `None`
     assert_eq!(0, stream.read(&mut response).await.unwrap());

@@ -9,7 +9,7 @@ use crate::{
 /// https://redis.io/commands/decr
 #[derive(Debug, ParseFrames)]
 pub struct Decr {
-    key: SimpleType,
+    pub key: SimpleType,
 }
 
 impl Decr {

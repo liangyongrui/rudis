@@ -4,12 +4,11 @@ mod list;
 mod set;
 mod sorted_set;
 
-pub use self::base::{get::Get, set::Set, setex::Setex};
-use self::{
+pub use self::{
     base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
-        incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat, psetex::Psetex,
-        unknown::Unknown,
+        get::Get, incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat,
+        psetex::Psetex, set::Set, setex::Setex, unknown::Unknown,
     },
     hash::{
         hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,

@@ -9,8 +9,8 @@ use crate::{
 /// https://redis.io/commands/incrby
 #[derive(Debug, ParseFrames)]
 pub struct Incrby {
-    key: SimpleType,
-    value: i64,
+    pub key: SimpleType,
+    pub value: i64,
 }
 impl Incrby {
     #[instrument(skip(self, db, dst))]

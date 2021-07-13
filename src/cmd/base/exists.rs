@@ -6,7 +6,7 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/exists
 #[derive(Debug, ParseFrames)]
 pub struct Exists {
-    keys: Vec<SimpleType>,
+    pub keys: Vec<SimpleType>,
 }
 
 impl Exists {

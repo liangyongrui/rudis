@@ -6,8 +6,8 @@ use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/zrem
 #[derive(Debug, ParseFrames)]
 pub struct Zrem {
-    key: SimpleType,
-    members: Vec<SimpleType>,
+    pub key: SimpleType,
+    pub members: Vec<SimpleType>,
 }
 
 impl Zrem {
