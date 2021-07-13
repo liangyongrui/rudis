@@ -143,3 +143,9 @@ impl From<SimpleType> for Bytes {
         }
     }
 }
+
+impl From<&str> for SimpleType {
+    fn from(s: &str) -> Self {
+        SimpleType::SimpleString(s.to_owned())
+    }
+}

@@ -19,7 +19,7 @@ impl Deref for Hash {
         &self.value
     }
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HashEntry {
     pub field: SimpleType,
     pub value: SimpleType,
@@ -159,7 +159,7 @@ impl Slot {
                 }
                 hash.version += 1;
                 hash.value = Arc::new(new);
-                hash.size() - old_len
+                old_len - hash.size()
             },
             || 0,
         )
@@ -193,5 +193,94 @@ impl Slot {
             hash.value = Arc::new(hash.insert(field, SimpleType::Integer(nv)));
             Ok(nv)
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        db::{data_type::HashEntry, slot::Slot},
+        SimpleType,
+    };
+
+    #[tokio::test]
+    async fn test() {
+        let slot = Slot::new();
+        let key = SimpleType::SimpleString("abc".to_string());
+        assert_eq!(
+            Ok(2),
+            slot.hset(
+                key.clone(),
+                vec![
+                    HashEntry {
+                        field: "abc".into(),
+                        value: "456".into(),
+                    },
+                    HashEntry {
+                        field: "def".into(),
+                        value: 123.into(),
+                    },
+                ],
+            )
+        );
+        assert_eq!(
+            slot.hmget(&key, vec!["abc".into(), "aaa".into(), "def".into()]),
+            Ok(vec![Some("456".into()), None, Some(123.into())])
+        );
+        assert_eq!(slot.hsetnx(&key, "abc".into(), "111".into()), Ok(0));
+        assert_eq!(slot.hsetnx(&key, "aaa".into(), "111".into()), Ok(1));
+        assert_eq!(
+            slot.hmget(&key, vec!["abc".into(), "aaa".into()]),
+            Ok(vec![Some("456".into()), Some("111".into())])
+        );
+        assert_eq!(
+            {
+                let mut r = slot.hgetall(&key).unwrap();
+                r.sort();
+                r
+            },
+            {
+                let mut r2 = vec![
+                    HashEntry {
+                        field: "abc".into(),
+                        value: "456".into(),
+                    },
+                    HashEntry {
+                        field: "aaa".into(),
+                        value: "111".into(),
+                    },
+                    HashEntry {
+                        field: "def".into(),
+                        value: 123.into(),
+                    },
+                ];
+                r2.sort();
+                r2
+            }
+        );
+        assert_eq!(
+            slot.hdel(&key, vec!["abc".into(), "aaa".into(), "xxx".into()]),
+            Ok(2)
+        );
+        assert_eq!(
+            slot.hgetall(&key).unwrap(),
+            vec![HashEntry {
+                field: "def".into(),
+                value: 123.into(),
+            }]
+        );
+        assert_eq!(slot.hexists(&key, "abc".into()), Ok(0));
+        assert_eq!(slot.hexists(&key, "def".into()), Ok(1));
+        assert_eq!(slot.hincrby(&key, "def".into(), 123), Ok(123 + 123));
+        assert_eq!(slot.hincrby(&key, "xxx".into(), 123), Ok(123));
+        slot.hset(
+            key.clone(),
+            vec![HashEntry {
+                field: "abc".into(),
+                value: "456".into(),
+            }],
+        )
+        .unwrap();
+        assert_eq!(slot.hincrby(&key, "abc".into(), 123), Ok(456 + 123));
     }
 }
