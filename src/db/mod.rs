@@ -170,8 +170,8 @@ impl Db {
         self.get_slot(&key).incr_by(key, value)
     }
 
-    pub(crate) fn expires_at(&self, key: SimpleType, expires_at: DateTime<Utc>) -> bool {
-        self.get_slot(&key).set_expires_at(key, expires_at)
+    pub(crate) async fn expires_at(&self, key: &SimpleType, expires_at: DateTime<Utc>) -> bool {
+        self.get_slot(&key).set_expires_at(key, expires_at).await
     }
     pub(crate) fn exists(&self, keys: Vec<SimpleType>) -> usize {
         keys.into_iter()

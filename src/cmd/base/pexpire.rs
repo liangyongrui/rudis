@@ -19,7 +19,7 @@ impl Pexpire {
         let res = if let Some(ea) =
             Utc::now().checked_add_signed(Duration::milliseconds(self.milliseconds as _))
         {
-            db.expires_at(self.key, ea)
+            db.expires_at(&self.key, ea).await
         } else {
             false
         };

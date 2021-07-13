@@ -98,7 +98,7 @@ impl Expiration {
         data.lock().unwrap().shutdown = true;
     }
 
-    /// fixme: 这个操作是同步的，不过在对底层 对性能影响不大
+    /// fixme: 这个操作是同步的，不过在对底层 对性能影响不大, 未来 lock 改为异步锁，试试效率
     pub fn update(&self, id: u64, pre_time: DateTime<Utc>, new_time: DateTime<Utc>) -> bool {
         let mut data = self.data.lock().unwrap();
         data.expirations

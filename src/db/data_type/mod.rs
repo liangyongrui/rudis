@@ -20,6 +20,15 @@ pub enum DataType {
     SimpleType(SimpleType),
     AggregateType(AggregateType),
 }
+impl PartialEq for DataType {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (DataType::SimpleType(o1), DataType::SimpleType(o2)) => o1 == o2,
+            _ => false,
+        }
+    }
+}
+impl Eq for DataType {}
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimpleType {

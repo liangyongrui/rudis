@@ -104,12 +104,26 @@ impl Slot {
         self.entries.get(key).and_then(|t| t.expires_at)
     }
 
-    pub fn set_expires_at(&self, key: SimpleType, new_time: DateTime<Utc>) -> bool {
-        self.entries
-            .get(&key)
-            .and_then(|t| t.expires_at.map(|p| (p, t.id)))
-            .map(|(pre_time, id)| self.expirations.update(id, pre_time, new_time))
-            .unwrap_or(false)
+    pub async fn set_expires_at(&self, key: &SimpleType, new_time: DateTime<Utc>) -> bool {
+        let (id, pre_time) = if let Some(t) = self.entries.get(key) {
+            (t.id, t.expires_at)
+        } else {
+            return false;
+        };
+        if let Some(pre_time) = pre_time {
+            self.expirations.update(id, pre_time, new_time);
+        } else {
+            let _ = self
+                .expirations
+                .sender
+                .send(ExpirationEntry {
+                    id,
+                    key: key.clone(),
+                    expires_at: new_time,
+                })
+                .await;
+        }
+        true
     }
 
     /// 调用之前需要自己保证原始值的value 为 simpleType 或 不存在
@@ -179,7 +193,7 @@ mod test {
     use tracing::Level;
 
     use super::Slot;
-    use crate::{utils::options::NxXx, SimpleType};
+    use crate::{db::DataType, utils::options::NxXx, SimpleType};
 
     // #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     #[tokio::test]
@@ -265,7 +279,60 @@ mod test {
         .await
         .unwrap();
         assert_eq!(slot.get_expires_at(&key), ea);
-        sleep(Duration::from_secs(1)).await;
+        sleep(Duration::from_secs(2)).await;
         assert_eq!(slot.get_expires_at(&key), None);
+    }
+
+    #[tokio::test]
+    async fn test_remove() {
+        let slot = Slot::new();
+        let key = SimpleType::SimpleString("123".to_owned());
+        let res = slot
+            .set(
+                key.clone(),
+                SimpleType::SimpleString("456".to_owned()),
+                NxXx::None,
+                None,
+                false,
+            )
+            .await
+            .unwrap();
+        assert_eq!(res, None);
+        assert_eq!(
+            slot.get_simple(&key).unwrap(),
+            Some(SimpleType::SimpleString("456".to_owned()))
+        );
+        assert_eq!(
+            slot.remove(&key),
+            Some(DataType::SimpleType(SimpleType::SimpleString(
+                "456".to_owned()
+            )))
+        );
+        assert_eq!(slot.get_simple(&key).unwrap(), None)
+    }
+
+    #[tokio::test]
+    async fn test_set_expires_at() {
+        let slot = Slot::new();
+        let key = SimpleType::SimpleString("123".to_owned());
+        let res = slot
+            .set(
+                key.clone(),
+                SimpleType::SimpleString("456".to_owned()),
+                NxXx::None,
+                None,
+                false,
+            )
+            .await
+            .unwrap();
+        assert_eq!(res, None);
+        assert_eq!(
+            slot.get_simple(&key).unwrap(),
+            Some(SimpleType::SimpleString("456".to_owned()))
+        );
+        let ea = Utc::now() + chrono::Duration::seconds(1);
+        assert!(slot.set_expires_at(&key, ea).await);
+        sleep(Duration::from_secs(2)).await;
+        assert_eq!(slot.get_simple(&key).unwrap(), None)
     }
 }
