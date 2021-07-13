@@ -4,16 +4,6 @@ use crate::db::{
     slot::{Entry, Slot},
 };
 
-fn insert_new(state: &Slot, key: SimpleType, value: i64) {
-    let id = state.next_id();
-    let e = Entry {
-        id,
-        data: value.into(),
-        expires_at: None,
-    };
-    state.entries.insert(key, e);
-}
-
 impl From<i64> for DataType {
     fn from(n: i64) -> Self {
         DataType::SimpleType(SimpleType::Integer(n))
@@ -28,33 +18,64 @@ impl From<i64> for SimpleType {
 
 impl Slot {
     pub(crate) fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
-        if let Some(old) = self.entries.get(&key) {
-            let (after_value, new_entry) = match &old.data {
-                DataType::SimpleType(SimpleType::SimpleString(s)) => {
-                    let after_value = s.parse::<i64>().map_err(|e| e.to_string())? + value;
-                    (
-                        after_value,
+        match self.entries.entry(key) {
+            dashmap::mapref::entry::Entry::Occupied(mut e) => {
+                let old = e.get();
+                let (after_value, new_entry) = match &old.data {
+                    DataType::SimpleType(SimpleType::SimpleString(s)) => {
+                        let after_value = s.parse::<i64>().map_err(|e| e.to_string())? + value;
+                        (
+                            after_value,
+                            Entry {
+                                id: old.id,
+                                expires_at: old.expires_at,
+                                data: after_value.into(),
+                            },
+                        )
+                    }
+                    DataType::SimpleType(SimpleType::Integer(i)) => (
+                        value + i,
                         Entry {
                             id: old.id,
                             expires_at: old.expires_at,
-                            data: after_value.into(),
+                            data: (value + i).into(),
                         },
-                    )
-                }
-                DataType::SimpleType(SimpleType::Integer(i)) => (
-                    value + i,
-                    Entry {
-                        id: old.id,
-                        expires_at: old.expires_at,
-                        data: (value + i).into(),
-                    },
-                ),
-                _ => return Err("type not support".to_owned()),
-            };
-            self.entries.insert(key, new_entry);
-            return Ok(after_value);
+                    ),
+                    _ => return Err("type not support".to_owned()),
+                };
+                e.insert(new_entry);
+                Ok(after_value)
+            }
+            dashmap::mapref::entry::Entry::Vacant(e) => {
+                let id = self.next_id();
+                let v = Entry {
+                    id,
+                    data: value.into(),
+                    expires_at: None,
+                };
+                e.insert(v);
+                Ok(value)
+            }
         }
-        insert_new(self, key, value);
-        Ok(value)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{db::slot::Slot, utils::options::NxXx};
+
+    #[tokio::test]
+    async fn test() {
+        tracing_subscriber::fmt::Subscriber::builder()
+            .with_max_level(tracing::Level::DEBUG)
+            .try_init()
+            .unwrap();
+        let slot = Slot::new();
+        assert_eq!(slot.incr_by("abc".into(), 123), Ok(123));
+        assert_eq!(slot.incr_by("abc".into(), 123), Ok(123 + 123));
+        slot.set("aaa".into(), "2345".into(), NxXx::None, None, false)
+            .await
+            .unwrap();
+        assert_eq!(slot.incr_by("aaa".into(), -123), Ok(2345 - 123));
     }
 }
