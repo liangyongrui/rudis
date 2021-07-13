@@ -39,15 +39,16 @@ async fn decr() {
         key: SimpleType::SimpleString(key),
     };
     stream.write_all(&decr.into_cmd()[..]).await.unwrap();
-    // Read OK
-    let mut response = [0; 5];
+    let ans = format!(":{}\r\n", "-1");
+    let mut response = vec![0; ans.len()];
     stream.read_exact(&mut response).await.unwrap();
-    assert_eq!(b"+OK\r\n", &response);
+    assert_eq!(ans.as_bytes(), &response);
+
     stream.write_all(cmd).await.unwrap();
     // Shutdown the write half
     stream.shutdown().await.unwrap();
 
-    let ans = format!("${}\r\n{}\r\n", "-1".len(), "-1");
+    let ans = format!(":{}\r\n", "-1");
     let mut response = vec![0; ans.len()];
     stream.read_exact(&mut response).await.unwrap();
     assert_eq!(ans.as_bytes(), &response);

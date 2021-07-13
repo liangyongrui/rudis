@@ -81,6 +81,7 @@ impl Expiration {
             expires_at,
         }) = receiver.recv().await
         {
+            debug!(id, ?key, ?expires_at);
             let mut data = data.lock().unwrap();
             let need_notify = data
                 .expirations
@@ -154,11 +155,15 @@ impl Expiration {
             if when > now {
                 return Some(when);
             }
+            let mut need_remove = false;
             if let Some(e) = entry.get(key) {
                 if e.id == id {
-                    debug!("purge_expired_keys: {:?}", key);
-                    entry.remove(key);
+                    need_remove = true;
                 }
+            }
+            if need_remove {
+                entry.remove(key);
+                debug!("purge_expired_keys: {:?}", key);
             }
             data.expirations.remove(&(when, id));
         }

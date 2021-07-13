@@ -29,20 +29,20 @@ impl From<i64> for SimpleType {
 impl Slot {
     pub(crate) fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
         if let Some(old) = self.entries.get(&key) {
-            let (old_value, new_entry) = match &old.data {
+            let (after_value, new_entry) = match &old.data {
                 DataType::SimpleType(SimpleType::SimpleString(s)) => {
-                    let old_value = s.parse::<i64>().map_err(|e| e.to_string())?;
+                    let after_value = s.parse::<i64>().map_err(|e| e.to_string())? + value;
                     (
-                        old_value,
+                        after_value,
                         Entry {
                             id: old.id,
                             expires_at: old.expires_at,
-                            data: (value + old_value).into(),
+                            data: after_value.into(),
                         },
                     )
                 }
                 DataType::SimpleType(SimpleType::Integer(i)) => (
-                    *i,
+                    value + i,
                     Entry {
                         id: old.id,
                         expires_at: old.expires_at,
@@ -52,10 +52,9 @@ impl Slot {
                 _ => return Err("type not support".to_owned()),
             };
             self.entries.insert(key, new_entry);
-            Ok(old_value)
-        } else {
-            insert_new(self, key, value);
-            Ok(0)
+            return Ok(after_value);
         }
+        insert_new(self, key, value);
+        Ok(value)
     }
 }

@@ -165,6 +165,7 @@ impl Db {
     pub(crate) fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
         self.get_slot(key).rpop(key, count)
     }
+
     pub(crate) fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
         self.get_slot(&key).incr_by(key, value)
     }
