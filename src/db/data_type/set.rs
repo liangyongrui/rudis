@@ -71,10 +71,10 @@ impl Set {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut Set) -> Result<T>>(
         slot: &Slot,
-        key: &SimpleType,
+        key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(&key, || (Set::new_data_type(), None));
+        let mut entry = slot.get_or_insert_entry(key, || (Set::new_data_type(), None));
         match entry.value_mut() {
             Entry {
                 data: DataType::AggregateType(AggregateType::Set(set)),
@@ -86,7 +86,7 @@ impl Set {
 }
 impl Slot {
     pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        Set::mut_process_exists_or_new(self, &key, |set| {
+        Set::mut_process_exists_or_new(self, key, |set| {
             let old_len = set.size();
             let mut new = (*set.value).clone();
             for v in values {
@@ -98,14 +98,14 @@ impl Slot {
         })
     }
 
-    pub fn smismember(&self, key: &SimpleType, values: Vec<&SimpleType>) -> Result<Vec<bool>> {
+    pub fn smismember(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<Vec<bool>> {
         let set = Set::process(
             self,
             key,
             |set| Arc::clone(&set.value),
             || Arc::new(HashTrieSetSync::new_sync()),
         )?;
-        Ok(values.into_iter().map(|t| set.contains(t)).collect())
+        Ok(values.into_iter().map(|t| set.contains(&t)).collect())
     }
 
     pub fn smembers(&self, key: &SimpleType) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
@@ -117,7 +117,7 @@ impl Slot {
         )
     }
 
-    pub fn srem(&self, key: &SimpleType, values: Vec<&SimpleType>) -> Result<usize> {
+    pub fn srem(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         Set::mut_process(
             self,
             key,
@@ -125,13 +125,43 @@ impl Slot {
                 let old_len = set.size();
                 let mut new = (*set.value).clone();
                 for v in values {
-                    new.remove_mut(v);
+                    new.remove_mut(&v);
                 }
                 set.version += 1;
                 set.value = Arc::new(new);
-                set.size() - old_len
+                old_len - set.size()
             },
             || 0,
         )
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::db::slot::Slot;
+
+    #[tokio::test]
+    async fn test() {
+        let slot = Slot::new();
+        assert_eq!(
+            slot.sadd(
+                "key".into(),
+                vec!["123".into(), 2.into(), 3.into(), 4.into(), 2.into()],
+            ),
+            Ok(4)
+        );
+        assert_eq!(
+            slot.smismember(&"key".into(), vec!["123".into(), 5.into(), 4.into()]),
+            Ok(vec![true, false, true])
+        );
+        assert_eq!(
+            slot.srem(&"key".into(), vec!["123".into(), 5.into(), 4.into()]),
+            Ok(2)
+        );
+        assert_eq!(slot.sadd("key".into(), vec!["bb".into()]), Ok(1));
+        let r = slot.smembers(&"key".into()).unwrap();
+        let mut r2 = r.iter().cloned().collect::<Vec<_>>();
+        r2.sort();
+        assert_eq!(r2, vec![2.into(), 3.into(), "bb".into(),])
     }
 }

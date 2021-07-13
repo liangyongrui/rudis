@@ -13,7 +13,7 @@ pub struct Sismember {
 impl Sismember {
     #[instrument(skip(self, db, dst))]
     pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let response = match db.sismember(&self.key, &self.value) {
+        let response = match db.sismember(&self.key, self.value) {
             Ok(i) => Frame::Integer(if i { 1 } else { 0 }),
             Err(e) => Frame::Error(e),
         };

@@ -87,21 +87,21 @@ impl Db {
     pub fn smembers(&self, key: &SimpleType) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
         self.get_slot(&key).smembers(key)
     }
-    pub fn srem(&self, key: &SimpleType, values: Vec<&SimpleType>) -> Result<usize> {
+    pub fn srem(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).srem(key, values)
     }
-    pub fn sismember(&self, key: &SimpleType, value: &SimpleType) -> Result<bool> {
+    pub fn sismember(&self, key: &SimpleType, value: SimpleType) -> Result<bool> {
         self.get_slot(&key)
             .smismember(key, vec![value])
             .map(|t| t[0])
     }
-    pub fn smismember(&self, key: &SimpleType, values: Vec<&SimpleType>) -> Result<Vec<bool>> {
+    pub fn smismember(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<Vec<bool>> {
         self.get_slot(&key).smismember(key, values)
     }
     pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).sadd(key, values)
     }
-    pub fn hincrby(&self, key: &SimpleType, field: SimpleType, value: i64) -> Result<i64> {
+    pub fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
         self.get_slot(&key).hincrby(key, field, value)
     }
     pub fn hexists(&self, key: &SimpleType, field: SimpleType) -> Result<usize> {
@@ -112,7 +112,7 @@ impl Db {
     }
     pub(crate) fn hsetnx(
         &self,
-        key: &SimpleType,
+        key: SimpleType,
         field: SimpleType,
         value: SimpleType,
     ) -> Result<usize> {
@@ -145,7 +145,7 @@ impl Db {
         self.get_slot(key).lrange(key, start, stop)
     }
     pub(crate) fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).lpush(&key, values)
+        self.get_slot(&key).lpush(key, values)
     }
     pub(crate) fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).rpush(key, values)

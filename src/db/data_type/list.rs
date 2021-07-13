@@ -88,7 +88,7 @@ impl List {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut List) -> T>(
         slot: &Slot,
-        key: &SimpleType,
+        key: SimpleType,
         f: F,
     ) -> Result<T> {
         let mut entry = slot.get_or_insert_entry(key, || {
@@ -135,7 +135,8 @@ impl Slot {
             || 0,
         )
     }
-    pub(crate) fn lpush(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+
+    pub(crate) fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_front(v)
@@ -145,7 +146,7 @@ impl Slot {
     }
 
     pub(crate) fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        List::mut_process_exists_or_new(self, &key, |list| {
+        List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_back(v)
             }
@@ -214,5 +215,86 @@ impl Slot {
 
     pub(crate) fn llen(&self, key: &SimpleType) -> Result<usize> {
         List::process(self, key, |list| list.len(), || 0)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::db::slot::Slot;
+
+    #[test]
+    fn test_shape() {
+        let list = super::List(
+            vec![
+                1.into(),
+                2.into(),
+                3.into(),
+                4.into(),
+                5.into(),
+                6.into(),
+                7.into(),
+                8.into(),
+                9.into(),
+                10.into(),
+            ]
+            .into_iter()
+            .collect(),
+        );
+        assert_eq!(list.shape(1, 5), (1, 6));
+        assert_eq!(list.shape(1, 100), (1, 10));
+        assert_eq!(list.shape(0, 100), (0, 10));
+        assert_eq!(list.shape(-2, 100), (8, 10));
+        assert_eq!(list.shape(-2, -2), (8, 9));
+        assert_eq!(list.shape(-2, -100), (0, 0));
+        assert_eq!(list.shape(-2, -10), (0, 0));
+        assert_eq!(list.shape(2, -10), (0, 0));
+        assert_eq!(list.shape(2, -1), (2, 10));
+        assert_eq!(list.shape(-100, -1), (0, 10));
+    }
+
+    #[tokio::test]
+    async fn test() {
+        let slot = Slot::new();
+        assert_eq!(
+            slot.lpush(
+                "key".into(),
+                vec![
+                    "123".into(),
+                    "4".into(),
+                    5.into(),
+                    6.into(),
+                    7.into(),
+                    8.into(),
+                    9.into()
+                ]
+            ),
+            Ok(7)
+        );
+        assert_eq!(
+            slot.lpop(&"key".into(), 2),
+            Ok(Some(vec![9.into(), 8.into()]))
+        );
+        assert_eq!(
+            slot.rpop(&"key".into(), 2),
+            Ok(Some(vec!["123".into(), "4".into()]))
+        );
+        assert_eq!(
+            slot.rpush("key".into(), vec![7.into(), 8.into(), 9.into()]),
+            Ok(6)
+        );
+        assert_eq!(
+            slot.rpop(&"key".into(), 2),
+            Ok(Some(vec![9.into(), 8.into()]))
+        );
+        assert_eq!(
+            slot.lrange(&"key".into(), 0, 10),
+            Ok(vec![7.into(), 6.into(), 5.into(), 7.into()])
+        );
+        assert_eq!(slot.llen(&"key".into()), Ok(4));
+        assert_eq!(slot.lpushx(&"key2".into(), vec![9.into()]), Ok(0));
+        assert_eq!(slot.rpushx(&"key2".into(), vec![9.into()]), Ok(0));
+        assert_eq!(slot.llen(&"key2".into()), Ok(0));
+        assert_eq!(slot.rpushx(&"key".into(), vec![9.into()]), Ok(5));
+        assert_eq!(slot.llen(&"key".into()), Ok(5));
     }
 }

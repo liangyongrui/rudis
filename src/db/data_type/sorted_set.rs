@@ -95,7 +95,7 @@ impl SortedSet {
         }
     }
     fn add(&mut self, nodes: Vec<Node>, nx_xx: NxXx, gt_lt: GtLt, ch: bool, incr: bool) -> usize {
-        let old_len = self.value.size();
+        let mut res = 0;
         let mut new = (*self.value).clone();
         for mut v in nodes {
             if self.can_update(&v, nx_xx, gt_lt) {
@@ -104,12 +104,18 @@ impl SortedSet {
                     if incr {
                         v.score += ov.score;
                     }
+                    #[allow(clippy::float_cmp)]
+                    if ch && v.score != ov.score {
+                        res += 1
+                    }
+                } else {
+                    res += 1;
                 }
                 self.hash.insert(v.key.clone(), v.clone());
                 new.insert_mut(v)
             }
         }
-        self.value.size() - if ch { 0 } else { old_len }
+        res
     }
 
     pub fn zrem(&mut self, members: Vec<SimpleType>) -> usize {
@@ -362,10 +368,10 @@ impl SortedSet {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut SortedSet) -> Result<T>>(
         slot: &Slot,
-        key: &SimpleType,
+        key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(&key, || (SortedSet::new_data_type(), None));
+        let mut entry = slot.get_or_insert_entry(key, || (SortedSet::new_data_type(), None));
         match entry.value_mut() {
             Entry {
                 data: DataType::AggregateType(AggregateType::SortedSet(sorted_set)),
@@ -423,7 +429,8 @@ impl Slot {
         ch: bool,
         incr: bool,
     ) -> Result<usize> {
-        SortedSet::mut_process_exists_or_new(self, &key, |set| {
+        // TODO nodes 去重
+        SortedSet::mut_process_exists_or_new(self, key, |set| {
             Ok(set.add(nodes, nx_xx, gt_lt, ch, incr))
         })
     }
@@ -725,6 +732,32 @@ mod test {
                 Node::new_str("f", 1.0),
                 Node::new_str("g", 1.0),
             ]
+        );
+    }
+
+    #[tokio::test]
+    async fn test() {
+        let slot = Slot::new();
+        let nodes = vec![
+            Node::new_str("n", 11.0),
+            Node::new_str("m", 10.0),
+            Node::new_str("l", 1.0),
+            Node::new_str("k", 9.0),
+            Node::new_str("j", 8.0),
+            Node::new_str("i", 7.0),
+            Node::new_str("h", 6.0),
+            Node::new_str("g", 5.0),
+            Node::new_str("f", 2.0),
+            Node::new_str("e", 2.0),
+            Node::new_str("e2", 2.0),
+            Node::new_str("d", 2.0),
+            Node::new_str("c", 1.0),
+            Node::new_str("b", 1.0),
+            Node::new_str("a", 1.0),
+        ];
+        assert_eq!(
+            slot.zadd("key".into(), nodes, NxXx::None, GtLt::None, false, false),
+            Ok(15)
         );
     }
 }

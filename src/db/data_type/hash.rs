@@ -77,10 +77,10 @@ impl Hash {
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut Hash) -> Result<T>>(
         slot: &Slot,
-        key: &SimpleType,
+        key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(&key, || (Hash::new_data_type(), None));
+        let mut entry = slot.get_or_insert_entry(key, || (Hash::new_data_type(), None));
         match entry.value_mut() {
             Entry {
                 data: DataType::AggregateType(AggregateType::Hash(hash)),
@@ -92,7 +92,7 @@ impl Hash {
 }
 impl Slot {
     pub fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
-        Hash::mut_process_exists_or_new(self, &key, |hash| {
+        Hash::mut_process_exists_or_new(self, key, |hash| {
             let len = pairs.len();
             let mut new = (*hash.value).clone();
             for HashEntry { field, value } in pairs.into_iter() {
@@ -104,8 +104,8 @@ impl Slot {
         })
     }
 
-    pub fn hsetnx(&self, key: &SimpleType, field: SimpleType, value: SimpleType) -> Result<usize> {
-        Hash::mut_process_exists_or_new(self, &key, |hash| {
+    pub fn hsetnx(&self, key: SimpleType, field: SimpleType, value: SimpleType) -> Result<usize> {
+        Hash::mut_process_exists_or_new(self, key, |hash| {
             if hash.contains_key(&field) {
                 Ok(0)
             } else {
@@ -180,8 +180,8 @@ impl Slot {
         )
     }
 
-    pub fn hincrby(&self, key: &SimpleType, field: SimpleType, value: i64) -> Result<i64> {
-        Hash::mut_process_exists_or_new(self, &key, |hash| {
+    pub fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
+        Hash::mut_process_exists_or_new(self, key, |hash| {
             let old_value = match hash.get(&field) {
                 Some(SimpleType::SimpleString(s)) => s.parse::<i64>().map_err(|e| e.to_string())?,
                 Some(SimpleType::Integer(i)) => *i,
@@ -227,8 +227,8 @@ mod test {
             slot.hmget(&key, vec!["abc".into(), "aaa".into(), "def".into()]),
             Ok(vec![Some("456".into()), None, Some(123.into())])
         );
-        assert_eq!(slot.hsetnx(&key, "abc".into(), "111".into()), Ok(0));
-        assert_eq!(slot.hsetnx(&key, "aaa".into(), "111".into()), Ok(1));
+        assert_eq!(slot.hsetnx(key.clone(), "abc".into(), "111".into()), Ok(0));
+        assert_eq!(slot.hsetnx(key.clone(), "aaa".into(), "111".into()), Ok(1));
         assert_eq!(
             slot.hmget(&key, vec!["abc".into(), "aaa".into()]),
             Ok(vec![Some("456".into()), Some("111".into())])
@@ -271,8 +271,8 @@ mod test {
         );
         assert_eq!(slot.hexists(&key, "abc".into()), Ok(0));
         assert_eq!(slot.hexists(&key, "def".into()), Ok(1));
-        assert_eq!(slot.hincrby(&key, "def".into(), 123), Ok(123 + 123));
-        assert_eq!(slot.hincrby(&key, "xxx".into(), 123), Ok(123));
+        assert_eq!(slot.hincrby(key.clone(), "def".into(), 123), Ok(123 + 123));
+        assert_eq!(slot.hincrby(key.clone(), "xxx".into(), 123), Ok(123));
         slot.hset(
             key.clone(),
             vec![HashEntry {
@@ -281,6 +281,6 @@ mod test {
             }],
         )
         .unwrap();
-        assert_eq!(slot.hincrby(&key, "abc".into(), 123), Ok(456 + 123));
+        assert_eq!(slot.hincrby(key, "abc".into(), 123), Ok(456 + 123));
     }
 }

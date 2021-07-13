@@ -70,19 +70,21 @@ impl Slot {
 
     pub fn get_or_insert_entry(
         &self,
-        key: &SimpleType,
+        key: SimpleType,
         f: fn() -> (DataType, Option<DateTime<Utc>>),
     ) -> dashmap::mapref::one::RefMut<'_, SimpleType, Entry> {
-        if !self.entries.contains_key(key) {
-            let (data, expires_at) = f();
-            let e = Entry {
-                id: self.next_id(),
-                data,
-                expires_at,
-            };
-            self.entries.insert(key.to_owned(), e);
+        match self.entries.entry(key) {
+            dashmap::mapref::entry::Entry::Occupied(e) => e.into_ref(),
+            dashmap::mapref::entry::Entry::Vacant(e) => {
+                let (data, expires_at) = f();
+                let v = Entry {
+                    id: self.next_id(),
+                    data,
+                    expires_at,
+                };
+                e.insert(v)
+            }
         }
-        self.entries.get_mut(key).unwrap()
     }
 
     /// Get and increment the next insertion ID.
@@ -190,7 +192,6 @@ mod test {
 
     use chrono::Utc;
     use tokio::time::sleep;
-    use tracing::Level;
 
     use super::Slot;
     use crate::{db::DataType, utils::options::NxXx, SimpleType};
@@ -198,10 +199,6 @@ mod test {
     // #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
     #[tokio::test]
     async fn test_set() {
-        tracing_subscriber::fmt::Subscriber::builder()
-            .with_max_level(Level::DEBUG)
-            .try_init()
-            .unwrap();
         let slot = Slot::new();
         let key = SimpleType::SimpleString("123".to_owned());
         let res = slot
