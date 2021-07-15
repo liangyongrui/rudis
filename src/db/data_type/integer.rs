@@ -17,7 +17,7 @@ impl From<i64> for SimpleType {
 }
 
 impl Slot {
-    pub(crate) fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
+    pub fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
         match self.entries.entry(key) {
             dashmap::mapref::entry::Entry::Occupied(mut e) => {
                 let old = e.get();
@@ -66,10 +66,9 @@ mod test {
 
     #[tokio::test]
     async fn test() {
-        tracing_subscriber::fmt::Subscriber::builder()
+        let _ = tracing_subscriber::fmt::Subscriber::builder()
             .with_max_level(tracing::Level::DEBUG)
-            .try_init()
-            .unwrap();
+            .try_init();
         let slot = Slot::new();
         assert_eq!(slot.incr_by("abc".into(), 123), Ok(123));
         assert_eq!(slot.incr_by("abc".into(), 123), Ok(123 + 123));

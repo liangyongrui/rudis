@@ -10,7 +10,7 @@ pub struct Del {
 
 impl Del {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = Frame::Integer(db.del(self.keys) as i64);
         debug!(?response);
         // Write the response back to the client

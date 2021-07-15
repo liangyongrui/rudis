@@ -13,7 +13,7 @@ pub struct Llen {
 }
 impl Llen {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.llen(&self.key) {
             Ok(r) => Frame::Integer(r as _),
             Err(e) => Frame::Error(e),

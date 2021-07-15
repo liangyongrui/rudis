@@ -11,7 +11,7 @@ pub struct Smembers {
 
 impl Smembers {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.smembers(&self.key) {
             Ok(i) => Frame::Array(i.iter().map(|t| t.clone().into()).collect()),
             Err(e) => Frame::Error(e),

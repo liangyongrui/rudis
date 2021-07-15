@@ -67,7 +67,7 @@ impl Set {
     /// ```text
     /// SET key value [EX seconds|PX milliseconds]
     /// ```
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Set> {
+    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Set> {
         use ParseError::EndOfStream;
 
         // Read the key to set. This is a required field
@@ -163,7 +163,7 @@ impl Set {
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res = db
             .set(
                 self.key,

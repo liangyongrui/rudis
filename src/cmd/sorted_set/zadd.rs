@@ -21,7 +21,7 @@ pub struct Zadd {
 }
 
 impl Zadd {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
+    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_simple_type()?;
         let mut nx_xx = NxXx::None;
         let mut gt_lt = GtLt::None;
@@ -71,7 +71,7 @@ impl Zadd {
     }
 
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.zadd(
             self.key, self.nodes, self.nx_xx, self.gt_lt, self.ch, self.incr,
         ) {

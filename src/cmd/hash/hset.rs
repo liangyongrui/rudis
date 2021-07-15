@@ -14,7 +14,7 @@ pub struct Hset {
 }
 
 impl Hset {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
+    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_simple_type()?;
         let mut values = vec![];
         loop {
@@ -47,7 +47,7 @@ impl Hset {
     }
 
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hset(self.key, self.pairs) {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),

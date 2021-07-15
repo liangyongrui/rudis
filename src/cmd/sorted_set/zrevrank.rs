@@ -11,7 +11,7 @@ pub struct Zrevrank {
 
 impl Zrevrank {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.zrank(&self.key, &self.member, true) {
             Ok(None) => Frame::Null,
             Ok(Some(v)) => Frame::Integer(v as _),

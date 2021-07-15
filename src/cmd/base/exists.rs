@@ -11,7 +11,7 @@ pub struct Exists {
 
 impl Exists {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = Frame::Integer(db.exists(self.keys) as i64);
         debug!(?response);
         // Write the response back to the client

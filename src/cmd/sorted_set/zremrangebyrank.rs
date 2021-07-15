@@ -10,7 +10,7 @@ pub struct Zremrangebyrank {
 }
 
 impl Zremrangebyrank {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
+    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_simple_type()?;
         let start = parse.next_int()?;
         let stop = parse.next_int()?;
@@ -21,7 +21,7 @@ impl Zremrangebyrank {
     }
 
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.zremrange_by_rank(&self.key, self.range) {
             Ok(v) => Frame::Integer(v as _),
             Err(e) => Frame::Error(e),

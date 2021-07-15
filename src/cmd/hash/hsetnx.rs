@@ -13,7 +13,7 @@ pub struct Hsetnx {
 
 impl Hsetnx {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hsetnx(self.key, self.field, self.value) {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),

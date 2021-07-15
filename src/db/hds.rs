@@ -1,11 +1,67 @@
-use std::{collections::HashMap, fs::File, path::Path};
+use std::{
+    collections::HashMap,
+    fs::File,
+    path::Path,
+    sync::{
+        atomic::{AtomicBool, AtomicU64, Ordering},
+        Arc,
+    },
+    time::{Duration, Instant},
+};
 
 use nix::unistd::{fork, ForkResult};
+use tokio::time::sleep;
 use tracing::{error, info};
 
-use super::slot::Slot;
-use crate::utils::ParseSerdeType;
+use super::{slot::Slot, Db};
+use crate::{config::CONFIG, utils::ParseSerdeType};
 
+#[derive(Debug)]
+pub struct HdsStatus {
+    can_do: AtomicBool,
+    update_time: Instant,
+    change_times: AtomicU64,
+}
+
+impl HdsStatus {
+    pub fn new() -> Self {
+        Self {
+            can_do: AtomicBool::new(false),
+            update_time: Instant::now(),
+            change_times: AtomicU64::new(0),
+        }
+    }
+}
+
+pub async fn run_bg_save_task(db: Arc<Db>) {
+    // todo 安全退出
+    loop {
+        sleep(Duration::from_secs(1)).await;
+        let load = db.hds_status.load();
+        if !load.can_do.load(Ordering::SeqCst) {
+            continue;
+        }
+        let duration_now = Instant::now() - load.update_time;
+        let mut trigger = false;
+        for (duration, times) in &CONFIG.save {
+            if &duration_now > duration && load.change_times.load(Ordering::SeqCst) > *times {
+                trigger = true;
+                break;
+            }
+        }
+        if trigger {
+            drop(load);
+            db.hds_status.swap(Arc::new(HdsStatus::new()));
+            save_slots(&db.slots);
+            let _res = db.hds_status.load().can_do.compare_exchange(
+                false,
+                true,
+                Ordering::SeqCst,
+                Ordering::SeqCst,
+            );
+        }
+    }
+}
 pub fn save_slots(slots: &HashMap<u16, Slot>) {
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child, .. }) => {

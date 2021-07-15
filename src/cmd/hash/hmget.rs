@@ -11,7 +11,7 @@ pub struct Hmget {
 
 impl Hmget {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hmget(&self.key, self.fields) {
             Ok(v) => Frame::Array(
                 v.into_iter()

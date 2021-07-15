@@ -14,7 +14,7 @@ use crate::{db::data_type::SimpleType, Frame};
 /// cursor-like API. Each command struct includes a `parse_frame` method that
 /// uses a `Parse` to extract its fields.
 #[derive(Debug)]
-pub(crate) struct Parse {
+pub struct Parse {
     /// Array frame iterator.
     parts: vec::IntoIter<Frame>,
 }
@@ -24,7 +24,7 @@ pub(crate) struct Parse {
 /// Only `EndOfStream` errors are handled at runtime. All other errors result in
 /// the connection being terminated.
 #[derive(Debug)]
-pub(crate) enum ParseError {
+pub enum ParseError {
     /// Attempting to extract a value failed due to the frame being fully
     /// consumed.
     EndOfStream,
@@ -37,7 +37,7 @@ impl Parse {
     /// Create a new `Parse` to parse the contents of `frame`.
     ///
     /// Returns `Err` if `frame` is not an array frame.
-    pub(crate) fn new(frame: Frame) -> Result<Parse, ParseError> {
+    pub fn new(frame: Frame) -> Result<Parse, ParseError> {
         let array = match frame {
             Frame::Array(array) => array,
             frame => return Err(format!("protocol error; expected array, got {:?}", frame).into()),
@@ -69,7 +69,7 @@ impl Parse {
     /// Return the next entry as a string.
     ///
     /// If the next entry cannot be represented as a String, then an error is returned.
-    pub(crate) fn next_string(&mut self) -> Result<String, ParseError> {
+    pub fn next_string(&mut self) -> Result<String, ParseError> {
         match self.next()? {
             // Both `Simple` and `Bulk` representation may be strings. Strings
             // are parsed to UTF-8.
@@ -95,7 +95,7 @@ impl Parse {
     ///
     /// If the next entry cannot be represented as an integer, then an error is
     /// returned.
-    pub(crate) fn next_int(&mut self) -> Result<i64, ParseError> {
+    pub fn next_int(&mut self) -> Result<i64, ParseError> {
         use atoi::atoi;
 
         const MSG: &str = "protocol error; invalid number";
@@ -112,7 +112,7 @@ impl Parse {
     }
 
     /// Ensure there are no more entries in the array
-    pub(crate) fn finish(&mut self) -> Result<(), ParseError> {
+    pub fn finish(&mut self) -> Result<(), ParseError> {
         if self.parts.next().is_none() {
             Ok(())
         } else {

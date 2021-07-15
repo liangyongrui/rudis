@@ -15,7 +15,7 @@ pub struct Expire {
 }
 impl Expire {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res =
             if let Some(ea) = Utc::now().checked_add_signed(Duration::seconds(self.seconds as _)) {
                 db.expires_at(&self.key, ea).await

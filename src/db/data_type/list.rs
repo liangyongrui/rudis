@@ -110,7 +110,7 @@ impl List {
 }
 
 impl Slot {
-    pub(crate) fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process(
             self,
             key,
@@ -124,7 +124,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn rpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn rpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process(
             self,
             key,
@@ -138,7 +138,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_front(v)
@@ -147,7 +147,7 @@ impl Slot {
         })
     }
 
-    pub(crate) fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_back(v)
@@ -156,7 +156,7 @@ impl Slot {
         })
     }
 
-    pub(crate) fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
+    pub fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
         List::mut_process(
             self,
             key,
@@ -175,7 +175,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
+    pub fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
         List::mut_process(
             self,
             key,
@@ -194,7 +194,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn lrange(
+    pub fn lrange(
         &self,
         key: &SimpleType,
         start: i64,
@@ -215,7 +215,7 @@ impl Slot {
         )
     }
 
-    pub(crate) fn llen(&self, key: &SimpleType) -> Result<usize> {
+    pub fn llen(&self, key: &SimpleType) -> Result<usize> {
         List::process(self, key, |list| list.len(), || 0)
     }
 }

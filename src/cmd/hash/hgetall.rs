@@ -10,7 +10,7 @@ pub struct Hgetall {
 
 impl Hgetall {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hgetall(&self.key) {
             Ok(v) => Frame::Array(
                 v.into_iter()

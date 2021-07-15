@@ -187,7 +187,7 @@ impl Command {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    pub(crate) async fn apply(
+    pub async fn apply(
         self,
         db: &Db,
         dst: &mut Connection,

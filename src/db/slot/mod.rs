@@ -198,7 +198,7 @@ impl Slot {
         self.entries.remove(key).map(|prev| prev.1.data)
     }
 
-    pub(crate) async fn set(
+    pub async fn set(
         &self,
         key: SimpleType,
         value: SimpleType,

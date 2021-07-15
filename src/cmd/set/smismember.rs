@@ -11,7 +11,7 @@ pub struct Smismember {
 
 impl Smismember {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.smismember(&self.key, self.values) {
             Ok(i) => Frame::Array(
                 i.into_iter()

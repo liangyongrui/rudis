@@ -2,22 +2,26 @@ pub mod data_type;
 mod result;
 mod slot;
 // Hard drive snapshot
+mod bg_save;
 mod hds;
 
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
+    net::SocketAddr,
     ops::Bound,
-    sync::{atomic::AtomicBool, Arc},
+    sync::{Arc, Mutex},
     usize,
 };
 
+use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
 
 pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
 use self::{
     data_type::{HashEntry, SimpleType},
+    hds::HdsStatus,
     result::Result,
     slot::Slot,
 };
@@ -26,9 +30,16 @@ use crate::utils::options::{GtLt, NxXx};
 const SIZE: u16 = 1024;
 
 #[derive(Debug)]
-pub(crate) struct Db {
-    bg_save_run: AtomicBool,
+pub enum Role {
+    Master(Vec<SocketAddr>),
+    Slave(Option<SocketAddr>),
+}
+
+#[derive(Debug)]
+pub struct Db {
+    role: Mutex<Role>,
     slots: Arc<HashMap<u16, Slot>>,
+    hds_status: ArcSwap<HdsStatus>,
 }
 
 impl Db {
@@ -37,19 +48,22 @@ impl Db {
         let mut s = DefaultHasher::new();
         key.hash(&mut s);
         let i = s.finish() % SIZE as u64;
-        // todo move
+        // todo cluster move
         self.slots.get(&(i as u16)).unwrap()
     }
 
-    pub(crate) fn new() -> Self {
+    pub fn new(role: Role) -> Arc<Self> {
         let mut slots = HashMap::new();
         for i in 0..SIZE {
             slots.insert(i, Slot::new());
         }
-        Self {
-            bg_save_run: AtomicBool::new(false),
+        let s = Arc::new(Self {
+            role: Mutex::new(role),
+            hds_status: ArcSwap::from_pointee(HdsStatus::new()),
             slots: Arc::new(slots),
-        }
+        });
+        tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));
+        s
     }
     pub fn zremrange_by_rank(&self, key: &SimpleType, range: (i64, i64)) -> Result<usize> {
         self.get_slot(&key).zremrange_by_rank(key, range)
@@ -112,87 +126,77 @@ impl Db {
     pub fn hexists(&self, key: &SimpleType, field: SimpleType) -> Result<usize> {
         self.get_slot(&key).hexists(key, field)
     }
-    pub(crate) fn hdel(&self, key: &SimpleType, fields: Vec<SimpleType>) -> Result<usize> {
+    pub fn hdel(&self, key: &SimpleType, fields: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).hdel(key, fields)
     }
-    pub(crate) fn hsetnx(
-        &self,
-        key: SimpleType,
-        field: SimpleType,
-        value: SimpleType,
-    ) -> Result<usize> {
+    pub fn hsetnx(&self, key: SimpleType, field: SimpleType, value: SimpleType) -> Result<usize> {
         self.get_slot(&key).hsetnx(key, field, value)
     }
-    pub(crate) fn hget(&self, key: &SimpleType, field: SimpleType) -> Result<Option<SimpleType>> {
+    pub fn hget(&self, key: &SimpleType, field: SimpleType) -> Result<Option<SimpleType>> {
         self.get_slot(&key)
             .hmget(key, vec![field])
             .map(|x| x[0].clone())
     }
-    pub(crate) fn hmget(
+    pub fn hmget(
         &self,
         key: &SimpleType,
         fields: Vec<SimpleType>,
     ) -> Result<Vec<Option<SimpleType>>> {
         self.get_slot(&key).hmget(key, fields)
     }
-    pub(crate) fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
+    pub fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
         self.get_slot(&key).hset(key, pairs)
     }
-    pub(crate) fn hgetall(&self, key: &SimpleType) -> Result<Vec<HashEntry>> {
+    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<HashEntry>> {
         self.get_slot(key).hgetall(key)
     }
-    pub(crate) fn lrange(
-        &self,
-        key: &SimpleType,
-        start: i64,
-        stop: i64,
-    ) -> Result<Vec<SimpleType>> {
+    pub fn lrange(&self, key: &SimpleType, start: i64, stop: i64) -> Result<Vec<SimpleType>> {
         self.get_slot(key).lrange(key, start, stop)
     }
-    pub(crate) fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).lpush(key, values)
     }
-    pub(crate) fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).rpush(key, values)
     }
-    pub(crate) fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(key).lpushx(key, values)
     }
-    pub(crate) fn rpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub fn rpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(key).rpushx(key, values)
     }
-    pub(crate) fn llen(&self, key: &SimpleType) -> Result<usize> {
+    pub fn llen(&self, key: &SimpleType) -> Result<usize> {
         self.get_slot(key).llen(key)
     }
-    pub(crate) fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
+    pub fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
         self.get_slot(key).lpop(key, count)
     }
-    pub(crate) fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
+    pub fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
         self.get_slot(key).rpop(key, count)
     }
 
-    pub(crate) fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
+    pub fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
         self.get_slot(&key).incr_by(key, value)
     }
 
-    pub(crate) async fn expires_at(&self, key: &SimpleType, expires_at: DateTime<Utc>) -> bool {
+    pub async fn expires_at(&self, key: &SimpleType, expires_at: DateTime<Utc>) -> bool {
         self.get_slot(&key).set_expires_at(key, expires_at).await
     }
-    pub(crate) fn exists(&self, keys: Vec<SimpleType>) -> usize {
+    pub fn exists(&self, keys: Vec<SimpleType>) -> usize {
         keys.into_iter()
             .filter(|key| self.get_slot(key).exists(key))
             .count()
     }
 
-    pub(crate) fn get(&self, key: &SimpleType) -> Result<Option<SimpleType>> {
+    pub fn get(&self, key: &SimpleType) -> Result<Option<SimpleType>> {
         self.get_slot(key).get_simple(key)
     }
-    pub(crate) fn del(&self, keys: Vec<SimpleType>) -> usize {
+    pub fn del(&self, keys: Vec<SimpleType>) -> usize {
         keys.into_iter()
             .filter(|key| self.get_slot(key).remove(key).is_some())
             .count()
     }
-    pub(crate) async fn set(
+    pub async fn set(
         &self,
         key: SimpleType,
         value: SimpleType,
@@ -205,7 +209,7 @@ impl Db {
             .await
     }
 
-    pub(crate) fn bgsave(&self) {
+    pub fn bgsave(&self) {
         // todo 防止多个save执行
         // self.bg_save_run.compare_exchange(current, new, success, failure)
         hds::save_slots(self.slots.as_ref())

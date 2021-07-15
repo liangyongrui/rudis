@@ -15,7 +15,7 @@ pub struct Pexpireat {
 }
 impl Pexpireat {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let res = db
             .expires_at(
                 &self.key,

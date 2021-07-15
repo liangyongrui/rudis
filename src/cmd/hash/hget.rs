@@ -12,7 +12,7 @@ pub struct Hget {
 
 impl Hget {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hget(&self.key, self.field) {
             Ok(Some(v)) => v.into(),
             Ok(None) => Frame::Null,

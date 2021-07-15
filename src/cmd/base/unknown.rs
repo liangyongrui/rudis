@@ -11,14 +11,14 @@ pub struct Unknown {
 impl Unknown {
     /// Create a new `Unknown` command which responds to unknown commands
     /// issued by clients
-    pub(crate) fn new(key: impl ToString) -> Unknown {
+    pub fn new(key: impl ToString) -> Unknown {
         Unknown {
             command_name: key.to_string(),
         }
     }
 
     /// Returns the command name
-    pub(crate) fn _get_name(&self) -> &str {
+    pub fn _get_name(&self) -> &str {
         &self.command_name
     }
 
@@ -26,7 +26,7 @@ impl Unknown {
     ///
     /// This usually means the command is not yet implemented by `rcc`.
     #[instrument(skip(self, dst))]
-    pub(crate) async fn apply(self, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, dst: &mut Connection) -> crate::Result<()> {
         let response = Frame::Error(format!("ERR unknown command '{}'", self.command_name));
 
         debug!(?response);

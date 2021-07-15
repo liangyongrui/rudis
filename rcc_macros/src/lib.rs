@@ -102,7 +102,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
 
     let res = quote! {
         impl #struct_name {
-            pub(crate) fn parse_frames(parse: &mut crate::parse::Parse) -> crate::Result<Self> {
+            pub fn parse_frames(parse: &mut crate::parse::Parse) -> crate::Result<Self> {
                 #(#read_token)*
                 Ok(Self {
                     #self_token

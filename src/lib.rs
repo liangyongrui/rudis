@@ -27,6 +27,7 @@
 
 // pub mod client;
 mod utils;
+mod config;
 
 pub mod cmd;
 pub use cmd::Command;

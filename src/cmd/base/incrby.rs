@@ -14,7 +14,7 @@ pub struct Incrby {
 }
 impl Incrby {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.incr_by(self.key, self.value) {
             Ok(i) => Frame::Integer(i),
             Err(e) => Frame::Error(e),

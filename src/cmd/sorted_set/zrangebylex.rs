@@ -17,7 +17,7 @@ pub struct Zrangebylex {
 }
 
 impl Zrangebylex {
-    pub(crate) fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
+    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
         let key = parse.next_simple_type()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
@@ -58,7 +58,7 @@ impl Zrangebylex {
     }
 
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.zrange(&self.key, self.range_item, false, self.limit) {
             Ok(v) => {
                 let mut res = vec![];

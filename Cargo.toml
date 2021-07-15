@@ -31,6 +31,10 @@ rcc_macros = { path = "./rcc_macros" }
 nix = "0.22"
 bincode = "1"
 serde = { version = "1", features = ["derive"] }
+serde_with = "1"
+toml = "0.5"
+once_cell = "1"
+arc-swap = "1"
 
 [dev-dependencies]
 # Enable test-utilities in dev mode only. This is mostly for tests.

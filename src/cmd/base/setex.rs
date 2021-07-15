@@ -16,7 +16,7 @@ pub struct Setex {
 }
 impl Setex {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = if let Err(e) = db
             .set(
                 self.key,

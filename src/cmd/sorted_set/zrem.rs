@@ -12,7 +12,7 @@ pub struct Zrem {
 
 impl Zrem {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.zrem(&self.key, self.members) {
             Ok(v) => Frame::Integer(v as _),
             Err(e) => Frame::Error(e),

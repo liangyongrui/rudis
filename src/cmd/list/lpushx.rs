@@ -12,7 +12,7 @@ pub struct Lpushx {
 
 impl Lpushx {
     #[instrument(skip(self, db, dst))]
-    pub(crate) async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.lpushx(&self.key, self.values) {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),
