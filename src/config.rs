@@ -44,7 +44,7 @@ pub struct Config {
     #[serde(default)]
     pub log_level: String,
     #[serde(default)]
-    pub slave: bool,
+    pub replica: bool,
     #[serde(default)]
     pub master_addr: Option<SocketAddr>,
 

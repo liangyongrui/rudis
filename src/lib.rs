@@ -26,10 +26,10 @@
 //!   representation.
 
 // pub mod client;
-mod utils;
-mod config;
-
 pub mod cmd;
+mod config;
+mod replica;
+mod utils;
 pub use cmd::Command;
 
 mod connection;

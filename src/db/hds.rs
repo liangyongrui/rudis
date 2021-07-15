@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     fs::File,
+    io::BufWriter,
     path::Path,
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
@@ -85,7 +86,8 @@ fn save_slot(id: u16, slot: &Slot) {
     let display = path.display();
     let file = match File::create(&path) {
         Err(why) => panic!("couldn't create {}: {}", display, why),
-        Ok(file) => file,
+        Ok(file) => BufWriter::new(file),
     };
+    // todo 这里用了双倍的内存，需要优化一下
     bincode::serialize_into(file, &slot.parse_serde_type()).unwrap();
 }

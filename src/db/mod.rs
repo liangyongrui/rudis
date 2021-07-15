@@ -2,7 +2,6 @@ pub mod data_type;
 mod result;
 mod slot;
 // Hard drive snapshot
-mod bg_save;
 mod hds;
 
 use std::{
@@ -25,14 +24,17 @@ use self::{
     result::Result,
     slot::Slot,
 };
-use crate::utils::options::{GtLt, NxXx};
+use crate::{
+    replica,
+    utils::options::{GtLt, NxXx},
+};
 
 const SIZE: u16 = 1024;
 
 #[derive(Debug)]
 pub enum Role {
     Master(Vec<SocketAddr>),
-    Slave(Option<SocketAddr>),
+    Replica(Option<SocketAddr>),
 }
 
 #[derive(Debug)]
@@ -63,6 +65,9 @@ impl Db {
             slots: Arc::new(slots),
         });
         tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));
+        if let Role::Replica(Some(master_addr)) = *s.role.lock().unwrap() {
+            replica::update_master(master_addr)
+        }
         s
     }
     pub fn zremrange_by_rank(&self, key: &SimpleType, range: (i64, i64)) -> Result<usize> {
@@ -213,5 +218,11 @@ impl Db {
         // todo 防止多个save执行
         // self.bg_save_run.compare_exchange(current, new, success, failure)
         hds::save_slots(self.slots.as_ref())
+    }
+
+    pub fn replicaof(&self, master_addr: SocketAddr) {
+        replica::update_master(master_addr);
+        let mut role = self.role.lock().unwrap();
+        *role = Role::Replica(Some(master_addr));
     }
 }

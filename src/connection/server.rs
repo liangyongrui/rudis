@@ -139,8 +139,8 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     let (notify_shutdown, _) = broadcast::channel(1);
     let (shutdown_complete_tx, shutdown_complete_rx) = mpsc::channel(1);
 
-    let role = if CONFIG.slave {
-        Role::Slave(CONFIG.master_addr)
+    let role = if CONFIG.replica {
+        Role::Replica(CONFIG.master_addr)
     } else {
         Role::Master(vec![])
     };

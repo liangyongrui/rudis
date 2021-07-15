@@ -23,9 +23,12 @@ rust cloud cache
 1. [x] nom parse
 1. [x] macros
 1. [x] 接收字符串的地方 都改成 基础类型(string, blob, i64, f64)
+1. [x] hds(rdb)
 1. [ ] 实现主从
+   - [ ] 全量同步
+   - [ ] 部分重同步
    - [ ] 密码验证
-   - [ ] slave 的 slave 自动挂到master上
+   - [ ] replica 的 replica 自动挂到master上
 1. [ ] cluster 模式
    - [ ] 支持主从读写分离
 1. [ ] 集群 proxy(可能用 raft)

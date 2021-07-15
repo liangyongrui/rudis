@@ -194,12 +194,7 @@ impl Slot {
         )
     }
 
-    pub fn lrange(
-        &self,
-        key: &SimpleType,
-        start: i64,
-        stop: i64,
-    ) -> Result<Vec<SimpleType>> {
+    pub fn lrange(&self, key: &SimpleType, start: i64, stop: i64) -> Result<Vec<SimpleType>> {
         List::process(
             self,
             key,
