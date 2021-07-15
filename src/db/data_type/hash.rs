@@ -1,16 +1,37 @@
-use std::{ops::Deref, sync::Arc};
+use std::{collections::HashMap, ops::Deref, sync::Arc};
 
 use rpds::HashTrieMapSync;
+use serde::{Deserialize, Serialize};
 
 use super::{AggregateType, DataType, SimpleType};
-use crate::db::{
-    result::Result,
-    slot::{Entry, Slot},
+use crate::{
+    db::{
+        result::Result,
+        slot::{Entry, Slot},
+    },
+    utils::ParseSerdeType,
 };
 #[derive(Debug, Clone)]
 pub struct Hash {
     version: u64,
     value: Arc<HashTrieMapSync<SimpleType, SimpleType>>,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct HashSerdeType {
+    version: u64,
+    value: HashMap<SimpleType, SimpleType>,
+}
+impl ParseSerdeType<'_, HashSerdeType> for Hash {
+    fn parse_serde_type(&self) -> HashSerdeType {
+        HashSerdeType {
+            version: self.version,
+            value: self
+                .value
+                .iter()
+                .map(|t| (t.0.clone(), t.1.clone()))
+                .collect(),
+        }
+    }
 }
 impl Deref for Hash {
     type Target = HashTrieMapSync<SimpleType, SimpleType>;

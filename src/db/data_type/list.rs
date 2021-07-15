@@ -4,6 +4,8 @@ use std::{
     usize,
 };
 
+use serde::{Deserialize, Serialize};
+
 use super::{AggregateType, DataType, SimpleType};
 use crate::db::{
     result::Result,
@@ -14,7 +16,7 @@ use crate::db::{
 /// L.....R
 /// front.....back
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct List(VecDeque<SimpleType>);
 
 impl Deref for List {

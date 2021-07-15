@@ -58,7 +58,7 @@ impl Parse {
         match self.next()? {
             Frame::Simple(s) => Ok(SimpleType::SimpleString(s)),
             Frame::Integer(i) => Ok(SimpleType::Integer(i)),
-            Frame::Bulk(b) => Ok(SimpleType::Blob(b)),
+            Frame::Bulk(b) => Ok(SimpleType::Blob(b.to_vec())),
             frame => Err(format!(
                 "protocol error; expected simple frame or bulk frame, got {:?}",
                 frame

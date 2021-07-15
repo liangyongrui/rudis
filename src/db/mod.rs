@@ -1,12 +1,14 @@
 pub mod data_type;
 mod result;
 mod slot;
+// Hard drive snapshot
+mod hds;
 
 use std::{
-    collections::hash_map::DefaultHasher,
+    collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
     ops::Bound,
-    sync::Arc,
+    sync::{atomic::AtomicBool, Arc},
     usize,
 };
 
@@ -21,11 +23,12 @@ use self::{
 };
 use crate::utils::options::{GtLt, NxXx};
 
-const SIZE: usize = 1024;
+const SIZE: u16 = 1024;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub(crate) struct Db {
-    slots: Arc<Vec<Slot>>,
+    bg_save_run: AtomicBool,
+    slots: Arc<HashMap<u16, Slot>>,
 }
 
 impl Db {
@@ -34,15 +37,17 @@ impl Db {
         let mut s = DefaultHasher::new();
         key.hash(&mut s);
         let i = s.finish() % SIZE as u64;
-        &self.slots[i as usize]
+        // todo move
+        self.slots.get(&(i as u16)).unwrap()
     }
 
     pub(crate) fn new() -> Self {
-        let mut slots = vec![];
-        for _ in 0..SIZE {
-            slots.push(Slot::new());
+        let mut slots = HashMap::new();
+        for i in 0..SIZE {
+            slots.insert(i, Slot::new());
         }
         Self {
+            bg_save_run: AtomicBool::new(false),
             slots: Arc::new(slots),
         }
     }
@@ -198,5 +203,11 @@ impl Db {
         self.get_slot(&key)
             .set(key, value, nx_xx, expires_at, keepttl)
             .await
+    }
+
+    pub(crate) fn bgsave(&self) {
+        // todo 防止多个save执行
+        // self.bg_save_run.compare_exchange(current, new, success, failure)
+        hds::save_slots(self.slots.as_ref())
     }
 }

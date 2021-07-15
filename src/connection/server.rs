@@ -25,7 +25,7 @@ struct Listener {
     ///
     /// This is a wrapper around an `Arc`. This enables `db` to be cloned and
     /// passed into the per connection state (`Handler`).
-    db: Db,
+    db: Arc<Db>,
 
     /// TCP listener supplied by the `run` caller.
     listener: TcpListener,
@@ -75,7 +75,7 @@ struct Handler {
     /// When a command is received from `connection`, it is applied with `db`.
     /// The implementation of the command is in the `cmd` module. Each command
     /// will need to interact with `db` in order to complete the work.
-    db: Db,
+    db: Arc<Db>,
 
     /// The TCP connection decorated with the redis protocol encoder / decoder
     /// implemented using a buffered `TcpStream`.
@@ -142,7 +142,7 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     // Initialize the listener state
     let mut server = Listener {
         listener,
-        db: Db::new(),
+        db: Arc::new(Db::new()),
         limit_connections: Arc::new(Semaphore::new(MAX_CONNECTIONS)),
         notify_shutdown,
         shutdown_complete_tx,
@@ -253,7 +253,7 @@ impl Listener {
             let mut handler = Handler {
                 // Get a handle to the shared database. Internally, this is an
                 // `Arc`, so a clone only increments the ref count.
-                db: self.db.clone(),
+                db: Arc::clone(&self.db),
 
                 // Initialize the connection state. This allocates read/write
                 // buffers to perform redis protocol frame parsing.

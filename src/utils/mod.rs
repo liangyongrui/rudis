@@ -1,6 +1,8 @@
 pub mod options;
 
 use std::ops::Bound;
+
+use serde::{Deserialize, Serialize};
 pub trait BoundExt<T> {
     fn map<O, F: FnOnce(T) -> O>(self, f: F) -> Bound<O>;
 }
@@ -23,4 +25,8 @@ pub fn u8_to_string(data: &[u8]) -> String {
 
 pub fn u8_to_i64(data: &[u8]) -> i64 {
     atoi::atoi::<i64>(data).expect("protocol error; invalid number")
+}
+
+pub trait ParseSerdeType<'de, T: Deserialize<'de> + Serialize> {
+    fn parse_serde_type(&self) -> T;
 }

@@ -1,10 +1,11 @@
 use std::{
-    collections::HashMap,
+    collections::{BTreeSet, HashMap},
     ops::{Bound, RangeBounds},
     sync::Arc,
 };
 
 use rpds::RedBlackTreeSetSync;
+use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 use super::{AggregateType, DataType, SimpleType};
@@ -15,11 +16,11 @@ use crate::{
     },
     utils::{
         options::{GtLt, NxXx},
-        BoundExt,
+        BoundExt, ParseSerdeType,
     },
 };
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Node {
     pub key: SimpleType,
     pub score: f64,
@@ -70,7 +71,21 @@ pub struct SortedSet {
     hash: HashMap<SimpleType, Node>,
     value: Arc<RedBlackTreeSetSync<Node>>,
 }
-
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SortedSetSerdeType {
+    version: u64,
+    hash: HashMap<SimpleType, Node>,
+    value: BTreeSet<Node>,
+}
+impl ParseSerdeType<'_, SortedSetSerdeType> for SortedSet {
+    fn parse_serde_type(&self) -> SortedSetSerdeType {
+        SortedSetSerdeType {
+            version: self.version,
+            hash: self.hash.clone(),
+            value: self.value.iter().cloned().collect(),
+        }
+    }
+}
 impl SortedSet {
     fn contains_key(&self, key: &SimpleType) -> bool {
         self.hash.contains_key(key)

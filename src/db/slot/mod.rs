@@ -1,21 +1,22 @@
 mod expirations;
 
 use std::{
+    collections::HashMap,
     convert::TryInto,
     sync::{atomic::AtomicU64, Arc},
 };
 
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use serde::{Deserialize, Serialize};
 use tracing::debug;
 
 use self::expirations::{Expiration, ExpirationEntry};
 use super::{
-    data_type::{DataType, SimpleType},
+    data_type::{DataSerdeType, DataType, SimpleType},
     result::Result,
 };
-use crate::utils::options::NxXx;
-
+use crate::utils::{options::NxXx, ParseSerdeType};
 /// Entry in the key-value store
 #[derive(Debug)]
 pub struct Entry {
@@ -30,6 +31,25 @@ pub struct Entry {
     pub expires_at: Option<DateTime<Utc>>,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct EntrySerdeType {
+    pub id: u64,
+    pub data: DataSerdeType,
+    pub expires_at: i64,
+}
+impl ParseSerdeType<'_, EntrySerdeType> for Entry {
+    fn parse_serde_type(&self) -> EntrySerdeType {
+        EntrySerdeType {
+            id: self.id,
+            data: self.data.parse_serde_type(),
+            expires_at: match self.expires_at {
+                Some(ea) => ea.timestamp_millis(),
+                None => -1,
+            },
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Slot {
     /// The key-value data. We are not trying to do anything fancy so a
@@ -42,6 +62,22 @@ pub struct Slot {
     /// Identifier to use for the next expiration. Each expiration is associated
     /// with a unique identifier. See above for why.
     next_id: AtomicU64,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SlotSerdeType {
+    pub entries: HashMap<SimpleType, EntrySerdeType>,
+}
+impl ParseSerdeType<'_, SlotSerdeType> for Slot {
+    fn parse_serde_type(&self) -> SlotSerdeType {
+        SlotSerdeType {
+            entries: self
+                .entries
+                .iter()
+                .map(|t| (t.key().clone(), t.value().parse_serde_type()))
+                .collect(),
+        }
+    }
 }
 
 impl Slot {

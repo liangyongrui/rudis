@@ -10,16 +10,36 @@ use std::convert::TryFrom;
 use bytes::Bytes;
 pub use hash::HashEntry;
 use nom::AsBytes;
+use serde::{Deserialize, Serialize};
 pub use sorted_set::{Node as SortedSetNode, RangeItem as ZrangeItem};
 
-use self::{hash::Hash, list::List, set::Set, sorted_set::SortedSet};
-use crate::Frame;
-
+use self::{
+    hash::{Hash, HashSerdeType},
+    list::List,
+    set::{Set, SetSerdeType},
+    sorted_set::{SortedSet, SortedSetSerdeType},
+};
+use crate::{utils::ParseSerdeType, Frame};
 #[derive(Debug, Clone)]
 pub enum DataType {
     SimpleType(SimpleType),
     AggregateType(AggregateType),
 }
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum DataSerdeType {
+    SimpleType(SimpleType),
+    AggregateType(AggregateSerdeType),
+}
+impl ParseSerdeType<'_, DataSerdeType> for DataType {
+    fn parse_serde_type(&self) -> DataSerdeType {
+        match self {
+            DataType::SimpleType(s) => DataSerdeType::SimpleType(s.clone()),
+            DataType::AggregateType(a) => DataSerdeType::AggregateType(a.parse_serde_type()),
+        }
+    }
+}
+
 impl PartialEq for DataType {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -30,9 +50,9 @@ impl PartialEq for DataType {
 }
 impl Eq for DataType {}
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SimpleType {
-    Blob(bytes::Bytes),
+    Blob(Vec<u8>),
     SimpleString(String),
     Integer(i64),
     Null,
@@ -72,6 +92,24 @@ pub enum AggregateType {
     Hash(Hash),
     Set(Set),
     SortedSet(SortedSet),
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum AggregateSerdeType {
+    List(List),
+    Hash(HashSerdeType),
+    Set(SetSerdeType),
+    SortedSet(SortedSetSerdeType),
+}
+impl ParseSerdeType<'_, AggregateSerdeType> for AggregateType {
+    fn parse_serde_type(&self) -> AggregateSerdeType {
+        match self {
+            AggregateType::List(list) => AggregateSerdeType::List(list.clone()),
+            AggregateType::Hash(hash) => AggregateSerdeType::Hash(hash.parse_serde_type()),
+            AggregateType::Set(s) => AggregateSerdeType::Set(s.parse_serde_type()),
+            AggregateType::SortedSet(ss) => AggregateSerdeType::SortedSet(ss.parse_serde_type()),
+        }
+    }
 }
 
 impl TryFrom<&SimpleType> for f64 {
@@ -125,7 +163,7 @@ impl From<AggregateType> for DataType {
 impl From<SimpleType> for Frame {
     fn from(st: SimpleType) -> Self {
         match st {
-            SimpleType::Blob(bytes) => Frame::Bulk(bytes),
+            SimpleType::Blob(bytes) => Frame::Bulk(bytes.into()),
             SimpleType::SimpleString(s) => Frame::Simple(s),
             SimpleType::Integer(n) => Frame::Integer(n),
             SimpleType::Null => Frame::Null,
@@ -136,7 +174,7 @@ impl From<SimpleType> for Frame {
 impl From<SimpleType> for Bytes {
     fn from(st: SimpleType) -> Self {
         match st {
-            SimpleType::Blob(bytes) => bytes,
+            SimpleType::Blob(bytes) => bytes.into(),
             SimpleType::SimpleString(s) => Bytes::from(s.into_bytes()),
             SimpleType::Integer(n) => Bytes::from(n.to_string().into_bytes()),
             SimpleType::Null => Bytes::new(),

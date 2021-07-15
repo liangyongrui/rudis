@@ -7,13 +7,27 @@ rust cloud cache
 1. 完全并发
 1. 过期异步删除
 
+## 整体设计
+
+- group: 一个 group 为一个主节点+多个从节点
+  - 主 可以写和读
+  - 从 只能读
+  - 主从之间通过 raft 来调度
+- 整个集群分成 x 个 slot, 每个 group 包含多个 slot
+
 ## todo
 
+1. [ ] https://github.com/dalei2019/redis-study/blob/main/docs/redis-rdb-format.md
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
 1. [x] macros
 1. [x] 接收字符串的地方 都改成 基础类型(string, blob, i64, f64)
+1. [ ] 实现主从
+   - [ ] 密码验证
+   - [ ] slave 的 slave 自动挂到master上
+1. [ ] cluster 模式
+   - [ ] 支持主从读写分离
 1. [ ] 集群 proxy(可能用 raft)
 1. [ ] #[instrument] 用法
 1. [ ] 多个建立连接同时请求报错
@@ -33,6 +47,8 @@ rust cloud cache
 1. [ ] 带 size 的持久化红黑树/btree/b+tree
 1. [ ] 在 slot 上加一个 tokio 的大锁，内部无锁, 测试这种方案的效率
 1. [ ] 各种动态配置参数
+1. [ ] <https://jzwdsb.github.io/2019/01/CRDT/>
+1. [ ] [优化rdb保存结构](https://github.com/dalei2019/redis-study/blob/main/docs/redis-rdb-format.md) 
 
 ## 支持的命令
 

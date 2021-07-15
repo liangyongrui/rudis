@@ -28,6 +28,9 @@ dashmap = "4"
 rpds = "0.9"
 nom = "6"
 rcc_macros = { path = "./rcc_macros" }
+nix = "0.22"
+bincode = "1"
+serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
 # Enable test-utilities in dev mode only. This is mostly for tests.
