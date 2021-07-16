@@ -49,6 +49,22 @@ impl ToVecU8 for u64 {
         self.to_string().into_vec_u8()
     }
 }
+impl ToVecU8 for Option<i64> {
+    fn into_vec_u8(self) -> Vec<u8> {
+        match self {
+            Some(i) => i.into_vec_u8(),
+            None => vec![],
+        }
+    }
+}
+
+impl ToVecU8 for (i64, i64) {
+    fn into_vec_u8(self) -> Vec<u8> {
+        let mut i0 = self.0.into_vec_u8();
+        i0.append(&mut self.1.into_vec_u8());
+        i0
+    }
+}
 
 #[inline]
 pub fn build_cmd(cmd: String, args_len: usize) -> Vec<u8> {

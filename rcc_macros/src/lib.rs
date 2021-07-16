@@ -19,11 +19,30 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
         .map(|field| {
             let field_name = field.ident.as_ref();
             let field_type = &field.ty;
+            if let syn::Type::Tuple(syn::TypeTuple { ref elems, .. }) = field.ty {
+                let mut tuple = vec![];
+                for e in elems{
+                    if let syn::Type::Path(syn::TypePath {
+                        path: syn::Path { ref segments, .. },
+                        ..
+                    }) = e {
+                        if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                            if *ident == "i64"  {
+                                tuple.push( quote! { parse.next_int()?, });
+                                continue;
+                            }
+                        }
+                    }
+                    panic!("{:?} type not support", field_name.unwrap().to_string());
+                }
+                return quote!(let #field_name = (#(#tuple)*););
+            }
             if let syn::Type::Path(syn::TypePath {
                 path: syn::Path { ref segments, .. },
                 ..
             }) = field.ty
             {
+
                 if let Some(syn::PathSegment { ident, arguments }) = segments.last() {
                     if *ident == "String" {
                         return quote! {
@@ -61,6 +80,30 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                                     Err(err) => return Err(err.into()),
                                                 }
                                             }
+                                        };
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if *ident == "Option" {
+                        if let syn::PathArguments::AngleBracketed(
+                            syn::AngleBracketedGenericArguments { args, .. },
+                        ) = arguments
+                        {
+                            if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
+                                path: syn::Path { ref segments, .. },
+                                ..
+                            })) = args.first().unwrap()
+                            {
+                                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                                    if *ident == "i64" {
+                                        return quote! {
+                                            let mut #field_name = match parse.next_int() {
+                                                    Ok(key) => Some(key),
+                                                    Err(crate::parse::ParseError::EndOfStream) => None,
+                                                    Err(err) => return Err(err.into()),
+                                                };
                                         };
                                     }
                                 }
@@ -108,13 +151,12 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                     #self_token
                 })
             }
-            pub fn into_cmd(self) -> Vec<u8> {
+            pub fn into_cmd_bytes(self) -> Vec<u8> {
                 let mut cmd = #cmd
                 #cmd_args
                 cmd
             }
         }
     };
-    // eprintln!("{}", res);
     Ok(res)
 }

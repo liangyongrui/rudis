@@ -268,6 +268,39 @@ impl WriteCmd {
             Zremrangebyscore(cmd) => cmd.apply(db, dst).await,
         }
     }
+
+    pub fn into_cmd_bytes(self) -> Vec<u8> {
+        match self {
+            WriteCmd::Zrem(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Zremrangebyrank(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Zremrangebyscore(cmd) => todo!(),
+            WriteCmd::Zadd(cmd) => todo!(),
+            WriteCmd::Sadd(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Srem(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Hincrby(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Hdel(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Hsetnx(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Hset(cmd) => todo!(),
+            WriteCmd::Lpop(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Rpop(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Lpush(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Rpush(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Lpushx(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Rpushx(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Incrby(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Incr(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Decr(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Decrby(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Set(cmd) => todo!(),
+            WriteCmd::Del(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Psetex(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Setex(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Pexpireat(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Expireat(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Expire(cmd) => cmd.into_cmd_bytes(),
+            WriteCmd::Pexpire(cmd) => cmd.into_cmd_bytes(),
+        }
+    }
 }
 
 impl ReadCmd {

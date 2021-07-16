@@ -29,7 +29,7 @@ async fn decr() {
     let get = Get {
         key: SimpleType::SimpleString(key.clone()),
     };
-    let cmd = &get.into_cmd()[..];
+    let cmd = &get.into_cmd_bytes()[..];
     stream.write_all(cmd).await.unwrap();
     // Read nil response
     let mut response = [0; 5];
@@ -38,7 +38,7 @@ async fn decr() {
     let decr = Decr {
         key: SimpleType::SimpleString(key),
     };
-    stream.write_all(&decr.into_cmd()[..]).await.unwrap();
+    stream.write_all(&decr.into_cmd_bytes()[..]).await.unwrap();
     let ans = format!(":{}\r\n", "-1");
     let mut response = vec![0; ans.len()];
     stream.read_exact(&mut response).await.unwrap();

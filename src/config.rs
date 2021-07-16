@@ -35,7 +35,10 @@ pub struct Config {
     /// 是否要从hds文件中加载
     pub load_hds_path: Option<PathBuf>,
     /// aof 最多积压条数 (0 表示不开启 aof)
+    #[serde(default)]
     pub aof_max_backlog: u64,
+    #[serde(default)]
+    pub save_aof_path: Option<PathBuf>,
 }
 
 #[derive(Deserialize, Debug)]

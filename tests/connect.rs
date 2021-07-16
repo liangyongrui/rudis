@@ -47,7 +47,7 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
     let get = Get {
         key: SimpleType::SimpleString(hello.clone()),
     };
-    let cmd = &get.into_cmd()[..];
+    let cmd = &get.into_cmd_bytes()[..];
     stream.write_all(cmd).await.unwrap();
 
     // Read nil response
@@ -79,7 +79,7 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
     let get = Get {
         key: SimpleType::SimpleString(hello.clone()),
     };
-    stream.write_all(&get.into_cmd()[..]).await.unwrap();
+    stream.write_all(&get.into_cmd_bytes()[..]).await.unwrap();
 
     // Shutdown the write half
     stream.shutdown().await.unwrap();

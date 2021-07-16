@@ -1,3 +1,4 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
 use crate::{
@@ -7,27 +8,12 @@ use crate::{
 };
 
 /// https://redis.io/commands/rpop
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Rpop {
     pub key: SimpleType,
     pub count: Option<i64>,
 }
 impl Rpop {
-    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
-        let count = match parse.next_int() {
-            Ok(value) => {
-                if value <= 0 {
-                    return Err("count must be greater than 0.".into());
-                }
-                Some(value)
-            }
-            Err(ParseError::EndOfStream) => None,
-            Err(err) => return Err(err.into()),
-        };
-        Ok(Self { key, count })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.rpop(&self.key, self.count.unwrap_or(1) as _) {
