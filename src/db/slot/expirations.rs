@@ -26,13 +26,13 @@ pub struct ExpirationEntry {
 #[derive(Debug)]
 pub struct Expiration {
     pub sender: Sender<ExpirationEntry>,
-    data: Arc<Mutex<Data>>,
-    notify: Arc<Notify>,
+    pub data: Arc<Mutex<Data>>,
+    pub notify: Arc<Notify>,
 }
 
 #[derive(Debug)]
 pub struct Data {
-    expirations: BTreeMap<(DateTime<Utc>, u64), SimpleType>,
+    pub expirations: BTreeMap<(DateTime<Utc>, u64), SimpleType>,
     shutdown: bool,
 }
 

@@ -1,20 +1,17 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
 use rpds::HashTrieMapSync;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use super::{AggregateType, DataType, SimpleType};
-use crate::{
-    db::{
-        result::Result,
-        slot::{Entry, Slot},
-    },
-    utils::pointer::Bor,
+use crate::db::{
+    result::Result,
+    slot::{Entry, Slot},
 };
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Hash {
     version: u64,
-    value: Bor<Arc<HashTrieMapSync<SimpleType, SimpleType>>>,
+    value: HashTrieMapSync<SimpleType, SimpleType>,
 }
 
 impl Deref for Hash {
@@ -38,7 +35,7 @@ impl Hash {
     fn new() -> Self {
         Self {
             version: 0,
-            value: Arc::new(HashTrieMapSync::new_sync()).into(),
+            value: HashTrieMapSync::new_sync(),
         }
     }
 
@@ -99,12 +96,12 @@ impl Slot {
     pub fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, key, |hash| {
             let len = pairs.len();
-            let mut new = (**hash.value).clone();
+            let mut new = hash.value.clone();
             for HashEntry { field, value } in pairs.into_iter() {
                 new.insert_mut(field, value);
             }
             hash.version += 1;
-            hash.value = Arc::new(new).into();
+            hash.value = new;
             Ok(len)
         })
     }
@@ -115,7 +112,7 @@ impl Slot {
                 Ok(0)
             } else {
                 hash.version += 1;
-                hash.value = Arc::new(hash.insert(field, value)).into();
+                hash.value = hash.insert(field, value);
                 Ok(1)
             }
         })
@@ -125,8 +122,8 @@ impl Slot {
         Hash::process(
             self,
             key,
-            |hash| Arc::clone(&hash.value),
-            || Arc::new(HashTrieMapSync::new_sync()),
+            |hash| hash.value.clone(),
+            HashTrieMapSync::new_sync,
         )
         .map(|p| {
             p.iter()
@@ -146,8 +143,8 @@ impl Slot {
         Hash::process(
             self,
             key,
-            |hash| Arc::clone(&hash.value),
-            || Arc::new(HashTrieMapSync::new_sync()),
+            |hash| hash.value.clone(),
+            HashTrieMapSync::new_sync,
         )
         .map(|p| fields.into_iter().map(|x| p.get(&x).cloned()).collect())
     }
@@ -158,12 +155,12 @@ impl Slot {
             key,
             |hash| {
                 let old_len = hash.size();
-                let mut new = (**hash.value).clone();
+                let mut new = hash.value.clone();
                 for field in fields {
                     new.remove_mut(&field);
                 }
                 hash.version += 1;
-                hash.value = Arc::new(new).into();
+                hash.value = new;
                 old_len - hash.size()
             },
             || 0,
@@ -195,7 +192,7 @@ impl Slot {
             };
             let nv = old_value + value;
             hash.version += 1;
-            hash.value = Arc::new(hash.insert(field, SimpleType::Integer(nv))).into();
+            hash.value = hash.insert(field, SimpleType::Integer(nv));
             Ok(nv)
         })
     }

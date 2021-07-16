@@ -15,7 +15,7 @@ pub use sorted_set::{Node as SortedSetNode, RangeItem as ZrangeItem};
 
 use self::{hash::Hash, list::List, set::Set, sorted_set::SortedSet};
 use crate::Frame;
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataType {
     SimpleType(SimpleType),
     AggregateType(AggregateType),
@@ -67,7 +67,7 @@ impl Ord for SimpleType {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum AggregateType {
     List(List),
     Hash(Hash),

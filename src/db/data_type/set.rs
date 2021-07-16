@@ -1,21 +1,18 @@
-use std::{ops::Deref, sync::Arc};
+use std::ops::Deref;
 
 use rpds::HashTrieSetSync;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use super::{AggregateType, DataType, SimpleType};
-use crate::{
-    db::{
-        result::Result,
-        slot::{Entry, Slot},
-    },
-    utils::pointer::Bor,
+use crate::db::{
+    result::Result,
+    slot::{Entry, Slot},
 };
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Set {
     version: u64,
-    value: Bor<Arc<HashTrieSetSync<SimpleType>>>,
+    value: HashTrieSetSync<SimpleType>,
 }
 impl Deref for Set {
     type Target = HashTrieSetSync<SimpleType>;
@@ -32,7 +29,7 @@ impl Set {
     fn new() -> Self {
         Self {
             version: 0,
-            value: Arc::new(HashTrieSetSync::new_sync()).into(),
+            value: HashTrieSetSync::new_sync(),
         }
     }
     fn process<T, F: FnOnce(&Set) -> T>(
@@ -92,12 +89,12 @@ impl Slot {
     pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         Set::mut_process_exists_or_new(self, key, |set| {
             let old_len = set.size();
-            let mut new = (**set.value).clone();
+            let mut new = set.value.clone();
             for v in values {
                 new.insert_mut(v)
             }
             set.version += 1;
-            set.value = Arc::new(new).into();
+            set.value = new;
             Ok(set.size() - old_len)
         })
     }
@@ -106,18 +103,18 @@ impl Slot {
         let set = Set::process(
             self,
             key,
-            |set| Arc::clone(&set.value),
-            || Arc::new(HashTrieSetSync::new_sync()),
+            |set| set.value.clone(),
+            HashTrieSetSync::new_sync,
         )?;
         Ok(values.into_iter().map(|t| set.contains(&t)).collect())
     }
 
-    pub fn smembers(&self, key: &SimpleType) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
+    pub fn smembers(&self, key: &SimpleType) -> Result<HashTrieSetSync<SimpleType>> {
         Set::process(
             self,
             key,
-            |set| Arc::clone(&set.value),
-            || Arc::new(HashTrieSetSync::new_sync()),
+            |set| set.value.clone(),
+            HashTrieSetSync::new_sync,
         )
     }
 
@@ -127,12 +124,12 @@ impl Slot {
             key,
             |set| {
                 let old_len = set.size();
-                let mut new = (**set.value).clone();
+                let mut new = set.value.clone();
                 for v in values {
                     new.remove_mut(&v);
                 }
                 set.version += 1;
-                set.value = Arc::new(new).into();
+                set.value = new;
                 old_len - set.size()
             },
             || 0,

@@ -108,7 +108,7 @@ impl Db {
         self.get_slot(&key)
             .zadd(key, values, nx_xx, gt_lt, ch, incr)
     }
-    pub fn smembers(&self, key: &SimpleType) -> Result<Arc<HashTrieSetSync<SimpleType>>> {
+    pub fn smembers(&self, key: &SimpleType) -> Result<HashTrieSetSync<SimpleType>> {
         self.get_slot(&key).smembers(key)
     }
     pub fn srem(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {

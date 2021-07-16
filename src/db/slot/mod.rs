@@ -7,7 +7,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
-use serde::Serialize;
+use serde::{de::Visitor, ser::SerializeStruct, Deserialize, Serialize};
 use tracing::debug;
 
 use self::expirations::{Expiration, ExpirationEntry};
@@ -17,7 +17,7 @@ use super::{
 };
 use crate::utils::options::NxXx;
 /// Entry in the key-value store
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Entry {
     /// Uniquely identifies this entry.
     pub id: u64,
@@ -29,34 +29,6 @@ pub struct Entry {
     /// database.
     pub expires_at: Option<DateTime<Utc>>,
 }
-
-impl Serialize for Entry {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        todo!()
-    }
-}
-
-// #[derive(Debug, Deserialize, Serialize)]
-// pub struct EntrySerdeType {
-//     pub id: u64,
-//     pub data: DataSerdeType,
-//     pub expires_at: i64,
-// }
-// impl ParseSerdeType<'_, EntrySerdeType> for Entry {
-//     fn parse_serde_type(&self) -> EntrySerdeType {
-//         EntrySerdeType {
-//             id: self.id,
-//             data: self.data.parse_serde_type(),
-//             expires_at: match self.expires_at {
-//                 Some(ea) => ea.timestamp_millis(),
-//                 None => -1,
-//             },
-//         }
-//     }
-// }
 
 #[derive(Debug)]
 pub struct Slot {
@@ -77,24 +49,49 @@ impl Serialize for Slot {
     where
         S: serde::Serializer,
     {
-        todo!()
+        let mut state = serializer.serialize_struct("Slot", 1)?;
+        state.serialize_field("entries", self.entries.as_ref())?;
+        state.end()
     }
 }
-// #[derive(Debug, Deserialize, Serialize)]
-// pub struct SlotSerdeType {
-//     pub entries: HashMap<SimpleType, EntrySerdeType>,
-// }
-// impl ParseSerdeType<'_, SlotSerdeType> for Slot {
-//     fn parse_serde_type(&self) -> SlotSerdeType {
-//         SlotSerdeType {
-//             entries: self
-//                 .entries
-//                 .iter()
-//                 .map(|t| (t.key().clone(), t.value().parse_serde_type()))
-//                 .collect(),
-//         }
-//     }
-// }
+
+struct SlotVistor;
+
+impl<'de> Visitor<'de> for SlotVistor {
+    type Value = Slot;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("Slot need a map")
+    }
+
+    fn visit_map<A>(self, mut map: A) -> std::result::Result<Self::Value, A::Error>
+    where
+        A: serde::de::MapAccess<'de>,
+    {
+        let mut slot = Slot::new();
+        let mut big = 0;
+        let mut expirations = slot.expirations.data.lock().unwrap();
+        while let Some((key, value)) = map.next_entry::<SimpleType, Entry>()? {
+            big = big.max(value.id);
+            if let Some(ea) = value.expires_at {
+                expirations.expirations.insert((ea, value.id), key.clone());
+            }
+            slot.entries.insert(key, value);
+        }
+        drop(expirations);
+        slot.expirations.notify.notify_one();
+        slot.next_id = AtomicU64::new(big + 1);
+        Ok(slot)
+    }
+}
+impl<'de> Deserialize<'de> for Slot {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_i32(SlotVistor)
+    }
+}
 
 impl Slot {
     pub fn new() -> Self {
