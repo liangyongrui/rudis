@@ -8,7 +8,7 @@ use crate::{
     Connection, Frame,
 };
 /// https://redis.io/commands/psetex
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Psetex {
     pub key: SimpleType,
     pub milliseconds: u64,

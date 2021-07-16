@@ -4,7 +4,7 @@ use tracing::{debug, instrument};
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/zrem
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Zrem {
     pub key: SimpleType,
     pub members: Vec<SimpleType>,

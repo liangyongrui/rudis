@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/incrby
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Incrby {
     pub key: SimpleType,
     pub value: i64,

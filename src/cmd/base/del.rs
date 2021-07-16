@@ -3,7 +3,7 @@ use tracing::{debug, instrument};
 
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/del
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
     pub keys: Vec<SimpleType>,
 }

@@ -4,7 +4,7 @@ use tracing::{debug, instrument};
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/hsetnx
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: SimpleType,
     pub field: SimpleType,

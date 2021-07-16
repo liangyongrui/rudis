@@ -11,7 +11,7 @@ use crate::{
 /// Set `key` to hold the string `value`.
 ///
 /// https://redis.io/commands/set
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Set {
     /// the lookup key
     pub key: SimpleType,

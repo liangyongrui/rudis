@@ -4,7 +4,7 @@ use tracing::{debug, instrument};
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/hdel
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Hdel {
     pub key: SimpleType,
     pub fields: Vec<SimpleType>,

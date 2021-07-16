@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/zadd
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Zadd {
     pub key: SimpleType,
     pub nx_xx: NxXx,

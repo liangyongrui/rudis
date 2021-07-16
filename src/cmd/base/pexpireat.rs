@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/pexpireat
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Pexpireat {
     pub key: SimpleType,
     pub ms_timestamp: u64,

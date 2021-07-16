@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/expire
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Expire {
     pub key: SimpleType,
     pub seconds: u64,

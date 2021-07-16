@@ -4,7 +4,7 @@ use tracing::{debug, instrument};
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/rpush
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Rpush {
     pub key: SimpleType,
     pub values: Vec<SimpleType>,

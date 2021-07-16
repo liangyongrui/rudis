@@ -1,3 +1,4 @@
+mod aof;
 pub mod data_type;
 mod result;
 mod slot;
@@ -16,15 +17,18 @@ use std::{
 use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
+use tokio::sync::mpsc;
 
 pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
 use self::{
+    aof::Aof,
     data_type::{HashEntry, SimpleType},
     hds::HdsStatus,
     result::Result,
     slot::Slot,
 };
 use crate::{
+    cmd::WriteCmd,
     replica,
     utils::options::{GtLt, NxXx},
 };
@@ -39,6 +43,7 @@ pub enum Role {
 
 #[derive(Debug)]
 pub struct Db {
+    pub aof_sender: Option<mpsc::Sender<WriteCmd>>,
     role: Mutex<Role>,
     slots: Arc<HashMap<u16, Slot>>,
     hds_status: ArcSwap<HdsStatus>,
@@ -60,6 +65,7 @@ impl Db {
             slots.entry(i).or_insert_with(Slot::new);
         }
         let s = Arc::new(Self {
+            aof_sender: Aof::start(),
             role: Mutex::new(role),
             hds_status: ArcSwap::from_pointee(HdsStatus::new()),
             slots: Arc::new(slots),

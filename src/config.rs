@@ -7,29 +7,6 @@ use tracing::{info, warn};
 
 pub static CONFIG: Lazy<Config> = Lazy::new(get_config);
 
-fn get_config() -> Config {
-    info!("loading config");
-    // todo path
-    // let file_path = "./config.toml";
-    let file_path = "/Users/liangyongrui/code/github/rcc/tests/config.toml";
-    let str_val = match File::open(file_path) {
-        Ok(mut file) => {
-            let mut str_val = String::new();
-            match file.read_to_string(&mut str_val) {
-                Ok(s) => s,
-                Err(e) => panic!("Error Reading file: {}", e),
-            };
-            str_val
-        }
-        Err(e) => {
-            warn!("no config.toml file, {}", e);
-            String::new()
-        }
-    };
-    let res = toml::from_str(&str_val).unwrap();
-    info!("loading config success: {:#?}", res);
-    res
-}
 #[serde_as]
 #[derive(Deserialize, Debug)]
 pub struct Config {
@@ -57,12 +34,38 @@ pub struct Config {
     pub save_hds_path: PathBuf,
     /// 是否要从hds文件中加载
     pub load_hds_path: Option<PathBuf>,
+    /// aof 最多积压条数 (0 表示不开启 aof)
+    pub aof_max_backlog: u64,
 }
 
 #[derive(Deserialize, Debug)]
 pub struct MasterConfig {
     pub ip: String,
     pub port: u16,
+}
+
+fn get_config() -> Config {
+    info!("loading config");
+    // todo path
+    // let file_path = "./config.toml";
+    let file_path = "/Users/liangyongrui/code/github/rcc/tests/config.toml";
+    let str_val = match File::open(file_path) {
+        Ok(mut file) => {
+            let mut str_val = String::new();
+            match file.read_to_string(&mut str_val) {
+                Ok(s) => s,
+                Err(e) => panic!("Error Reading file: {}", e),
+            };
+            str_val
+        }
+        Err(e) => {
+            warn!("no config.toml file, {}", e);
+            String::new()
+        }
+    };
+    let res = toml::from_str(&str_val).unwrap();
+    info!("loading config success: {:#?}", res);
+    res
 }
 
 #[cfg(test)]

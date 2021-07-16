@@ -8,7 +8,7 @@ use crate::{
     Connection, Frame,
 };
 /// https://redis.io/commands/setex
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Setex {
     pub key: SimpleType,
     pub seconds: u64,

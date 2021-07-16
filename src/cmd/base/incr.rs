@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/incr
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Incr {
     pub key: SimpleType,
 }

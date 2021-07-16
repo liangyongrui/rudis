@@ -21,7 +21,7 @@ impl Deref for Hash {
         &self.value
     }
 }
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HashEntry {
     pub field: SimpleType,
     pub value: SimpleType,

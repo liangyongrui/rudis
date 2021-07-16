@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/pexpire
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Pexpire {
     pub key: SimpleType,
     pub milliseconds: u64,

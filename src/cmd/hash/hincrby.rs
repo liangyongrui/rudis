@@ -3,7 +3,7 @@ use tracing::{debug, instrument};
 
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 /// https://redis.io/commands/hincrby
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
     pub key: SimpleType,
     pub field: SimpleType,

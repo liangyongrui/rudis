@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/hset
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Hset {
     pub key: SimpleType,
     pub pairs: Vec<HashEntry>,

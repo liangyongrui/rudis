@@ -5,7 +5,7 @@ use tracing::{debug, instrument};
 use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyrank
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Zremrangebyscore {
     pub key: SimpleType,
     pub range: (Bound<f64>, Bound<f64>),

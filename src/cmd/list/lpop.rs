@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/lpop
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Lpop {
     pub key: SimpleType,
     pub count: Option<i64>,

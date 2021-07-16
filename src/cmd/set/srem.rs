@@ -4,7 +4,7 @@ use tracing::{debug, instrument};
 use crate::{db::data_type::SimpleType, Connection, Db, Frame};
 
 /// https://redis.io/commands/srem
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Srem {
     pub key: SimpleType,
     pub values: Vec<SimpleType>,

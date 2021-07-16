@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// https://redis.io/commands/expireat
-#[derive(Debug, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Expireat {
     pub key: SimpleType,
     pub s_timestamp: u64,
