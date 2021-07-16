@@ -55,9 +55,9 @@ impl Db {
     }
 
     pub fn new(role: Role) -> Arc<Self> {
-        let mut slots = HashMap::new();
+        let mut slots = hds::load_slots();
         for i in 0..SIZE {
-            slots.insert(i, Slot::new());
+            slots.entry(i).or_insert_with(Slot::new);
         }
         let s = Arc::new(Self {
             role: Mutex::new(role),

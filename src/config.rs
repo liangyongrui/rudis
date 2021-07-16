@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, net::SocketAddr, time::Duration};
+use std::{fs::File, io::Read, net::SocketAddr, path::PathBuf, time::Duration};
 
 use once_cell::sync::Lazy;
 use serde::Deserialize;
@@ -51,7 +51,12 @@ pub struct Config {
     /// 每隔x秒，至少有y条数据发现变化，触发 bg_save
     #[serde(default)]
     #[serde_as(as = "Vec<(serde_with::DurationSeconds, _)>")]
-    pub save: Vec<(Duration, u64)>,
+    pub save_hds: Vec<(Duration, u64)>,
+    /// 持久化文件保存路径
+    #[serde(default)]
+    pub save_hds_path: PathBuf,
+    /// 是否要从hds文件中加载
+    pub load_hds_path: Option<PathBuf>,
 }
 
 #[derive(Deserialize, Debug)]

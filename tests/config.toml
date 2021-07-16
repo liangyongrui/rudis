@@ -1,4 +1,5 @@
 port = 5678
 replica = true
 master_addr = "127.0.0.1:1234"
-save = [[900, 1], [300, 10], [60, 10000]]
+save_hds = [[900, 1], [300, 10], [60, 10000]]
+save_hds_path = "./dump.hds"

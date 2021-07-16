@@ -17,7 +17,6 @@ rust cloud cache
 
 ## todo
 
-1. [ ] https://github.com/dalei2019/redis-study/blob/main/docs/redis-rdb-format.md
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
@@ -28,10 +27,9 @@ rust cloud cache
    - [ ] 全量同步
    - [ ] 部分重同步
    - [ ] 密码验证
-   - [ ] replica 的 replica 自动挂到master上
+   - [ ] replica 的 replica 自动挂到 master 上
 1. [ ] cluster 模式
    - [ ] 支持主从读写分离
-1. [ ] 集群 proxy(可能用 raft)
 1. [ ] #[instrument] 用法
 1. [ ] 多个建立连接同时请求报错
 1. [x] 测试命令 demo
@@ -42,16 +40,19 @@ rust cloud cache
 1. [ ] 持久化
 1. [ ] 主备
 1. [ ] 自定义插件
-1. [ ] lua 脚本
 1. [ ] 支持[resp3 协议](https://www.zeekling.cn/articles/2021/01/10/1610263628832.html)
 1. [ ] 整体梳理错误处理
 1. [ ] 完备的测试
 1. [ ] 注释中加测试
-1. [ ] 带 size 的持久化红黑树/btree/b+tree
+
+## 不一定要做
+
+1. [ ] [优化 rdb 保存结构](https://github.com/dalei2019/redis-study/blob/main/docs/redis-rdb-format.md)
 1. [ ] 在 slot 上加一个 tokio 的大锁，内部无锁, 测试这种方案的效率
-1. [ ] 各种动态配置参数
 1. [ ] <https://jzwdsb.github.io/2019/01/CRDT/>
-1. [ ] [优化rdb保存结构](https://github.com/dalei2019/redis-study/blob/main/docs/redis-rdb-format.md) 
+1. [ ] 带 size 的持久化红黑树/btree/b+tree
+1. [ ] lua 脚本
+1. [ ] 集群 proxy
 
 ## 支持的命令
 

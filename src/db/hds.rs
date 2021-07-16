@@ -1,8 +1,7 @@
 use std::{
     collections::HashMap,
     fs::File,
-    io::BufWriter,
-    path::Path,
+    io::{BufReader, BufWriter},
     sync::{
         atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
@@ -12,7 +11,7 @@ use std::{
 
 use nix::unistd::{fork, ForkResult};
 use tokio::time::sleep;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use super::{slot::Slot, Db};
 use crate::config::CONFIG;
@@ -44,7 +43,7 @@ pub async fn run_bg_save_task(db: Arc<Db>) {
         }
         let duration_now = Instant::now() - load.update_time;
         let mut trigger = false;
-        for (duration, times) in &CONFIG.save {
+        for (duration, times) in &CONFIG.save_hds {
             if &duration_now > duration && load.change_times.load(Ordering::SeqCst) > *times {
                 trigger = true;
                 break;
@@ -72,21 +71,31 @@ pub fn save_slots(slots: &HashMap<u16, Slot>) {
             );
         }
         Ok(ForkResult::Child) => {
-            for (id, slot) in slots {
-                save_slot(*id, slot);
-            }
+            let path = &CONFIG.save_hds_path;
+            let display = path.display();
+            let file = match File::create(path) {
+                Err(why) => panic!("couldn't create {}: {}", display, why),
+                Ok(file) => BufWriter::new(file),
+            };
+            bincode::serialize_into(file, slots).unwrap();
         }
         Err(e) => error!("Fork failed: {}", e),
     }
 }
 
-fn save_slot(id: u16, slot: &Slot) {
-    let file_name = format!("slot_{}", id);
-    let path = Path::new(&file_name);
-    let display = path.display();
-    let file = match File::create(&path) {
-        Err(why) => panic!("couldn't create {}: {}", display, why),
-        Ok(file) => BufWriter::new(file),
-    };
-    bincode::serialize_into(file, &slot).unwrap();
+/// 启动服务的时候执行
+pub fn load_slots() -> HashMap<u16, Slot> {
+    if let Some(path) = &CONFIG.load_hds_path {
+        let display_path = path.display();
+        let file = match File::open(path) {
+            Err(why) => {
+                warn!("no hds files {}: {}", display_path, why);
+                return HashMap::new();
+            }
+            Ok(file) => BufReader::new(file),
+        };
+        bincode::deserialize_from(file).unwrap()
+    } else {
+        HashMap::new()
+    }
 }
