@@ -3,9 +3,9 @@ use tracing::{debug, instrument};
 
 use crate::{
     db::{data_type::SimpleType, Db},
-    parse::{Parse, ParseError},
     Connection, Frame,
 };
+
 /// https://redis.io/commands/lpop
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Lpop {

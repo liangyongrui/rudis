@@ -25,7 +25,6 @@
 //!   intermediate representation between a "command" and the byte
 //!   representation.
 
-// pub mod client;
 pub mod cmd;
 mod config;
 mod replica;
@@ -44,7 +43,6 @@ mod parse;
 pub use connection::server;
 pub use parse::to_bytes::ToVecU8;
 use parse::{Parse, ParseError};
-// pub use buffer::{buffer, Buffer};
 
 mod shutdown;
 use shutdown::Shutdown;

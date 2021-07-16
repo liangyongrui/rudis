@@ -4,7 +4,7 @@ use tracing::{debug, instrument};
 
 use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
 
-/// https://redis.io/commands/zremrangebyrank
+/// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
 pub struct Zremrangebyscore {
     pub key: SimpleType,
@@ -36,6 +36,11 @@ impl Zremrangebyscore {
         Ok(Self { key, range })
     }
 
+    pub fn into_cmd_bytes(self) -> Vec<u8> {
+        let res = vec![];
+        Frame::Array(res);
+        todo!()
+    }
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.zremrange_by_score(&self.key, self.range) {

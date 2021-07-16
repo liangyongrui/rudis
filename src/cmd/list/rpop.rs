@@ -3,7 +3,6 @@ use tracing::{debug, instrument};
 
 use crate::{
     db::{data_type::SimpleType, Db},
-    parse::{Parse, ParseError},
     Connection, Frame,
 };
 

@@ -4,7 +4,7 @@
 //! 目前使用的是 RESP2
 //! todo 支持 RESP3
 
-use std::fmt;
+use std::{fmt, vec};
 
 use bytes::Bytes;
 use nom::{
@@ -137,6 +137,45 @@ pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         parse_bulk,
         parse_array,
     ))(i)
+}
+
+impl From<Frame> for Vec<u8> {
+    fn from(frame: Frame) -> Self {
+        let mut res = vec![];
+        match frame {
+            Frame::Simple(a) => {
+                res.push(b'+');
+                res.extend_from_slice(a.as_bytes());
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::Error(a) => {
+                res.push(b'-');
+                res.extend_from_slice(a.as_bytes());
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::Integer(a) => {
+                res.push(b':');
+                res.extend_from_slice(a.to_string().as_bytes());
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::Bulk(b) => {
+                res.push(b'$');
+                res.extend_from_slice(b.len().to_string().as_bytes());
+                res.extend_from_slice(&b[..]);
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::Null => res.extend_from_slice(b"$-1\r\n"),
+            Frame::Array(a) => {
+                res.push(b'*');
+                res.extend_from_slice(a.len().to_string().as_bytes());
+                for v in a {
+                    res.append(&mut v.into());
+                }
+                res.extend_from_slice(b"\r\n");
+            }
+        }
+        res
+    }
 }
 #[cfg(test)]
 mod test {

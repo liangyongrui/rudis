@@ -1,6 +1,7 @@
 use std::{
     fs::File,
     io::{BufWriter, Write},
+    time::Instant,
 };
 
 use tokio::sync::mpsc;
@@ -14,9 +15,7 @@ pub struct Aof {
 
 impl Aof {
     pub fn start() -> Option<mpsc::Sender<WriteCmd>> {
-        if CONFIG.save_aof_path.is_none() {
-            return None;
-        }
+        CONFIG.save_aof_path.as_ref()?;
         let aof_max_backlog = CONFIG.aof_max_backlog;
         if aof_max_backlog == 0 {
             return None;
@@ -37,13 +36,14 @@ impl Aof {
             Err(why) => panic!("couldn't create {}: {}", display, why),
             Ok(file) => BufWriter::new(file),
         };
-        let mut count = 0;
+        let now = Instant::now();
+        let mut update_secs = 0;
         while let Some(cmd) = self.rx.recv().await {
-            count += 1;
             file.write_all(&cmd.into_cmd_bytes()[..]).unwrap();
-            if count >= self.aof_max_backlog {
+            let secs = (Instant::now() - now).as_secs();
+            if secs > update_secs {
+                update_secs = secs;
                 file.flush().unwrap();
-                count = 0;
             }
         }
         file.flush().unwrap();
