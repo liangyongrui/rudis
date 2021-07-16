@@ -13,31 +13,12 @@ use nom::AsBytes;
 use serde::{Deserialize, Serialize};
 pub use sorted_set::{Node as SortedSetNode, RangeItem as ZrangeItem};
 
-use self::{
-    hash::{Hash, HashSerdeType},
-    list::List,
-    set::{Set, SetSerdeType},
-    sorted_set::{SortedSet, SortedSetSerdeType},
-};
-use crate::{utils::ParseSerdeType, Frame};
-#[derive(Debug, Clone)]
+use self::{hash::Hash, list::List, set::Set, sorted_set::SortedSet};
+use crate::Frame;
+#[derive(Debug, Clone, Serialize)]
 pub enum DataType {
     SimpleType(SimpleType),
     AggregateType(AggregateType),
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub enum DataSerdeType {
-    SimpleType(SimpleType),
-    AggregateType(AggregateSerdeType),
-}
-impl ParseSerdeType<'_, DataSerdeType> for DataType {
-    fn parse_serde_type(&self) -> DataSerdeType {
-        match self {
-            DataType::SimpleType(s) => DataSerdeType::SimpleType(s.clone()),
-            DataType::AggregateType(a) => DataSerdeType::AggregateType(a.parse_serde_type()),
-        }
-    }
 }
 
 impl PartialEq for DataType {
@@ -86,30 +67,12 @@ impl Ord for SimpleType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum AggregateType {
     List(List),
     Hash(Hash),
     Set(Set),
     SortedSet(SortedSet),
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub enum AggregateSerdeType {
-    List(List),
-    Hash(HashSerdeType),
-    Set(SetSerdeType),
-    SortedSet(SortedSetSerdeType),
-}
-impl ParseSerdeType<'_, AggregateSerdeType> for AggregateType {
-    fn parse_serde_type(&self) -> AggregateSerdeType {
-        match self {
-            AggregateType::List(list) => AggregateSerdeType::List(list.clone()),
-            AggregateType::Hash(hash) => AggregateSerdeType::Hash(hash.parse_serde_type()),
-            AggregateType::Set(s) => AggregateSerdeType::Set(s.parse_serde_type()),
-            AggregateType::SortedSet(ss) => AggregateSerdeType::SortedSet(ss.parse_serde_type()),
-        }
-    }
 }
 
 impl TryFrom<&SimpleType> for f64 {

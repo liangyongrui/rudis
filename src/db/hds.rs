@@ -15,7 +15,7 @@ use tokio::time::sleep;
 use tracing::{error, info};
 
 use super::{slot::Slot, Db};
-use crate::{config::CONFIG, utils::ParseSerdeType};
+use crate::config::CONFIG;
 
 #[derive(Debug)]
 pub struct HdsStatus {
@@ -88,6 +88,5 @@ fn save_slot(id: u16, slot: &Slot) {
         Err(why) => panic!("couldn't create {}: {}", display, why),
         Ok(file) => BufWriter::new(file),
     };
-    // todo 这里用了双倍的内存，需要优化一下
-    bincode::serialize_into(file, &slot.parse_serde_type()).unwrap();
+    bincode::serialize_into(file, &slot).unwrap();
 }

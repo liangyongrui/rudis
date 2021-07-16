@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::HashMap,
     ops::{Bound, RangeBounds},
     sync::Arc,
 };
@@ -16,7 +16,8 @@ use crate::{
     },
     utils::{
         options::{GtLt, NxXx},
-        BoundExt, ParseSerdeType,
+        pointer::Bor,
+        BoundExt,
     },
 };
 
@@ -65,26 +66,11 @@ impl Ord for Node {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SortedSet {
     version: u64,
     hash: HashMap<SimpleType, Node>,
-    value: Arc<RedBlackTreeSetSync<Node>>,
-}
-#[derive(Debug, Deserialize, Serialize)]
-pub struct SortedSetSerdeType {
-    version: u64,
-    hash: HashMap<SimpleType, Node>,
-    value: BTreeSet<Node>,
-}
-impl ParseSerdeType<'_, SortedSetSerdeType> for SortedSet {
-    fn parse_serde_type(&self) -> SortedSetSerdeType {
-        SortedSetSerdeType {
-            version: self.version,
-            hash: self.hash.clone(),
-            value: self.value.iter().cloned().collect(),
-        }
-    }
+    value: Bor<Arc<RedBlackTreeSetSync<Node>>>,
 }
 impl SortedSet {
     fn contains_key(&self, key: &SimpleType) -> bool {
@@ -111,7 +97,7 @@ impl SortedSet {
     }
     fn add(&mut self, nodes: Vec<Node>, nx_xx: NxXx, gt_lt: GtLt, ch: bool, incr: bool) -> usize {
         let mut res = 0;
-        let mut new = (*self.value).clone();
+        let mut new = (**self.value).clone();
         for mut v in nodes {
             if self.can_update(&v, nx_xx, gt_lt) {
                 if let Some(ov) = self.hash.remove(&v.key) {
@@ -135,38 +121,38 @@ impl SortedSet {
 
     pub fn zrem(&mut self, members: Vec<SimpleType>) -> usize {
         let old_len = self.value.size();
-        let mut set = (*self.value).clone();
+        let mut set = (**self.value).clone();
         for v in members {
             if let Some(n) = self.hash.remove(&v) {
                 set.remove_mut(&n);
             }
         }
         self.version += 1;
-        self.value = Arc::new(set);
+        self.value = Arc::new(set).into();
         self.value.size() - old_len
     }
 
     pub fn zremrange_by_rank(&mut self, range: (i64, i64)) -> usize {
-        let mut n = (*self.value).clone();
+        let mut n = (**self.value).clone();
         let old_size = n.size();
         let range = n.zrange_by_rank(range, false, None);
         for i in range {
             n.remove_mut(&i);
             self.hash.remove(&i.key);
         }
-        self.value = Arc::new(n);
+        self.value = Arc::new(n).into();
         old_size - self.value.size()
     }
 
     pub fn zremrange_by_score(&mut self, range: (Bound<f64>, Bound<f64>)) -> usize {
-        let mut n = (*self.value).clone();
+        let mut n = (**self.value).clone();
         let old_size = n.size();
         let range = n.zrange_by_score(range, false, None);
         for i in range {
             n.remove_mut(&i);
             self.hash.remove(&i.key);
         }
-        self.value = Arc::new(n);
+        self.value = Arc::new(n).into();
         old_size - self.value.size()
     }
 }
@@ -377,7 +363,7 @@ impl SortedSet {
         Self {
             version: 0,
             hash: HashMap::new(),
-            value: Arc::new(RedBlackTreeSetSync::new_sync()),
+            value: Arc::new(RedBlackTreeSetSync::new_sync()).into(),
         }
     }
 

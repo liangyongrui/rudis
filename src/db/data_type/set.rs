@@ -1,7 +1,7 @@
-use std::{collections::HashSet, ops::Deref, sync::Arc};
+use std::{ops::Deref, sync::Arc};
 
 use rpds::HashTrieSetSync;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use super::{AggregateType, DataType, SimpleType};
 use crate::{
@@ -9,26 +9,13 @@ use crate::{
         result::Result,
         slot::{Entry, Slot},
     },
-    utils::ParseSerdeType,
+    utils::pointer::Bor,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Set {
     version: u64,
-    value: Arc<HashTrieSetSync<SimpleType>>,
-}
-#[derive(Debug, Deserialize, Serialize)]
-pub struct SetSerdeType {
-    version: u64,
-    value: HashSet<SimpleType>,
-}
-impl ParseSerdeType<'_, SetSerdeType> for Set {
-    fn parse_serde_type(&self) -> SetSerdeType {
-        SetSerdeType {
-            version: self.version,
-            value: self.value.iter().cloned().collect(),
-        }
-    }
+    value: Bor<Arc<HashTrieSetSync<SimpleType>>>,
 }
 impl Deref for Set {
     type Target = HashTrieSetSync<SimpleType>;
@@ -45,7 +32,7 @@ impl Set {
     fn new() -> Self {
         Self {
             version: 0,
-            value: Arc::new(HashTrieSetSync::new_sync()),
+            value: Arc::new(HashTrieSetSync::new_sync()).into(),
         }
     }
     fn process<T, F: FnOnce(&Set) -> T>(
@@ -105,12 +92,12 @@ impl Slot {
     pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         Set::mut_process_exists_or_new(self, key, |set| {
             let old_len = set.size();
-            let mut new = (*set.value).clone();
+            let mut new = (**set.value).clone();
             for v in values {
                 new.insert_mut(v)
             }
             set.version += 1;
-            set.value = Arc::new(new);
+            set.value = Arc::new(new).into();
             Ok(set.size() - old_len)
         })
     }
@@ -140,12 +127,12 @@ impl Slot {
             key,
             |set| {
                 let old_len = set.size();
-                let mut new = (*set.value).clone();
+                let mut new = (**set.value).clone();
                 for v in values {
                     new.remove_mut(&v);
                 }
                 set.version += 1;
-                set.value = Arc::new(new);
+                set.value = Arc::new(new).into();
                 old_len - set.size()
             },
             || 0,

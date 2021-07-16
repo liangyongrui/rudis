@@ -1,4 +1,6 @@
+pub mod custom_serde;
 pub mod options;
+pub mod pointer;
 
 use std::ops::Bound;
 
