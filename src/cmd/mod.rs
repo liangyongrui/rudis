@@ -273,7 +273,7 @@ impl WriteCmd {
         match self {
             WriteCmd::Zrem(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Zremrangebyrank(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Zremrangebyscore(cmd) => todo!(),
+            WriteCmd::Zremrangebyscore(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Zadd(cmd) => todo!(),
             WriteCmd::Sadd(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Srem(cmd) => cmd.into_cmd_bytes(),

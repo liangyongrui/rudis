@@ -37,9 +37,17 @@ impl Zremrangebyscore {
     }
 
     pub fn into_cmd_bytes(self) -> Vec<u8> {
-        let res = vec![];
-        Frame::Array(res);
-        todo!()
+        let mut res = vec![self.key.into()];
+        fn bf64_to_frame(b: Bound<f64>, left: bool) -> Frame {
+            match b {
+                Bound::Included(a) => Frame::Simple(a.to_string()),
+                Bound::Excluded(a) => Frame::Simple(format!("({}", a)),
+                Bound::Unbounded => Frame::Simple(format!("{}inf", if left { "+" } else { "-" })),
+            }
+        }
+        res.push(bf64_to_frame(self.range.0, true));
+        res.push(bf64_to_frame(self.range.1, false));
+        Frame::Array(res).into()
     }
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
