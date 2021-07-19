@@ -7,7 +7,7 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
-use serde::{de::Visitor, ser::SerializeStruct, Deserialize, Serialize};
+use serde::{de::Visitor, ser::SerializeMap, Deserialize, Serialize};
 use tracing::debug;
 
 use self::expirations::{Expiration, ExpirationEntry};
@@ -49,8 +49,10 @@ impl Serialize for Slot {
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_struct("Slot", 1)?;
-        state.serialize_field("entries", self.entries.as_ref())?;
+        let mut state = serializer.serialize_map(Some(self.entries.len()))?;
+        for pair in self.entries.iter() {
+            state.serialize_entry(pair.key(), pair.value())?;
+        }
         state.end()
     }
 }

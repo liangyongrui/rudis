@@ -67,7 +67,8 @@ impl Db {
         let s = Arc::new(Self {
             aof_sender: Aof::start(),
             role: Mutex::new(role),
-            hds_status: ArcSwap::from_pointee(HdsStatus::new()),
+            // todo id
+            hds_status: ArcSwap::from_pointee(HdsStatus::new(0)),
             slots: Arc::new(slots),
         });
         tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));
@@ -218,12 +219,6 @@ impl Db {
         self.get_slot(&key)
             .set(key, value, nx_xx, expires_at, keepttl)
             .await
-    }
-
-    pub fn bgsave(&self) {
-        // todo 防止多个save执行
-        // self.bg_save_run.compare_exchange(current, new, success, failure)
-        hds::save_slots(self.slots.as_ref())
     }
 
     pub fn replicaof(&self, master_addr: SocketAddr) {

@@ -1,5 +1,5 @@
 [workspace]
-members = ["rcc_macros"]
+members = ["rcc_macros", "management"]
 
 [package]
 authors = ["LiangYongrui <leungyongrui@gmail.com>"]

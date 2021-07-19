@@ -29,16 +29,16 @@ pub struct Config {
     #[serde(default)]
     #[serde_as(as = "Vec<(serde_with::DurationSeconds, _)>")]
     pub save_hds: Vec<(Duration, u64)>,
-    /// 持久化文件保存路径
+    /// 持久化文件保存目录
     #[serde(default)]
-    pub save_hds_path: PathBuf,
+    pub save_hds_dir: PathBuf,
     /// 是否要从hds文件中加载
     pub load_hds_path: Option<PathBuf>,
     /// aof 最多积压条数 (0 表示不开启 aof)
     #[serde(default)]
     pub aof_max_backlog: u64,
     #[serde(default)]
-    pub save_aof_path: Option<PathBuf>,
+    pub save_aof_dir: Option<PathBuf>,
 }
 
 #[derive(Deserialize, Debug)]

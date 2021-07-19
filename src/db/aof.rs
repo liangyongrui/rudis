@@ -15,7 +15,7 @@ pub struct Aof {
 
 impl Aof {
     pub fn start() -> Option<mpsc::Sender<WriteCmd>> {
-        CONFIG.save_aof_path.as_ref()?;
+        CONFIG.save_aof_dir.as_ref()?;
         let aof_max_backlog = CONFIG.aof_max_backlog;
         if aof_max_backlog == 0 {
             return None;
@@ -30,7 +30,7 @@ impl Aof {
     }
 
     async fn listener(mut self) {
-        let path = CONFIG.save_aof_path.as_ref().unwrap();
+        let path = CONFIG.save_aof_dir.as_ref().unwrap();
         let display = path.display();
         let mut file = match File::create(path) {
             Err(why) => panic!("couldn't create {}: {}", display, why),

@@ -3,7 +3,7 @@ use std::{
     fs::File,
     io::{BufReader, BufWriter},
     sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
+        atomic::{AtomicU64, Ordering},
         Arc,
     },
     time::{Duration, Instant},
@@ -18,15 +18,15 @@ use crate::config::CONFIG;
 
 #[derive(Debug)]
 pub struct HdsStatus {
-    can_do: AtomicBool,
+    id: u64,
     update_time: Instant,
     change_times: AtomicU64,
 }
 
 impl HdsStatus {
-    pub fn new() -> Self {
+    pub fn new(id: u64) -> Self {
         Self {
-            can_do: AtomicBool::new(false),
+            id,
             update_time: Instant::now(),
             change_times: AtomicU64::new(0),
         }
@@ -38,9 +38,6 @@ pub async fn run_bg_save_task(db: Arc<Db>) {
     loop {
         sleep(Duration::from_secs(1)).await;
         let load = db.hds_status.load();
-        if !load.can_do.load(Ordering::SeqCst) {
-            continue;
-        }
         let duration_now = Instant::now() - load.update_time;
         let mut trigger = false;
         for (duration, times) in &CONFIG.save_hds {
@@ -50,19 +47,15 @@ pub async fn run_bg_save_task(db: Arc<Db>) {
             }
         }
         if trigger {
+            let new_hds_id = load.id + 1;
             drop(load);
-            db.hds_status.swap(Arc::new(HdsStatus::new()));
-            save_slots(&db.slots);
-            let _res = db.hds_status.load().can_do.compare_exchange(
-                false,
-                true,
-                Ordering::SeqCst,
-                Ordering::SeqCst,
-            );
+            // 这里有并发问题
+            db.hds_status.swap(Arc::new(HdsStatus::new(new_hds_id)));
+            save_slots(&db.slots, new_hds_id);
         }
     }
 }
-pub fn save_slots(slots: &HashMap<u16, Slot>) {
+pub fn save_slots(slots: &HashMap<u16, Slot>, hds_id: u64) {
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child, .. }) => {
             info!(
@@ -71,7 +64,7 @@ pub fn save_slots(slots: &HashMap<u16, Slot>) {
             );
         }
         Ok(ForkResult::Child) => {
-            let path = &CONFIG.save_hds_path;
+            let path = &CONFIG.save_hds_dir.join(format!("dump_{}.hds", hds_id));
             let display = path.display();
             let file = match File::create(path) {
                 Err(why) => panic!("couldn't create {}: {}", display, why),
