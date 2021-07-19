@@ -1,10 +1,10 @@
 //! 模拟客户端, 转Vec<u8>
 //!
-//! todo 做多种格式兼容, 目前都是转为blob string
+//! todo 改成通过Frame转化
 
 use std::usize;
 
-use crate::db::data_type::SimpleType;
+use crate::db::data_type::{SimpleType, SimpleTypePair};
 
 pub trait ToVecU8 {
     fn into_vec_u8(self) -> Vec<u8>;
@@ -35,8 +35,7 @@ impl ToVecU8 for SimpleType {
 
 impl ToVecU8 for Vec<SimpleType> {
     fn into_vec_u8(self) -> Vec<u8> {
-        let mut res = vec![b'*'];
-        res.append(&mut (self.len() as u64).into_vec_u8());
+        let mut res = vec![];
         for s in self {
             res.append(&mut s.into_vec_u8());
         }
@@ -63,6 +62,17 @@ impl ToVecU8 for (i64, i64) {
         let mut i0 = self.0.into_vec_u8();
         i0.append(&mut self.1.into_vec_u8());
         i0
+    }
+}
+
+impl ToVecU8 for Vec<SimpleTypePair> {
+    fn into_vec_u8(self) -> Vec<u8> {
+        let mut res = vec![];
+        for s in self {
+            res.append(&mut s.key.into_vec_u8());
+            res.append(&mut s.value.into_vec_u8());
+        }
+        res
     }
 }
 

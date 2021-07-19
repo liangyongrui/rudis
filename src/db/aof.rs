@@ -9,7 +9,7 @@ use tokio::sync::mpsc;
 use crate::{cmd::WriteCmd, config::CONFIG};
 
 pub struct Aof {
-    aof_max_backlog: u64,
+    _aof_max_backlog: u64,
     rx: mpsc::Receiver<WriteCmd>,
 }
 
@@ -22,7 +22,7 @@ impl Aof {
         }
         let (tx, rx) = mpsc::channel(aof_max_backlog as _);
         let aof = Aof {
-            aof_max_backlog,
+            _aof_max_backlog: aof_max_backlog,
             rx,
         };
         tokio::spawn(aof.listener());

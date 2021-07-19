@@ -14,7 +14,7 @@ impl Hgetall {
         let response = match db.hgetall(&self.key) {
             Ok(v) => Frame::Array(
                 v.into_iter()
-                    .flat_map(|i| vec![i.field.into(), i.value.into()].into_iter())
+                    .flat_map(|i| vec![i.key.into(), i.value.into()].into_iter())
                     .collect(),
             ),
             Err(e) => Frame::Error(e),

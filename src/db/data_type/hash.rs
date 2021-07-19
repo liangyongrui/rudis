@@ -3,7 +3,7 @@ use std::ops::Deref;
 use rpds::HashTrieMapSync;
 use serde::{Deserialize, Serialize};
 
-use super::{AggregateType, DataType, SimpleType};
+use super::{AggregateType, DataType, SimpleType, SimpleTypePair};
 use crate::db::{
     result::Result,
     slot::{Entry, Slot},
@@ -20,11 +20,6 @@ impl Deref for Hash {
     fn deref(&self) -> &Self::Target {
         &self.value
     }
-}
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct HashEntry {
-    pub field: SimpleType,
-    pub value: SimpleType,
 }
 
 impl Hash {
@@ -93,11 +88,11 @@ impl Hash {
     }
 }
 impl Slot {
-    pub fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
+    pub fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, key, |hash| {
             let len = pairs.len();
             let mut new = hash.value.clone();
-            for HashEntry { field, value } in pairs.into_iter() {
+            for SimpleTypePair { key: field, value } in pairs.into_iter() {
                 new.insert_mut(field, value);
             }
             hash.version += 1;
@@ -118,7 +113,7 @@ impl Slot {
         })
     }
 
-    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<HashEntry>> {
+    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<SimpleTypePair>> {
         Hash::process(
             self,
             key,
@@ -127,8 +122,8 @@ impl Slot {
         )
         .map(|p| {
             p.iter()
-                .map(|x| HashEntry {
-                    field: x.0.clone(),
+                .map(|x| SimpleTypePair {
+                    key: x.0.clone(),
                     value: x.1.clone(),
                 })
                 .collect()
@@ -201,7 +196,7 @@ impl Slot {
 #[cfg(test)]
 mod test {
     use crate::{
-        db::{data_type::HashEntry, slot::Slot},
+        db::{data_type::SimpleTypePair, slot::Slot},
         SimpleType,
     };
 
@@ -214,12 +209,12 @@ mod test {
             slot.hset(
                 key.clone(),
                 vec![
-                    HashEntry {
-                        field: "abc".into(),
+                    SimpleTypePair {
+                        key: "abc".into(),
                         value: "456".into(),
                     },
-                    HashEntry {
-                        field: "def".into(),
+                    SimpleTypePair {
+                        key: "def".into(),
                         value: 123.into(),
                     },
                 ],
@@ -243,16 +238,16 @@ mod test {
             },
             {
                 let mut r2 = vec![
-                    HashEntry {
-                        field: "abc".into(),
+                    SimpleTypePair {
+                        key: "abc".into(),
                         value: "456".into(),
                     },
-                    HashEntry {
-                        field: "aaa".into(),
+                    SimpleTypePair {
+                        key: "aaa".into(),
                         value: "111".into(),
                     },
-                    HashEntry {
-                        field: "def".into(),
+                    SimpleTypePair {
+                        key: "def".into(),
                         value: 123.into(),
                     },
                 ];
@@ -266,8 +261,8 @@ mod test {
         );
         assert_eq!(
             slot.hgetall(&key).unwrap(),
-            vec![HashEntry {
-                field: "def".into(),
+            vec![SimpleTypePair {
+                key: "def".into(),
                 value: 123.into(),
             }]
         );
@@ -277,8 +272,8 @@ mod test {
         assert_eq!(slot.hincrby(key.clone(), "xxx".into(), 123), Ok(123));
         slot.hset(
             key.clone(),
-            vec![HashEntry {
-                field: "abc".into(),
+            vec![SimpleTypePair {
+                key: "abc".into(),
                 value: "456".into(),
             }],
         )

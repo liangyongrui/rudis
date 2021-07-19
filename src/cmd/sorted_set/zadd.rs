@@ -27,7 +27,7 @@ impl Zadd {
         let mut gt_lt = GtLt::None;
         let mut ch = false;
         let mut incr = false;
-        let nk = loop {
+        let score = loop {
             match parse.next_simple_type()? {
                 SimpleType::SimpleString(s) => {
                     let lowercase = s.to_lowercase();
@@ -44,8 +44,8 @@ impl Zadd {
                 t => break t,
             }
         };
-        let nv: f64 = (&parse.next_simple_type()?).try_into()?;
-        let mut nodes = vec![SortedSetNode::new(nk, nv)];
+        let member = parse.next_simple_type()?;
+        let mut nodes = vec![SortedSetNode::new(member, (&score).try_into()?)];
         let mut values = vec![];
         loop {
             match parse.next_simple_type() {
@@ -58,7 +58,7 @@ impl Zadd {
             return Err(format!("参数数量错误: {}", values.len()).into());
         }
         for p in values.windows(2) {
-            nodes.push(SortedSetNode::new(p[0].to_owned(), (&p[1]).try_into()?));
+            nodes.push(SortedSetNode::new(p[1].to_owned(), (&p[0]).try_into()?));
         }
         Ok(Self {
             key,
@@ -68,6 +68,31 @@ impl Zadd {
             incr,
             nodes,
         })
+    }
+
+    pub fn into_cmd_bytes(self) -> Vec<u8> {
+        let mut res = vec![Frame::Simple("ZADD".to_owned()), self.key.into()];
+        match self.nx_xx {
+            NxXx::Nx => res.push(Frame::Simple("NX".to_owned())),
+            NxXx::Xx => res.push(Frame::Simple("XX".to_owned())),
+            NxXx::None => (),
+        }
+        match self.gt_lt {
+            GtLt::Gt => res.push(Frame::Simple("GT".to_owned())),
+            GtLt::Lt => res.push(Frame::Simple("LT".to_owned())),
+            GtLt::None => (),
+        }
+        if self.ch {
+            res.push(Frame::Simple("CH".to_owned()))
+        }
+        if self.incr {
+            res.push(Frame::Simple("INCR".to_owned()))
+        }
+        for node in self.nodes {
+            res.push(Frame::Simple(node.score.to_string()));
+            res.push(node.key.into());
+        }
+        Frame::Array(res).into()
     }
 
     #[instrument(skip(self, db, dst))]

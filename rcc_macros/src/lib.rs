@@ -82,6 +82,22 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                             }
                                         };
                                     }
+                                    if *ident == "SimpleTypePair" {
+                                        return quote! {
+                                            let p_key = parse.next_simple_type()?;
+                                            let p_value = parse.next_simple_type()?;
+                                            let mut #field_name = vec![crate::db::data_type::SimpleTypePair {key: p_key, value: p_value}];
+                                            loop {
+                                                match (parse.next_simple_type(), parse.next_simple_type()) {
+                                                    (Ok(key), Ok(value)) => #field_name.push(crate::db::data_type::SimpleTypePair {key, value}),
+                                                    (Err(crate::parse::ParseError::EndOfStream), Err(crate::parse::ParseError::EndOfStream)) => break,
+                                                    (Ok(_), Err(crate::parse::ParseError::EndOfStream)) => return Err("参数格式不对".to_owned().into()),
+                                                    (Ok(_), Err(err)) => return Err(err.into()),
+                                                    (Err(err), _) => return Err(err.into()),
+                                                }
+                                            }
+                                        };
+                                    }
                                 }
                             }
                         }

@@ -1,51 +1,18 @@
+use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
 use crate::{
-    db::data_type::{HashEntry, SimpleType},
-    parse::ParseError,
-    Connection, Db, Frame, Parse,
+    db::data_type::{SimpleType, SimpleTypePair},
+    Connection, Db, Frame,
 };
-
 /// https://redis.io/commands/hset
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Hset {
     pub key: SimpleType,
-    pub pairs: Vec<HashEntry>,
+    pub pairs: Vec<SimpleTypePair>,
 }
 
 impl Hset {
-    pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
-        let mut values = vec![];
-        loop {
-            match parse.next() {
-                Ok(Frame::Simple(s)) => values.push(SimpleType::SimpleString(s)),
-                Ok(Frame::Bulk(data)) => values.push(data.into()),
-                Ok(Frame::Integer(data)) => values.push(data.into()),
-                Ok(frame) => {
-                    return Err(format!(
-                        "protocol error; expected simple frame or bulk frame, got {:?}",
-                        frame
-                    )
-                    .into())
-                }
-                Err(ParseError::EndOfStream) => break,
-                Err(err) => return Err(err.into()),
-            };
-        }
-        if values.len() % 2 != 0 {
-            return Err(format!("参数数量错误: {}", values.len()).into());
-        }
-        let mut pairs = vec![];
-        for p in values.windows(2) {
-            pairs.push(HashEntry {
-                field: p[0].clone(),
-                value: p[1].clone(),
-            });
-        }
-        Ok(Self { key, pairs })
-    }
-
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
         let response = match db.hset(self.key, self.pairs) {

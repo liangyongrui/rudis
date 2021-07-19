@@ -8,13 +8,19 @@ mod sorted_set;
 use std::convert::TryFrom;
 
 use bytes::Bytes;
-pub use hash::HashEntry;
 use nom::AsBytes;
 use serde::{Deserialize, Serialize};
 pub use sorted_set::{Node as SortedSetNode, RangeItem as ZrangeItem};
 
 use self::{hash::Hash, list::List, set::Set, sorted_set::SortedSet};
 use crate::Frame;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct SimpleTypePair {
+    pub key: SimpleType,
+    pub value: SimpleType,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataType {
     SimpleType(SimpleType),

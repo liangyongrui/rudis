@@ -22,7 +22,7 @@ use tokio::sync::mpsc;
 pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
 use self::{
     aof::Aof,
-    data_type::{HashEntry, SimpleType},
+    data_type::{SimpleType, SimpleTypePair},
     hds::HdsStatus,
     result::Result,
     slot::Slot,
@@ -155,10 +155,10 @@ impl Db {
     ) -> Result<Vec<Option<SimpleType>>> {
         self.get_slot(&key).hmget(key, fields)
     }
-    pub fn hset(&self, key: SimpleType, pairs: Vec<HashEntry>) -> Result<usize> {
+    pub fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
         self.get_slot(&key).hset(key, pairs)
     }
-    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<HashEntry>> {
+    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<SimpleTypePair>> {
         self.get_slot(key).hgetall(key)
     }
     pub fn lrange(&self, key: &SimpleType, start: i64, stop: i64) -> Result<Vec<SimpleType>> {
