@@ -2,3 +2,4 @@
 **/*.rs.bk
 /.idea
 *.iml
+# /rcc_macros/Cargo.lock

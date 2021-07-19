@@ -190,4 +190,28 @@ impl Set {
 
         Ok(())
     }
+
+    pub fn into_cmd_bytes(self) -> Vec<u8> {
+        let mut res = vec![
+            Frame::Simple("SET".to_owned()),
+            self.key.into(),
+            self.value.into(),
+        ];
+        if let Some(ea) = self.expires_at {
+            res.push(Frame::Simple("PXAT".to_owned()));
+            res.push(Frame::Integer(ea.timestamp_millis()))
+        }
+        if self.keepttl {
+            res.push(Frame::Simple("KEEPTTL".to_owned()));
+        }
+        match self.nx_xx {
+            NxXx::Nx => res.push(Frame::Simple("NX".to_owned())),
+            NxXx::Xx => res.push(Frame::Simple("XX".to_owned())),
+            NxXx::None => (),
+        }
+        if self.get {
+            res.push(Frame::Simple("GET".to_owned()))
+        }
+        Frame::Array(res).into()
+    }
 }

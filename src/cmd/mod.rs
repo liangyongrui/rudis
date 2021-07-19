@@ -291,7 +291,7 @@ impl WriteCmd {
             WriteCmd::Incr(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Decr(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Decrby(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Set(cmd) => todo!(),
+            WriteCmd::Set(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Del(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Psetex(cmd) => cmd.into_cmd_bytes(),
             WriteCmd::Setex(cmd) => cmd.into_cmd_bytes(),
