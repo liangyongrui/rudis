@@ -4,10 +4,7 @@ use rpds::HashTrieSetSync;
 use serde::{Deserialize, Serialize};
 
 use super::{AggregateType, DataType, SimpleType};
-use crate::db::{
-    result::Result,
-    slot::{Entry, Slot},
-};
+use crate::db::{dict, result::Result, slot::Slot};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Set {
@@ -32,17 +29,17 @@ impl Set {
             value: HashTrieSetSync::new_sync(),
         }
     }
-    fn process<T, F: FnOnce(&Set) -> T>(
+    fn process<T, F: FnOnce(&Set) -> T, NF: FnOnce() -> T>(
         slot: &Slot,
         key: &SimpleType,
         f: F,
-        none_value: fn() -> T,
+        none_value: NF,
     ) -> Result<T> {
-        let entry = slot.entries.get(key);
+        let entry = slot.dict.get(key);
         match entry {
-            Some(e) => match e.value() {
-                Entry {
-                    data: DataType::AggregateType(AggregateType::Set(set)),
+            Some(e) => match e {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::Set(ref set)),
                     ..
                 } => Ok(f(set)),
                 _ => Err("the value stored at key is not a set.".to_owned()),
@@ -57,17 +54,16 @@ impl Set {
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = slot.entries.get_mut(key);
-        match entry {
-            Some(mut e) => match e.value_mut() {
-                Entry {
+        slot.dict.process_mut(key, |entry| match entry {
+            Some(e) => match e {
+                dict::Entry {
                     data: DataType::AggregateType(AggregateType::Set(set)),
                     ..
                 } => Ok(f(set)),
                 _ => Err("the value stored at key is not a set.".to_owned()),
             },
             None => Ok(none_value()),
-        }
+        })
     }
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut Set) -> Result<T>>(
@@ -75,14 +71,17 @@ impl Set {
         key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(key, || (Set::new_data_type(), None));
-        match entry.value_mut() {
-            Entry {
-                data: DataType::AggregateType(AggregateType::Set(set)),
-                ..
-            } => Ok(f(set)?),
-            _ => Err("the value stored at key is not a set.".to_owned()),
-        }
+        slot.get_or_insert(
+            key,
+            || (Set::new_data_type(), None),
+            |entry| match entry {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::Set(set)),
+                    ..
+                } => Ok(f(set)?),
+                _ => Err("the value stored at key is not a set.".to_owned()),
+            },
+        )
     }
 }
 impl Slot {
@@ -100,13 +99,15 @@ impl Slot {
     }
 
     pub fn smismember(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<Vec<bool>> {
+        let len = values.len();
+        let n = || vec![false; len];
         let set = Set::process(
             self,
             key,
-            |set| set.value.clone(),
-            HashTrieSetSync::new_sync,
+            |set| values.into_iter().map(|t| set.contains(&t)).collect(),
+            n,
         )?;
-        Ok(values.into_iter().map(|t| set.contains(&t)).collect())
+        Ok(set)
     }
 
     pub fn smembers(&self, key: &SimpleType) -> Result<HashTrieSetSync<SimpleType>> {

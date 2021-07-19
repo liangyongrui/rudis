@@ -9,10 +9,7 @@ use tracing::debug;
 
 use super::{AggregateType, DataType, SimpleType};
 use crate::{
-    db::{
-        result::Result,
-        slot::{Entry, Slot},
-    },
+    db::{dict, result::Result, slot::Slot},
     utils::{
         options::{GtLt, NxXx},
         BoundExt,
@@ -370,14 +367,17 @@ impl SortedSet {
         key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(key, || (SortedSet::new_data_type(), None));
-        match entry.value_mut() {
-            Entry {
-                data: DataType::AggregateType(AggregateType::SortedSet(sorted_set)),
-                ..
-            } => Ok(f(sorted_set)?),
-            _ => Err("the value stored at key is not a sorted set.".to_owned()),
-        }
+        slot.get_or_insert(
+            key,
+            || (SortedSet::new_data_type(), None),
+            |entry| match entry {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::SortedSet(sorted_set)),
+                    ..
+                } => Ok(f(sorted_set)?),
+                _ => Err("the value stored at key is not a sorted set.".to_owned()),
+            },
+        )
     }
     fn process<T, F: FnOnce(&SortedSet) -> T>(
         slot: &Slot,
@@ -385,11 +385,11 @@ impl SortedSet {
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = slot.entries.get(key);
+        let entry = slot.dict.get(key);
         match entry {
-            Some(e) => match e.value() {
-                Entry {
-                    data: DataType::AggregateType(AggregateType::SortedSet(sorted_set)),
+            Some(e) => match e {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::SortedSet(ref sorted_set)),
                     ..
                 } => Ok(f(sorted_set)),
                 _ => Err("the value stored at key is not a sorted set.".to_owned()),
@@ -404,17 +404,16 @@ impl SortedSet {
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = slot.entries.get_mut(key);
-        match entry {
-            Some(mut e) => match e.value_mut() {
-                Entry {
+        slot.dict.process_mut(key, |entry| match entry {
+            Some(e) => match e {
+                dict::Entry {
                     data: DataType::AggregateType(AggregateType::SortedSet(sorted_set)),
                     ..
                 } => Ok(f(sorted_set)),
                 _ => Err("the value stored at key is not a sorted set.".to_owned()),
             },
             None => Ok(none_value()),
-        }
+        })
     }
 }
 

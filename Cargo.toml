@@ -27,7 +27,6 @@ tracing-futures = { version = "0.2" }
 tracing-subscriber = "0.2"
 chrono = { version = "0.4", features = ["serde"] }
 automod = "1"
-dashmap = { version = "4", features = ["serde"] }
 rpds = { version = "0.9", features = ["serde"] }
 nom = "6"
 rcc_macros = { path = "./rcc_macros" }

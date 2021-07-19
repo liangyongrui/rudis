@@ -1,40 +1,22 @@
 mod expirations;
 
-use std::{
-    convert::TryInto,
-    sync::{atomic::AtomicU64, Arc},
-};
+use std::{convert::TryInto, sync::atomic::AtomicU64};
 
 use chrono::{DateTime, Utc};
-use dashmap::DashMap;
-use serde::{de::Visitor, ser::SerializeMap, Deserialize, Serialize};
-use tracing::debug;
+use serde::{de::Visitor, Deserialize, Serialize};
 
 use self::expirations::{Expiration, ExpirationEntry};
 use super::{
     data_type::{DataType, SimpleType},
+    dict::{self, Dict},
     result::Result,
 };
 use crate::utils::options::NxXx;
-/// Entry in the key-value store
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Entry {
-    /// Uniquely identifies this entry.
-    pub id: u64,
 
-    /// Stored data
-    pub data: DataType,
-
-    /// Instant at which the entry expires and should be removed from the
-    /// database.
-    pub expires_at: Option<DateTime<Utc>>,
-}
-
-#[derive(Debug)]
 pub struct Slot {
     /// The key-value data. We are not trying to do anything fancy so a
     /// `std::collections::HashMap` works fine.
-    pub entries: Arc<DashMap<SimpleType, Entry>>,
+    pub dict: dict::Dict,
 
     /// Tracks key TTLs.
     expirations: Expiration,
@@ -49,11 +31,12 @@ impl Serialize for Slot {
     where
         S: serde::Serializer,
     {
-        let mut state = serializer.serialize_map(Some(self.entries.len()))?;
-        for pair in self.entries.iter() {
-            state.serialize_entry(pair.key(), pair.value())?;
-        }
-        state.end()
+        // let mut state = serializer.serialize_map(Some(self.dict.len()))?;
+        // for pair in self.dict.iter() {
+        //     state.serialize_entry(pair.key(), pair.value())?;
+        // }
+        // state.end()
+        todo!()
     }
 }
 
@@ -70,20 +53,21 @@ impl<'de> Visitor<'de> for SlotVistor {
     where
         A: serde::de::MapAccess<'de>,
     {
-        let mut slot = Slot::new();
-        let mut big = 0;
-        let mut expirations = slot.expirations.data.lock().unwrap();
-        while let Some((key, value)) = map.next_entry::<SimpleType, Entry>()? {
-            big = big.max(value.id);
-            if let Some(ea) = value.expires_at {
-                expirations.expirations.insert((ea, value.id), key.clone());
-            }
-            slot.entries.insert(key, value);
-        }
-        drop(expirations);
-        slot.expirations.notify.notify_one();
-        slot.next_id = AtomicU64::new(big + 1);
-        Ok(slot)
+        todo!()
+        // let mut slot = Slot::new();
+        // let mut big = 0;
+        // let mut expirations = slot.expirations.data.lock().unwrap();
+        // while let Some((key, value)) = map.next_entry::<SimpleType, dict::Entry>()? {
+        //     big = big.max(value.id);
+        //     if let Some(ea) = value.expires_at {
+        //         expirations.expirations.insert((ea, value.id), key.clone());
+        //     }
+        //     slot.dict.insert(key, value);
+        // }
+        // drop(expirations);
+        // slot.expirations.notify.notify_one();
+        // slot.next_id = AtomicU64::new(big + 1);
+        // Ok(slot)
     }
 }
 impl<'de> Deserialize<'de> for Slot {
@@ -97,72 +81,63 @@ impl<'de> Deserialize<'de> for Slot {
 
 impl Slot {
     pub fn new() -> Self {
-        let entries = Arc::new(DashMap::new());
-        let expirations = Expiration::new(Arc::clone(&entries));
+        let dict = Dict::new();
+        let expirations = Expiration::new(dict.clone());
         Self {
-            entries,
+            dict,
             expirations,
             next_id: AtomicU64::new(0),
         }
     }
 
+    pub fn get_or_insert<F: FnOnce(&mut dict::Entry) -> T, T>(
+        &self,
+        key: SimpleType,
+        f: fn() -> (DataType, Option<DateTime<Utc>>),
+        then_do: F,
+    ) -> T {
+        // todo!("过期")
+        self.dict.get_or_insert(key, f, then_do)
+    }
     pub fn get_simple(&self, key: &SimpleType) -> Result<Option<SimpleType>> {
-        match self.entries.get(key) {
-            Some(s) => match s.value() {
-                Entry {
+        self.dict.process_mut(key, |entry| match entry {
+            Some(s) => match s {
+                dict::Entry {
                     data: DataType::SimpleType(st),
                     ..
                 } => Ok(Some(st.clone())),
                 _ => Err("类型错误".to_string()),
             },
             None => Ok(None),
-        }
-    }
-
-    pub fn get_or_insert_entry(
-        &self,
-        key: SimpleType,
-        f: fn() -> (DataType, Option<DateTime<Utc>>),
-    ) -> dashmap::mapref::one::RefMut<'_, SimpleType, Entry> {
-        match self.entries.entry(key) {
-            dashmap::mapref::entry::Entry::Occupied(e) => e.into_ref(),
-            dashmap::mapref::entry::Entry::Vacant(e) => {
-                let (data, expires_at) = f();
-                let v = Entry {
-                    id: self.next_id(),
-                    data,
-                    expires_at,
-                };
-                e.insert(v)
-            }
-        }
+        })
     }
 
     /// Get and increment the next insertion ID.
     pub fn next_id(&self) -> u64 {
-        self.next_id
-            .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+        //todo 删除
+        0
+        // self.next_id
+        //     .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
     }
 
     pub fn exists(&self, key: &SimpleType) -> bool {
-        self.entries.contains_key(key)
+        self.dict.exists(key)
     }
 
     pub fn get_expires_at(&self, key: &SimpleType) -> Option<DateTime<Utc>> {
-        debug!(
-            "key: {:?}, value: {:?}",
-            key,
-            self.entries.get(key).and_then(|t| t.expires_at)
-        );
-        self.entries.get(key).and_then(|t| t.expires_at)
+        self.dict.get_expires_at(key)
     }
 
     pub async fn set_expires_at(&self, key: &SimpleType, new_time: DateTime<Utc>) -> bool {
-        let (id, pre_time) = if let Some(t) = self.entries.get(key) {
-            (t.id, t.expires_at)
+        let (id, pre_time) = if let Some(t) = self.dict.process_mut(key, |entry| match entry {
+            Some(t) => Some((t.id, t.expires_at)),
+            None => None,
+        }) {
+            (t.0, t.1)
         } else {
             return false;
         };
+
         if let Some(pre_time) = pre_time {
             self.expirations.update(id, pre_time, new_time);
         } else {
@@ -198,9 +173,9 @@ impl Slot {
                 })
                 .await;
         }
-        let prev = self.entries.insert(
+        let prev = self.dict.insert(
             key,
-            Entry {
+            dict::Entry {
                 id,
                 data: value.into(),
                 expires_at,
@@ -210,7 +185,7 @@ impl Slot {
     }
 
     pub fn remove(&self, key: &SimpleType) -> Option<DataType> {
-        self.entries.remove(key).map(|prev| prev.1.data)
+        self.dict.remove(key).map(|prev| prev.data)
     }
 
     pub async fn set(

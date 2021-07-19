@@ -21,6 +21,7 @@ pub struct SimpleTypePair {
     pub value: SimpleType,
 }
 
+/// 这里的 Clone 都得是低成本的, 减少lock的时间
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DataType {
     SimpleType(SimpleType),

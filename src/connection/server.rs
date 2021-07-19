@@ -16,7 +16,6 @@ use crate::{config::CONFIG, db::Role, Command, Connection, Db, Shutdown};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.
-#[derive(Debug)]
 struct Listener {
     /// Shared database handle.
     ///
@@ -68,7 +67,6 @@ struct Listener {
 
 /// Per-connection handler. Reads requests from `connection` and applies the
 /// commands to `db`.
-#[derive(Debug)]
 struct Handler {
     /// Shared database handle.
     ///

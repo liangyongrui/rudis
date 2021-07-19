@@ -4,10 +4,7 @@ use rpds::HashTrieMapSync;
 use serde::{Deserialize, Serialize};
 
 use super::{AggregateType, DataType, SimpleType, SimpleTypePair};
-use crate::db::{
-    result::Result,
-    slot::{Entry, Slot},
-};
+use crate::db::{dict, result::Result, slot::Slot};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Hash {
     version: u64,
@@ -40,11 +37,11 @@ impl Hash {
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = slot.entries.get(key);
+        let entry = slot.dict.get(key);
         match entry {
-            Some(e) => match e.value() {
-                Entry {
-                    data: DataType::AggregateType(AggregateType::Hash(hash)),
+            Some(e) => match e {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::Hash(ref hash)),
                     ..
                 } => Ok(f(hash)),
                 _ => Err("the value stored at key is not a hash.".to_owned()),
@@ -53,23 +50,22 @@ impl Hash {
         }
     }
 
-    fn mut_process<T, F: FnOnce(&mut Hash) -> T>(
+    fn mut_process<T, F: Fn(&mut Hash) -> T>(
         slot: &Slot,
         key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        let entry = slot.entries.get_mut(key);
-        match entry {
-            Some(mut e) => match e.value_mut() {
-                Entry {
+        slot.dict.process_mut(key, |entry| match entry {
+            Some(e) => match e {
+                dict::Entry {
                     data: DataType::AggregateType(AggregateType::Hash(hash)),
                     ..
                 } => Ok(f(hash)),
                 _ => Err("the value stored at key is not a hash.".to_owned()),
             },
             None => Ok(none_value()),
-        }
+        })
     }
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut Hash) -> Result<T>>(
@@ -77,14 +73,17 @@ impl Hash {
         key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(key, || (Hash::new_data_type(), None));
-        match entry.value_mut() {
-            Entry {
-                data: DataType::AggregateType(AggregateType::Hash(hash)),
-                ..
-            } => Ok(f(hash)?),
-            _ => Err("the value stored at key is not a hash.".to_owned()),
-        }
+        slot.get_or_insert(
+            key,
+            || (Hash::new_data_type(), None),
+            |entry| match entry {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::Hash(hash)),
+                    ..
+                } => Ok(f(hash)?),
+                _ => Err("the value stored at key is not a hash.".to_owned()),
+            },
+        )
     }
 }
 impl Slot {
@@ -151,8 +150,8 @@ impl Slot {
             |hash| {
                 let old_len = hash.size();
                 let mut new = hash.value.clone();
-                for field in fields {
-                    new.remove_mut(&field);
+                for field in &fields {
+                    new.remove_mut(field);
                 }
                 hash.version += 1;
                 hash.value = new;

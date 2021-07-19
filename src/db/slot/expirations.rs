@@ -4,7 +4,6 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
-use dashmap::DashMap;
 use tokio::{
     sync::{
         mpsc::{self, Receiver, Sender},
@@ -14,8 +13,7 @@ use tokio::{
 };
 use tracing::debug;
 
-use super::Entry;
-use crate::db::data_type::SimpleType;
+use crate::db::{data_type::SimpleType, dict::Dict};
 
 pub struct ExpirationEntry {
     pub id: u64,
@@ -46,7 +44,7 @@ impl Data {
 }
 
 impl Expiration {
-    pub fn new(entry: Arc<DashMap<SimpleType, Entry>>) -> Self {
+    pub fn new(entry: Dict) -> Self {
         let notify = Arc::new(Notify::new());
         let data = Arc::new(Mutex::new(Data::new()));
         let (sender, receiver) = mpsc::channel(100);
@@ -125,11 +123,7 @@ impl Expiration {
         }
         res
     }
-    async fn purge_expired_tasks(
-        notify: Arc<Notify>,
-        data: Arc<Mutex<Data>>,
-        entry: Arc<DashMap<SimpleType, Entry>>,
-    ) {
+    async fn purge_expired_tasks(notify: Arc<Notify>, data: Arc<Mutex<Data>>, entry: Dict) {
         while !Expiration::is_shutdown(&data) {
             if let Some(when) = Expiration::purge_expired_keys(&data, &entry) {
                 tokio::select! {
@@ -144,10 +138,7 @@ impl Expiration {
         }
     }
 
-    fn purge_expired_keys(
-        data: &Mutex<Data>,
-        entry: &DashMap<SimpleType, Entry>,
-    ) -> Option<DateTime<Utc>> {
+    fn purge_expired_keys(data: &Mutex<Data>, entry: &Dict) -> Option<DateTime<Utc>> {
         let now = Utc::now();
         let mut data = data.lock().unwrap();
         // 因为只需要处理头部元素，所有这里每次产生一个新的迭代器是安全的, 等first_entry stable 可以替换
@@ -155,12 +146,11 @@ impl Expiration {
             if when > now {
                 return Some(when);
             }
-            let mut need_remove = false;
-            if let Some(e) = entry.get(key) {
-                if e.id == id {
-                    need_remove = true;
-                }
-            }
+            let need_remove = entry.process_mut(key, |e| match e {
+                Some(e) => e.id == id,
+                None => false,
+            });
+
             if need_remove {
                 entry.remove(key);
                 debug!("purge_expired_keys: {:?}", key);

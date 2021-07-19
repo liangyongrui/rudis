@@ -1,8 +1,5 @@
 use super::{DataType, SimpleType};
-use crate::db::{
-    result::Result,
-    slot::{Entry, Slot},
-};
+use crate::db::{dict, result::Result, slot::Slot};
 
 impl From<i64> for DataType {
     fn from(n: i64) -> Self {
@@ -18,15 +15,15 @@ impl From<i64> for SimpleType {
 
 impl Slot {
     pub fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
-        match self.entries.entry(key) {
-            dashmap::mapref::entry::Entry::Occupied(mut e) => {
+        self.dict.entry(key, |entry| match entry {
+            std::collections::hash_map::Entry::Occupied(mut e) => {
                 let old = e.get();
                 let (after_value, new_entry) = match &old.data {
                     DataType::SimpleType(SimpleType::SimpleString(s)) => {
                         let after_value = s.parse::<i64>().map_err(|e| e.to_string())? + value;
                         (
                             after_value,
-                            Entry {
+                            dict::Entry {
                                 id: old.id,
                                 expires_at: old.expires_at,
                                 data: after_value.into(),
@@ -35,7 +32,7 @@ impl Slot {
                     }
                     DataType::SimpleType(SimpleType::Integer(i)) => (
                         value + i,
-                        Entry {
+                        dict::Entry {
                             id: old.id,
                             expires_at: old.expires_at,
                             data: (value + i).into(),
@@ -46,9 +43,9 @@ impl Slot {
                 e.insert(new_entry);
                 Ok(after_value)
             }
-            dashmap::mapref::entry::Entry::Vacant(e) => {
+            std::collections::hash_map::Entry::Vacant(e) => {
                 let id = self.next_id();
-                let v = Entry {
+                let v = dict::Entry {
                     id,
                     data: value.into(),
                     expires_at: None,
@@ -56,7 +53,7 @@ impl Slot {
                 e.insert(v);
                 Ok(value)
             }
-        }
+        })
     }
 }
 

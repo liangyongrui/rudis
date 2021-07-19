@@ -1,5 +1,6 @@
 mod aof;
 pub mod data_type;
+mod dict;
 mod result;
 mod slot;
 // Hard drive snapshot
@@ -41,7 +42,6 @@ pub enum Role {
     Replica(Option<SocketAddr>),
 }
 
-#[derive(Debug)]
 pub struct Db {
     pub aof_sender: Option<mpsc::Sender<WriteCmd>>,
     role: Mutex<Role>,

@@ -7,10 +7,7 @@ use std::{
 use serde::{Deserialize, Serialize};
 
 use super::{AggregateType, DataType, SimpleType};
-use crate::db::{
-    result::Result,
-    slot::{Entry, Slot},
-};
+use crate::db::{dict, result::Result, slot::Slot};
 
 /// redis list 中元素顺序 和  VecDeque 的内存顺序关系
 /// L.....R
@@ -58,10 +55,10 @@ impl List {
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        match slot.entries.get(key) {
-            Some(v) => match v.value() {
-                Entry {
-                    data: DataType::AggregateType(AggregateType::List(list)),
+        match slot.dict.get(key) {
+            Some(v) => match v {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::List(ref list)),
                     ..
                 } => Ok(f(list)),
                 _ => Err("the value stored at key is not a list.".to_owned()),
@@ -70,22 +67,22 @@ impl List {
         }
     }
 
-    fn mut_process<T, F: FnOnce(&mut List) -> T>(
+    fn process_mut<T, F: FnOnce(&mut List) -> T>(
         slot: &Slot,
         key: &SimpleType,
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        match slot.entries.get_mut(key) {
-            Some(mut v) => match v.value_mut() {
-                Entry {
+        slot.dict.process_mut(key, |entry| match entry {
+            Some(v) => match v {
+                dict::Entry {
                     data: DataType::AggregateType(AggregateType::List(list)),
                     ..
                 } => Ok(f(list)),
                 _ => Err("the value stored at key is not a list.".to_owned()),
             },
             None => Ok(none_value()),
-        }
+        })
     }
 
     fn mut_process_exists_or_new<T, F: FnOnce(&mut List) -> T>(
@@ -93,25 +90,28 @@ impl List {
         key: SimpleType,
         f: F,
     ) -> Result<T> {
-        let mut entry = slot.get_or_insert_entry(key, || {
-            (
-                DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
-                None,
-            )
-        });
-        match entry.value_mut() {
-            Entry {
-                data: DataType::AggregateType(AggregateType::List(list)),
-                ..
-            } => Ok(f(list)),
-            _ => Err("the value stored at key is not a list.".to_owned()),
-        }
+        slot.get_or_insert(
+            key,
+            || {
+                (
+                    DataType::AggregateType(AggregateType::List(List(VecDeque::new()))),
+                    None,
+                )
+            },
+            |entry| match entry {
+                dict::Entry {
+                    data: DataType::AggregateType(AggregateType::List(list)),
+                    ..
+                } => Ok(f(list)),
+                _ => Err("the value stored at key is not a list.".to_owned()),
+            },
+        )
     }
 }
 
 impl Slot {
     pub fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        List::mut_process(
+        List::process_mut(
             self,
             key,
             |list| {
@@ -125,7 +125,7 @@ impl Slot {
     }
 
     pub fn rpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        List::mut_process(
+        List::process_mut(
             self,
             key,
             |list| {
@@ -157,7 +157,7 @@ impl Slot {
     }
 
     pub fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
-        List::mut_process(
+        List::process_mut(
             self,
             key,
             |list| {
@@ -176,7 +176,7 @@ impl Slot {
     }
 
     pub fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
-        List::mut_process(
+        List::process_mut(
             self,
             key,
             |list| {
