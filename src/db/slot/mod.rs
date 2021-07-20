@@ -1,7 +1,7 @@
 pub mod dict;
 mod expirations;
 
-use std::{convert::TryInto, sync::atomic::AtomicU64};
+use std::sync::atomic::AtomicU64;
 
 use chrono::{DateTime, Utc};
 use serde::{de::Visitor, Deserialize, Serialize};
@@ -34,12 +34,10 @@ impl Serialize for Slot {
     where
         S: serde::Serializer,
     {
-        // let mut state = serializer.serialize_map(Some(self.dict.len()))?;
-        // for pair in self.dict.iter() {
-        //     state.serialize_entry(pair.key(), pair.value())?;
-        // }
-        // state.end()
-        todo!()
+        self.dict.process_all(|dict| {
+            let entries = &dict.entries;
+            serializer.collect_map(entries)
+        })
     }
 }
 
@@ -56,21 +54,23 @@ impl<'de> Visitor<'de> for SlotVistor {
     where
         A: serde::de::MapAccess<'de>,
     {
-        todo!()
-        // let mut slot = Slot::new();
-        // let mut big = 0;
-        // let mut expirations = slot.expirations.data.lock().unwrap();
-        // while let Some((key, value)) = map.next_entry::<SimpleType, dict::Entry>()? {
-        //     big = big.max(value.id);
-        //     if let Some(ea) = value.expires_at {
-        //         expirations.expirations.insert((ea, value.id), key.clone());
-        //     }
-        //     slot.dict.insert(key, value);
-        // }
-        // drop(expirations);
-        // slot.expirations.notify.notify_one();
-        // slot.next_id = AtomicU64::new(big + 1);
-        // Ok(slot)
+        let mut slot = Slot::new();
+        let mut big = 0;
+        slot.dict.process_all(|dict| {
+            let mut expirations = slot.expirations.data.lock().unwrap();
+            let entries = &mut dict.entries;
+            while let Some((key, value)) = map.next_entry::<SimpleType, dict::Entry>()? {
+                big = big.max(value.id);
+                if let Some(ea) = value.expires_at {
+                    expirations.expirations.insert((ea, value.id), key.clone());
+                }
+                entries.insert(key, value);
+            }
+            Ok(())
+        })?;
+        slot.expirations.notify.notify_one();
+        slot.next_id = AtomicU64::new(big + 1);
+        Ok(slot)
     }
 }
 impl<'de> Deserialize<'de> for Slot {
@@ -86,10 +86,11 @@ impl Slot {
     pub fn new() -> Self {
         let dict = Dict::new();
         let expirations = Expiration::new(dict.clone());
+        let next_id = AtomicU64::new(0);
         Self {
             dict,
             expirations,
-            next_id: AtomicU64::new(0),
+            next_id,
         }
     }
 
@@ -99,7 +100,18 @@ impl Slot {
         f: fn() -> (DataType, Option<DateTime<Utc>>),
         then_do: F,
     ) -> T {
-        match self.dict.get_or_insert(key, f, then_do) {
+        match self.dict.get_or_insert(
+            key,
+            || {
+                let (data, expires_at) = f();
+                dict::Entry {
+                    data,
+                    expires_at,
+                    id: self.next_id(),
+                }
+            },
+            then_do,
+        ) {
             (res, None) => res,
             (res, Some(e)) => {
                 let _ = self.expirations.sender.send(e).await;
@@ -122,10 +134,8 @@ impl Slot {
 
     /// Get and increment the next insertion ID.
     pub fn next_id(&self) -> u64 {
-        //todo 删除
-        0
-        // self.next_id
-        //     .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
+        self.next_id
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
     }
 
     pub fn exists(&self, key: &SimpleType) -> bool {
@@ -136,66 +146,33 @@ impl Slot {
         self.dict.get_expires_at(key)
     }
 
-    pub async fn set_expires_at(&self, key: &SimpleType, new_time: DateTime<Utc>) -> bool {
-        let (id, pre_time) = if let Some(t) = self.dict.process_mut(key, |entry| match entry {
-            Some(t) => Some((t.id, t.expires_at)),
-            None => None,
-        }) {
-            (t.0, t.1)
+    pub async fn set_expires_at(&self, key: &SimpleType, new_time: Option<DateTime<Utc>>) -> bool {
+        if let Some(id) = self
+            .dict
+            .update_expires_at(key, new_time, || self.next_id())
+        {
+            if let Some(expires_at) = new_time {
+                let _ = self
+                    .expirations
+                    .sender
+                    .send(ExpirationEntry {
+                        id,
+                        key: key.clone(),
+                        expires_at,
+                    })
+                    .await;
+            }
+            true
         } else {
-            return false;
-        };
-
-        if let Some(pre_time) = pre_time {
-            self.expirations.update(id, pre_time, new_time);
-        } else {
-            let _ = self
-                .expirations
-                .sender
-                .send(ExpirationEntry {
-                    id,
-                    key: key.clone(),
-                    expires_at: new_time,
-                })
-                .await;
+            false
         }
-        true
-    }
-
-    /// 调用之前需要自己保证原始值的value 为 simpleType 或 不存在
-    async fn update_simple(
-        &self,
-        key: SimpleType,
-        value: SimpleType,
-        expires_at: Option<DateTime<Utc>>,
-    ) -> Option<SimpleType> {
-        let id = self.next_id();
-        if let Some(expires_at) = expires_at {
-            let _ = self
-                .expirations
-                .sender
-                .send(ExpirationEntry {
-                    id,
-                    key: key.clone(),
-                    expires_at,
-                })
-                .await;
-        }
-        let prev = self.dict.insert(
-            key,
-            dict::Entry {
-                id,
-                data: value.into(),
-                expires_at,
-            },
-        );
-        prev.map(|t| t.data.try_into().unwrap())
     }
 
     pub fn remove(&self, key: &SimpleType) -> Option<DataType> {
         self.dict.remove(key).map(|prev| prev.data)
     }
 
+    /// TODO 优化一下，上了两次锁
     pub async fn set(
         &self,
         key: SimpleType,
@@ -216,7 +193,25 @@ impl Slot {
         if keepttl {
             expires_at = self.get_expires_at(&key);
         }
-        Ok(self.update_simple(key, value, expires_at).await)
+        let id = self.next_id();
+        let entry = dict::Entry {
+            id,
+            expires_at,
+            data: value.into(),
+        };
+        let _ = self.dict.insert_or_update(key.clone(), entry);
+        if let Some(expires_at) = expires_at {
+            let _ = self
+                .expirations
+                .sender
+                .send(ExpirationEntry {
+                    id,
+                    key,
+                    expires_at,
+                })
+                .await;
+        }
+        Ok(old_value)
     }
 }
 
@@ -362,7 +357,7 @@ mod test {
             Some(SimpleType::SimpleString("456".to_owned()))
         );
         let ea = Utc::now() + chrono::Duration::seconds(1);
-        assert!(slot.set_expires_at(&key, ea).await);
+        assert!(slot.set_expires_at(&key, Some(ea)).await);
         sleep(Duration::from_secs(2)).await;
         assert_eq!(slot.get_simple(&key).unwrap(), None)
     }

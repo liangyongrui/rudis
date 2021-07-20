@@ -1,5 +1,6 @@
 use std::{
-    collections::{hash_map, HashMap},
+    collections::HashMap,
+    ops::DerefMut,
     sync::{Arc, Mutex},
 };
 
@@ -36,6 +37,7 @@ impl Dict {
             inner: Arc::new(Mutex::new(DictInner::new())),
         }
     }
+
     pub fn get_expires_at(&self, key: &SimpleType) -> Option<DateTime<Utc>> {
         self.inner
             .lock()
@@ -47,6 +49,10 @@ impl Dict {
             .filter(|x| x > &Utc::now())
     }
 
+    pub fn process_all<F: FnOnce(&mut DictInner) -> T, T>(&self, f: F) -> T {
+        let mut mutex_guard = self.inner.lock().unwrap();
+        f(mutex_guard.deref_mut())
+    }
     pub fn process_mut<F: FnOnce(Option<&mut Entry>) -> T, T>(&self, key: &SimpleType, f: F) -> T {
         let mut mutex_guard = self.inner.lock().unwrap();
         let res = mutex_guard
@@ -59,12 +65,25 @@ impl Dict {
         f(res)
     }
 
-    pub fn entry<F: FnOnce(hash_map::Entry<SimpleType, Entry>) -> T, T>(
+    /// new id
+    pub fn update_expires_at<F: FnOnce() -> u64>(
         &self,
-        key: SimpleType,
-        f: F,
-    ) -> T {
-        f(self.inner.lock().unwrap().entries.entry(key))
+        key: &SimpleType,
+        expires_at: Option<DateTime<Utc>>,
+        next_id: F,
+    ) -> Option<u64> {
+        let mut gurad = self.inner.lock().unwrap();
+        if let Some(v) = gurad.entries.get_mut(&key) {
+            let id = next_id();
+            *v = Entry {
+                id,
+                data: v.data.clone(),
+                expires_at,
+            };
+            Some(id)
+        } else {
+            None
+        }
     }
 
     pub fn get(&self, key: &SimpleType) -> Option<Entry> {
@@ -93,61 +112,47 @@ impl Dict {
             .is_some()
     }
 
-    pub fn insert(&self, key: SimpleType, value: Entry) -> Option<Entry> {
-        self.inner.lock().unwrap().entries.insert(key, value)
+    /// return old_value
+    pub fn insert_or_update(&self, key: SimpleType, entry: Entry) -> Option<Entry> {
+        let mut mutex_guard = self.inner.lock().unwrap();
+        mutex_guard.entries.insert(key, entry)
     }
 
     pub fn remove(&self, key: &SimpleType) -> Option<Entry> {
         self.inner.lock().unwrap().entries.remove(key)
     }
 
-    /// return (result, 需要更新的id和过期时间)
-    pub fn get_or_insert<F: FnOnce(&mut Entry) -> T, T>(
+    /// return (result, 是否新插入)
+    pub fn get_or_insert<F: FnOnce(&mut Entry) -> T, T, F2: FnOnce() -> Entry>(
         &self,
         key: SimpleType,
-        f: fn() -> (DataType, Option<DateTime<Utc>>),
+        f: F2,
         then_do: F,
     ) -> (T, Option<ExpirationEntry>) {
         let mut gurad = self.inner.lock().unwrap();
-        if let Some(v) = gurad.entries.get_mut(&key) {
-            return (then_do(v), None);
+        match gurad.entries.entry(key.clone()) {
+            std::collections::hash_map::Entry::Occupied(mut e) => (then_do(e.get_mut()), None),
+            std::collections::hash_map::Entry::Vacant(e) => {
+                let value = f();
+                let res = value.expires_at.map(|expires_at| ExpirationEntry {
+                    id: value.id,
+                    key,
+                    expires_at,
+                });
+                (then_do(e.insert(value)), res)
+            }
         }
-        let id = gurad.next_id();
-        let (data, expires_at) = f();
-        let mut v = Entry {
-            id,
-            data,
-            expires_at,
-        };
-        let res = then_do(&mut v);
-        gurad.entries.insert(key.clone(), v);
-        drop(gurad);
-        (
-            res,
-            expires_at.map(|expires_at| ExpirationEntry {
-                id,
-                key,
-                expires_at,
-            }),
-        )
     }
 }
 
 pub struct DictInner {
-    entries: HashMap<SimpleType, Entry>,
-    next_id: u64,
+    pub entries: HashMap<SimpleType, Entry>,
 }
 
 impl DictInner {
     fn new() -> Self {
         Self {
             entries: HashMap::new(),
-            next_id: 0,
         }
-    }
-
-    fn next_id(&mut self) -> u64 {
-        self.next_id += 1;
-        self.next_id
     }
 }

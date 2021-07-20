@@ -198,7 +198,9 @@ impl Db {
     }
 
     pub async fn expires_at(&self, key: &SimpleType, expires_at: DateTime<Utc>) -> bool {
-        self.get_slot(&key).set_expires_at(key, expires_at).await
+        self.get_slot(&key)
+            .set_expires_at(key, Some(expires_at))
+            .await
     }
     pub fn exists(&self, keys: Vec<SimpleType>) -> usize {
         keys.into_iter()

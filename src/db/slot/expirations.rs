@@ -96,33 +96,6 @@ impl Expiration {
         data.lock().unwrap().shutdown = true;
     }
 
-    /// fixme: 这个操作是同步的，不过在对底层 对性能影响不大, 未来 lock 改为异步锁，试试效率
-    pub fn update(&self, id: u64, pre_time: DateTime<Utc>, new_time: DateTime<Utc>) -> bool {
-        let mut data = self.data.lock().unwrap();
-        data.expirations
-            .keys()
-            .next()
-            .map(|expiration| expiration.0 > new_time)
-            .unwrap_or(true);
-        let key = data.expirations.get(&(pre_time, id)).cloned();
-        let (res, need_notify) = if let Some(key) = key {
-            let need_notify = data
-                .expirations
-                .keys()
-                .next()
-                .map(|expiration| expiration.0 > new_time)
-                .unwrap_or(true);
-            data.expirations.insert((new_time, id), key);
-            (true, need_notify)
-        } else {
-            (false, false)
-        };
-        drop(data);
-        if need_notify {
-            self.notify.notify_one();
-        }
-        res
-    }
     async fn purge_expired_tasks(notify: Arc<Notify>, data: Arc<Mutex<Data>>, entry: Dict) {
         while !Expiration::is_shutdown(&data) {
             if let Some(when) = Expiration::purge_expired_keys(&data, &entry) {

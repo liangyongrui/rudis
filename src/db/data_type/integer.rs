@@ -15,45 +15,42 @@ impl From<i64> for SimpleType {
 
 impl Slot {
     pub fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
-        self.dict.entry(key, |entry| match entry {
-            std::collections::hash_map::Entry::Occupied(mut e) => {
-                let old = e.get();
-                let (after_value, new_entry) = match &old.data {
-                    DataType::SimpleType(SimpleType::SimpleString(s)) => {
-                        let after_value = s.parse::<i64>().map_err(|e| e.to_string())? + value;
-                        (
-                            after_value,
-                            dict::Entry {
-                                id: old.id,
-                                expires_at: old.expires_at,
-                                data: after_value.into(),
-                            },
-                        )
-                    }
-                    DataType::SimpleType(SimpleType::Integer(i)) => (
-                        value + i,
-                        dict::Entry {
-                            id: old.id,
-                            expires_at: old.expires_at,
-                            data: (value + i).into(),
-                        },
-                    ),
-                    _ => return Err("type not support".to_owned()),
-                };
-                e.insert(new_entry);
-                Ok(after_value)
-            }
-            std::collections::hash_map::Entry::Vacant(e) => {
-                let id = self.next_id();
-                let v = dict::Entry {
-                    id,
-                    data: value.into(),
+        self.dict
+            .get_or_insert(
+                key,
+                || dict::Entry {
+                    id: self.next_id(),
                     expires_at: None,
-                };
-                e.insert(v);
-                Ok(value)
-            }
-        })
+                    data: 0.into(),
+                },
+                |entry| {
+                    let (after_value, new_entry) = match &entry.data {
+                        DataType::SimpleType(SimpleType::SimpleString(s)) => {
+                            let after_value = s.parse::<i64>().map_err(|e| e.to_string())? + value;
+                            (
+                                after_value,
+                                dict::Entry {
+                                    id: entry.id,
+                                    expires_at: entry.expires_at,
+                                    data: after_value.into(),
+                                },
+                            )
+                        }
+                        DataType::SimpleType(SimpleType::Integer(i)) => (
+                            value + i,
+                            dict::Entry {
+                                id: entry.id,
+                                expires_at: entry.expires_at,
+                                data: (value + i).into(),
+                            },
+                        ),
+                        _ => return Err("type not support".to_owned()),
+                    };
+                    *entry = new_entry;
+                    Ok(after_value)
+                },
+            )
+            .0
     }
 }
 
