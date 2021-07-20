@@ -1,6 +1,5 @@
 mod aof;
 pub mod data_type;
-mod dict;
 mod result;
 mod slot;
 // Hard drive snapshot
@@ -18,6 +17,7 @@ use std::{
 use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
 use rpds::HashTrieSetSync;
+pub use slot::dict;
 use tokio::sync::mpsc;
 
 pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
@@ -103,7 +103,7 @@ impl Db {
     ) -> Result<Vec<SortedSetNode>> {
         self.get_slot(&key).zrange(key, range, rev, limit)
     }
-    pub fn zadd(
+    pub async fn zadd(
         &self,
         key: SimpleType,
         values: Vec<SortedSetNode>,
@@ -114,6 +114,7 @@ impl Db {
     ) -> Result<usize> {
         self.get_slot(&key)
             .zadd(key, values, nx_xx, gt_lt, ch, incr)
+            .await
     }
     pub fn smembers(&self, key: &SimpleType) -> Result<HashTrieSetSync<SimpleType>> {
         self.get_slot(&key).smembers(key)
@@ -129,11 +130,11 @@ impl Db {
     pub fn smismember(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<Vec<bool>> {
         self.get_slot(&key).smismember(key, values)
     }
-    pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).sadd(key, values)
+    pub async fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+        self.get_slot(&key).sadd(key, values).await
     }
-    pub fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
-        self.get_slot(&key).hincrby(key, field, value)
+    pub async fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
+        self.get_slot(&key).hincrby(key, field, value).await
     }
     pub fn hexists(&self, key: &SimpleType, field: SimpleType) -> Result<usize> {
         self.get_slot(&key).hexists(key, field)
@@ -141,8 +142,13 @@ impl Db {
     pub fn hdel(&self, key: &SimpleType, fields: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(&key).hdel(key, fields)
     }
-    pub fn hsetnx(&self, key: SimpleType, field: SimpleType, value: SimpleType) -> Result<usize> {
-        self.get_slot(&key).hsetnx(key, field, value)
+    pub async fn hsetnx(
+        &self,
+        key: SimpleType,
+        field: SimpleType,
+        value: SimpleType,
+    ) -> Result<usize> {
+        self.get_slot(&key).hsetnx(key, field, value).await
     }
     pub fn hget(&self, key: &SimpleType, field: SimpleType) -> Result<Option<SimpleType>> {
         self.get_slot(&key)
@@ -156,8 +162,8 @@ impl Db {
     ) -> Result<Vec<Option<SimpleType>>> {
         self.get_slot(&key).hmget(key, fields)
     }
-    pub fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
-        self.get_slot(&key).hset(key, pairs)
+    pub async fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
+        self.get_slot(&key).hset(key, pairs).await
     }
     pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<SimpleTypePair>> {
         self.get_slot(key).hgetall(key)
@@ -165,11 +171,11 @@ impl Db {
     pub fn lrange(&self, key: &SimpleType, start: i64, stop: i64) -> Result<Vec<SimpleType>> {
         self.get_slot(key).lrange(key, start, stop)
     }
-    pub fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).lpush(key, values)
+    pub async fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+        self.get_slot(&key).lpush(key, values).await
     }
-    pub fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).rpush(key, values)
+    pub async fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+        self.get_slot(&key).rpush(key, values).await
     }
     pub fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         self.get_slot(key).lpushx(key, values)

@@ -13,7 +13,7 @@ pub struct Hincrby {
 impl Hincrby {
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let response = match db.hincrby(self.key, self.field, self.value) {
+        let response = match db.hincrby(self.key, self.field, self.value).await {
             Ok(i) => Frame::Integer(i),
             Err(e) => Frame::Error(e),
         };

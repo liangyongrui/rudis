@@ -68,7 +68,7 @@ impl Hash {
         })
     }
 
-    fn mut_process_exists_or_new<T, F: FnOnce(&mut Hash) -> Result<T>>(
+    async fn mut_process_exists_or_new<T, F: FnOnce(&mut Hash) -> Result<T>>(
         slot: &Slot,
         key: SimpleType,
         f: F,
@@ -84,10 +84,11 @@ impl Hash {
                 _ => Err("the value stored at key is not a hash.".to_owned()),
             },
         )
+        .await
     }
 }
 impl Slot {
-    pub fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
+    pub async fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, key, |hash| {
             let len = pairs.len();
             let mut new = hash.value.clone();
@@ -98,9 +99,15 @@ impl Slot {
             hash.value = new;
             Ok(len)
         })
+        .await
     }
 
-    pub fn hsetnx(&self, key: SimpleType, field: SimpleType, value: SimpleType) -> Result<usize> {
+    pub async fn hsetnx(
+        &self,
+        key: SimpleType,
+        field: SimpleType,
+        value: SimpleType,
+    ) -> Result<usize> {
         Hash::mut_process_exists_or_new(self, key, |hash| {
             if hash.contains_key(&field) {
                 Ok(0)
@@ -110,6 +117,7 @@ impl Slot {
                 Ok(1)
             }
         })
+        .await
     }
 
     pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<SimpleTypePair>> {
@@ -176,7 +184,7 @@ impl Slot {
         )
     }
 
-    pub fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
+    pub async fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
         Hash::mut_process_exists_or_new(self, key, |hash| {
             let old_value = match hash.get(&field) {
                 Some(SimpleType::SimpleString(s)) => s.parse::<i64>().map_err(|e| e.to_string())?,
@@ -189,6 +197,7 @@ impl Slot {
             hash.value = hash.insert(field, SimpleType::Integer(nv));
             Ok(nv)
         })
+        .await
     }
 }
 
@@ -218,13 +227,20 @@ mod test {
                     },
                 ],
             )
+            .await
         );
         assert_eq!(
             slot.hmget(&key, vec!["abc".into(), "aaa".into(), "def".into()]),
             Ok(vec![Some("456".into()), None, Some(123.into())])
         );
-        assert_eq!(slot.hsetnx(key.clone(), "abc".into(), "111".into()), Ok(0));
-        assert_eq!(slot.hsetnx(key.clone(), "aaa".into(), "111".into()), Ok(1));
+        assert_eq!(
+            slot.hsetnx(key.clone(), "abc".into(), "111".into()).await,
+            Ok(0)
+        );
+        assert_eq!(
+            slot.hsetnx(key.clone(), "aaa".into(), "111".into()).await,
+            Ok(1)
+        );
         assert_eq!(
             slot.hmget(&key, vec!["abc".into(), "aaa".into()]),
             Ok(vec![Some("456".into()), Some("111".into())])
@@ -267,8 +283,11 @@ mod test {
         );
         assert_eq!(slot.hexists(&key, "abc".into()), Ok(0));
         assert_eq!(slot.hexists(&key, "def".into()), Ok(1));
-        assert_eq!(slot.hincrby(key.clone(), "def".into(), 123), Ok(123 + 123));
-        assert_eq!(slot.hincrby(key.clone(), "xxx".into(), 123), Ok(123));
+        assert_eq!(
+            slot.hincrby(key.clone(), "def".into(), 123).await,
+            Ok(123 + 123)
+        );
+        assert_eq!(slot.hincrby(key.clone(), "xxx".into(), 123).await, Ok(123));
         slot.hset(
             key.clone(),
             vec![SimpleTypePair {
@@ -276,7 +295,8 @@ mod test {
                 value: "456".into(),
             }],
         )
+        .await
         .unwrap();
-        assert_eq!(slot.hincrby(key, "abc".into(), 123), Ok(456 + 123));
+        assert_eq!(slot.hincrby(key, "abc".into(), 123).await, Ok(456 + 123));
     }
 }

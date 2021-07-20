@@ -362,7 +362,7 @@ impl SortedSet {
         }
     }
 
-    fn mut_process_exists_or_new<T, F: FnOnce(&mut SortedSet) -> Result<T>>(
+    async fn mut_process_exists_or_new<T, F: FnOnce(&mut SortedSet) -> Result<T>>(
         slot: &Slot,
         key: SimpleType,
         f: F,
@@ -378,6 +378,7 @@ impl SortedSet {
                 _ => Err("the value stored at key is not a sorted set.".to_owned()),
             },
         )
+        .await
     }
     fn process<T, F: FnOnce(&SortedSet) -> T>(
         slot: &Slot,
@@ -418,7 +419,7 @@ impl SortedSet {
 }
 
 impl Slot {
-    pub fn zadd(
+    pub async fn zadd(
         &self,
         key: SimpleType,
         nodes: Vec<Node>,
@@ -431,6 +432,7 @@ impl Slot {
         SortedSet::mut_process_exists_or_new(self, key, |set| {
             Ok(set.add(nodes, nx_xx, gt_lt, ch, incr))
         })
+        .await
     }
 
     pub fn zrem(&self, key: &SimpleType, members: Vec<SimpleType>) -> Result<usize> {
@@ -754,7 +756,8 @@ mod test {
             Node::new_str("a", 1.0),
         ];
         assert_eq!(
-            slot.zadd("key".into(), nodes, NxXx::None, GtLt::None, false, false),
+            slot.zadd("key".into(), nodes, NxXx::None, GtLt::None, false, false)
+                .await,
             Ok(15)
         );
     }

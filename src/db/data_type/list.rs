@@ -85,7 +85,7 @@ impl List {
         })
     }
 
-    fn mut_process_exists_or_new<T, F: FnOnce(&mut List) -> T>(
+    async fn mut_process_exists_or_new<T, F: FnOnce(&mut List) -> T>(
         slot: &Slot,
         key: SimpleType,
         f: F,
@@ -106,6 +106,7 @@ impl List {
                 _ => Err("the value stored at key is not a list.".to_owned()),
             },
         )
+        .await
     }
 }
 
@@ -138,22 +139,24 @@ impl Slot {
         )
     }
 
-    pub fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub async fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_front(v)
             }
             list.len()
         })
+        .await
     }
 
-    pub fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub async fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         List::mut_process_exists_or_new(self, key, |list| {
             for v in values {
                 list.push_back(v)
             }
             list.len()
         })
+        .await
     }
 
     pub fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
@@ -264,7 +267,8 @@ mod test {
                     8.into(),
                     9.into()
                 ]
-            ),
+            )
+            .await,
             Ok(7)
         );
         assert_eq!(
@@ -276,7 +280,8 @@ mod test {
             Ok(Some(vec!["123".into(), "4".into()]))
         );
         assert_eq!(
-            slot.rpush("key".into(), vec![7.into(), 8.into(), 9.into()]),
+            slot.rpush("key".into(), vec![7.into(), 8.into(), 9.into()])
+                .await,
             Ok(6)
         );
         assert_eq!(

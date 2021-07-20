@@ -97,9 +97,12 @@ impl Zadd {
 
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let response = match db.zadd(
-            self.key, self.nodes, self.nx_xx, self.gt_lt, self.ch, self.incr,
-        ) {
+        let response = match db
+            .zadd(
+                self.key, self.nodes, self.nx_xx, self.gt_lt, self.ch, self.incr,
+            )
+            .await
+        {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),
         };

@@ -66,7 +66,7 @@ impl Set {
         })
     }
 
-    fn mut_process_exists_or_new<T, F: FnOnce(&mut Set) -> Result<T>>(
+    async fn mut_process_exists_or_new<T, F: FnOnce(&mut Set) -> Result<T>>(
         slot: &Slot,
         key: SimpleType,
         f: F,
@@ -82,10 +82,11 @@ impl Set {
                 _ => Err("the value stored at key is not a set.".to_owned()),
             },
         )
+        .await
     }
 }
 impl Slot {
-    pub fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
+    pub async fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
         Set::mut_process_exists_or_new(self, key, |set| {
             let old_len = set.size();
             let mut new = set.value.clone();
@@ -96,6 +97,7 @@ impl Slot {
             set.value = new;
             Ok(set.size() - old_len)
         })
+        .await
     }
 
     pub fn smismember(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<Vec<bool>> {
@@ -149,7 +151,8 @@ mod test {
             slot.sadd(
                 "key".into(),
                 vec!["123".into(), 2.into(), 3.into(), 4.into(), 2.into()],
-            ),
+            )
+            .await,
             Ok(4)
         );
         assert_eq!(
@@ -160,7 +163,7 @@ mod test {
             slot.srem(&"key".into(), vec!["123".into(), 5.into(), 4.into()]),
             Ok(2)
         );
-        assert_eq!(slot.sadd("key".into(), vec!["bb".into()]), Ok(1));
+        assert_eq!(slot.sadd("key".into(), vec!["bb".into()]).await, Ok(1));
         let r = slot.smembers(&"key".into()).unwrap();
         let mut r2 = r.iter().cloned().collect::<Vec<_>>();
         r2.sort();

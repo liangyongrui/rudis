@@ -6,7 +6,7 @@ use std::{
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::DataType;
+use super::{expirations::ExpirationEntry, DataType};
 use crate::SimpleType;
 
 /// Entry in the key-value store
@@ -101,25 +101,35 @@ impl Dict {
         self.inner.lock().unwrap().entries.remove(key)
     }
 
-    /// todo 这个需要优化一下
+    /// return (result, 需要更新的id和过期时间)
     pub fn get_or_insert<F: FnOnce(&mut Entry) -> T, T>(
         &self,
         key: SimpleType,
         f: fn() -> (DataType, Option<DateTime<Utc>>),
         then_do: F,
-    ) -> T {
-        let mut mutex_guard = self.inner.lock().unwrap();
-        if !mutex_guard.entries.contains_key(&key) {
-            let id = mutex_guard.next_id();
-            let (data, expires_at) = f();
-            let v = Entry {
-                id,
-                data,
-                expires_at,
-            };
-            mutex_guard.entries.insert(key.clone(), v);
+    ) -> (T, Option<ExpirationEntry>) {
+        let mut gurad = self.inner.lock().unwrap();
+        if let Some(v) = gurad.entries.get_mut(&key) {
+            return (then_do(v), None);
         }
-        then_do(mutex_guard.entries.get_mut(&key).unwrap())
+        let id = gurad.next_id();
+        let (data, expires_at) = f();
+        let mut v = Entry {
+            id,
+            data,
+            expires_at,
+        };
+        let res = then_do(&mut v);
+        gurad.entries.insert(key.clone(), v);
+        drop(gurad);
+        (
+            res,
+            expires_at.map(|expires_at| ExpirationEntry {
+                id,
+                key,
+                expires_at,
+            }),
+        )
     }
 }
 

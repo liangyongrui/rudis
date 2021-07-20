@@ -13,7 +13,7 @@ pub struct Sadd {
 impl Sadd {
     #[instrument(skip(self, db, dst))]
     pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
-        let response = match db.sadd(self.key, self.values) {
+        let response = match db.sadd(self.key, self.values).await {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),
         };

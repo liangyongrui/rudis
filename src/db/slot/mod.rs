@@ -1,3 +1,4 @@
+pub mod dict;
 mod expirations;
 
 use std::{convert::TryInto, sync::atomic::AtomicU64};
@@ -5,10 +6,12 @@ use std::{convert::TryInto, sync::atomic::AtomicU64};
 use chrono::{DateTime, Utc};
 use serde::{de::Visitor, Deserialize, Serialize};
 
-use self::expirations::{Expiration, ExpirationEntry};
+use self::{
+    dict::Dict,
+    expirations::{Expiration, ExpirationEntry},
+};
 use super::{
     data_type::{DataType, SimpleType},
-    dict::{self, Dict},
     result::Result,
 };
 use crate::utils::options::NxXx;
@@ -90,14 +93,19 @@ impl Slot {
         }
     }
 
-    pub fn get_or_insert<F: FnOnce(&mut dict::Entry) -> T, T>(
+    pub async fn get_or_insert<F: FnOnce(&mut dict::Entry) -> T, T>(
         &self,
         key: SimpleType,
         f: fn() -> (DataType, Option<DateTime<Utc>>),
         then_do: F,
     ) -> T {
-        // todo!("过期")
-        self.dict.get_or_insert(key, f, then_do)
+        match self.dict.get_or_insert(key, f, then_do) {
+            (res, None) => res,
+            (res, Some(e)) => {
+                let _ = self.expirations.sender.send(e).await;
+                res
+            }
+        }
     }
     pub fn get_simple(&self, key: &SimpleType) -> Result<Option<SimpleType>> {
         self.dict.process_mut(key, |entry| match entry {
