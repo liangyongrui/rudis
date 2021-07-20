@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     fs::File,
     io::{BufWriter, Write},
     path::PathBuf,
@@ -6,8 +7,10 @@ use std::{
 };
 
 use tokio::sync::mpsc;
+use tracing::{error, warn};
 
-use crate::{cmd::WriteCmd, config::CONFIG};
+use super::Db;
+use crate::{cmd::WriteCmd, cmd_reader::Reader, config::CONFIG, Command};
 
 pub struct Aof {
     rx: mpsc::Receiver<WriteCmd>,
@@ -48,5 +51,40 @@ impl Aof {
             }
         }
         file.flush().unwrap();
+    }
+}
+
+pub async fn load_into_db(db: &Db) {
+    let path = if let Some(ref path) = CONFIG.load_aof_path {
+        path
+    } else {
+        return;
+    };
+    let display_path = path.display();
+    let mut reader = match tokio::fs::File::open(path).await {
+        Err(why) => {
+            warn!("no aof files {}: {}", display_path, why);
+            return;
+        }
+        Ok(file) => Reader::new(file),
+    };
+
+    loop {
+        match reader.read_frame().await {
+            Ok(None) => return,
+            Ok(Some(frame)) => match Command::from_frame(frame) {
+                Ok(cmd) => {
+                    let _ = cmd.apply(db.borrow()).await;
+                }
+                Err(e) => {
+                    error!("error: {:?}", e);
+                    return;
+                }
+            },
+            Err(e) => {
+                error!("error: {:?}", e);
+                return;
+            }
+        }
     }
 }

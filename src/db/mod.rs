@@ -73,7 +73,7 @@ impl Db {
         self.slots.get(&(i as u16)).unwrap()
     }
 
-    pub fn new(role: Role) -> Arc<Self> {
+    pub async fn new(role: Role) -> Arc<Self> {
         let mut slots = hds::load_slots();
         for i in 0..SIZE {
             slots.entry(i).or_insert_with(Slot::new);
@@ -85,6 +85,7 @@ impl Db {
             hds_status: ArcSwap::from_pointee(HdsStatus::new(create_timestamp)),
             slots: Arc::new(slots),
         });
+        aof::load_into_db(&s).await;
         tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));
         if let Role::Replica(Some(master_addr)) = *s.role.lock() {
             replica::update_master(master_addr)

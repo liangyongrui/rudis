@@ -105,20 +105,6 @@ struct Handler {
     _shutdown_complete: mpsc::Sender<()>,
 }
 
-/// Maximum number of concurrent connections the redis server will accept.
-///
-/// When this limit is reached, the server will stop accepting connections until
-/// an active connection terminates.
-///
-/// A real application will want to make this value configurable, but for this
-/// example, it is hard coded.
-///
-/// This is also set to a pretty low value to discourage using this in
-/// production (you'd think that all the disclaimers would make it obvious that
-/// this is not a serious project... but I thought that about mini-http as
-/// well).
-const MAX_CONNECTIONS: usize = 250;
-
 /// Run the rcc server.
 ///
 /// Accepts connections from the supplied listener. For each inbound connection,
@@ -145,8 +131,8 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     // Initialize the listener state
     let mut server = Listener {
         listener,
-        db: Db::new(role),
-        limit_connections: Arc::new(Semaphore::new(MAX_CONNECTIONS)),
+        db: Db::new(role).await,
+        limit_connections: Arc::new(Semaphore::new(CONFIG.max_connections)),
         notify_shutdown,
         shutdown_complete_tx,
         shutdown_complete_rx,

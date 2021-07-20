@@ -1,6 +1,6 @@
 use bytes::Bytes;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum NxXx {
     Nx,
     Xx,
@@ -25,7 +25,7 @@ impl NxXx {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum GtLt {
     Gt,
     Lt,

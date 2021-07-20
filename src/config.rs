@@ -10,6 +10,12 @@ pub static CONFIG: Lazy<Config> = Lazy::new(get_config);
 #[serde_as]
 #[derive(Deserialize, Debug)]
 pub struct Config {
+    /// Maximum number of concurrent connections the redis server will accept.
+    ///
+    /// When this limit is reached, the server will stop accepting connections until
+    /// an active connection terminates.
+    #[serde(default)]
+    pub max_connections: usize,
     #[serde(default)]
     pub port: u16,
     #[serde(default)]
@@ -37,8 +43,10 @@ pub struct Config {
     /// aof 最多积压条数 (0 表示不开启 aof)
     #[serde(default)]
     pub aof_max_backlog: u64,
-    #[serde(default)]
+    /// 保存aof文件的文件夹
     pub save_aof_dir: Option<PathBuf>,
+    /// 加载aof文件的路径
+    pub load_aof_path: Option<PathBuf>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -49,9 +57,9 @@ pub struct MasterConfig {
 
 fn get_config() -> Config {
     info!("loading config");
-    // todo path
+    // todo 根据环境变量设置配置文件路径
     // let file_path = "./config.toml";
-    let file_path = "/Users/liangyongrui/code/github/rcc/tests/config.toml";
+    let file_path = "/Users/liangyongrui/code/github/rcc/conf/config.toml";
     let str_val = match File::open(file_path) {
         Ok(mut file) => {
             let mut str_val = String::new();
