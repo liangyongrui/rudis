@@ -541,6 +541,7 @@ dependencies = [
  "nix",
  "nom",
  "once_cell",
+ "parking_lot",
  "rcc_macros",
  "rpds",
  "serde",

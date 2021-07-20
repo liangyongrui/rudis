@@ -10,12 +10,13 @@ use std::{
     hash::{Hash, Hasher},
     net::SocketAddr,
     ops::Bound,
-    sync::{Arc, Mutex},
+    sync::Arc,
     usize,
 };
 
 use arc_swap::ArcSwap;
 use chrono::{DateTime, Utc};
+use parking_lot::Mutex;
 use rpds::HashTrieSetSync;
 pub use slot::dict;
 use tokio::sync::mpsc;
@@ -50,6 +51,16 @@ pub struct Db {
 }
 
 impl Db {
+    /// 锁住所有dict，这里需要监控一下耗时
+    pub fn read_lock(
+        &self,
+    ) -> Vec<parking_lot::lock_api::RwLockReadGuard<parking_lot::RawRwLock, dict::DictInner>> {
+        self.slots
+            .values()
+            .into_iter()
+            .map(|t| t.dict.read_lock())
+            .collect::<Vec<_>>()
+    }
     fn get_slot(&self, key: &SimpleType) -> &Slot {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();
@@ -72,7 +83,7 @@ impl Db {
             slots: Arc::new(slots),
         });
         tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));
-        if let Role::Replica(Some(master_addr)) = *s.role.lock().unwrap() {
+        if let Role::Replica(Some(master_addr)) = *s.role.lock() {
             replica::update_master(master_addr)
         }
         s
@@ -231,7 +242,7 @@ impl Db {
 
     pub fn replicaof(&self, master_addr: SocketAddr) {
         replica::update_master(master_addr);
-        let mut role = self.role.lock().unwrap();
+        let mut role = self.role.lock();
         *role = Role::Replica(Some(master_addr));
     }
 }

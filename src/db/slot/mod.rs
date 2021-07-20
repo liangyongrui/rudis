@@ -56,8 +56,8 @@ impl<'de> Visitor<'de> for SlotVistor {
     {
         let mut slot = Slot::new();
         let mut big = 0;
-        slot.dict.process_all(|dict| {
-            let mut expirations = slot.expirations.data.lock().unwrap();
+        slot.dict.process_all_mut(|dict| {
+            let mut expirations = slot.expirations.data.lock();
             let entries = &mut dict.entries;
             while let Some((key, value)) = map.next_entry::<SimpleType, dict::Entry>()? {
                 big = big.max(value.id);

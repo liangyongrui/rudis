@@ -1,9 +1,7 @@
-use std::{
-    collections::BTreeMap,
-    sync::{Arc, Mutex},
-};
+use std::{collections::BTreeMap, sync::Arc};
 
 use chrono::{DateTime, Utc};
+use parking_lot::Mutex;
 use tokio::{
     sync::{
         mpsc::{self, Receiver, Sender},
@@ -66,7 +64,7 @@ impl Expiration {
     }
 
     fn is_shutdown(data: &Mutex<Data>) -> bool {
-        data.lock().unwrap().shutdown
+        data.lock().shutdown
     }
     async fn receiver_listener(
         notify: Arc<Notify>,
@@ -80,7 +78,7 @@ impl Expiration {
         }) = receiver.recv().await
         {
             debug!(id, ?key, ?expires_at);
-            let mut data = data.lock().unwrap();
+            let mut data = data.lock();
             let need_notify = data
                 .expirations
                 .keys()
@@ -93,7 +91,7 @@ impl Expiration {
                 notify.notify_one();
             }
         }
-        data.lock().unwrap().shutdown = true;
+        data.lock().shutdown = true;
     }
 
     async fn purge_expired_tasks(notify: Arc<Notify>, data: Arc<Mutex<Data>>, entry: Dict) {
@@ -113,7 +111,7 @@ impl Expiration {
 
     fn purge_expired_keys(data: &Mutex<Data>, entry: &Dict) -> Option<DateTime<Utc>> {
         let now = Utc::now();
-        let mut data = data.lock().unwrap();
+        let mut data = data.lock();
         // 因为只需要处理头部元素，所有这里每次产生一个新的迭代器是安全的, 等first_entry stable 可以替换
         while let Some((&(when, id), key)) = data.expirations.iter().next() {
             if when > now {

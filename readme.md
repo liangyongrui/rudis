@@ -6,6 +6,7 @@ rust cloud cache
 
 1. 兼容 redis client
 1. 完全并发
+1. 读操作完全并发，公平的读写锁
 1. 过期异步删除
 1. cluster
 1. ha

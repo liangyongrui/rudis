@@ -1,10 +1,11 @@
 use std::{
     collections::HashMap,
-    ops::DerefMut,
-    sync::{Arc, Mutex},
+    ops::{Deref, DerefMut},
+    sync::Arc,
 };
 
 use chrono::{DateTime, Utc};
+use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 
 use super::{expirations::ExpirationEntry, DataType};
@@ -28,20 +29,25 @@ pub struct Entry {
 #[derive(Clone)]
 pub struct Dict {
     /// 这里只有最底层的操作，直接上同步锁，不会锁太久
-    inner: Arc<Mutex<DictInner>>,
+    inner: Arc<RwLock<DictInner>>,
 }
 
 impl Dict {
+    pub fn read_lock(
+        &self,
+    ) -> parking_lot::lock_api::RwLockReadGuard<parking_lot::RawRwLock, DictInner> {
+        self.inner.read()
+    }
+
     pub fn new() -> Self {
         Self {
-            inner: Arc::new(Mutex::new(DictInner::new())),
+            inner: Arc::new(RwLock::new(DictInner::new())),
         }
     }
 
     pub fn get_expires_at(&self, key: &SimpleType) -> Option<DateTime<Utc>> {
         self.inner
-            .lock()
-            .unwrap()
+            .read()
             .entries
             .get(key)
             .and_then(|t| t.expires_at)
@@ -49,12 +55,16 @@ impl Dict {
             .filter(|x| x > &Utc::now())
     }
 
-    pub fn process_all<F: FnOnce(&mut DictInner) -> T, T>(&self, f: F) -> T {
-        let mut mutex_guard = self.inner.lock().unwrap();
+    pub fn process_all<F: FnOnce(&DictInner) -> T, T>(&self, f: F) -> T {
+        let mutex_guard = self.inner.read();
+        f(mutex_guard.deref())
+    }
+    pub fn process_all_mut<F: FnOnce(&mut DictInner) -> T, T>(&self, f: F) -> T {
+        let mut mutex_guard = self.inner.write();
         f(mutex_guard.deref_mut())
     }
     pub fn process_mut<F: FnOnce(Option<&mut Entry>) -> T, T>(&self, key: &SimpleType, f: F) -> T {
-        let mut mutex_guard = self.inner.lock().unwrap();
+        let mut mutex_guard = self.inner.write();
         let res = mutex_guard
             .entries
             .get_mut(key)
@@ -72,7 +82,7 @@ impl Dict {
         expires_at: Option<DateTime<Utc>>,
         next_id: F,
     ) -> Option<u64> {
-        let mut gurad = self.inner.lock().unwrap();
+        let mut gurad = self.inner.write();
         if let Some(v) = gurad.entries.get_mut(&key) {
             let id = next_id();
             *v = Entry {
@@ -88,8 +98,7 @@ impl Dict {
 
     pub fn get(&self, key: &SimpleType) -> Option<Entry> {
         self.inner
-            .lock()
-            .unwrap()
+            .read()
             .entries
             .get(key)
             .filter(|x| match x.expires_at {
@@ -101,8 +110,7 @@ impl Dict {
 
     pub fn exists(&self, key: &SimpleType) -> bool {
         self.inner
-            .lock()
-            .unwrap()
+            .read()
             .entries
             .get(key)
             .filter(|x| match x.expires_at {
@@ -114,12 +122,12 @@ impl Dict {
 
     /// return old_value
     pub fn insert_or_update(&self, key: SimpleType, entry: Entry) -> Option<Entry> {
-        let mut mutex_guard = self.inner.lock().unwrap();
+        let mut mutex_guard = self.inner.write();
         mutex_guard.entries.insert(key, entry)
     }
 
     pub fn remove(&self, key: &SimpleType) -> Option<Entry> {
-        self.inner.lock().unwrap().entries.remove(key)
+        self.inner.write().entries.remove(key)
     }
 
     /// return (result, 是否新插入)
@@ -129,7 +137,7 @@ impl Dict {
         f: F2,
         then_do: F,
     ) -> (T, Option<ExpirationEntry>) {
-        let mut gurad = self.inner.lock().unwrap();
+        let mut gurad = self.inner.write();
         match gurad.entries.entry(key.clone()) {
             std::collections::hash_map::Entry::Occupied(mut e) => (then_do(e.get_mut()), None),
             std::collections::hash_map::Entry::Vacant(e) => {
