@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::SimpleType, Connection, Db, Frame};
+use crate::{db::data_type::SimpleType,  Db, Frame};
 
 /// Get the value of key.
 ///
@@ -31,8 +31,8 @@ impl Get {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         // Get the value from the shared database state
 
         let response = db
@@ -42,8 +42,6 @@ impl Get {
         debug!(?response);
 
         // Write the response back to the client
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 }

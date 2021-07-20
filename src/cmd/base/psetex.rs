@@ -4,8 +4,7 @@ use tracing::instrument;
 
 use crate::{
     db::{data_type::SimpleType, Db},
-    utils::options::NxXx,
-    Connection, Frame,
+    utils::options::NxXx, Frame,
 };
 /// https://redis.io/commands/psetex
 #[derive(Debug, Clone, ParseFrames)]
@@ -15,8 +14,8 @@ pub struct Psetex {
     pub value: SimpleType,
 }
 impl Psetex {
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = if let Err(e) = db
             .set(
                 self.key,
@@ -32,8 +31,6 @@ impl Psetex {
             Frame::Simple("OK".to_string())
         };
         // Create a success response and write it to `dst`.
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 }

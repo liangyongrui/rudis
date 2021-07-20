@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
-use tracing::{debug, instrument};
+use tracing::{instrument};
 
-use crate::{db::data_type::SimpleType, Connection, Db, Frame};
+use crate::{db::data_type::SimpleType, Db, Frame};
 
 /// https://redis.io/commands/lpushx
 #[derive(Debug, Clone, ParseFrames)]
@@ -11,15 +11,12 @@ pub struct Lpushx {
 }
 
 impl Lpushx {
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = match db.lpushx(&self.key, self.values) {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),
         };
-        debug!(?response);
-        // Write the response back to the client
-        dst.write_frame(&response).await?;
-        Ok(())
+        Ok(response)
     }
 }

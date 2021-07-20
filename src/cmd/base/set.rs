@@ -4,8 +4,7 @@ use tracing::{debug, instrument};
 use crate::{
     cmd::{Parse, ParseError},
     db::data_type::SimpleType,
-    utils::options::NxXx,
-    Connection, Db, Frame,
+    utils::options::NxXx, Db, Frame,
 };
 
 /// Set `key` to hold the string `value`.
@@ -162,8 +161,8 @@ impl Set {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db
             .set(
                 self.key,
@@ -186,9 +185,7 @@ impl Set {
             Frame::Simple("OK".to_string())
         };
         debug!(?response);
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 
     pub fn into_cmd_bytes(self) -> Vec<u8> {

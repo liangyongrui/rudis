@@ -1,12 +1,11 @@
 use std::convert::TryInto;
 
-use tracing::{debug, instrument};
+use tracing::{instrument};
 
 use crate::{
     db::data_type::{SimpleType, SortedSetNode},
     parse::ParseError,
-    utils::options::{GtLt, NxXx},
-    Connection, Db, Frame, Parse,
+    utils::options::{GtLt, NxXx}, Db, Frame, Parse,
 };
 
 /// https://redis.io/commands/zadd
@@ -95,8 +94,8 @@ impl Zadd {
         Frame::Array(res).into()
     }
 
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = match db
             .zadd(
                 self.key, self.nodes, self.nx_xx, self.gt_lt, self.ch, self.incr,
@@ -106,9 +105,6 @@ impl Zadd {
             Ok(i) => Frame::Integer(i as _),
             Err(e) => Frame::Error(e),
         };
-        debug!(?response);
-        // Write the response back to the client
-        dst.write_frame(&response).await?;
-        Ok(())
+        Ok(response)
     }
 }

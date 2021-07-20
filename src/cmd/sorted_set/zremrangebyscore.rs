@@ -1,8 +1,8 @@
 use std::ops::Bound;
 
-use tracing::{debug, instrument};
+use tracing::{instrument};
 
-use crate::{db::data_type::SimpleType, Connection, Db, Frame, Parse};
+use crate::{db::data_type::SimpleType, Db, Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
@@ -50,15 +50,12 @@ impl Zremrangebyscore {
         res.push(bf64_to_frame(self.range.1, false));
         Frame::Array(res).into()
     }
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = match db.zremrange_by_score(&self.key, self.range) {
             Ok(v) => Frame::Integer(v as _),
             Err(e) => Frame::Error(e),
         };
-        debug!(?response);
-        // Write the response back to the client
-        dst.write_frame(&response).await?;
-        Ok(())
+        Ok(response)
     }
 }

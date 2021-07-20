@@ -3,8 +3,7 @@ use rcc_macros::ParseFrames;
 use tracing::instrument;
 
 use crate::{
-    db::{data_type::SimpleType, Db},
-    Connection, Frame,
+    db::{data_type::SimpleType, Db}, Frame,
 };
 
 /// https://redis.io/commands/pexpireat
@@ -14,8 +13,8 @@ pub struct Pexpireat {
     pub ms_timestamp: u64,
 }
 impl Pexpireat {
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db
             .expires_at(
                 &self.key,
@@ -27,8 +26,6 @@ impl Pexpireat {
             .await;
         // Create a success response and write it to `dst`.
         let response = Frame::Integer(if res { 1 } else { 0 });
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 }

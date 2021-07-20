@@ -26,6 +26,7 @@
 //!   representation.
 
 pub mod cmd;
+mod cmd_reader;
 mod config;
 mod replica;
 mod utils;

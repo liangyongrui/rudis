@@ -28,7 +28,7 @@ pub use self::{
         zrevrangebyscore::Zrevrangebyscore, zrevrank::Zrevrank,
     },
 };
-use crate::{Connection, Db, Frame, Parse, ParseError, Shutdown};
+use crate::{Db, Frame, Parse, ParseError, Shutdown};
 
 /// Enumeration of supported Redis commands.
 ///
@@ -212,71 +212,56 @@ impl Command {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    pub async fn apply(
-        self,
-        db: &Db,
-        dst: &mut Connection,
-        shutdown: &mut Shutdown,
-    ) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, shutdown: &mut Shutdown) -> crate::Result<Frame> {
         match self {
-            Command::ReadCmd(cmd) => cmd.apply(db, dst, shutdown).await,
-            Command::WriteCmd(cmd) => cmd.apply(db, dst, shutdown).await,
-            Command::Unknown(cmd) => cmd.apply(dst).await,
+            Command::ReadCmd(cmd) => cmd.apply(db, shutdown).await,
+            Command::WriteCmd(cmd) => cmd.apply(db, shutdown).await,
+            Command::Unknown(cmd) => cmd.apply().await,
         }
     }
 }
 
 impl WriteCmd {
-    async fn apply0(
-        self,
-        db: &Db,
-        dst: &mut Connection,
-        _shutdown: &mut Shutdown,
-    ) -> crate::Result<()> {
+    async fn apply0(self, db: &Db, _shutdown: &mut Shutdown) -> crate::Result<Frame> {
         use WriteCmd::*;
         match self {
-            Set(cmd) => cmd.apply(db, dst).await,
-            Psetex(cmd) => cmd.apply(db, dst).await,
-            Setex(cmd) => cmd.apply(db, dst).await,
-            Del(cmd) => cmd.apply(db, dst).await,
-            Pexpireat(cmd) => cmd.apply(db, dst).await,
-            Expireat(cmd) => cmd.apply(db, dst).await,
-            Expire(cmd) => cmd.apply(db, dst).await,
-            Pexpire(cmd) => cmd.apply(db, dst).await,
-            Incrby(cmd) => cmd.apply(db, dst).await,
-            Incr(cmd) => cmd.apply(db, dst).await,
-            Decr(cmd) => cmd.apply(db, dst).await,
-            Decrby(cmd) => cmd.apply(db, dst).await,
-            Lpush(cmd) => cmd.apply(db, dst).await,
-            Rpush(cmd) => cmd.apply(db, dst).await,
-            Lpushx(cmd) => cmd.apply(db, dst).await,
-            Rpushx(cmd) => cmd.apply(db, dst).await,
-            Lpop(cmd) => cmd.apply(db, dst).await,
-            Rpop(cmd) => cmd.apply(db, dst).await,
-            Hset(cmd) => cmd.apply(db, dst).await,
-            Hdel(cmd) => cmd.apply(db, dst).await,
-            Hsetnx(cmd) => cmd.apply(db, dst).await,
-            Hincrby(cmd) => cmd.apply(db, dst).await,
-            Sadd(cmd) => cmd.apply(db, dst).await,
-            Srem(cmd) => cmd.apply(db, dst).await,
-            Zadd(cmd) => cmd.apply(db, dst).await,
-            Zrem(cmd) => cmd.apply(db, dst).await,
-            Zremrangebyrank(cmd) => cmd.apply(db, dst).await,
-            Zremrangebyscore(cmd) => cmd.apply(db, dst).await,
+            Set(cmd) => cmd.apply(db).await,
+            Psetex(cmd) => cmd.apply(db).await,
+            Setex(cmd) => cmd.apply(db).await,
+            Del(cmd) => cmd.apply(db).await,
+            Pexpireat(cmd) => cmd.apply(db).await,
+            Expireat(cmd) => cmd.apply(db).await,
+            Expire(cmd) => cmd.apply(db).await,
+            Pexpire(cmd) => cmd.apply(db).await,
+            Incrby(cmd) => cmd.apply(db).await,
+            Incr(cmd) => cmd.apply(db).await,
+            Decr(cmd) => cmd.apply(db).await,
+            Decrby(cmd) => cmd.apply(db).await,
+            Lpush(cmd) => cmd.apply(db).await,
+            Rpush(cmd) => cmd.apply(db).await,
+            Lpushx(cmd) => cmd.apply(db).await,
+            Rpushx(cmd) => cmd.apply(db).await,
+            Lpop(cmd) => cmd.apply(db).await,
+            Rpop(cmd) => cmd.apply(db).await,
+            Hset(cmd) => cmd.apply(db).await,
+            Hdel(cmd) => cmd.apply(db).await,
+            Hsetnx(cmd) => cmd.apply(db).await,
+            Hincrby(cmd) => cmd.apply(db).await,
+            Sadd(cmd) => cmd.apply(db).await,
+            Srem(cmd) => cmd.apply(db).await,
+            Zadd(cmd) => cmd.apply(db).await,
+            Zrem(cmd) => cmd.apply(db).await,
+            Zremrangebyrank(cmd) => cmd.apply(db).await,
+            Zremrangebyscore(cmd) => cmd.apply(db).await,
         }
     }
-    pub async fn apply(
-        self,
-        db: &Db,
-        dst: &mut Connection,
-        shutdown: &mut Shutdown,
-    ) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, shutdown: &mut Shutdown) -> crate::Result<Frame> {
         let res = if let Some(ref sender) = db.sender {
-            let res = self.clone().apply0(db, dst, shutdown).await;
+            let res = self.clone().apply0(db, shutdown).await;
             sender.load().send(self.clone()).await?;
             res
         } else {
-            self.apply0(db, dst, shutdown).await
+            self.apply0(db, shutdown).await
         };
         db.hds_status.load().add_change_times();
         res
@@ -317,34 +302,29 @@ impl WriteCmd {
 }
 
 impl ReadCmd {
-    pub async fn apply(
-        self,
-        db: &Db,
-        dst: &mut Connection,
-        _shutdown: &mut Shutdown,
-    ) -> crate::Result<()> {
+    pub async fn apply(self, db: &Db, _shutdown: &mut Shutdown) -> crate::Result<Frame> {
         use ReadCmd::*;
 
         match self {
-            Get(cmd) => cmd.apply(db, dst).await,
-            Llen(cmd) => cmd.apply(db, dst).await,
-            Hgetall(cmd) => cmd.apply(db, dst).await,
-            Hget(cmd) => cmd.apply(db, dst).await,
-            Hmget(cmd) => cmd.apply(db, dst).await,
-            Hexists(cmd) => cmd.apply(db, dst).await,
-            Sismember(cmd) => cmd.apply(db, dst).await,
-            Smembers(cmd) => cmd.apply(db, dst).await,
-            Smismember(cmd) => cmd.apply(db, dst).await,
-            Zrangebylex(cmd) => cmd.apply(db, dst).await,
-            Zrangebyscore(cmd) => cmd.apply(db, dst).await,
-            Zrank(cmd) => cmd.apply(db, dst).await,
-            Zrevrange(cmd) => cmd.apply(db, dst).await,
-            Zrevrangebylex(cmd) => cmd.apply(db, dst).await,
-            Zrevrangebyscore(cmd) => cmd.apply(db, dst).await,
-            Zrevrank(cmd) => cmd.apply(db, dst).await,
-            Zrange(cmd) => cmd.apply(db, dst).await,
-            Lrange(cmd) => cmd.apply(db, dst).await,
-            Exists(cmd) => cmd.apply(db, dst).await,
+            Get(cmd) => cmd.apply(db).await,
+            Llen(cmd) => cmd.apply(db).await,
+            Hgetall(cmd) => cmd.apply(db).await,
+            Hget(cmd) => cmd.apply(db).await,
+            Hmget(cmd) => cmd.apply(db).await,
+            Hexists(cmd) => cmd.apply(db).await,
+            Sismember(cmd) => cmd.apply(db).await,
+            Smembers(cmd) => cmd.apply(db).await,
+            Smismember(cmd) => cmd.apply(db).await,
+            Zrangebylex(cmd) => cmd.apply(db).await,
+            Zrangebyscore(cmd) => cmd.apply(db).await,
+            Zrank(cmd) => cmd.apply(db).await,
+            Zrevrange(cmd) => cmd.apply(db).await,
+            Zrevrangebylex(cmd) => cmd.apply(db).await,
+            Zrevrangebyscore(cmd) => cmd.apply(db).await,
+            Zrevrank(cmd) => cmd.apply(db).await,
+            Zrange(cmd) => cmd.apply(db).await,
+            Lrange(cmd) => cmd.apply(db).await,
+            Exists(cmd) => cmd.apply(db).await,
         }
     }
 }

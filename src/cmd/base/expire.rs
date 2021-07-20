@@ -3,8 +3,7 @@ use rcc_macros::ParseFrames;
 use tracing::instrument;
 
 use crate::{
-    db::{data_type::SimpleType, Db},
-    Connection, Frame,
+    db::{data_type::SimpleType, Db}, Frame,
 };
 
 /// https://redis.io/commands/expire
@@ -14,8 +13,8 @@ pub struct Expire {
     pub seconds: u64,
 }
 impl Expire {
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res =
             if let Some(ea) = Utc::now().checked_add_signed(Duration::seconds(self.seconds as _)) {
                 db.expires_at(&self.key, ea).await
@@ -24,8 +23,6 @@ impl Expire {
             };
         // Create a success response and write it to `dst`.
         let response = Frame::Integer(if res { 1 } else { 0 });
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 }

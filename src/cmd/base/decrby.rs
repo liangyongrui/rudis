@@ -3,7 +3,7 @@ use tracing::instrument;
 
 use crate::{
     db::{data_type::SimpleType, Db},
-    Connection, Frame,
+    Frame,
 };
 
 /// https://redis.io/commands/decrby
@@ -13,14 +13,12 @@ pub struct Decrby {
     pub value: i64,
 }
 impl Decrby {
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = match db.incr_by(self.key, -self.value) {
             Ok(i) => Frame::Integer(i),
             Err(e) => Frame::Error(e),
         };
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 }

@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     db::{data_type::SimpleType, Db},
-    Connection, Frame,
+    Frame,
 };
 
 /// https://redis.io/commands/expireat
@@ -18,8 +18,8 @@ impl Expireat {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    #[instrument(skip(self, db, dst))]
-    pub async fn apply(self, db: &Db, dst: &mut Connection) -> crate::Result<()> {
+    #[instrument(skip(self, db))]
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db
             .expires_at(
                 &self.key,
@@ -31,8 +31,6 @@ impl Expireat {
             .await;
         // Create a success response and write it to `dst`.
         let response = Frame::Integer(if res { 1 } else { 0 });
-        dst.write_frame(&response).await?;
-
-        Ok(())
+        Ok(response)
     }
 }
