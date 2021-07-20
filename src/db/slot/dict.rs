@@ -75,6 +75,15 @@ impl Dict {
         f(res)
     }
 
+    pub fn process<F: FnOnce(Option<&Entry>) -> T, T>(&self, key: &SimpleType, f: F) -> T {
+        let mutex_guard = self.inner.read();
+        let res = mutex_guard.entries.get(key).filter(|x| match x.expires_at {
+            Some(y) => y > Utc::now(),
+            None => true,
+        });
+        f(res)
+    }
+
     /// new id
     pub fn update_expires_at<F: FnOnce() -> u64>(
         &self,

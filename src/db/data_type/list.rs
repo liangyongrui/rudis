@@ -12,7 +12,6 @@ use crate::db::{dict, result::Result, slot::Slot};
 /// redis list 中元素顺序 和  VecDeque 的内存顺序关系
 /// L.....R
 /// front.....back
-
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct List(VecDeque<SimpleType>);
 
@@ -55,7 +54,7 @@ impl List {
         f: F,
         none_value: fn() -> T,
     ) -> Result<T> {
-        match slot.dict.get(key) {
+        slot.dict.process(key, |entry| match entry {
             Some(v) => match v {
                 dict::Entry {
                     data: DataType::AggregateType(AggregateType::List(ref list)),
@@ -64,7 +63,7 @@ impl List {
                 _ => Err("the value stored at key is not a list.".to_owned()),
             },
             None => Ok(none_value()),
-        }
+        })
     }
 
     fn process_mut<T, F: FnOnce(&mut List) -> T>(

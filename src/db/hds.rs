@@ -2,6 +2,7 @@ use std::{
     collections::HashMap,
     fs::File,
     io::{BufReader, BufWriter},
+    process::exit,
     sync::{
         atomic::{AtomicU64, Ordering},
         Arc,
@@ -81,6 +82,7 @@ pub fn save_slots(slots: &HashMap<u16, Slot>, create_timestamp: u64) {
                 Ok(file) => BufWriter::new(file),
             };
             bincode::serialize_into(file, slots).unwrap();
+            exit(0);
         }
         Err(e) => error!("Fork failed: {}", e),
     }

@@ -1,8 +1,3 @@
-//! Minimal Redis server implementation
-//!
-//! Provides an async `run` function that listens for inbound connections,
-//! spawning a task per connection.
-
 use std::{future::Future, sync::Arc};
 
 use tokio::{
