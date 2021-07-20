@@ -227,16 +227,13 @@ impl Command {
 }
 
 impl WriteCmd {
-    pub async fn apply(
+    async fn apply0(
         self,
         db: &Db,
         dst: &mut Connection,
         _shutdown: &mut Shutdown,
     ) -> crate::Result<()> {
         use WriteCmd::*;
-        if let Some(ref sender) = db.aof_sender {
-            sender.send(self.clone()).await?;
-        }
         match self {
             Set(cmd) => cmd.apply(db, dst).await,
             Psetex(cmd) => cmd.apply(db, dst).await,
@@ -267,6 +264,22 @@ impl WriteCmd {
             Zremrangebyrank(cmd) => cmd.apply(db, dst).await,
             Zremrangebyscore(cmd) => cmd.apply(db, dst).await,
         }
+    }
+    pub async fn apply(
+        self,
+        db: &Db,
+        dst: &mut Connection,
+        shutdown: &mut Shutdown,
+    ) -> crate::Result<()> {
+        let res = if let Some(ref sender) = db.sender {
+            let res = self.clone().apply0(db, dst, shutdown).await;
+            sender.load().send(self.clone()).await?;
+            res
+        } else {
+            self.apply0(db, dst, shutdown).await
+        };
+        db.hds_status.load().add_change_times();
+        res
     }
 
     pub fn into_cmd_bytes(self) -> Vec<u8> {

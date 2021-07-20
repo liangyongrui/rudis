@@ -44,14 +44,17 @@ pub enum Role {
 }
 
 pub struct Db {
-    pub aof_sender: Option<mpsc::Sender<WriteCmd>>,
+    pub sender: Option<ArcSwap<mpsc::Sender<WriteCmd>>>,
     role: Mutex<Role>,
     slots: Arc<HashMap<u16, Slot>>,
-    hds_status: ArcSwap<HdsStatus>,
+    pub hds_status: ArcSwap<HdsStatus>,
 }
 
 impl Db {
-    /// 锁住所有dict，这里需要监控一下耗时
+    /// 锁住所有dict，
+    ///
+    /// 锁定期间 所有的写操作的不能执行，读操作不受影响
+    /// - TODO 这里需要监控一下耗时
     pub fn read_lock(
         &self,
     ) -> Vec<parking_lot::lock_api::RwLockReadGuard<parking_lot::RawRwLock, dict::DictInner>> {
@@ -75,11 +78,11 @@ impl Db {
         for i in 0..SIZE {
             slots.entry(i).or_insert_with(Slot::new);
         }
+        let create_timestamp = Utc::now().timestamp() as _;
         let s = Arc::new(Self {
-            aof_sender: Aof::start(),
+            sender: Aof::start(create_timestamp).map(ArcSwap::from_pointee),
             role: Mutex::new(role),
-            // todo id
-            hds_status: ArcSwap::from_pointee(HdsStatus::new(0)),
+            hds_status: ArcSwap::from_pointee(HdsStatus::new(create_timestamp)),
             slots: Arc::new(slots),
         });
         tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));

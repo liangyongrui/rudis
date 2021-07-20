@@ -9,32 +9,35 @@ use std::{
     time::{Duration, Instant},
 };
 
+use chrono::Utc;
 use nix::unistd::{fork, ForkResult};
 use tokio::time::sleep;
 use tracing::{error, info, warn};
 
-use super::{slot::Slot, Db};
+use super::{aof::Aof, slot::Slot, Db};
 use crate::config::CONFIG;
 
 #[derive(Debug)]
 pub struct HdsStatus {
-    id: u64,
+    create_timestamp: u64,
     update_time: Instant,
     change_times: AtomicU64,
 }
 
 impl HdsStatus {
-    pub fn new(id: u64) -> Self {
+    pub fn new(create_timestamp: u64) -> Self {
         Self {
-            id,
+            create_timestamp,
             update_time: Instant::now(),
             change_times: AtomicU64::new(0),
         }
     }
+    pub fn add_change_times(&self) {
+        self.change_times.fetch_add(1, Ordering::SeqCst);
+    }
 }
 
 pub async fn run_bg_save_task(db: Arc<Db>) {
-    // todo 安全退出
     loop {
         sleep(Duration::from_secs(1)).await;
         let load = db.hds_status.load();
@@ -46,16 +49,21 @@ pub async fn run_bg_save_task(db: Arc<Db>) {
                 break;
             }
         }
+        drop(load);
         if trigger {
-            let new_hds_id = load.id + 1;
-            drop(load);
-            // 这里有并发问题
-            db.hds_status.swap(Arc::new(HdsStatus::new(new_hds_id)));
-            save_slots(&db.slots, new_hds_id);
+            let create_timestamp = Utc::now().timestamp() as _;
+            let hds = Arc::new(HdsStatus::new(create_timestamp));
+            db.read_lock();
+            db.hds_status.swap(hds);
+            if let Some(ref t) = db.sender {
+                t.swap(Arc::new(Aof::start(create_timestamp).unwrap()));
+            }
+            save_slots(&db.slots, create_timestamp);
         }
     }
 }
-pub fn save_slots(slots: &HashMap<u16, Slot>, hds_id: u64) {
+
+pub fn save_slots(slots: &HashMap<u16, Slot>, create_timestamp: u64) {
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child, .. }) => {
             info!(
@@ -64,7 +72,9 @@ pub fn save_slots(slots: &HashMap<u16, Slot>, hds_id: u64) {
             );
         }
         Ok(ForkResult::Child) => {
-            let path = &CONFIG.save_hds_dir.join(format!("dump_{}.hds", hds_id));
+            let path = &CONFIG
+                .save_hds_dir
+                .join(format!("dump_{}.hds", create_timestamp));
             let display = path.display();
             let file = match File::create(path) {
                 Err(why) => panic!("couldn't create {}: {}", display, why),
