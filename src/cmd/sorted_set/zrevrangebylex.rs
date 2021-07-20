@@ -1,10 +1,11 @@
 use std::ops::Bound;
 
-use tracing::{instrument};
+use tracing::instrument;
 
 use crate::{
     db::data_type::{SimpleType, ZrangeItem},
-    parse::ParseError, Db, Frame, Parse,
+    parse::ParseError,
+    Db, Frame, Parse,
 };
 
 /// https://redis.io/commands/zrevrangebylex

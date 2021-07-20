@@ -28,7 +28,7 @@ pub use self::{
         zrevrangebyscore::Zrevrangebyscore, zrevrank::Zrevrank,
     },
 };
-use crate::{Db, Frame, Parse, ParseError, Shutdown};
+use crate::{Db, Frame, Parse, ParseError};
 
 /// Enumeration of supported Redis commands.
 ///
@@ -212,17 +212,17 @@ impl Command {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    pub async fn apply(self, db: &Db, shutdown: &mut Shutdown) -> crate::Result<Frame> {
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         match self {
-            Command::ReadCmd(cmd) => cmd.apply(db, shutdown).await,
-            Command::WriteCmd(cmd) => cmd.apply(db, shutdown).await,
+            Command::ReadCmd(cmd) => cmd.apply(db).await,
+            Command::WriteCmd(cmd) => cmd.apply(db).await,
             Command::Unknown(cmd) => cmd.apply().await,
         }
     }
 }
 
 impl WriteCmd {
-    async fn apply0(self, db: &Db, _shutdown: &mut Shutdown) -> crate::Result<Frame> {
+    async fn apply0(self, db: &Db) -> crate::Result<Frame> {
         use WriteCmd::*;
         match self {
             Set(cmd) => cmd.apply(db).await,
@@ -255,13 +255,13 @@ impl WriteCmd {
             Zremrangebyscore(cmd) => cmd.apply(db).await,
         }
     }
-    pub async fn apply(self, db: &Db, shutdown: &mut Shutdown) -> crate::Result<Frame> {
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = if let Some(ref sender) = db.sender {
-            let res = self.clone().apply0(db, shutdown).await;
+            let res = self.clone().apply0(db).await;
             sender.load().send(self.clone()).await?;
             res
         } else {
-            self.apply0(db, shutdown).await
+            self.apply0(db).await
         };
         db.hds_status.load().add_change_times();
         res
@@ -302,7 +302,7 @@ impl WriteCmd {
 }
 
 impl ReadCmd {
-    pub async fn apply(self, db: &Db, _shutdown: &mut Shutdown) -> crate::Result<Frame> {
+    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         use ReadCmd::*;
 
         match self {

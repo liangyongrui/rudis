@@ -1,8 +1,9 @@
 use rcc_macros::ParseFrames;
-use tracing::{instrument};
+use tracing::instrument;
 
 use crate::{
-    db::data_type::{SimpleType, SimpleTypePair}, Db, Frame,
+    db::data_type::{SimpleType, SimpleTypePair},
+    Db, Frame,
 };
 /// https://redis.io/commands/hset
 #[derive(Debug, Clone, ParseFrames)]

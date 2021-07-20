@@ -1,6 +1,6 @@
-use tracing::{instrument};
+use tracing::instrument;
 
-use crate::{Frame};
+use crate::Frame;
 
 /// Represents an "unknown" command. This is not a real `Redis` command.
 #[derive(Debug)]

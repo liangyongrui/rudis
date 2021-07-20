@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
-use tracing::{instrument};
+use tracing::instrument;
 
-use crate::{db::data_type::SimpleType,  Db, Frame};
+use crate::{db::data_type::SimpleType, Db, Frame};
 
 /// https://redis.io/commands/exists
 #[derive(Debug, ParseFrames)]

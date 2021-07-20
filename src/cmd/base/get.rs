@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::{debug, instrument};
 
-use crate::{db::data_type::SimpleType,  Db, Frame};
+use crate::{db::data_type::SimpleType, Db, Frame};
 
 /// Get the value of key.
 ///

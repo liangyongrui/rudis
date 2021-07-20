@@ -3,13 +3,19 @@ use tokio::io::{AsyncRead, AsyncReadExt, BufReader};
 use tracing::error;
 
 use crate::{parse, Frame};
-
+#[derive(Debug)]
 pub struct Reader<R: AsyncRead + Sized + Unpin> {
     stream: BufReader<R>,
     buffer: BytesMut,
 }
 
 impl<R: AsyncRead + Sized + Unpin> Reader<R> {
+    pub fn new(r: R) -> Self {
+        Self {
+            stream: BufReader::new(r),
+            buffer: BytesMut::with_capacity(4 * 1024),
+        }
+    }
     pub async fn read_frame(&mut self) -> crate::Result<Option<Frame>> {
         loop {
             // Attempt to parse a frame from the buffered data. If enough data

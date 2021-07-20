@@ -4,7 +4,8 @@ use tracing::instrument;
 
 use crate::{
     db::{data_type::SimpleType, Db},
-    utils::options::NxXx, Frame,
+    utils::options::NxXx,
+    Frame,
 };
 /// https://redis.io/commands/psetex
 #[derive(Debug, Clone, ParseFrames)]

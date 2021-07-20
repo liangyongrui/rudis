@@ -2,7 +2,8 @@ use rcc_macros::ParseFrames;
 use tracing::instrument;
 
 use crate::{
-    db::{data_type::SimpleType, Db}, Frame,
+    db::{data_type::SimpleType, Db},
+    Frame,
 };
 
 /// https://redis.io/commands/incr

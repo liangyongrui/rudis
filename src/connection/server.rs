@@ -340,7 +340,7 @@ impl Handler {
             // While reading a request frame, also listen for the shutdown
             // signal.
             let maybe_frame = tokio::select! {
-                res = self.connection.read_frame() => res?,
+                res = self.connection.reader.read_frame() => res?,
                 _ = self.shutdown.recv() => {
                     // If a shutdown signal is received, return from `run`.
                     // This will result in the task terminating.
@@ -379,7 +379,7 @@ impl Handler {
             // command to write response frames directly to the connection. In
             // the case of pub/sub, multiple frames may be send back to the
             // peer.
-            let res = cmd.apply(&self.db, &mut self.shutdown).await?;
+            let res = cmd.apply(&self.db).await?;
             self.connection.write_frame(&res).await?;
         }
 

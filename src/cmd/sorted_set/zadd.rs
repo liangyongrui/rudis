@@ -1,11 +1,12 @@
 use std::convert::TryInto;
 
-use tracing::{instrument};
+use tracing::instrument;
 
 use crate::{
     db::data_type::{SimpleType, SortedSetNode},
     parse::ParseError,
-    utils::options::{GtLt, NxXx}, Db, Frame, Parse,
+    utils::options::{GtLt, NxXx},
+    Db, Frame, Parse,
 };
 
 /// https://redis.io/commands/zadd

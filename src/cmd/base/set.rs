@@ -4,7 +4,8 @@ use tracing::{debug, instrument};
 use crate::{
     cmd::{Parse, ParseError},
     db::data_type::SimpleType,
-    utils::options::NxXx, Db, Frame,
+    utils::options::NxXx,
+    Db, Frame,
 };
 
 /// Set `key` to hold the string `value`.
