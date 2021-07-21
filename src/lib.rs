@@ -28,7 +28,12 @@
 pub mod cmd;
 mod cmd_reader;
 mod config;
+/// 过期处理
+mod expire;
+/// 请求转发
+mod forward;
 mod replica;
+mod slot;
 mod utils;
 pub use cmd::Command;
 

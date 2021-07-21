@@ -1,8 +1,12 @@
 use bytes::Bytes;
+use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum NxXx {
+    // Only set the key if it does not already exist.
     Nx,
+    // Only set the key if it already exist.
     Xx,
     None,
 }
@@ -23,11 +27,33 @@ impl NxXx {
     pub const fn is_none(self) -> bool {
         matches!(self, NxXx::None)
     }
+
+    #[inline]
+    #[must_use]
+    pub const fn is_xx(self) -> bool {
+        matches!(self, NxXx::Xx)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn is_nx(self) -> bool {
+        matches!(self, NxXx::Nx)
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
 pub enum GtLt {
     Gt,
     Lt,
+    None,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+pub enum ExpiresAt {
+    // 指定时间
+    Specific(DateTime<Utc>),
+    // 上一次时间
+    Last,
+    // 不会过期
     None,
 }

@@ -209,6 +209,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixed-vec-deque"
+version = "0.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14c0bc0a5a14538da76b4127910be3eca0df0fb8fd6dc893fe620ecf583dda71"
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -538,6 +544,7 @@ dependencies = [
  "bincode",
  "bytes",
  "chrono",
+ "fixed-vec-deque",
  "nix",
  "nom",
  "once_cell",

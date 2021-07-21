@@ -1,3 +1,4 @@
+pub mod float;
 pub mod options;
 pub mod pointer;
 
