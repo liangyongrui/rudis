@@ -92,3 +92,10 @@ fn data_type_to_simple(dt: DataType) -> SimpleType {
         DataType::CollectionType(_) => SimpleType::Null,
     }
 }
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test1() {
+        
+    }
+}
