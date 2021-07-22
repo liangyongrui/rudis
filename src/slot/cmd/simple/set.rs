@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     slot::{
-        cmd::{Write, WriteResp},
+        cmd::{Write, WriteCmd, WriteResp},
         data_type::{DataType, SimpleType},
         dict::{self, Dict},
     },
@@ -10,17 +10,22 @@ use crate::{
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct Set {
+pub struct Req {
     pub key: SimpleType,
     pub value: SimpleType,
     pub expires_at: ExpiresAt,
     pub nx_xx: NxXx,
 }
-
+impl From<Req> for WriteCmd {
+    fn from(req: Req) -> Self {
+        Self::Set(req)
+    }
+}
 /// 返回 原始值
 /// 如果原始值的类型不为SimpleType, 则返回 null
-impl Write<SimpleType> for Set {
+impl Write<SimpleType> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<SimpleType>> {
+        let key = self.key.clone();
         if let Some(v) = dict.d_get(&self.key) {
             if self.nx_xx.is_nx() {
                 let old_value = data_type_copy_to_simple(&v.data);
@@ -46,7 +51,7 @@ impl Write<SimpleType> for Set {
                 .unwrap();
             Ok(WriteResp {
                 payload: data_type_to_simple(old.data),
-                new_expires_at: expire_at,
+                new_expires_at: expire_at.map(|ea| (ea, key)),
             })
         } else {
             if self.nx_xx.is_xx() {
@@ -69,7 +74,7 @@ impl Write<SimpleType> for Set {
             );
             Ok(WriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: expire_at,
+                new_expires_at: expire_at.map(|ea| (ea, key)),
             })
         }
     }
@@ -105,7 +110,7 @@ mod test {
     fn test1() {
         let mut dict = Dict::new();
         let date_time = Utc::now() + Duration::seconds(1);
-        let cmd = Set {
+        let cmd = Req {
             key: "hello".into(),
             value: "world".into(),
             expires_at: ExpiresAt::Specific(date_time),
@@ -116,7 +121,7 @@ mod test {
             res,
             WriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some(date_time)
+                new_expires_at: Some((date_time, "hello".into()))
             }
         );
         let res = Get {
@@ -128,7 +133,7 @@ mod test {
         let res = Get { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, SimpleType::Null);
         // xx
-        let cmd = Set {
+        let cmd = Req {
             key: "hello".into(),
             value: "world2".into(),
             expires_at: ExpiresAt::Specific(date_time),
@@ -139,10 +144,10 @@ mod test {
             res,
             WriteResp {
                 payload: "world".into(),
-                new_expires_at: Some(date_time)
+                new_expires_at: Some((date_time, "hello".into()))
             }
         );
-        let cmd = Set {
+        let cmd = Req {
             key: "n".into(),
             value: "world2".into(),
             expires_at: ExpiresAt::Specific(date_time),
@@ -165,7 +170,7 @@ mod test {
         let res = Get { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, SimpleType::Null);
         // nx
-        let cmd = Set {
+        let cmd = Req {
             key: "hello".into(),
             value: "world3".into(),
             expires_at: ExpiresAt::Specific(date_time),
@@ -179,7 +184,7 @@ mod test {
                 new_expires_at: None
             }
         );
-        let cmd = Set {
+        let cmd = Req {
             key: "n".into(),
             value: "world3".into(),
             expires_at: ExpiresAt::None,
@@ -202,7 +207,7 @@ mod test {
         let res = Get { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, "world3".into());
         // time
-        let cmd = Set {
+        let cmd = Req {
             key: "hello".into(),
             value: "world".into(),
             expires_at: ExpiresAt::Last,
@@ -213,7 +218,7 @@ mod test {
             res,
             WriteResp {
                 payload: "world2".into(),
-                new_expires_at: Some(date_time)
+                new_expires_at: Some((date_time, "hello".into()))
             }
         );
         let res = Get {

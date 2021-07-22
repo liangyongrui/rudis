@@ -17,6 +17,7 @@ use self::{
 };
 use crate::{
     db2::BgTask,
+    forward,
     slot::cmd::{Read, Write},
 };
 
@@ -47,15 +48,35 @@ impl Slot {
             .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
     }
 
-    async fn call_write<T, C: Write<T>>(&self, cmd: C) -> crate::Result<T> {
+    async fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
         let id = self.next_id();
-        // todo 转发请求服务
+        let _ = self
+            .bg_task
+            .forward_sender
+            .send(forward::Message {
+                id,
+                slot: self.slot_id,
+                cmd: cmd.clone().into(),
+            })
+            .await;
+        let mut dict = self.dict.write();
+        dict.last_write_op_id = id;
         let WriteResp {
             new_expires_at,
             payload,
-        } = cmd.apply(id, self.dict.write().borrow_mut())?;
-        if let Some(ea) = new_expires_at {
-            // todo 发送到过期task
+        } = cmd.apply(id, dict.borrow_mut())?;
+        drop(dict);
+        if let Some((ea, key)) = new_expires_at {
+            let _ = self
+                .bg_task
+                .expire_sender
+                .send(crate::expire::Entry {
+                    expires_at: ea,
+                    slot: self.slot_id,
+                    id,
+                    key,
+                })
+                .await;
         }
         Ok(payload)
     }
@@ -63,16 +84,19 @@ impl Slot {
 
 /// 写命令
 impl Slot {
-    pub async fn set(&self, cmd: cmd::simple::set::Set) -> crate::Result<SimpleType> {
+    pub async fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
         self.call_write(cmd).await
     }
-    pub async fn del(&self, cmd: cmd::simple::del::Del) -> crate::Result<Option<Value>> {
+    pub async fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<Value>> {
         self.call_write(cmd).await
     }
-    pub async fn expire(&self, cmd: cmd::simple::expire::Expire) -> crate::Result<bool> {
+    pub async fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
         self.call_write(cmd).await
     }
-    pub async fn incr(&self, cmd: cmd::simple::incr::Incr) -> crate::Result<i64> {
+    pub async fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
+        self.call_write(cmd).await
+    }
+    pub async fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
         self.call_write(cmd).await
     }
 }

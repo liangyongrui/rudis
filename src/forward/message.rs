@@ -5,9 +5,9 @@ use crate::slot::cmd::WriteCmd;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
-    id: u64,
-    slot: u16,
-    cmd: WriteCmd,
+    pub id: u64,
+    pub slot: u16,
+    pub cmd: WriteCmd,
 }
 
 impl Default for Message {

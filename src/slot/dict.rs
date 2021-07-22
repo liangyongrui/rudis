@@ -6,9 +6,10 @@ use std::{
 use chrono::{DateTime, Utc};
 
 use super::data_type::{DataType, SimpleType};
-use crate::db;
 
 pub struct Dict {
+    /// 最后一次写操作的id
+    pub last_write_op_id: u64,
     pub inner: HashMap<SimpleType, Value>,
 }
 #[derive(Debug)]
@@ -22,6 +23,7 @@ impl Dict {
     #[inline]
     pub fn new() -> Self {
         Self {
+            last_write_op_id: 0,
             inner: HashMap::new(),
         }
     }
@@ -41,6 +43,25 @@ impl Dict {
     pub fn d_get_mut(&mut self, key: &SimpleType) -> Option<&mut Value> {
         self.get_mut(key)
             .filter(|v| v.expire_at.filter(|x| *x <= Utc::now()).is_none())
+    }
+
+    /// todo 这里可能可以优化一下
+    pub fn d_get_mut_or_insert_with<F: FnOnce() -> Value>(
+        &mut self,
+        key: SimpleType,
+        f: F,
+    ) -> &mut Value {
+        match self.entry(key.clone()) {
+            std::collections::hash_map::Entry::Occupied(mut o) => {
+                if o.get().expire_at.filter(|x| *x <= Utc::now()).is_some() {
+                    o.insert(f());
+                }
+            }
+            std::collections::hash_map::Entry::Vacant(e) => {
+                e.insert(f());
+            }
+        }
+        self.get_mut(&key).unwrap()
     }
 }
 
