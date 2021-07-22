@@ -21,55 +21,59 @@ pub struct Set {
 /// 如果原始值的类型不为SimpleType, 则返回 null
 impl Write<SimpleType> for Set {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<SimpleType>> {
-        match dict.inner.entry(self.key) {
-            std::collections::hash_map::Entry::Occupied(mut e) => {
-                if self.nx_xx.is_nx() {
-                    let old_value = data_type_copy_to_simple(&e.get().data);
-                    return Ok(WriteResp {
-                        payload: old_value,
-                        new_expires_at: None,
-                    });
-                }
-                let expire_at = match self.expires_at {
-                    ExpiresAt::Specific(i) => Some(i),
-                    ExpiresAt::Last => e.get().expire_at,
-                    ExpiresAt::None => None,
-                };
-                let old = e.insert(dict::Value {
-                    id,
-                    data: DataType::SimpleType(self.value),
-                    expire_at,
+        if let Some(v) = dict.d_get(&self.key) {
+            if self.nx_xx.is_nx() {
+                let old_value = data_type_copy_to_simple(&v.data);
+                return Ok(WriteResp {
+                    payload: old_value,
+                    new_expires_at: None,
                 });
-                Ok(WriteResp {
-                    payload: data_type_to_simple(old.data),
-                    new_expires_at: expire_at,
-                })
             }
-            std::collections::hash_map::Entry::Vacant(e) => {
-                if self.nx_xx.is_xx() {
-                    return Ok(WriteResp {
-                        payload: SimpleType::Null,
-                        new_expires_at: None,
-                    });
-                }
-                let expire_at = match self.expires_at {
-                    ExpiresAt::Specific(i) => Some(i),
-                    _ => None,
-                };
-                e.insert(dict::Value {
-                    id,
-                    data: DataType::SimpleType(self.value),
-                    expire_at,
-                });
-                Ok(WriteResp {
+            let expire_at = match self.expires_at {
+                ExpiresAt::Specific(i) => Some(i),
+                ExpiresAt::Last => v.expire_at,
+                ExpiresAt::None => None,
+            };
+            let old = dict
+                .insert(
+                    self.key,
+                    dict::Value {
+                        id,
+                        data: DataType::SimpleType(self.value),
+                        expire_at,
+                    },
+                )
+                .unwrap();
+            Ok(WriteResp {
+                payload: data_type_to_simple(old.data),
+                new_expires_at: expire_at,
+            })
+        } else {
+            if self.nx_xx.is_xx() {
+                return Ok(WriteResp {
                     payload: SimpleType::Null,
-                    new_expires_at: expire_at,
-                })
+                    new_expires_at: None,
+                });
             }
+            let expire_at = match self.expires_at {
+                ExpiresAt::Specific(i) => Some(i),
+                _ => None,
+            };
+            dict.insert(
+                self.key,
+                dict::Value {
+                    id,
+                    data: DataType::SimpleType(self.value),
+                    expire_at,
+                },
+            );
+            Ok(WriteResp {
+                payload: SimpleType::Null,
+                new_expires_at: expire_at,
+            })
         }
     }
 }
-
 #[inline]
 fn data_type_copy_to_simple(dt: &DataType) -> SimpleType {
     match dt {
@@ -93,7 +97,7 @@ mod test {
 
     use super::*;
     use crate::slot::{
-        cmd::{get::Get, Read},
+        cmd::{simple::get::Get, Read},
         dict::Dict,
     };
 

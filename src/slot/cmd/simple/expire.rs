@@ -16,19 +16,18 @@ pub struct Expire {
 /// 返回 是否更新成功
 impl Write<bool> for Expire {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<bool>> {
-        match dict.get_mut(&self.key) {
-            Some(v) if v.expire_at.map(|x| x < Utc::now()).is_none() => {
-                v.id = id;
-                v.expire_at = self.expire_at;
-                Ok(WriteResp {
-                    payload: true,
-                    new_expires_at: self.expire_at,
-                })
-            }
-            _ => Ok(WriteResp {
+        if let Some(v) = dict.d_get_mut(&self.key) {
+            v.id = id;
+            v.expire_at = self.expire_at;
+            Ok(WriteResp {
+                payload: true,
+                new_expires_at: self.expire_at,
+            })
+        } else {
+            Ok(WriteResp {
                 payload: false,
                 new_expires_at: None,
-            }),
+            })
         }
     }
 }

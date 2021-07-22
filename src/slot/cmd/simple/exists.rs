@@ -1,5 +1,3 @@
-use chrono::Utc;
-
 use crate::slot::{cmd::Read, data_type::SimpleType, dict::Dict};
 
 #[derive(Debug, Clone)]
@@ -9,12 +7,6 @@ pub struct Exists<'a> {
 
 impl<'a> Read<bool> for Exists<'a> {
     fn apply(self, dict: &Dict) -> crate::Result<bool> {
-        Ok(dict
-            .inner
-            .get(self.key)
-            .filter(|v| v.expire_at.map(|x| x <= Utc::now()).is_none())
-            .is_some())
+        Ok(dict.d_exists(self.key))
     }
 }
-
-// todo utest

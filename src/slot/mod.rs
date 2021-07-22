@@ -63,26 +63,26 @@ impl Slot {
 
 /// 写命令
 impl Slot {
-    pub async fn set(&self, cmd: cmd::set::Set) -> crate::Result<SimpleType> {
+    pub async fn set(&self, cmd: cmd::simple::set::Set) -> crate::Result<SimpleType> {
         self.call_write(cmd).await
     }
-    pub async fn del(&self, cmd: cmd::del::Del) -> crate::Result<Option<Value>> {
+    pub async fn del(&self, cmd: cmd::simple::del::Del) -> crate::Result<Option<Value>> {
         self.call_write(cmd).await
     }
-    pub async fn expire(&self, cmd: cmd::expire::Expire) -> crate::Result<bool> {
+    pub async fn expire(&self, cmd: cmd::simple::expire::Expire) -> crate::Result<bool> {
         self.call_write(cmd).await
     }
-    pub async fn incr(&self, cmd: cmd::incr::Incr) -> crate::Result<i64> {
+    pub async fn incr(&self, cmd: cmd::simple::incr::Incr) -> crate::Result<i64> {
         self.call_write(cmd).await
     }
 }
 
 /// 读命令
 impl Slot {
-    pub fn get(&self, cmd: cmd::get::Get<'_>) -> crate::Result<SimpleType> {
+    pub fn get(&self, cmd: cmd::simple::get::Get<'_>) -> crate::Result<SimpleType> {
         cmd.apply(self.dict.read().borrow())
     }
-    pub fn exists(&self, cmd: cmd::exists::Exists<'_>) -> crate::Result<bool> {
+    pub fn exists(&self, cmd: cmd::simple::exists::Exists<'_>) -> crate::Result<bool> {
         cmd.apply(self.dict.read().borrow())
     }
 }

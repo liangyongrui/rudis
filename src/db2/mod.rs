@@ -57,22 +57,22 @@ impl Db {
 
 /// cmd
 impl Db {
-    pub fn get(&self, cmd: cmd::get::Get) -> crate::Result<SimpleType> {
+    pub fn get(&self, cmd: cmd::simple::get::Get) -> crate::Result<SimpleType> {
         self.get_slot(cmd.key).get(cmd)
     }
-    pub async fn set(&self, cmd: cmd::set::Set) -> crate::Result<SimpleType> {
+    pub async fn set(&self, cmd: cmd::simple::set::Set) -> crate::Result<SimpleType> {
         self.get_slot(&cmd.key).set(cmd).await
     }
-    pub async fn del(&self, cmd: cmd::del::Del) -> crate::Result<Option<dict::Value>> {
+    pub async fn del(&self, cmd: cmd::simple::del::Del) -> crate::Result<Option<dict::Value>> {
         self.get_slot(&cmd.key).del(cmd).await
     }
-    pub async fn expire(&self, cmd: cmd::expire::Expire) -> crate::Result<bool> {
+    pub async fn expire(&self, cmd: cmd::simple::expire::Expire) -> crate::Result<bool> {
         self.get_slot(&cmd.key).expire(cmd).await
     }
-    pub fn exists(&self, cmd: cmd::exists::Exists) -> crate::Result<bool> {
+    pub fn exists(&self, cmd: cmd::simple::exists::Exists) -> crate::Result<bool> {
         self.get_slot(&cmd.key).exists(cmd)
     }
-    pub async fn incr(&self, cmd: cmd::incr::Incr) -> crate::Result<i64> {
+    pub async fn incr(&self, cmd: cmd::simple::incr::Incr) -> crate::Result<i64> {
         self.get_slot(&cmd.key).incr(cmd).await
     }
 }

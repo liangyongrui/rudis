@@ -1,12 +1,12 @@
 //! slot 的 cmd
 //! 写操作，会有个操作id
 
+pub mod kvp;
 pub mod simple;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-pub use self::simple::*;
 use super::dict::Dict;
 
 #[derive(Debug, PartialEq, Eq)]
@@ -24,6 +24,6 @@ pub trait Read<T> {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum WriteCmd {
-    Set(set::Set),
+    Set(simple::set::Set),
     None,
 }
