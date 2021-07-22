@@ -1,6 +1,7 @@
 //! slot 的 cmd
 //! 写操作，会有个操作id
 
+pub mod deque;
 pub mod kvp;
 pub mod simple;
 
@@ -36,6 +37,9 @@ pub enum WriteCmd {
     Incr(simple::incr::Req),
     Set(simple::set::Req),
     KvpDel(kvp::del::Req),
+    KvpIncr(kvp::incr::Req),
     KvpSet(kvp::set::Req),
+    DequePop(deque::pop::Req),
+    DequePush(deque::push::Req),
     None,
 }

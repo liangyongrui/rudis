@@ -3,11 +3,12 @@
 //! 类型主要分为两种，简单类型 和 集合类型
 
 use std::convert::TryFrom;
+mod deque;
 mod kvp;
 
 use serde::{Deserialize, Serialize};
 
-pub use self::kvp::Kvp;
+pub use self::{deque::Deque, kvp::Kvp};
 pub use crate::utils::float::Float;
 
 /// slot value 的类型
@@ -60,4 +61,5 @@ impl From<i64> for DataType {
 #[derive(Debug)]
 pub enum CollectionType {
     Kvp(Kvp),
+    Deque(Deque),
 }

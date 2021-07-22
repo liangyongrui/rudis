@@ -102,7 +102,7 @@ mod test {
 
     use super::*;
     use crate::slot::{
-        cmd::{simple::get::Get, Read},
+        cmd::{simple::get, Read},
         dict::Dict,
     };
 
@@ -124,13 +124,13 @@ mod test {
                 new_expires_at: Some((date_time, "hello".into()))
             }
         );
-        let res = Get {
+        let res = get::Req {
             key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world".into());
-        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, SimpleType::Null);
         // xx
         let cmd = Req {
@@ -161,13 +161,13 @@ mod test {
                 new_expires_at: None,
             }
         );
-        let res = Get {
+        let res = get::Req {
             key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world2".into());
-        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, SimpleType::Null);
         // nx
         let cmd = Req {
@@ -198,13 +198,13 @@ mod test {
                 new_expires_at: None
             }
         );
-        let res = Get {
+        let res = get::Req {
             key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world2".into());
-        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, "world3".into());
         // time
         let cmd = Req {
@@ -221,22 +221,22 @@ mod test {
                 new_expires_at: Some((date_time, "hello".into()))
             }
         );
-        let res = Get {
+        let res = get::Req {
             key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world".into());
-        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, "world3".into());
         sleep(std::time::Duration::from_secs(1));
-        let res = Get {
+        let res = get::Req {
             key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, SimpleType::Null);
-        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
         assert_eq!(res, "world3".into());
     }
 }

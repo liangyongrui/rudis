@@ -17,6 +17,12 @@ impl Kvp {
         }
     }
 }
+
+impl Default for Kvp {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Deref for Kvp {
     type Target = HashTrieMapSync<SimpleType, SimpleType>;
 

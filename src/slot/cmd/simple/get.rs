@@ -5,11 +5,11 @@ use crate::slot::{
 };
 
 #[derive(Debug, Clone)]
-pub struct Get<'a> {
+pub struct Req<'a> {
     pub key: &'a SimpleType,
 }
 
-impl<'a> Read<SimpleType> for Get<'a> {
+impl<'a> Read<SimpleType> for Req<'a> {
     fn apply(self, dict: &Dict) -> crate::Result<SimpleType> {
         if let Some(v) = dict.d_get(self.key) {
             if let DataType::SimpleType(ref s) = v.data {

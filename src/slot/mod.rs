@@ -99,14 +99,38 @@ impl Slot {
     pub async fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
         self.call_write(cmd).await
     }
+    pub async fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> crate::Result<cmd::kvp::del::Resp> {
+        self.call_write(cmd).await
+    }
+    pub async fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> crate::Result<i64> {
+        self.call_write(cmd).await
+    }
+    pub async fn deque_push(
+        &self,
+        cmd: cmd::deque::push::Req,
+    ) -> crate::Result<cmd::deque::push::Resp> {
+        self.call_write(cmd).await
+    }
+    pub async fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
+        self.call_write(cmd).await
+    }
 }
 
 /// 读命令
 impl Slot {
-    pub fn get(&self, cmd: cmd::simple::get::Get<'_>) -> crate::Result<SimpleType> {
+    pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> crate::Result<SimpleType> {
         cmd.apply(self.dict.read().borrow())
     }
-    pub fn exists(&self, cmd: cmd::simple::exists::Exists<'_>) -> crate::Result<bool> {
+    pub fn exists(&self, cmd: cmd::simple::exists::Req<'_>) -> crate::Result<bool> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> crate::Result<bool> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> crate::Result<usize> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> crate::Result<Vec<SimpleType>> {
         cmd.apply(self.dict.read().borrow())
     }
 }

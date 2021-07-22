@@ -1,5 +1,4 @@
 use fixed_vec_deque::FixedVecDeque;
-use once_cell::sync::Lazy;
 use tokio::sync::mpsc;
 
 pub use self::message::Message;

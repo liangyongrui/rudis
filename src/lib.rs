@@ -15,7 +15,8 @@ pub use connection::Connection;
 pub use parse::frame::Frame;
 
 mod db;
-mod db2;
+/// 暂时pub
+pub mod db2;
 pub use db::data_type::SimpleType;
 use db::Db;
 
