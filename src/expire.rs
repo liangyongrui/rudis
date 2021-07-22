@@ -7,14 +7,11 @@ use std::{
 use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
 use tokio::{
-    sync::{
-        mpsc::{self},
-        Notify,
-    },
+    sync::{mpsc, Notify},
     time,
 };
 
-use crate::{db::Db, slot::data_type::SimpleType};
+use crate::{db2::Db, slot::data_type::SimpleType};
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
@@ -28,29 +25,48 @@ pub struct Entry {
 
 #[derive(Debug)]
 pub struct Expiration {
-    pub data: Mutex<BTreeSet<Entry>>,
-    pub notify: Notify,
+    data: Arc<Mutex<BTreeSet<Entry>>>,
+    notify: Arc<Notify>,
+    pub tx: mpsc::Sender<Entry>,
+    rx: mpsc::Receiver<Entry>,
 }
 
 impl Expiration {
     pub fn new() -> Self {
+        let (tx, rx) = mpsc::channel(1024);
+
         Self {
-            data: Mutex::new(BTreeSet::new()),
-            notify: Notify::new(),
+            tx,
+            rx,
+            data: Arc::new(Mutex::new(BTreeSet::new())),
+            notify: Arc::new(Notify::new()),
         }
     }
 
     pub fn listen(self, db: Arc<Db>) -> mpsc::Sender<Entry> {
-        let (tx, rx) = mpsc::channel(1024);
-        let s = Arc::new(self);
-        tokio::spawn(Arc::clone(&s).recv_task(rx));
-        tokio::spawn(s.purge_expired_task(db));
+        let Expiration {
+            data,
+            notify,
+            tx,
+            rx,
+        } = self;
+
+        tokio::spawn(Expiration::recv_task(
+            Arc::clone(&data),
+            Arc::clone(&notify),
+            rx,
+        ));
+        tokio::spawn(Expiration::purge_expired_task(data, notify, db));
         tx
     }
 
-    async fn recv_task(self: Arc<Self>, mut rx: mpsc::Receiver<Entry>) {
+    async fn recv_task(
+        data: Arc<Mutex<BTreeSet<Entry>>>,
+        notify: Arc<Notify>,
+        mut rx: mpsc::Receiver<Entry>,
+    ) {
         while let Some(e) = rx.recv().await {
-            let mut lock = self.data.lock();
+            let mut lock = data.lock();
             let need_notify = lock
                 .iter()
                 .next()
@@ -59,23 +75,27 @@ impl Expiration {
             lock.insert(e);
             drop(lock);
             if need_notify {
-                self.notify.notify_one();
+                notify.notify_one();
             }
         }
     }
 
-    async fn purge_expired_task(self: Arc<Self>, db: Arc<Db>) {
+    async fn purge_expired_task(
+        data: Arc<Mutex<BTreeSet<Entry>>>,
+        notify: Arc<Notify>,
+        db: Arc<Db>,
+    ) {
         loop {
-            let next = Expiration::purge_expired_keys(self.data.lock().borrow_mut(), db.borrow());
+            let next = Expiration::purge_expired_keys(data.lock().borrow_mut(), db.borrow());
             if let Some(when) = next {
                 tokio::select! {
                     _ = time::sleep((when - Utc::now()).to_std().unwrap()) =>{}
-                    _ = self.notify.notified() => {}
+                    _ = notify.notified() => {}
                 }
             } else {
                 // There are no keys expiring in the future.
                 // Wait until the task is notified.
-                self.notify.notified().await;
+                notify.notified().await;
             }
         }
     }

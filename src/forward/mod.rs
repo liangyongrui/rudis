@@ -2,30 +2,33 @@ use fixed_vec_deque::FixedVecDeque;
 use once_cell::sync::Lazy;
 use tokio::sync::mpsc;
 
-use self::message::Message;
+pub use self::message::Message;
 
 pub mod message;
 
 /// 转发服务的状态
-struct Forward {
+pub struct Forward {
     buf: FixedVecDeque<[Message; 16384]>,
+    pub tx: mpsc::Sender<Message>,
+    rx: mpsc::Receiver<Message>,
 }
 
 impl Forward {
     pub fn new() -> Self {
+        let (tx, rx) = mpsc::channel(1024);
         Self {
+            tx,
+            rx,
             buf: FixedVecDeque::new(),
         }
     }
 
-    pub fn listen(self) -> mpsc::Sender<Message> {
-        let (tx, rx) = mpsc::channel(1024);
-        tokio::spawn(self.run(rx));
-        tx
+    pub fn listen(self) {
+        tokio::spawn(self.run());
     }
 
-    async fn run(mut self, mut rx: mpsc::Receiver<Message>) {
-        while let Some(msg) = rx.recv().await {
+    async fn run(mut self) {
+        while let Some(msg) = self.rx.recv().await {
             *self.buf.push_back() = msg.clone();
             // todo aof, 主从同步...
         }

@@ -1,9 +1,8 @@
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     slot::{
-        cmd::Write,
+        cmd::{Write, WriteResp},
         data_type::{DataType, SimpleType},
         dict::{self, Dict},
     },
@@ -18,23 +17,16 @@ pub struct Set {
     pub nx_xx: NxXx,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub struct Resp {
-    /// 原始值
-    /// 如果原始值的类型不为SimpleType, 则返回 null
-    pub old_value: SimpleType,
-    /// 新过期时间
-    pub new_expires_at: Option<DateTime<Utc>>,
-}
-
-impl Write<Resp> for Set {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
+/// 返回 原始值
+/// 如果原始值的类型不为SimpleType, 则返回 null
+impl Write<SimpleType> for Set {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<SimpleType>> {
         match dict.inner.entry(self.key) {
             std::collections::hash_map::Entry::Occupied(mut e) => {
                 if self.nx_xx.is_nx() {
                     let old_value = data_type_copy_to_simple(&e.get().data);
-                    return Ok(Resp {
-                        old_value,
+                    return Ok(WriteResp {
+                        payload: old_value,
                         new_expires_at: None,
                     });
                 }
@@ -48,15 +40,15 @@ impl Write<Resp> for Set {
                     data: DataType::SimpleType(self.value),
                     expire_at,
                 });
-                Ok(Resp {
-                    old_value: data_type_to_simple(old.data),
+                Ok(WriteResp {
+                    payload: data_type_to_simple(old.data),
                     new_expires_at: expire_at,
                 })
             }
             std::collections::hash_map::Entry::Vacant(e) => {
                 if self.nx_xx.is_xx() {
-                    return Ok(Resp {
-                        old_value: SimpleType::Null,
+                    return Ok(WriteResp {
+                        payload: SimpleType::Null,
                         new_expires_at: None,
                     });
                 }
@@ -69,8 +61,8 @@ impl Write<Resp> for Set {
                     data: DataType::SimpleType(self.value),
                     expire_at,
                 });
-                Ok(Resp {
-                    old_value: SimpleType::Null,
+                Ok(WriteResp {
+                    payload: SimpleType::Null,
                     new_expires_at: expire_at,
                 })
             }
@@ -97,7 +89,7 @@ fn data_type_to_simple(dt: DataType) -> SimpleType {
 mod test {
     use std::thread::sleep;
 
-    use chrono::Duration;
+    use chrono::{Duration, Utc};
 
     use super::*;
     use crate::slot::{
@@ -121,8 +113,8 @@ mod test {
         let res = cmd.apply(1, &mut dict).unwrap();
         assert_eq!(
             res,
-            Resp {
-                old_value: SimpleType::Null,
+            WriteResp {
+                payload: SimpleType::Null,
                 new_expires_at: Some(date_time)
             }
         );
@@ -147,8 +139,8 @@ mod test {
         let res = cmd.apply(1, &mut dict).unwrap();
         assert_eq!(
             res,
-            Resp {
-                old_value: "world".into(),
+            WriteResp {
+                payload: "world".into(),
                 new_expires_at: Some(date_time)
             }
         );
@@ -161,8 +153,8 @@ mod test {
         let res = cmd.apply(1, &mut dict).unwrap();
         assert_eq!(
             res,
-            Resp {
-                old_value: SimpleType::Null,
+            WriteResp {
+                payload: SimpleType::Null,
                 new_expires_at: None,
             }
         );
@@ -187,8 +179,8 @@ mod test {
         let res = cmd.apply(1, &mut dict).unwrap();
         assert_eq!(
             res,
-            Resp {
-                old_value: "world2".into(),
+            WriteResp {
+                payload: "world2".into(),
                 new_expires_at: None
             }
         );
@@ -201,8 +193,8 @@ mod test {
         let res = cmd.apply(1, &mut dict).unwrap();
         assert_eq!(
             res,
-            Resp {
-                old_value: SimpleType::Null,
+            WriteResp {
+                payload: SimpleType::Null,
                 new_expires_at: None
             }
         );
@@ -227,8 +219,8 @@ mod test {
         let res = cmd.apply(1, &mut dict).unwrap();
         assert_eq!(
             res,
-            Resp {
-                old_value: "world2".into(),
+            WriteResp {
+                payload: "world2".into(),
                 new_expires_at: Some(date_time)
             }
         );

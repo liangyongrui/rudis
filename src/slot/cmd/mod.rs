@@ -3,13 +3,19 @@
 
 pub mod simple;
 
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 pub use self::simple::{get, set};
 use super::dict::Dict;
 
+#[derive(Debug, PartialEq, Eq)]
+pub struct WriteResp<T> {
+    pub payload: T,
+    pub new_expires_at: Option<DateTime<Utc>>,
+}
 pub trait Write<T> {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<T>;
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<T>>;
 }
 
 pub trait Read<T> {
