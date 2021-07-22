@@ -69,4 +69,10 @@ impl Db {
     pub async fn expire(&self, cmd: cmd::expire::Expire) -> crate::Result<bool> {
         self.get_slot(&cmd.key).expire(cmd).await
     }
+    pub fn exists(&self, cmd: cmd::exists::Exists) -> crate::Result<bool> {
+        self.get_slot(&cmd.key).exists(cmd)
+    }
+    pub async fn incr(&self, cmd: cmd::incr::Incr) -> crate::Result<i64> {
+        self.get_slot(&cmd.key).incr(cmd).await
+    }
 }

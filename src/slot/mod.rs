@@ -72,11 +72,17 @@ impl Slot {
     pub async fn expire(&self, cmd: cmd::expire::Expire) -> crate::Result<bool> {
         self.call_write(cmd).await
     }
+    pub async fn incr(&self, cmd: cmd::incr::Incr) -> crate::Result<i64> {
+        self.call_write(cmd).await
+    }
 }
 
 /// 读命令
 impl Slot {
     pub fn get(&self, cmd: cmd::get::Get<'_>) -> crate::Result<SimpleType> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn exists(&self, cmd: cmd::exists::Exists<'_>) -> crate::Result<bool> {
         cmd.apply(self.dict.read().borrow())
     }
 }

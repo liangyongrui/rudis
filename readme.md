@@ -25,6 +25,7 @@ rust cloud cache
 ## todo
 
 1. [ ] 新 db 和 slot 的模板代码 换成宏
+1. [ ] 基础类型 Arc(不知道有没有必要)
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
@@ -68,7 +69,6 @@ rust cloud cache
 ## 不一定要做
 
 1. [ ] [优化 rdb 保存结构](https://github.com/dalei2019/redis-study/blob/main/docs/redis-rdb-format.md)
-1. [ ] 在 slot 上加一个 tokio 的大锁，内部无锁, 测试这种方案的效率
 1. [ ] <https://jzwdsb.github.io/2019/01/CRDT/>
 1. [ ] 带 size 的持久化红黑树/btree/b+tree
 1. [ ] lua 脚本

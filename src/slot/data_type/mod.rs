@@ -2,6 +2,8 @@
 //!
 //! 类型主要分为两种，简单类型 和 集合类型
 
+use std::convert::TryFrom;
+
 use serde::{Deserialize, Serialize};
 
 use crate::utils::float::Float;
@@ -28,6 +30,27 @@ pub enum SimpleType {
 impl From<&str> for SimpleType {
     fn from(s: &str) -> Self {
         SimpleType::String(s.to_owned())
+    }
+}
+
+impl TryFrom<&SimpleType> for i64 {
+    type Error = crate::Error;
+
+    fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
+        let res = match value {
+            SimpleType::String(s) => s.parse()?,
+            SimpleType::Bytes(b) => atoi::atoi(b).ok_or("type error")?,
+            SimpleType::Integer(i) => *i,
+            SimpleType::Float(_) => return Err("type error".into()),
+            SimpleType::Null => 0,
+        };
+        Ok(res)
+    }
+}
+
+impl From<i64> for DataType {
+    fn from(i: i64) -> Self {
+        DataType::SimpleType(SimpleType::Integer(i))
     }
 }
 
