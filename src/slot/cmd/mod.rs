@@ -3,6 +3,7 @@
 
 pub mod deque;
 pub mod kvp;
+pub mod set;
 pub mod simple;
 
 use chrono::{DateTime, Utc};
@@ -41,5 +42,6 @@ pub enum WriteCmd {
     KvpSet(kvp::set::Req),
     DequePop(deque::pop::Req),
     DequePush(deque::push::Req),
+    SetAdd(set::add::Req),
     None,
 }

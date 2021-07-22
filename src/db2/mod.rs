@@ -4,6 +4,7 @@ use std::{
     sync::Arc,
 };
 
+use rpds::{HashTrieMapSync, HashTrieSetSync};
 use tokio::sync::mpsc;
 
 use crate::{
@@ -90,6 +91,15 @@ impl Db {
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req) -> crate::Result<bool> {
         self.get_slot(cmd.key).kvp_exists(cmd)
     }
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<SimpleType> {
+        self.get_slot(cmd.key).kvp_get(cmd)
+    }
+    pub fn kvp_get_all(
+        &self,
+        cmd: cmd::kvp::get_all::Req<'_>,
+    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
+        self.get_slot(cmd.key).kvp_get_all(cmd)
+    }
     pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> crate::Result<Vec<SimpleType>> {
         self.get_slot(cmd.key).deque_range(cmd)
     }
@@ -104,5 +114,17 @@ impl Db {
     }
     pub async fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
         self.get_slot(&cmd.key).deque_pop(cmd).await
+    }
+    pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
+        self.get_slot(&cmd.key).set_add(cmd).await
+    }
+    pub fn set_get_all(
+        &self,
+        cmd: cmd::set::get_all::Req<'_>,
+    ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+        self.get_slot(cmd.key).set_get_all(cmd)
+    }
+    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
+        self.get_slot(cmd.key).set_exists(cmd)
     }
 }

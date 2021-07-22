@@ -9,6 +9,7 @@ use std::{
 };
 
 use parking_lot::RwLock;
+use rpds::{HashTrieMapSync, HashTrieSetSync};
 
 use self::{
     cmd::WriteResp,
@@ -114,6 +115,9 @@ impl Slot {
     pub async fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
         self.call_write(cmd).await
     }
+    pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
+        self.call_write(cmd).await
+    }
 }
 
 /// 读命令
@@ -127,10 +131,28 @@ impl Slot {
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> crate::Result<bool> {
         cmd.apply(self.dict.read().borrow())
     }
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<SimpleType> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn kvp_get_all(
+        &self,
+        cmd: cmd::kvp::get_all::Req<'_>,
+    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
+        cmd.apply(self.dict.read().borrow())
+    }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> crate::Result<usize> {
         cmd.apply(self.dict.read().borrow())
     }
     pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> crate::Result<Vec<SimpleType>> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
+        cmd.apply(self.dict.read().borrow())
+    }
+    pub fn set_get_all(
+        &self,
+        cmd: cmd::set::get_all::Req<'_>,
+    ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
         cmd.apply(self.dict.read().borrow())
     }
 }

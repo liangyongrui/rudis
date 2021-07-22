@@ -5,10 +5,11 @@
 use std::convert::TryFrom;
 mod deque;
 mod kvp;
+mod set;
 
 use serde::{Deserialize, Serialize};
 
-pub use self::{deque::Deque, kvp::Kvp};
+pub use self::{deque::Deque, kvp::Kvp, set::Set};
 pub use crate::utils::float::Float;
 
 /// slot value 的类型
@@ -62,4 +63,5 @@ impl From<i64> for DataType {
 pub enum CollectionType {
     Kvp(Kvp),
     Deque(Deque),
+    Set(Set),
 }

@@ -10,16 +10,16 @@ pub struct Req<'a> {
     pub field: &'a SimpleType,
 }
 
-impl<'a> Read<SimpleType> for Req<'a> {
-    fn apply(self, dict: &Dict) -> crate::Result<SimpleType> {
+impl<'a> Read<bool> for Req<'a> {
+    fn apply(self, dict: &Dict) -> crate::Result<bool> {
         if let Some(v) = dict.d_get(self.key) {
-            if let DataType::CollectionType(CollectionType::Kvp(ref kvp)) = v.data {
-                return Ok(kvp.get(self.field).cloned().unwrap_or(SimpleType::Null));
+            if let DataType::CollectionType(CollectionType::Set(ref set)) = v.data {
+                return Ok(set.contains(self.field));
             } else {
                 return Err("error type".into());
             }
         }
-        Ok(SimpleType::Null)
+        Ok(false)
     }
 }
 

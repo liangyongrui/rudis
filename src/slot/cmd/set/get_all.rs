@@ -1,3 +1,5 @@
+use rpds::HashTrieSetSync;
+
 use crate::slot::{
     cmd::Read,
     data_type::{CollectionType, DataType, SimpleType},
@@ -7,19 +9,18 @@ use crate::slot::{
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a SimpleType,
-    pub field: &'a SimpleType,
 }
 
-impl<'a> Read<SimpleType> for Req<'a> {
-    fn apply(self, dict: &Dict) -> crate::Result<SimpleType> {
+impl<'a> Read<Option<HashTrieSetSync<SimpleType>>> for Req<'a> {
+    fn apply(self, dict: &Dict) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
         if let Some(v) = dict.d_get(self.key) {
-            if let DataType::CollectionType(CollectionType::Kvp(ref kvp)) = v.data {
-                return Ok(kvp.get(self.field).cloned().unwrap_or(SimpleType::Null));
+            if let DataType::CollectionType(CollectionType::Set(ref set)) = v.data {
+                return Ok(Some((*set).clone()));
             } else {
                 return Err("error type".into());
             }
         }
-        Ok(SimpleType::Null)
+        Ok(None)
     }
 }
 
