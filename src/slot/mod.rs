@@ -4,14 +4,21 @@
 //! slot 层的操作，加锁的时间粒度降为最小
 
 use std::{
-    borrow::BorrowMut,
-    sync::{atomic::AtomicU64, Arc},
+    borrow::{Borrow, BorrowMut},
+    sync::atomic::AtomicU64,
 };
 
 use parking_lot::RwLock;
 
-use self::{cmd::WriteResp, data_type::SimpleType, dict::Dict};
-use crate::{db2::BgTask, slot::cmd::Write};
+use self::{
+    cmd::WriteResp,
+    data_type::SimpleType,
+    dict::{Dict, Value},
+};
+use crate::{
+    db2::BgTask,
+    slot::cmd::{Read, Write},
+};
 
 pub mod cmd;
 pub mod data_type;
@@ -54,9 +61,22 @@ impl Slot {
     }
 }
 
-/// 各种命令
+/// 写命令
 impl Slot {
     pub async fn set(&self, cmd: cmd::set::Set) -> crate::Result<SimpleType> {
         self.call_write(cmd).await
+    }
+    pub async fn del(&self, cmd: cmd::del::Del) -> crate::Result<Option<Value>> {
+        self.call_write(cmd).await
+    }
+    pub async fn expire(&self, cmd: cmd::expire::Expire) -> crate::Result<bool> {
+        self.call_write(cmd).await
+    }
+}
+
+/// 读命令
+impl Slot {
+    pub fn get(&self, cmd: cmd::get::Get<'_>) -> crate::Result<SimpleType> {
+        cmd.apply(self.dict.read().borrow())
     }
 }

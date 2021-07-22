@@ -8,34 +8,22 @@ use crate::slot::{
 
 #[derive(Debug, Clone)]
 pub struct Get<'a> {
-    pub keys: Vec<&'a SimpleType>,
-}
-#[derive(Debug, PartialEq, Eq)]
-
-pub struct Resp {
-    pub values: Vec<SimpleType>,
+    pub key: &'a SimpleType,
 }
 
-impl<'a> Read<Resp> for Get<'a> {
-    fn apply(self, dict: &Dict) -> crate::Result<Resp> {
-        let values = self
-            .keys
-            .into_iter()
-            .map(|k| {
-                if let Some(v) = dict.inner.get(k) {
-                    match v.expire_at {
-                        Some(ea) if ea <= Utc::now() => (),
-                        _ => {
-                            if let DataType::SimpleType(ref s) = v.data {
-                                return s.clone();
-                            }
-                        }
+impl<'a> Read<SimpleType> for Get<'a> {
+    fn apply(self, dict: &Dict) -> crate::Result<SimpleType> {
+        if let Some(v) = dict.inner.get(self.key) {
+            match v.expire_at {
+                Some(ea) if ea <= Utc::now() => (),
+                _ => {
+                    if let DataType::SimpleType(ref s) = v.data {
+                        return Ok(s.clone());
                     }
                 }
-                SimpleType::Null
-            })
-            .collect();
-        Ok(Resp { values })
+            }
+        }
+        Ok(SimpleType::Null)
     }
 }
 

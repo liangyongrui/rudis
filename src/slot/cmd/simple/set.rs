@@ -93,10 +93,7 @@ mod test {
 
     use super::*;
     use crate::slot::{
-        cmd::{
-            get::{self, Get},
-            Read,
-        },
+        cmd::{get::Get, Read},
         dict::Dict,
     };
 
@@ -119,16 +116,13 @@ mod test {
             }
         );
         let res = Get {
-            keys: vec![&"hello".into(), &"n".into()],
+            key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(
-            res,
-            get::Resp {
-                values: vec!["world".into(), SimpleType::Null]
-            }
-        );
+        assert_eq!(res, "world".into());
+        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        assert_eq!(res, SimpleType::Null);
         // xx
         let cmd = Set {
             key: "hello".into(),
@@ -159,16 +153,13 @@ mod test {
             }
         );
         let res = Get {
-            keys: vec![&"hello".into(), &"n".into()],
+            key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(
-            res,
-            get::Resp {
-                values: vec!["world2".into(), SimpleType::Null]
-            }
-        );
+        assert_eq!(res, "world2".into());
+        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        assert_eq!(res, SimpleType::Null);
         // nx
         let cmd = Set {
             key: "hello".into(),
@@ -199,16 +190,13 @@ mod test {
             }
         );
         let res = Get {
-            keys: vec![&"hello".into(), &"n".into()],
+            key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(
-            res,
-            get::Resp {
-                values: vec!["world2".into(), "world3".into(),]
-            }
-        );
+        assert_eq!(res, "world2".into());
+        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        assert_eq!(res, "world3".into());
         // time
         let cmd = Set {
             key: "hello".into(),
@@ -225,27 +213,21 @@ mod test {
             }
         );
         let res = Get {
-            keys: vec![&"hello".into(), &"n".into()],
+            key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(
-            res,
-            get::Resp {
-                values: vec!["world".into(), "world3".into(),]
-            }
-        );
+        assert_eq!(res, "world".into());
+        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        assert_eq!(res, "world3".into());
         sleep(std::time::Duration::from_secs(1));
         let res = Get {
-            keys: vec![&"hello".into(), &"n".into()],
+            key: &"hello".into(),
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(
-            res,
-            get::Resp {
-                values: vec![SimpleType::Null, "world3".into(),]
-            }
-        );
+        assert_eq!(res, SimpleType::Null);
+        let res = Get { key: &"n".into() }.apply(&dict).unwrap();
+        assert_eq!(res, "world3".into());
     }
 }

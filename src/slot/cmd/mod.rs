@@ -6,7 +6,7 @@ pub mod simple;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-pub use self::simple::{get, set};
+pub use self::simple::{del, expire, get, set};
 use super::dict::Dict;
 
 #[derive(Debug, PartialEq, Eq)]

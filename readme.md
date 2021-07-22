@@ -24,6 +24,7 @@ rust cloud cache
 
 ## todo
 
+1. [ ] 新 db 和 slot 的模板代码 换成宏
 1. [x] 多 slot (shard)
 1. [x] 复杂数据结构, 持久化数据结构 mvcc
 1. [x] nom parse
