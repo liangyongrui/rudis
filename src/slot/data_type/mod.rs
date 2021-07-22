@@ -2,7 +2,6 @@
 //!
 //! 类型主要分为两种，简单类型 和 集合类型
 
-use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
 use crate::utils::float::Float;
@@ -24,6 +23,12 @@ pub enum SimpleType {
     Integer(i64),
     Float(Float),
     Null,
+}
+
+impl From<&str> for SimpleType {
+    fn from(s: &str) -> Self {
+        SimpleType::String(s.to_owned())
+    }
 }
 
 /// 集合类型

@@ -19,16 +19,14 @@ pub mod dict;
 
 pub struct Slot {
     next_id: AtomicU64,
-    dict: Arc<RwLock<Dict>>,
+    dict: RwLock<Dict>,
 }
 
 impl Slot {
     #[inline]
     fn next_id(&self) -> u64 {
-        let res = self
-            .next_id
-            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        res
+        self.next_id
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
     }
 }
 

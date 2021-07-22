@@ -1,11 +1,11 @@
 //! slot 的 cmd
 //! 写操作，会有个操作id
 
-pub mod get;
-pub mod set;
+pub mod simple;
 
 use serde::{Deserialize, Serialize};
 
+pub use self::simple::{get, set};
 use super::dict::Dict;
 
 pub trait Write<T> {

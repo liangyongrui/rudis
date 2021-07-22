@@ -1,7 +1,7 @@
 use chrono::Utc;
 
-use super::Read;
 use crate::slot::{
+    cmd::Read,
     data_type::{DataType, SimpleType},
     dict::Dict,
 };
@@ -10,6 +10,7 @@ use crate::slot::{
 pub struct Get<'a> {
     pub keys: Vec<&'a SimpleType>,
 }
+#[derive(Debug, PartialEq, Eq)]
 
 pub struct Resp {
     pub values: Vec<SimpleType>,
