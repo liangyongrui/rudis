@@ -2,7 +2,7 @@
 //!
 //! 类型主要分为两种，简单类型 和 集合类型
 
-use std::convert::TryFrom;
+use std::{convert::TryFrom, sync::Arc};
 mod deque;
 mod kvp;
 mod set;
@@ -25,8 +25,10 @@ pub enum DataType {
 /// When derived on enums, variants are ordered by their top-to-bottom discriminant order.
 #[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Hash, Clone, Deserialize, Serialize)]
 pub enum SimpleType {
-    String(String),
-    Bytes(Vec<u8>),
+    /// 占位，用于排序
+    Big,
+    String(Arc<str>),
+    Bytes(Arc<[u8]>),
     Integer(i64),
     Float(Float),
     Null,
@@ -34,7 +36,7 @@ pub enum SimpleType {
 
 impl From<&str> for SimpleType {
     fn from(s: &str) -> Self {
-        SimpleType::String(s.to_owned())
+        SimpleType::String(s.into())
     }
 }
 
@@ -48,6 +50,7 @@ impl TryFrom<&SimpleType> for i64 {
             SimpleType::Integer(i) => *i,
             SimpleType::Float(_) => return Err("type error".into()),
             SimpleType::Null => 0,
+            SimpleType::Big => 0,
         };
         Ok(res)
     }

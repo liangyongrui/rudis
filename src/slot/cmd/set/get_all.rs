@@ -1,3 +1,6 @@
+use std::borrow::Borrow;
+
+use parking_lot::RwLock;
 use rpds::HashTrieSetSync;
 
 use crate::slot::{
@@ -12,7 +15,11 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<Option<HashTrieSetSync<SimpleType>>> for Req<'a> {
-    fn apply(self, dict: &Dict) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+        self.apply_in_lock(dict.read().borrow())
+    }
+
+    fn apply_in_lock(&self, dict: &Dict) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
         if let Some(v) = dict.d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Set(ref set)) = v.data {
                 return Ok(Some((*set).clone()));

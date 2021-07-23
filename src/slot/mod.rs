@@ -3,10 +3,7 @@
 //! 实现内部的命令 不需要兼容redis
 //! slot 层的操作，加锁的时间粒度降为最小
 
-use std::{
-    borrow::{Borrow, BorrowMut},
-    sync::atomic::AtomicU64,
-};
+use std::{borrow::BorrowMut, sync::atomic::AtomicU64};
 
 use parking_lot::RwLock;
 use rpds::{HashTrieMapSync, HashTrieSetSync};
@@ -123,36 +120,36 @@ impl Slot {
 /// 读命令
 impl Slot {
     pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> crate::Result<SimpleType> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn exists(&self, cmd: cmd::simple::exists::Req<'_>) -> crate::Result<bool> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> crate::Result<bool> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<SimpleType> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
     ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> crate::Result<usize> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> crate::Result<Vec<SimpleType>> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
     ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
-        cmd.apply(self.dict.read().borrow())
+        cmd.apply(&self.dict)
     }
 }

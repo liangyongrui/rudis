@@ -32,7 +32,7 @@ nom = "6"
 rcc_macros = { path = "./rcc_macros" }
 nix = "0.22"
 bincode = "1"
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1", features = ["derive", "rc"] }
 serde_with = "1"
 toml = "0.5"
 once_cell = "1"

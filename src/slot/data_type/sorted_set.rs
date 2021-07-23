@@ -24,3 +24,23 @@ impl SortedSet {
         Self::default()
     }
 }
+
+pub fn sharp_limit(limit: Option<(i64, i64)>, len: usize) -> (usize, usize) {
+    let (offset, count) = match limit {
+        Some((mut offset, count)) => {
+            if offset < 0 {
+                offset = 0;
+            }
+            (
+                offset as usize,
+                if count < 0 {
+                    len
+                } else {
+                    (offset + count) as usize
+                },
+            )
+        }
+        None => (0, len),
+    };
+    (offset, count)
+}

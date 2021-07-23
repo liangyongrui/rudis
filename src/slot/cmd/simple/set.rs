@@ -127,10 +127,10 @@ mod test {
         let res = get::Req {
             key: &"hello".into(),
         }
-        .apply(&dict)
+        .apply_in_lock(&dict)
         .unwrap();
         assert_eq!(res, "world".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply_in_lock(&dict).unwrap();
         assert_eq!(res, SimpleType::Null);
         // xx
         let cmd = Req {
@@ -164,10 +164,10 @@ mod test {
         let res = get::Req {
             key: &"hello".into(),
         }
-        .apply(&dict)
+        .apply_in_lock(&dict)
         .unwrap();
         assert_eq!(res, "world2".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply_in_lock(&dict).unwrap();
         assert_eq!(res, SimpleType::Null);
         // nx
         let cmd = Req {
@@ -201,10 +201,10 @@ mod test {
         let res = get::Req {
             key: &"hello".into(),
         }
-        .apply(&dict)
+        .apply_in_lock(&dict)
         .unwrap();
         assert_eq!(res, "world2".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply_in_lock(&dict).unwrap();
         assert_eq!(res, "world3".into());
         // time
         let cmd = Req {
@@ -224,19 +224,19 @@ mod test {
         let res = get::Req {
             key: &"hello".into(),
         }
-        .apply(&dict)
+        .apply_in_lock(&dict)
         .unwrap();
         assert_eq!(res, "world".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply_in_lock(&dict).unwrap();
         assert_eq!(res, "world3".into());
         sleep(std::time::Duration::from_secs(1));
         let res = get::Req {
             key: &"hello".into(),
         }
-        .apply(&dict)
+        .apply_in_lock(&dict)
         .unwrap();
         assert_eq!(res, SimpleType::Null);
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req { key: &"n".into() }.apply_in_lock(&dict).unwrap();
         assert_eq!(res, "world3".into());
     }
 }

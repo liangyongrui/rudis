@@ -1,4 +1,6 @@
-use std::vec;
+use std::{borrow::Borrow, vec};
+
+use parking_lot::RwLock;
 
 use crate::slot::{
     cmd::Read,
@@ -20,7 +22,11 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<Vec<SimpleType>> for Req<'a> {
-    fn apply(self, dict: &Dict) -> crate::Result<Vec<SimpleType>> {
+    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<SimpleType>> {
+        self.apply_in_lock(dict.read().borrow())
+    }
+
+    fn apply_in_lock(&self, dict: &Dict) -> crate::Result<Vec<SimpleType>> {
         if let Some(v) = dict.d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Deque(ref deque)) = v.data {
                 let (b, e) = deque.shape(self.start, self.stop);
