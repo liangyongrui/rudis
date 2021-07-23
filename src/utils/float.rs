@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// 自定义的f64，为了实现 Ord, Eq
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]
-pub struct Float(f64);
+pub struct Float(pub f64);
 impl Eq for Float {}
 
 impl PartialOrd for Float {

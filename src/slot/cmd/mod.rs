@@ -5,6 +5,7 @@ pub mod deque;
 pub mod kvp;
 pub mod set;
 pub mod simple;
+pub mod sorted_set;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -43,5 +44,7 @@ pub enum WriteCmd {
     DequePop(deque::pop::Req),
     DequePush(deque::push::Req),
     SetAdd(set::add::Req),
+    SortedSetAdd(sorted_set::add::Req),
+    SortedSetRemove(sorted_set::remove::Req),
     None,
 }

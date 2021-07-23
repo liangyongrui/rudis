@@ -41,7 +41,7 @@ impl NxXx {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub enum GtLt {
     Gt,
     Lt,
