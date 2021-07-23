@@ -19,14 +19,7 @@ impl<'a> Read<Option<HashTrieMapSync<SimpleType, SimpleType>>> for Req<'a> {
         self,
         dict: &RwLock<Dict>,
     ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
-        self.apply_in_lock(dict.read().borrow())
-    }
-
-    fn apply_in_lock(
-        &self,
-        dict: &Dict,
-    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Kvp(ref kvp)) = v.data {
                 return Ok(Some((*kvp).clone()));
             } else {

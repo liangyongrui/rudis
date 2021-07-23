@@ -17,7 +17,7 @@ pub struct Req<'a> {
     pub rev: bool,
 }
 
-impl Read<Option<usize>, Option<RedBlackTreeSetSync<Node>>> for Req<'_> {
+impl Read<Option<usize>> for Req<'_> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Option<usize>> {
         if let Some(value) = self.apply_in_lock(dict.read().borrow())? {
             let mut ans = 0;
@@ -39,7 +39,8 @@ impl Read<Option<usize>, Option<RedBlackTreeSetSync<Node>>> for Req<'_> {
         }
         Ok(None)
     }
-
+}
+impl Req<'_> {
     fn apply_in_lock(&self, dict: &Dict) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
         if let Some(v) = dict.d_get(self.key) {
             if let DataType::CollectionType(CollectionType::SortedSet(ref sorted_set)) = v.data {

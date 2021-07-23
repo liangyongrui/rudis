@@ -29,8 +29,7 @@ where
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<T>>;
 }
 
-pub trait Read<T, R = T> {
-    fn apply_in_lock(&self, dict: &Dict) -> crate::Result<R>;
+pub trait Read<T> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<T>;
 }
 

@@ -11,10 +11,6 @@ pub struct Req<'a> {
 
 impl<'a> Read<bool> for Req<'a> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<bool> {
-        self.apply_in_lock(dict.read().borrow())
-    }
-
-    fn apply_in_lock(&self, dict: &Dict) -> crate::Result<bool> {
-        Ok(dict.d_exists(self.key))
+        Ok(dict.read().d_exists(self.key))
     }
 }

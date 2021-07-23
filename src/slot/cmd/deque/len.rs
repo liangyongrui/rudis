@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use parking_lot::RwLock;
 
 use crate::slot::{
@@ -15,11 +13,7 @@ pub struct Req<'a> {
 
 impl<'a> Read<usize> for Req<'a> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<usize> {
-        self.apply_in_lock(dict.read().borrow())
-    }
-
-    fn apply_in_lock(&self, dict: &Dict) -> crate::Result<usize> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Deque(ref deque)) = v.data {
                 return Ok(deque.len());
             } else {

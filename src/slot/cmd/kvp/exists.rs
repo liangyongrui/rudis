@@ -16,11 +16,7 @@ pub struct Req<'a> {
 
 impl<'a> Read<bool> for Req<'a> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<bool> {
-        self.apply_in_lock(dict.read().borrow())
-    }
-
-    fn apply_in_lock(&self, dict: &Dict) -> crate::Result<bool> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Kvp(ref kvp)) = v.data {
                 return Ok(kvp.get(self.field).is_some());
             } else {
