@@ -1,6 +1,6 @@
 //! 主要测试 连接过程
 
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
 use rcc::{cmd::Get, server, SimpleType};
 use tokio::{
@@ -41,11 +41,11 @@ async fn test_connect() {
 }
 
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
-    let hello = format!("hello{}", suffix);
+    let hello: Arc<str> = format!("hello{}", suffix).into();
     let world = format!("world{}", suffix);
     // Get a key, data is missing
     let get = Get {
-        key: SimpleType::SimpleString(hello.clone()),
+        key: SimpleType::String(hello.clone()),
     };
     let cmd = &get.into_cmd_bytes()[..];
     stream.write_all(cmd).await.unwrap();
@@ -77,7 +77,7 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
 
     // Get the key, data is present
     let get = Get {
-        key: SimpleType::SimpleString(hello.clone()),
+        key: SimpleType::String(hello),
     };
     stream.write_all(&get.into_cmd_bytes()[..]).await.unwrap();
 

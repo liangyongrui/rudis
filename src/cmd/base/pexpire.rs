@@ -2,7 +2,7 @@ use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db2::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::SimpleType, Frame};
 
 /// https://redis.io/commands/pexpire
 #[derive(Debug, Clone, ParseFrames)]

@@ -7,7 +7,8 @@ pub mod message;
 
 /// 转发服务的状态
 pub struct Forward {
-    buf: FixedVecDeque<[Message; 16384]>,
+    /// todo 这个大小需要调整
+    buf: FixedVecDeque<[Message; 128]>,
     pub tx: mpsc::Sender<Message>,
     rx: mpsc::Receiver<Message>,
 }

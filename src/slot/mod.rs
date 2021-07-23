@@ -14,7 +14,7 @@ use self::{
     dict::{Dict, Value},
 };
 use crate::{
-    db2::BgTask,
+    db::BgTask,
     forward,
     slot::cmd::{Read, Write},
 };
@@ -57,13 +57,15 @@ impl Slot {
                 cmd: cmd.clone().into(),
             })
             .await;
-        let mut dict = self.dict.write();
-        dict.last_write_op_id = id;
         let WriteResp {
             new_expires_at,
             payload,
-        } = cmd.apply(id, dict.borrow_mut())?;
-        drop(dict);
+        } = {
+            let mut dict = self.dict.write();
+            dict.last_write_op_id = id;
+            let res = cmd.apply(id, dict.borrow_mut())?;
+            res
+        };
         if let Some((ea, key)) = new_expires_at {
             let _ = self
                 .bg_task
@@ -115,13 +117,22 @@ impl Slot {
     pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
         self.call_write(cmd).await
     }
-    pub async fn set_remove(&self, cmd: cmd::set::remove::Req) -> crate::Result<cmd::set::remove::Resp> {
+    pub async fn set_remove(
+        &self,
+        cmd: cmd::set::remove::Req,
+    ) -> crate::Result<cmd::set::remove::Resp> {
         self.call_write(cmd).await
     }
     pub async fn sorted_set_add(
         &self,
         cmd: cmd::sorted_set::add::Req,
     ) -> crate::Result<cmd::sorted_set::add::Resp> {
+        self.call_write(cmd).await
+    }
+    pub async fn sorted_set_remove(
+        &self,
+        cmd: cmd::sorted_set::remove::Req,
+    ) -> crate::Result<cmd::sorted_set::remove::Resp> {
         self.call_write(cmd).await
     }
     pub async fn sorted_set_remove_by_lex_range(

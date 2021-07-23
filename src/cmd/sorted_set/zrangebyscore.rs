@@ -3,8 +3,9 @@ use std::ops::Bound;
 use tracing::instrument;
 
 use crate::{
-    db::data_type::{SimpleType, ZrangeItem},
     parse::ParseError,
+    slot::data_type::{Float, SimpleType},
+    utils::BoundExt,
     Db, Frame, Parse,
 };
 
@@ -12,7 +13,7 @@ use crate::{
 #[derive(Debug)]
 pub struct Zrangebyscore {
     pub key: SimpleType,
-    pub range_item: ZrangeItem,
+    pub range_item: (Bound<f64>, Bound<f64>),
     pub limit: Option<(i64, i64)>,
     pub withscores: bool,
 }
@@ -51,7 +52,7 @@ impl Zrangebyscore {
             } else {
                 Bound::Included(max.parse::<f64>()?)
             };
-            ZrangeItem::Socre((min, max))
+            (min, max)
         };
         Ok(Self {
             key,
@@ -60,22 +61,28 @@ impl Zrangebyscore {
             withscores,
         })
     }
-
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = match db.zrange(&self.key, self.range_item, false, self.limit) {
-            Ok(v) => {
-                let mut res = vec![];
-                for n in v {
-                    res.push(n.key.into());
-                    if self.withscores {
-                        res.push(Frame::Simple(n.score.to_string()));
-                    }
-                }
-                Frame::Array(res)
-            }
-            Err(e) => Frame::Error(e),
+        let limit = self
+            .limit
+            .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
+        let key = &self.key;
+        let (b, e) = self.range_item;
+        let cmd = crate::slot::cmd::sorted_set::range_by_score::Req {
+            key,
+            rev: false,
+            range: (b.map(|f| Float(f)), e.map(|f| Float(f))),
+            limit,
         };
-        Ok(response)
+        let response = db.sorted_set_range_by_score(cmd)?;
+
+        let mut res = vec![];
+        for n in response {
+            res.push((&n.key).into());
+            if self.withscores {
+                res.push(Frame::Simple(n.score.0.to_string()));
+            }
+        }
+        Ok(Frame::Array(res))
     }
 }

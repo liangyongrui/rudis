@@ -6,7 +6,6 @@ use std::{sync::Arc, usize};
 
 use crate::{slot::data_type::SimpleType, utils::other_type::SimpleTypePair};
 
-
 pub trait ToVecU8 {
     fn into_vec_u8(self) -> Vec<u8>;
 }
@@ -35,8 +34,8 @@ impl ToVecU8 for SimpleType {
             SimpleType::String(s) => s.into_vec_u8(),
             SimpleType::Integer(i) => i.into_vec_u8(),
             SimpleType::Null => vec![b'$', b'-', b'1'],
-            SimpleType::Big => todo!(),
-            SimpleType::Float(_) => todo!(),
+            SimpleType::Big => vec![b'$', b'-', b'1'],
+            SimpleType::Float(f) => f.0.to_string().into_vec_u8(),
         }
     }
 }

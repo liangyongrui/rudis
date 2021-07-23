@@ -1,7 +1,7 @@
 pub mod float;
 pub mod options;
-pub mod pointer;
 pub mod other_type;
+pub mod pointer;
 
 use std::ops::Bound;
 

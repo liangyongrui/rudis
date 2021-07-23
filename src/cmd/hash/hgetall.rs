@@ -3,15 +3,15 @@ use std::vec;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db2::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
     pub key: SimpleType,
 }
 
-impl From<Hgetall> for crate::slot::cmd::kvp::get_all::Req<'_> {
-    fn from(old: Hgetall) -> Self {
+impl<'a> From<&'a Hgetall> for crate::slot::cmd::kvp::get_all::Req<'a> {
+    fn from(old: &'a Hgetall) -> Self {
         Self { key: &old.key }
     }
 }
@@ -19,7 +19,7 @@ impl From<Hgetall> for crate::slot::cmd::kvp::get_all::Req<'_> {
 impl Hgetall {
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        if let Some(v) = db.kvp_get_all(self.into())? {
+        if let Some(v) = db.kvp_get_all((&self).into())? {
             Ok(Frame::Array(
                 v.into_iter()
                     .flat_map(|(k, v)| vec![k.into(), v.into()].into_iter())

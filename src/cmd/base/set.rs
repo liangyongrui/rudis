@@ -3,7 +3,7 @@ use tracing::instrument;
 
 use crate::{
     cmd::{Parse, ParseError},
-    db2::Db,
+    db::Db,
     slot::data_type::SimpleType,
     utils::options::{ExpiresAt, NxXx},
     Frame,

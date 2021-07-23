@@ -2,17 +2,13 @@ use std::ops::Bound;
 
 use tracing::instrument;
 
-use crate::{
-    db::data_type::{SimpleType, ZrangeItem},
-    parse::ParseError,
-    Db, Frame, Parse,
-};
+use crate::{parse::ParseError, slot::data_type::SimpleType, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrangebylex
 #[derive(Debug)]
 pub struct Zrangebylex {
     pub key: SimpleType,
-    pub range_item: ZrangeItem,
+    pub range_item: (Bound<String>, Bound<String>),
     pub limit: Option<(i64, i64)>,
 }
 
@@ -48,7 +44,7 @@ impl Zrangebylex {
             } else {
                 Bound::Included(max[1..].to_owned())
             };
-            ZrangeItem::Lex((min, max))
+            (min, max)
         };
         Ok(Self {
             key,
@@ -59,16 +55,25 @@ impl Zrangebylex {
 
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = match db.zrange(&self.key, self.range_item, false, self.limit) {
-            Ok(v) => {
-                let mut res = vec![];
-                for n in v {
-                    res.push(n.key.into());
-                }
-                Frame::Array(res)
-            }
-            Err(e) => Frame::Error(e),
+        let limit = self
+            .limit
+            .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
+        let key = &self.key;
+        let (b, e) = self.range_item;
+        let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
+            key,
+            rev: false,
+            range: (
+                b.map(|f| SimpleType::String(f.into())),
+                e.map(|f| SimpleType::String(f.into())),
+            ),
+            limit,
         };
-        Ok(response)
+        let response = db.sorted_set_range_by_lex(cmd)?;
+        let mut res = vec![];
+        for n in response {
+            res.push((&n.key).into());
+        }
+        Ok(Frame::Array(res))
     }
 }

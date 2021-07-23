@@ -3,7 +3,10 @@ use std::ops::Bound;
 use tracing::instrument;
 
 use crate::{
-    parse::ParseError, slot::data_type::SimpleType, utils::other_type::ZrangeItem, Db, Frame, Parse,
+    parse::ParseError,
+    slot::data_type::{Float, SimpleType},
+    utils::{other_type::ZrangeItem, BoundExt},
+    Db, Frame, Parse,
 };
 
 enum By {
@@ -94,46 +97,52 @@ impl Zrange {
 
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = match self.range_item {
+        let limit = self
+            .limit
+            .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
+        let key = &self.key;
+        let rev = self.rev;
+        let response = match self.range_item {
             ZrangeItem::Rank((start, stop)) => {
                 let cmd = crate::slot::cmd::sorted_set::range_by_rank::Req {
-                    key: &self.key,
+                    key,
                     start,
                     stop,
-                    limit: self
-                        .limit
-                        .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1)),
-                    rev: self.rev,
+                    limit,
+                    rev,
                 };
                 db.sorted_set_range_by_rank(cmd)?
             }
-            ZrangeItem::Socre((b,e)) => {
+            ZrangeItem::Socre((b, e)) => {
                 let cmd = crate::slot::cmd::sorted_set::range_by_score::Req {
-                    key: &self.key,
-                    start,
-                    stop,
-                    limit: self.limit,
-                    rev: self.rev,
+                    key,
+                    rev,
+                    range: (b.map(|f| Float(f)), e.map(|f| Float(f))),
+                    limit,
                 };
-                db.sorted_set_range_by_rank(cmd)?
+                db.sorted_set_range_by_score(cmd)?
             }
-            ZrangeItem::Lex(_) => todo!(),
+            ZrangeItem::Lex((b, e)) => {
+                let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
+                    key,
+                    rev,
+                    range: (
+                        b.map(|f| SimpleType::String(f.into())),
+                        e.map(|f| SimpleType::String(f.into())),
+                    ),
+                    limit,
+                };
+                db.sorted_set_range_by_lex(cmd)?
+            }
         };
 
-        todo!()
-        // let response = match db.zrange(&self.key, self.range_item, self.rev, self.limit) {
-        //     Ok(v) => {
-        //         let mut res = vec![];
-        //         for n in v {
-        //             res.push(n.key.into());
-        //             if self.withscores {
-        //                 res.push(Frame::Simple(n.score.to_string()));
-        //             }
-        //         }
-        //         Frame::Array(res)
-        //     }
-        //     Err(e) => Frame::Error(e),
-        // };
-        // Ok(response)
+        let mut res = vec![];
+        for n in response {
+            res.push((&n.key).into());
+            if self.withscores {
+                res.push(Frame::Simple(n.score.0.to_string()));
+            }
+        }
+        Ok(Frame::Array(res))
     }
 }

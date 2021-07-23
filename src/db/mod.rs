@@ -1,68 +1,57 @@
-mod aof;
-pub mod data_type;
-mod result;
-mod slot;
-// Hard drive snapshot
-mod hds;
-
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
-    net::SocketAddr,
-    ops::Bound,
     sync::Arc,
-    usize,
 };
 
-use arc_swap::ArcSwap;
-use chrono::{DateTime, Utc};
-use parking_lot::Mutex;
-use rpds::HashTrieSetSync;
-pub use slot::dict;
+use rpds::{HashTrieMapSync, HashTrieSetSync};
 use tokio::sync::mpsc;
 
-pub use self::data_type::{DataType, SortedSetNode, ZrangeItem};
-use self::{
-    aof::Aof,
-    data_type::{SimpleType, SimpleTypePair},
-    hds::HdsStatus,
-    result::Result,
-    slot::Slot,
-};
 use crate::{
-    cmd::WriteCmd,
-    replica,
-    utils::options::{GtLt, NxXx},
+    expire::{self, Expiration},
+    forward::{self, Forward},
+    slot::{
+        cmd,
+        data_type::{self, SimpleType},
+        dict, Slot,
+    },
 };
+
+#[derive(Clone)]
+pub struct BgTask {
+    // 过期task
+    pub expire_sender: mpsc::Sender<expire::Entry>,
+    // 转发task
+    pub forward_sender: mpsc::Sender<forward::Message>,
+}
+pub struct Db {
+    _bg_task: BgTask,
+    slots: HashMap<u16, Slot>,
+}
 
 const SIZE: u16 = 1024;
 
-#[derive(Debug)]
-pub enum Role {
-    Master(Vec<SocketAddr>),
-    Replica(Option<SocketAddr>),
-}
-
-pub struct Db {
-    pub sender: Option<ArcSwap<mpsc::Sender<WriteCmd>>>,
-    role: Mutex<Role>,
-    slots: Arc<HashMap<u16, Slot>>,
-    pub hds_status: ArcSwap<HdsStatus>,
-}
-
 impl Db {
-    /// 锁住所有dict，
-    ///
-    /// 锁定期间 所有的写操作的不能执行，读操作不受影响
-    /// - TODO 这里需要监控一下耗时
-    pub fn read_lock(
-        &self,
-    ) -> Vec<parking_lot::lock_api::RwLockReadGuard<parking_lot::RawRwLock, dict::DictInner>> {
-        self.slots
-            .values()
-            .into_iter()
-            .map(|t| t.dict.read_lock())
-            .collect::<Vec<_>>()
+    pub fn new() -> Arc<Self> {
+        let expiration = Expiration::new();
+        let forward = Forward::new();
+        let bg_task = BgTask {
+            expire_sender: expiration.tx.clone(),
+            forward_sender: forward.tx.clone(),
+        };
+        let mut slots = HashMap::new();
+        for i in 0..SIZE {
+            slots
+                .entry(i)
+                .or_insert_with(|| Slot::new(i, bg_task.clone()));
+        }
+        let db = Arc::new(Self {
+            _bg_task: bg_task,
+            slots,
+        });
+        expiration.listen(Arc::clone(&db));
+        forward.listen();
+        db
     }
     fn get_slot(&self, key: &SimpleType) -> &Slot {
         // todo 更完善的分片策略
@@ -72,181 +61,140 @@ impl Db {
         // todo cluster move
         self.slots.get(&(i as u16)).unwrap()
     }
+}
 
-    pub async fn new(role: Role) -> Arc<Self> {
-        let mut slots = hds::load_slots();
-        for i in 0..SIZE {
-            slots.entry(i).or_insert_with(Slot::new);
-        }
-        let create_timestamp = Utc::now().timestamp() as _;
-        let s = Arc::new(Self {
-            sender: Aof::start(create_timestamp).map(ArcSwap::from_pointee),
-            role: Mutex::new(role),
-            hds_status: ArcSwap::from_pointee(HdsStatus::new(create_timestamp)),
-            slots: Arc::new(slots),
-        });
-        aof::load_into_db(&s).await;
-        tokio::spawn(hds::run_bg_save_task(Arc::clone(&s)));
-        if let Role::Replica(Some(master_addr)) = *s.role.lock() {
-            replica::update_master(master_addr)
-        }
-        s
+/// cmd
+impl Db {
+    pub fn get(&self, cmd: cmd::simple::get::Req) -> crate::Result<SimpleType> {
+        self.get_slot(cmd.key).get(cmd)
     }
-    pub fn zremrange_by_rank(&self, key: &SimpleType, range: (i64, i64)) -> Result<usize> {
-        self.get_slot(&key).zremrange_by_rank(key, range)
+    pub async fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
+        self.get_slot(&cmd.key).set(cmd).await
     }
-    pub fn zremrange_by_score(
+    pub async fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<dict::Value>> {
+        self.get_slot(&cmd.key).del(cmd).await
+    }
+    pub async fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
+        self.get_slot(&cmd.key).expire(cmd).await
+    }
+    pub fn exists(&self, cmd: cmd::simple::exists::Req) -> crate::Result<bool> {
+        self.get_slot(&cmd.key).exists(cmd)
+    }
+    pub async fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
+        self.get_slot(&cmd.key).incr(cmd).await
+    }
+    pub async fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> crate::Result<i64> {
+        self.get_slot(&cmd.key).kvp_incr(cmd).await
+    }
+    pub async fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> crate::Result<cmd::kvp::del::Resp> {
+        self.get_slot(&cmd.key).kvp_del(cmd).await
+    }
+    pub async fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
+        self.get_slot(&cmd.key).kvp_set(cmd).await
+    }
+    pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req) -> crate::Result<bool> {
+        self.get_slot(cmd.key).kvp_exists(cmd)
+    }
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<SimpleType> {
+        self.get_slot(cmd.key).kvp_get(cmd)
+    }
+    pub fn kvp_get_all(
         &self,
-        key: &SimpleType,
-        range: (Bound<f64>, Bound<f64>),
-    ) -> Result<usize> {
-        self.get_slot(&key).zremrange_by_score(key, range)
+        cmd: cmd::kvp::get_all::Req<'_>,
+    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
+        self.get_slot(cmd.key).kvp_get_all(cmd)
     }
-
-    pub fn zrem(&self, key: &SimpleType, members: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).zrem(key, members)
+    pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> crate::Result<Vec<SimpleType>> {
+        self.get_slot(cmd.key).deque_range(cmd)
     }
-    pub fn zrank(&self, key: &SimpleType, member: &SimpleType, rev: bool) -> Result<Option<usize>> {
-        self.get_slot(&key).zrank(key, member, rev)
+    pub fn deque_len(&self, cmd: cmd::deque::len::Req) -> crate::Result<usize> {
+        self.get_slot(cmd.key).deque_len(cmd)
     }
-    pub fn zrange(
+    pub async fn deque_push(
         &self,
-        key: &SimpleType,
-        range: ZrangeItem,
-        rev: bool,
-        limit: Option<(i64, i64)>,
-    ) -> Result<Vec<SortedSetNode>> {
-        self.get_slot(&key).zrange(key, range, rev, limit)
+        cmd: cmd::deque::push::Req,
+    ) -> crate::Result<cmd::deque::push::Resp> {
+        self.get_slot(&cmd.key).deque_push(cmd).await
     }
-    pub async fn zadd(
+    pub async fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
+        self.get_slot(&cmd.key).deque_pop(cmd).await
+    }
+    pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
+        self.get_slot(&cmd.key).set_add(cmd).await
+    }
+    pub async fn set_remove(
         &self,
-        key: SimpleType,
-        values: Vec<SortedSetNode>,
-        nx_xx: NxXx,
-        gt_lt: GtLt,
-        ch: bool,
-        incr: bool,
-    ) -> Result<usize> {
-        self.get_slot(&key)
-            .zadd(key, values, nx_xx, gt_lt, ch, incr)
+        cmd: cmd::set::remove::Req,
+    ) -> crate::Result<cmd::set::remove::Resp> {
+        self.get_slot(&cmd.key).set_remove(cmd).await
+    }
+    pub fn set_get_all(
+        &self,
+        cmd: cmd::set::get_all::Req<'_>,
+    ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+        self.get_slot(cmd.key).set_get_all(cmd)
+    }
+    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
+        self.get_slot(cmd.key).set_exists(cmd)
+    }
+    pub fn sorted_set_range_by_lex(
+        &self,
+        cmd: cmd::sorted_set::range_by_lex::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key).sorted_set_range_by_lex(cmd)
+    }
+    pub fn sorted_set_range_by_rank(
+        &self,
+        cmd: cmd::sorted_set::range_by_rank::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key).sorted_set_range_by_rank(cmd)
+    }
+    pub fn sorted_set_range_by_score(
+        &self,
+        cmd: cmd::sorted_set::range_by_score::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key).sorted_set_range_by_score(cmd)
+    }
+    pub fn sorted_set_rank(
+        &self,
+        cmd: cmd::sorted_set::rank::Req<'_>,
+    ) -> crate::Result<Option<usize>> {
+        self.get_slot(&cmd.key).sorted_set_rank(cmd)
+    }
+    pub async fn sorted_set_add(
+        &self,
+        cmd: cmd::sorted_set::add::Req,
+    ) -> crate::Result<cmd::sorted_set::add::Resp> {
+        self.get_slot(&cmd.key).sorted_set_add(cmd).await
+    }
+    pub async fn sorted_set_remove(
+        &self,
+        cmd: cmd::sorted_set::remove::Req,
+    ) -> crate::Result<cmd::sorted_set::remove::Resp> {
+        self.get_slot(&cmd.key).sorted_set_remove(cmd).await
+    }
+    pub async fn sorted_set_remove_by_lex_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_lex_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key)
+            .sorted_set_remove_by_lex_range(cmd)
             .await
     }
-    pub fn smembers(&self, key: &SimpleType) -> Result<HashTrieSetSync<SimpleType>> {
-        self.get_slot(&key).smembers(key)
-    }
-    pub fn srem(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).srem(key, values)
-    }
-    pub fn sismember(&self, key: &SimpleType, value: SimpleType) -> Result<bool> {
-        self.get_slot(&key)
-            .smismember(key, vec![value])
-            .map(|t| t[0])
-    }
-    pub fn smismember(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<Vec<bool>> {
-        self.get_slot(&key).smismember(key, values)
-    }
-    pub async fn sadd(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).sadd(key, values).await
-    }
-    pub async fn hincrby(&self, key: SimpleType, field: SimpleType, value: i64) -> Result<i64> {
-        self.get_slot(&key).hincrby(key, field, value).await
-    }
-    pub fn hexists(&self, key: &SimpleType, field: SimpleType) -> Result<usize> {
-        self.get_slot(&key).hexists(key, field)
-    }
-    pub fn hdel(&self, key: &SimpleType, fields: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).hdel(key, fields)
-    }
-    pub async fn hsetnx(
+    pub async fn sorted_set_remove_by_rank_range(
         &self,
-        key: SimpleType,
-        field: SimpleType,
-        value: SimpleType,
-    ) -> Result<usize> {
-        self.get_slot(&key).hsetnx(key, field, value).await
-    }
-    pub fn hget(&self, key: &SimpleType, field: SimpleType) -> Result<Option<SimpleType>> {
-        self.get_slot(&key)
-            .hmget(key, vec![field])
-            .map(|x| x[0].clone())
-    }
-    pub fn hmget(
-        &self,
-        key: &SimpleType,
-        fields: Vec<SimpleType>,
-    ) -> Result<Vec<Option<SimpleType>>> {
-        self.get_slot(&key).hmget(key, fields)
-    }
-    pub async fn hset(&self, key: SimpleType, pairs: Vec<SimpleTypePair>) -> Result<usize> {
-        self.get_slot(&key).hset(key, pairs).await
-    }
-    pub fn hgetall(&self, key: &SimpleType) -> Result<Vec<SimpleTypePair>> {
-        self.get_slot(key).hgetall(key)
-    }
-    pub fn lrange(&self, key: &SimpleType, start: i64, stop: i64) -> Result<Vec<SimpleType>> {
-        self.get_slot(key).lrange(key, start, stop)
-    }
-    pub async fn lpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).lpush(key, values).await
-    }
-    pub async fn rpush(&self, key: SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(&key).rpush(key, values).await
-    }
-    pub fn lpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(key).lpushx(key, values)
-    }
-    pub fn rpushx(&self, key: &SimpleType, values: Vec<SimpleType>) -> Result<usize> {
-        self.get_slot(key).rpushx(key, values)
-    }
-    pub fn llen(&self, key: &SimpleType) -> Result<usize> {
-        self.get_slot(key).llen(key)
-    }
-    pub fn lpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
-        self.get_slot(key).lpop(key, count)
-    }
-    pub fn rpop(&self, key: &SimpleType, count: usize) -> Result<Option<Vec<SimpleType>>> {
-        self.get_slot(key).rpop(key, count)
-    }
-
-    pub fn incr_by(&self, key: SimpleType, value: i64) -> Result<i64> {
-        self.get_slot(&key).incr_by(key, value)
-    }
-
-    pub async fn expires_at(&self, key: &SimpleType, expires_at: DateTime<Utc>) -> bool {
-        self.get_slot(&key)
-            .set_expires_at(key, Some(expires_at))
+        cmd: cmd::sorted_set::remove_by_rank_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key)
+            .sorted_set_remove_by_rank_range(cmd)
             .await
     }
-    pub fn exists(&self, keys: Vec<SimpleType>) -> usize {
-        keys.into_iter()
-            .filter(|key| self.get_slot(key).exists(key))
-            .count()
-    }
-
-    pub fn get(&self, key: &SimpleType) -> Result<Option<SimpleType>> {
-        self.get_slot(key).get_simple(key)
-    }
-    pub fn del(&self, keys: Vec<SimpleType>) -> usize {
-        keys.into_iter()
-            .filter(|key| self.get_slot(key).remove(key).is_some())
-            .count()
-    }
-    pub async fn set(
+    pub async fn sorted_set_remove_by_score_range(
         &self,
-        key: SimpleType,
-        value: SimpleType,
-        nx_xx: NxXx,
-        expires_at: Option<DateTime<Utc>>,
-        keepttl: bool,
-    ) -> Result<Option<SimpleType>> {
-        self.get_slot(&key)
-            .set(key, value, nx_xx, expires_at, keepttl)
+        cmd: cmd::sorted_set::remove_by_score_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key)
+            .sorted_set_remove_by_score_range(cmd)
             .await
-    }
-
-    pub fn replicaof(&self, master_addr: SocketAddr) {
-        replica::update_master(master_addr);
-        let mut role = self.role.lock();
-        *role = Role::Replica(Some(master_addr));
     }
 }

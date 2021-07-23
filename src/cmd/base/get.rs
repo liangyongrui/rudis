@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db2::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::SimpleType, Frame};
 
 /// Get the value of key.
 ///
@@ -14,8 +14,8 @@ pub struct Get {
     /// Name of the key to get
     pub key: SimpleType,
 }
-impl From<Get> for crate::slot::cmd::simple::get::Req<'_> {
-    fn from(old: Get) -> Self {
+impl<'a> From<&'a Get> for crate::slot::cmd::simple::get::Req<'a> {
+    fn from(old: &'a Get) -> Self {
         Self { key: &old.key }
     }
 }
@@ -40,7 +40,7 @@ impl Get {
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         // Get the value from the shared database state
 
-        let response = (&db.get(self.into())?).into();
+        let response = (&db.get((&self).into())?).into();
         // Write the response back to the client
         Ok(response)
     }

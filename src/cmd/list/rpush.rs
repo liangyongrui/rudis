@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{Frame, db2::Db, slot::data_type::SimpleType};
+use crate::{db::Db, slot::data_type::SimpleType, Frame};
 
 /// https://redis.io/commands/rpush
 #[derive(Debug, Clone, ParseFrames)]

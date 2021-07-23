@@ -11,7 +11,7 @@ use tokio::{
     time,
 };
 
-use crate::{db2::Db, slot::data_type::SimpleType};
+use crate::{db::Db, slot::data_type::SimpleType};
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.

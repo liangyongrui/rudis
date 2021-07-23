@@ -2,7 +2,7 @@ use rcc_macros::ParseFrames;
 use tracing::instrument;
 
 use crate::{
-    db2::Db,
+    db::Db,
     slot::{self, data_type::SimpleType},
     Frame,
 };

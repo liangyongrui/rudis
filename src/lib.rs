@@ -16,10 +16,12 @@ pub use parse::frame::Frame;
 
 // mod db;
 /// 暂时pub
-pub mod db2;
+pub mod db;
 // pub use db::data_type::SimpleType;
 // use db::Db;
-use db2::Db;
+use crate::db::Db;
+pub use crate::slot::data_type::SimpleType;
+
 mod parse;
 pub use connection::server;
 pub use parse::to_bytes::ToVecU8;

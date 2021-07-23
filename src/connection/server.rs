@@ -1,4 +1,4 @@
-use std::{future::Future, net::SocketAddr, sync::Arc};
+use std::{future::Future, sync::Arc};
 
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -7,7 +7,7 @@ use tokio::{
 };
 use tracing::{debug, error, info, instrument};
 
-use crate::{Command, Connection, Db, Frame, Shutdown, config::CONFIG, utils::other_type::Role};
+use crate::{config::CONFIG, utils::other_type::Role, Command, Connection, Db, Frame, Shutdown};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.
@@ -118,12 +118,12 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     let (notify_shutdown, _) = broadcast::channel(1);
     let (shutdown_complete_tx, shutdown_complete_rx) = mpsc::channel(1);
 
-    let role = if CONFIG.replica {
+    // todo role
+    let _role = if CONFIG.replica {
         Role::Replica(CONFIG.master_addr)
     } else {
         Role::Master(vec![])
     };
-    // tod role
     // Initialize the listener state
     let mut server = Listener {
         listener,

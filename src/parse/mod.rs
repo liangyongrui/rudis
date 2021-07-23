@@ -5,7 +5,7 @@ use std::{fmt, str, vec};
 
 pub use frame::parse;
 
-use crate::{Frame, slot::data_type::SimpleType};
+use crate::{slot::data_type::SimpleType, Frame};
 
 /// Utility for parsing a command
 ///

@@ -1,8 +1,7 @@
-use nom::{bitvec::field, combinator::value};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db2::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::SimpleType, Frame};
 
 /// https://redis.io/commands/hsetnx
 #[derive(Debug, ParseFrames, Clone)]
