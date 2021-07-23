@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, vec};
+use std::vec;
 
 use parking_lot::RwLock;
 

@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use parking_lot::RwLock;
 use rpds::HashTrieSetSync;
 

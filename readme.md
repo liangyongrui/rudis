@@ -9,7 +9,9 @@ rust cloud cache
    - 读写公平锁
    - 单次请求只持有一次锁，并且时间粒度尽量小
    - slot 之间并发，空间粒度也尽量小
+   - COW/MVCC
 1. 过期异步删除
+   - 大 key 也是 O(1)的删除
 1. cluster
 1. ha
 1. 自动化运维

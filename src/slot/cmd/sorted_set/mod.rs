@@ -1,16 +1,24 @@
+use std::ops::Bound;
+
 use rpds::RedBlackTreeSetSync;
 
-use crate::slot::{
-    data_type::{sorted_set::Node, CollectionType, DataType},
-    dict, SimpleType,
+use crate::{
+    slot::{
+        data_type::{sorted_set::Node, CollectionType, DataType, Float},
+        dict, SimpleType,
+    },
+    utils::BoundExt,
 };
 
 pub mod add;
+pub mod range_by_lex;
 pub mod range_by_rank;
 pub mod range_by_score;
 pub mod rank;
 pub mod remove;
-pub mod remove_range;
+pub mod remove_by_lex_range;
+pub mod remove_by_rank_range;
+pub mod remove_by_score_range;
 
 pub(self) fn get_value(
     key: &SimpleType,
@@ -52,4 +60,17 @@ pub(self) fn shape_rank(mut start: i64, mut stop: i64, len: usize) -> (usize, us
         stop = len - 1
     }
     (start as usize, stop as usize + 1)
+}
+
+pub(self) fn bigger_range(range: (Bound<Float>, Bound<Float>)) -> (Bound<Node>, Bound<Node>) {
+    (
+        range.0.map(|f| Node {
+            score: f,
+            key: SimpleType::Null,
+        }),
+        range.1.map(|f| Node {
+            score: f,
+            key: SimpleType::Big,
+        }),
+    )
 }

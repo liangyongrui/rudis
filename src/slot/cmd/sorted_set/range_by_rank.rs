@@ -1,13 +1,8 @@
 use std::borrow::Borrow;
 
 use parking_lot::RwLock;
-use rpds::RedBlackTreeSetSync;
 
-use crate::slot::{
-    cmd::Read,
-    data_type::{self, sorted_set::Node, CollectionType, DataType, SimpleType},
-    dict::Dict,
-};
+use crate::slot::{cmd::Read, data_type::SimpleType, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {

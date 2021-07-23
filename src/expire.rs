@@ -100,14 +100,14 @@ impl Expiration {
         }
     }
 
-    fn purge_expired_keys(data: &mut BTreeSet<Entry>, db: &Db) -> Option<DateTime<Utc>> {
+    fn purge_expired_keys(data: &mut BTreeSet<Entry>, _db: &Db) -> Option<DateTime<Utc>> {
         let now = Utc::now();
         // 因为只需要处理头部元素，所有这里每次产生一个新的迭代器是安全的, 等 #![feature(map_first_last)] stable 可以替换
         while let Some(Entry {
             expires_at,
-            slot,
-            id,
-            key,
+            slot: _,
+            id: _,
+            key: _,
         }) = data.iter().next()
         {
             let expires_at = *expires_at;
@@ -115,6 +115,8 @@ impl Expiration {
                 return Some(expires_at);
             }
             // TODO 判断是否需要删除，需要则删除
+
+            // 新线程析构
             // let need_remove = entry.process_mut(key, |e| match e {
             //     Some(e) => e.id == id,
             //     None => false,
