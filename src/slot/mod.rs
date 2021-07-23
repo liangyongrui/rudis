@@ -115,6 +115,30 @@ impl Slot {
     pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
         self.call_write(cmd).await
     }
+    pub async fn sorted_set_add(
+        &self,
+        cmd: cmd::sorted_set::add::Req,
+    ) -> crate::Result<cmd::sorted_set::add::Resp> {
+        self.call_write(cmd).await
+    }
+    pub async fn sorted_set_remove_by_lex_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_lex_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.call_write(cmd).await
+    }
+    pub async fn sorted_set_remove_by_rank_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_rank_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.call_write(cmd).await
+    }
+    pub async fn sorted_set_remove_by_score_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_score_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.call_write(cmd).await
+    }
 }
 
 /// 读命令
@@ -150,6 +174,30 @@ impl Slot {
         &self,
         cmd: cmd::set::get_all::Req<'_>,
     ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+        cmd.apply(&self.dict)
+    }
+    pub fn sorted_set_range_by_lex(
+        &self,
+        cmd: cmd::sorted_set::range_by_lex::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        cmd.apply(&self.dict)
+    }
+    pub fn sorted_set_range_by_rank(
+        &self,
+        cmd: cmd::sorted_set::range_by_rank::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        cmd.apply(&self.dict)
+    }
+    pub fn sorted_set_range_by_score(
+        &self,
+        cmd: cmd::sorted_set::range_by_score::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        cmd.apply(&self.dict)
+    }
+    pub fn sorted_set_rank(
+        &self,
+        cmd: cmd::sorted_set::rank::Req<'_>,
+    ) -> crate::Result<Option<usize>> {
         cmd.apply(&self.dict)
     }
 }

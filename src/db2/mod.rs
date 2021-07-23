@@ -10,7 +10,11 @@ use tokio::sync::mpsc;
 use crate::{
     expire::{self, Expiration},
     forward::{self, Forward},
-    slot::{cmd, data_type::SimpleType, dict, Slot},
+    slot::{
+        cmd,
+        data_type::{self, SimpleType},
+        dict, Slot,
+    },
 };
 
 #[derive(Clone)]
@@ -126,5 +130,59 @@ impl Db {
     }
     pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
         self.get_slot(cmd.key).set_exists(cmd)
+    }
+    pub fn sorted_set_range_by_lex(
+        &self,
+        cmd: cmd::sorted_set::range_by_lex::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key).sorted_set_range_by_lex(cmd)
+    }
+    pub fn sorted_set_range_by_rank(
+        &self,
+        cmd: cmd::sorted_set::range_by_rank::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key).sorted_set_range_by_rank(cmd)
+    }
+    pub fn sorted_set_range_by_score(
+        &self,
+        cmd: cmd::sorted_set::range_by_score::Req<'_>,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key).sorted_set_range_by_score(cmd)
+    }
+    pub fn sorted_set_rank(
+        &self,
+        cmd: cmd::sorted_set::rank::Req<'_>,
+    ) -> crate::Result<Option<usize>> {
+        self.get_slot(&cmd.key).sorted_set_rank(cmd)
+    }
+    pub async fn sorted_set_add(
+        &self,
+        cmd: cmd::sorted_set::add::Req,
+    ) -> crate::Result<cmd::sorted_set::add::Resp> {
+        self.get_slot(&cmd.key).sorted_set_add(cmd).await
+    }
+    pub async fn sorted_set_remove_by_lex_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_lex_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key)
+            .sorted_set_remove_by_lex_range(cmd)
+            .await
+    }
+    pub async fn sorted_set_remove_by_rank_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_rank_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key)
+            .sorted_set_remove_by_rank_range(cmd)
+            .await
+    }
+    pub async fn sorted_set_remove_by_score_range(
+        &self,
+        cmd: cmd::sorted_set::remove_by_score_range::Req,
+    ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
+        self.get_slot(&cmd.key)
+            .sorted_set_remove_by_score_range(cmd)
+            .await
     }
 }
