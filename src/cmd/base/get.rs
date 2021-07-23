@@ -1,24 +1,29 @@
 use rcc_macros::ParseFrames;
-use tracing::{debug, instrument};
+use tracing::instrument;
 
-use crate::{db::data_type::SimpleType, Db, Frame};
+use crate::{db2::Db, slot::data_type::SimpleType, Frame};
 
 /// Get the value of key.
 ///
 /// If the key does not exist the special value nil is returned. An error is
 /// returned if the value stored at key is not a string, because GET only
 /// handles string values.
+/// https://redis.io/commands/get
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get
     pub key: SimpleType,
 }
-
+impl From<Get> for crate::slot::cmd::simple::get::Req<'_> {
+    fn from(old: Get) -> Self {
+        Self { key: &old.key }
+    }
+}
 impl Get {
     /// Create a new `Get` command which fetches `key`.
     pub fn new(key: impl ToString) -> Get {
         Get {
-            key: SimpleType::SimpleString(key.to_string()),
+            key: SimpleType::String(key.to_string().into()),
         }
     }
 
@@ -35,12 +40,7 @@ impl Get {
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         // Get the value from the shared database state
 
-        let response = db
-            .get(&self.key)
-            .map(|t| t.map(|x| x.into()).unwrap_or_else(|| Frame::Null))
-            .unwrap_or_else(Frame::Error);
-        debug!(?response);
-
+        let response = (&db.get(self.into())?).into();
         // Write the response back to the client
         Ok(response)
     }

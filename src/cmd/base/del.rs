@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::data_type::SimpleType, Db, Frame};
+use crate::{db2::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/del
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
@@ -11,7 +11,17 @@ pub struct Del {
 impl Del {
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = Frame::Integer(db.del(self.keys) as i64);
+        let mut res = 0;
+        for cmd in self
+            .keys
+            .into_iter()
+            .map(|key| crate::slot::cmd::simple::del::Req { key })
+        {
+            if db.del(cmd).await?.is_some() {
+                res += 1;
+            }
+        }
+        let response = Frame::Integer(res);
         Ok(response)
     }
 }

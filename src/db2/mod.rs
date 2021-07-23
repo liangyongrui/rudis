@@ -122,6 +122,12 @@ impl Db {
     pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
         self.get_slot(&cmd.key).set_add(cmd).await
     }
+    pub async fn set_remove(
+        &self,
+        cmd: cmd::set::remove::Req,
+    ) -> crate::Result<cmd::set::remove::Resp> {
+        self.get_slot(&cmd.key).set_remove(cmd).await
+    }
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,

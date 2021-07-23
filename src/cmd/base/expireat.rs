@@ -2,10 +2,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{
-    db::{data_type::SimpleType, Db},
-    Frame,
-};
+use crate::{db2::Db, slot::data_type::SimpleType, Frame};
 
 /// https://redis.io/commands/expireat
 #[derive(Debug, Clone, ParseFrames)]
@@ -13,6 +10,21 @@ pub struct Expireat {
     pub key: SimpleType,
     pub s_timestamp: u64,
 }
+
+impl From<Expireat> for crate::slot::cmd::simple::expire::Req {
+    fn from(old: Expireat) -> Self {
+        // Create a NaiveDateTime from the timestamp
+        let naive = NaiveDateTime::from_timestamp(old.s_timestamp as _, 0);
+
+        // Create a normal DateTime from the NaiveDateTime
+        let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
+        Self {
+            key: old.key,
+            expire_at: Some(datetime),
+        }
+    }
+}
+
 impl Expireat {
     /// Apply the `Set` command to the specified `Db` instance.
     ///
@@ -20,16 +32,7 @@ impl Expireat {
     /// to execute a received command.
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db
-            .expires_at(
-                &self.key,
-                DateTime::<Utc>::from_utc(
-                    NaiveDateTime::from_timestamp(self.s_timestamp as i64, 0),
-                    Utc,
-                ),
-            )
-            .await;
-        // Create a success response and write it to `dst`.
+        let res = db.expire(self.into()).await?;
         let response = Frame::Integer(if res { 1 } else { 0 });
         Ok(response)
     }

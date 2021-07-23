@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, iter::FlatMap};
 
 use rpds::RedBlackTreeSetSync;
 use serde::{Deserialize, Serialize};
@@ -12,6 +12,14 @@ pub struct Node {
     pub score: Float,
 }
 
+impl Node {
+    pub fn new(key: SimpleType, score: f64) -> Self {
+        Self {
+            key,
+            score: Float(score),
+        }
+    }
+}
 /// key value pairs
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct SortedSet {

@@ -45,6 +45,7 @@ pub enum WriteCmd {
     DequePop(deque::pop::Req),
     DequePush(deque::push::Req),
     SetAdd(set::add::Req),
+    SetRemove(set::remove::Req),
     SortedSetAdd(sorted_set::add::Req),
     SortedSetRemove(sorted_set::remove::Req),
     SortedSetRemoveByRankRange(sorted_set::remove_by_rank_range::Req),

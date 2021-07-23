@@ -1,7 +1,9 @@
+use std::vec;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::data_type::SimpleType, Db, Frame};
+use crate::{db2::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/hmget
 #[derive(Debug, ParseFrames)]
 pub struct Hmget {
@@ -12,14 +14,15 @@ pub struct Hmget {
 impl Hmget {
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = match db.hmget(&self.key, self.fields) {
-            Ok(v) => Frame::Array(
-                v.into_iter()
-                    .map(|x| x.map(|y| y.into()).unwrap_or(Frame::Null))
-                    .collect(),
-            ),
-            Err(e) => Frame::Error(e),
-        };
-        Ok(response)
+        if let Some(all) = db.kvp_get_all(crate::slot::cmd::kvp::get_all::Req { key: &self.key })? {
+            let res = self
+                .fields
+                .iter()
+                .map(|f| all.get(f).map(|t| t.into()).unwrap_or(Frame::Null))
+                .collect();
+            Ok(Frame::Array(res))
+        } else {
+            Ok(Frame::Array(vec![Frame::Null; self.fields.len()]))
+        }
     }
 }

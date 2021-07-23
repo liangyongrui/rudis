@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::data_type::SimpleType, Db, Frame};
+use crate::{Db, Frame, slot::data_type::SimpleType};
 
 /// https://redis.io/commands/rpushx
 #[derive(Debug, Clone, ParseFrames)]
@@ -10,13 +10,21 @@ pub struct Rpushx {
     pub values: Vec<SimpleType>,
 }
 
+impl From<Rpushx> for crate::slot::cmd::deque::push::Req {
+    fn from(old: Rpushx) -> Self {
+        Self {
+            key: old.key,
+            left: false,
+            elements: old.values,
+            nx_xx: crate::utils::options::NxXx::Xx,
+        }
+    }
+}
+
 impl Rpushx {
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = match db.rpushx(&self.key, self.values) {
-            Ok(i) => Frame::Integer(i as _),
-            Err(e) => Frame::Error(e),
-        };
-        Ok(response)
+        let response = db.deque_push(self.into()).await?;
+        Ok(Frame::Integer(response.new_len as _))
     }
 }

@@ -14,12 +14,12 @@ mod connection;
 pub use connection::Connection;
 pub use parse::frame::Frame;
 
-mod db;
+// mod db;
 /// 暂时pub
 pub mod db2;
-pub use db::data_type::SimpleType;
-use db::Db;
-
+// pub use db::data_type::SimpleType;
+// use db::Db;
+use db2::Db;
 mod parse;
 pub use connection::server;
 pub use parse::to_bytes::ToVecU8;

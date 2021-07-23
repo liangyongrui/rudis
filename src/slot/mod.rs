@@ -115,6 +115,9 @@ impl Slot {
     pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
         self.call_write(cmd).await
     }
+    pub async fn set_remove(&self, cmd: cmd::set::remove::Req) -> crate::Result<cmd::set::remove::Resp> {
+        self.call_write(cmd).await
+    }
     pub async fn sorted_set_add(
         &self,
         cmd: cmd::sorted_set::add::Req,

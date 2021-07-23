@@ -1,10 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{
-    db::{data_type::SimpleType, Db},
-    Frame,
-};
+use crate::{db2::Db, slot::data_type::SimpleType, Frame};
 
 /// https://redis.io/commands/rpop
 #[derive(Debug, Clone, ParseFrames)]
@@ -12,14 +9,20 @@ pub struct Rpop {
     pub key: SimpleType,
     pub count: Option<i64>,
 }
+
+impl From<Rpop> for crate::slot::cmd::deque::pop::Req {
+    fn from(old: Rpop) -> Self {
+        Self {
+            key: old.key,
+            count: old.count.filter(|&t| t > 0).unwrap_or(1) as _,
+            left: false,
+        }
+    }
+}
 impl Rpop {
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = match db.rpop(&self.key, self.count.unwrap_or(1) as _) {
-            Ok(Some(r)) => Frame::Array(r.into_iter().map(|t| t.into()).collect()),
-            Ok(None) => Frame::Null,
-            Err(e) => Frame::Error(e),
-        };
-        Ok(response)
+        let res = db.deque_pop(self.into()).await?;
+        Ok(Frame::Array(res.iter().map(|t| t.into()).collect()))
     }
 }

@@ -14,7 +14,10 @@ use nom::{
     sequence::delimited,
 };
 
-use crate::utils::{u8_to_i64, u8_to_string};
+use crate::{
+    slot::data_type::SimpleType,
+    utils::{u8_to_i64, u8_to_string},
+};
 
 /// A frame in the Redis protocol.
 ///
@@ -28,6 +31,18 @@ pub enum Frame {
     Array(Vec<Frame>),
 }
 
+impl From<&SimpleType> for Frame {
+    fn from(st: &SimpleType) -> Self {
+        match st {
+            SimpleType::Big => Frame::Null,
+            SimpleType::String(s) => Frame::Simple(s.to_string()),
+            SimpleType::Bytes(b) => Frame::Bulk(Bytes::copy_from_slice(&b)),
+            SimpleType::Integer(i) => Frame::Integer(*i),
+            SimpleType::Float(f) => Frame::Simple(format!("{}", f.0)),
+            SimpleType::Null => Frame::Null,
+        }
+    }
+}
 impl PartialEq<&str> for Frame {
     fn eq(&self, other: &&str) -> bool {
         match self {

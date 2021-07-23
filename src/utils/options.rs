@@ -57,3 +57,11 @@ pub enum ExpiresAt {
     // 不会过期
     None,
 }
+impl From<Option<DateTime<Utc>>> for ExpiresAt {
+    fn from(f: Option<DateTime<Utc>>) -> Self {
+        match f {
+            Some(ea) => Self::Specific(ea),
+            None => Self::None,
+        }
+    }
+}

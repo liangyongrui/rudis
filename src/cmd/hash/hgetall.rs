@@ -1,24 +1,32 @@
+use std::vec;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::data_type::SimpleType, Db, Frame};
+use crate::{db2::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
     pub key: SimpleType,
 }
 
+impl From<Hgetall> for crate::slot::cmd::kvp::get_all::Req<'_> {
+    fn from(old: Hgetall) -> Self {
+        Self { key: &old.key }
+    }
+}
+
 impl Hgetall {
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = match db.hgetall(&self.key) {
-            Ok(v) => Frame::Array(
+        if let Some(v) = db.kvp_get_all(self.into())? {
+            Ok(Frame::Array(
                 v.into_iter()
-                    .flat_map(|i| vec![i.key.into(), i.value.into()].into_iter())
+                    .flat_map(|(k, v)| vec![k.into(), v.into()].into_iter())
                     .collect(),
-            ),
-            Err(e) => Frame::Error(e),
-        };
-        Ok(response)
+            ))
+        } else {
+            Ok(Frame::Array(vec![]))
+        }
     }
 }

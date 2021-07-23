@@ -2,15 +2,21 @@
 //!
 //! todo 改成通过Frame转化
 
-use std::usize;
+use std::{sync::Arc, usize};
 
-use crate::db::data_type::{SimpleType, SimpleTypePair};
+use crate::{slot::data_type::SimpleType, utils::other_type::SimpleTypePair};
+
 
 pub trait ToVecU8 {
     fn into_vec_u8(self) -> Vec<u8>;
 }
 
 impl ToVecU8 for String {
+    fn into_vec_u8(self) -> Vec<u8> {
+        Vec::from(format!("${}\r\n{}\r\n", self.len(), self).as_bytes())
+    }
+}
+impl ToVecU8 for Arc<str> {
     fn into_vec_u8(self) -> Vec<u8> {
         Vec::from(format!("${}\r\n{}\r\n", self.len(), self).as_bytes())
     }
@@ -25,10 +31,12 @@ impl ToVecU8 for i64 {
 impl ToVecU8 for SimpleType {
     fn into_vec_u8(self) -> Vec<u8> {
         match self {
-            SimpleType::Blob(b) => Vec::from(&b[..]),
-            SimpleType::SimpleString(s) => s.into_vec_u8(),
+            SimpleType::Bytes(b) => Vec::from(&b[..]),
+            SimpleType::String(s) => s.into_vec_u8(),
             SimpleType::Integer(i) => i.into_vec_u8(),
             SimpleType::Null => vec![b'$', b'-', b'1'],
+            SimpleType::Big => todo!(),
+            SimpleType::Float(_) => todo!(),
         }
     }
 }

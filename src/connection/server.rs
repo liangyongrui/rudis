@@ -1,4 +1,4 @@
-use std::{future::Future, sync::Arc};
+use std::{future::Future, net::SocketAddr, sync::Arc};
 
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -7,7 +7,7 @@ use tokio::{
 };
 use tracing::{debug, error, info, instrument};
 
-use crate::{config::CONFIG, db::Role, Command, Connection, Db, Shutdown};
+use crate::{Command, Connection, Db, Frame, Shutdown, config::CONFIG, utils::other_type::Role};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.
@@ -123,10 +123,11 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     } else {
         Role::Master(vec![])
     };
+    // tod role
     // Initialize the listener state
     let mut server = Listener {
         listener,
-        db: Db::new(role).await,
+        db: Db::new(),
         limit_connections: Arc::new(Semaphore::new(CONFIG.max_connections)),
         notify_shutdown,
         shutdown_complete_tx,
@@ -360,7 +361,10 @@ impl Handler {
             // command to write response frames directly to the connection. In
             // the case of pub/sub, multiple frames may be send back to the
             // peer.
-            let res = cmd.apply(&self.db).await?;
+            let res = match cmd.apply(&self.db).await {
+                Ok(f) => f,
+                Err(e) => Frame::Error(e.to_string()),
+            };
             self.connection.write_frame(&res).await?;
         }
 

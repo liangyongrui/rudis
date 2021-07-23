@@ -1,11 +1,12 @@
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
-use tracing::{debug, instrument};
+use tracing::instrument;
 
 use crate::{
     cmd::{Parse, ParseError},
-    db::data_type::SimpleType,
-    utils::options::NxXx,
-    Db, Frame,
+    db2::Db,
+    slot::data_type::SimpleType,
+    utils::options::{ExpiresAt, NxXx},
+    Frame,
 };
 
 /// Set `key` to hold the string `value`.
@@ -25,6 +26,21 @@ pub struct Set {
     pub expires_at: Option<DateTime<Utc>>,
     pub keepttl: bool,
     pub get: bool,
+}
+
+impl From<Set> for crate::slot::cmd::simple::set::Req {
+    fn from(old: Set) -> Self {
+        Self {
+            key: old.key,
+            value: old.value,
+            expires_at: if old.keepttl {
+                ExpiresAt::Last
+            } else {
+                old.expires_at.into()
+            },
+            nx_xx: old.nx_xx,
+        }
+    }
 }
 
 impl Set {
@@ -164,52 +180,38 @@ impl Set {
     /// to execute a received command.
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db
-            .set(
-                self.key,
-                self.value,
-                self.nx_xx,
-                self.expires_at,
-                self.keepttl,
-            )
-            .await;
-        let response = if self.get {
-            match res {
-                Ok(Some(SimpleType::Blob(value))) => Frame::Bulk(value.into()),
-                Ok(Some(SimpleType::SimpleString(value))) => Frame::Simple(value),
-                Ok(Some(SimpleType::Integer(value))) => Frame::Integer(value),
-                Ok(Some(SimpleType::Null)) => Frame::Null,
-                Ok(None) => Frame::Null,
-                Err(e) => Frame::Error(e),
-            }
+        let get = self.get;
+        let res = db.set(self.into()).await?;
+        let response = if get {
+            (&res).into()
         } else {
             Frame::Simple("OK".to_string())
         };
-        debug!(?response);
         Ok(response)
     }
 
     pub fn into_cmd_bytes(self) -> Vec<u8> {
-        let mut res = vec![
-            Frame::Simple("SET".to_owned()),
-            self.key.into(),
-            self.value.into(),
-        ];
-        if let Some(ea) = self.expires_at {
-            res.push(Frame::Simple("PXAT".to_owned()));
-            res.push(Frame::Integer(ea.timestamp_millis()))
-        }
-        if self.keepttl {
-            res.push(Frame::Simple("KEEPTTL".to_owned()));
-        }
-        match self.nx_xx {
-            NxXx::Nx => res.push(Frame::Simple("NX".to_owned())),
-            NxXx::Xx => res.push(Frame::Simple("XX".to_owned())),
-            NxXx::None => (),
-        }
-        if self.get {
-            res.push(Frame::Simple("GET".to_owned()))
-        }
-        Frame::Array(res).into()
+        // let mut res = vec![
+        //     Frame::Simple("SET".to_owned()),
+        //     self.key.into(),
+        //     self.value.into(),
+        // ];
+        // if let Some(ea) = self.expires_at {
+        //     res.push(Frame::Simple("PXAT".to_owned()));
+        //     res.push(Frame::Integer(ea.timestamp_millis()))
+        // }
+        // if self.keepttl {
+        //     res.push(Frame::Simple("KEEPTTL".to_owned()));
+        // }
+        // match self.nx_xx {
+        //     NxXx::Nx => res.push(Frame::Simple("NX".to_owned())),
+        //     NxXx::Xx => res.push(Frame::Simple("XX".to_owned())),
+        //     NxXx::None => (),
+        // }
+        // if self.get {
+        //     res.push(Frame::Simple("GET".to_owned()))
+        // }
+        // Frame::Array(res).into()
+        todo!()
     }
 }

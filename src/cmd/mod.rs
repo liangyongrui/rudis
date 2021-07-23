@@ -256,15 +256,7 @@ impl WriteCmd {
         }
     }
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = if let Some(ref sender) = db.sender {
-            let res = self.clone().apply0(db).await;
-            sender.load().send(self.clone()).await?;
-            res
-        } else {
-            self.apply0(db).await
-        };
-        db.hds_status.load().add_change_times();
-        res
+        self.apply0(db).await
     }
 
     pub fn into_cmd_bytes(self) -> Vec<u8> {
