@@ -50,21 +50,6 @@ impl Zremrangebyscore {
         Ok(Self { key, range })
     }
 
-    pub fn into_cmd_bytes(self) -> Vec<u8> {
-        // let mut res = vec![
-        //     Frame::Simple("ZREMRANGEBYSCORE".to_owned()),
-        //     self.key.into(),
-        // ];
-        // let bf64_to_frame = |b: Bound<f64>, left| match b {
-        //     Bound::Included(a) => Frame::Simple(a.to_string()),
-        //     Bound::Excluded(a) => Frame::Simple(format!("({}", a)),
-        //     Bound::Unbounded => Frame::Simple(format!("{}inf", if left { "+" } else { "-" })),
-        // };
-        // res.push(bf64_to_frame(self.range.0, true));
-        // res.push(bf64_to_frame(self.range.1, false));
-        // Frame::Array(res).into()
-        todo!()
-    }
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.sorted_set_remove_by_score_range(self.into()).await?;

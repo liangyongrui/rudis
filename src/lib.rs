@@ -1,4 +1,4 @@
-pub mod cmd;
+mod cmd;
 mod cmd_reader;
 mod config;
 /// 过期处理
@@ -8,23 +8,17 @@ mod forward;
 mod replica;
 mod slot;
 mod utils;
-pub use cmd::Command;
+use cmd::Command;
 
 mod connection;
 pub use connection::Connection;
 pub use parse::frame::Frame;
 
-// mod db;
-/// 暂时pub
-pub mod db;
-// pub use db::data_type::SimpleType;
-// use db::Db;
+mod db;
 use crate::db::Db;
-pub use crate::slot::data_type::SimpleType;
 
 mod parse;
 pub use connection::server;
-pub use parse::to_bytes::ToVecU8;
 use parse::{Parse, ParseError};
 
 mod shutdown;

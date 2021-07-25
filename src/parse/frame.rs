@@ -176,6 +176,7 @@ impl From<Frame> for Vec<u8> {
             Frame::Bulk(b) => {
                 res.push(b'$');
                 res.extend_from_slice(b.len().to_string().as_bytes());
+                res.extend_from_slice(b"\r\n");
                 res.extend_from_slice(&b[..]);
                 res.extend_from_slice(b"\r\n");
             }
@@ -183,10 +184,10 @@ impl From<Frame> for Vec<u8> {
             Frame::Array(a) => {
                 res.push(b'*');
                 res.extend_from_slice(a.len().to_string().as_bytes());
+                res.extend_from_slice(b"\r\n");
                 for v in a {
                     res.append(&mut v.into());
                 }
-                res.extend_from_slice(b"\r\n");
             }
         }
         res
@@ -200,17 +201,17 @@ mod test {
     fn test() {
         let s = "*2\r\n*3\r\n:1\r\n$5\r\nhello\r\n:2\r\n+abc\r\n";
         let (_, f) = parse(s.as_bytes()).unwrap();
-        assert_eq!(
+        let t = Frame::Array(vec![
             Frame::Array(vec![
-                Frame::Array(vec![
-                    Frame::Integer(1),
-                    Frame::Bulk(Bytes::from_static(b"hello")),
-                    Frame::Integer(2),
-                ]),
-                Frame::Simple("abc".to_owned()),
+                Frame::Integer(1),
+                Frame::Bulk(Bytes::from_static(b"hello")),
+                Frame::Integer(2),
             ]),
-            f
-        )
+            Frame::Simple("abc".to_owned()),
+        ]);
+        assert_eq!(t, f);
+        let v: Vec<u8> = f.into();
+        assert_eq!(&v[..], s.as_bytes());
     }
 
     #[test]

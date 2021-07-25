@@ -4,7 +4,7 @@ mod list;
 mod set;
 mod sorted_set;
 
-pub use self::{
+use self::{
     base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
         get::Get, incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat,
@@ -23,7 +23,7 @@ pub use self::{
     },
     sorted_set::{
         zadd::Zadd, zrange::Zrange, zrangebylex::Zrangebylex, zrangebyscore::Zrangebyscore,
-        zrank::Zrank, zrem::Zrem, zremrangebyrank::Zremrangebyrank,
+        zrank::Zrank, zrem::Zrem, zremrangebylex::Zremrangebylex, zremrangebyrank::Zremrangebyrank,
         zremrangebyscore::Zremrangebyscore, zrevrange::Zrevrange, zrevrangebylex::Zrevrangebylex,
         zrevrangebyscore::Zrevrangebyscore, zrevrank::Zrevrank,
     },
@@ -66,6 +66,7 @@ pub enum ReadCmd {
 pub enum WriteCmd {
     Zrem(Zrem),
     Zremrangebyrank(Zremrangebyrank),
+    Zremrangebylex(Zremrangebylex),
     Zremrangebyscore(Zremrangebyscore),
     Zadd(Zadd),
     Sadd(Sadd),
@@ -127,6 +128,9 @@ impl Command {
             )),
             "zrank" => Command::ReadCmd(ReadCmd::Zrank(Zrank::parse_frames(&mut parse)?)),
             "zrem" => Command::WriteCmd(WriteCmd::Zrem(Zrem::parse_frames(&mut parse)?)),
+            "zremrangebylex" => Command::WriteCmd(WriteCmd::Zremrangebylex(
+                Zremrangebylex::parse_frames(&mut parse)?,
+            )),
             "zremrangebyrank" => Command::WriteCmd(WriteCmd::Zremrangebyrank(
                 Zremrangebyrank::parse_frames(&mut parse)?,
             )),
@@ -253,44 +257,46 @@ impl WriteCmd {
             Zrem(cmd) => cmd.apply(db).await,
             Zremrangebyrank(cmd) => cmd.apply(db).await,
             Zremrangebyscore(cmd) => cmd.apply(db).await,
+            Zremrangebylex(cmd) => cmd.apply(db).await,
         }
     }
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         self.apply0(db).await
     }
 
-    pub fn into_cmd_bytes(self) -> Vec<u8> {
-        match self {
-            WriteCmd::Zrem(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Zremrangebyrank(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Zremrangebyscore(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Zadd(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Sadd(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Srem(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Hincrby(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Hdel(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Hsetnx(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Hset(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Lpop(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Rpop(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Lpush(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Rpush(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Lpushx(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Rpushx(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Incrby(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Incr(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Decr(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Decrby(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Set(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Del(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Psetex(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Setex(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Pexpireat(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Expireat(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Expire(cmd) => cmd.into_cmd_bytes(),
-            WriteCmd::Pexpire(cmd) => cmd.into_cmd_bytes(),
-        }
-    }
+    // todo clean code
+    // pub fn into_cmd_bytes(self) -> Vec<u8> {
+    //     match self {
+    //         WriteCmd::Zrem(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Zremrangebyrank(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Zremrangebyscore(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Zadd(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Sadd(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Srem(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Hincrby(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Hdel(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Hsetnx(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Hset(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Lpop(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Rpop(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Lpush(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Rpush(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Lpushx(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Rpushx(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Incrby(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Incr(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Decr(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Decrby(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Set(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Del(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Psetex(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Setex(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Pexpireat(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Expireat(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Expire(cmd) => cmd.into_cmd_bytes(),
+    //         WriteCmd::Pexpire(cmd) => cmd.into_cmd_bytes(),
+    //     }
+    // }
 }
 
 impl ReadCmd {

@@ -1,8 +1,8 @@
 //! 主要测试 连接过程
 
-use std::{net::SocketAddr, sync::Arc};
+use std::net::SocketAddr;
 
-use rcc::{cmd::Get, server, SimpleType};
+use rcc::{server, Frame};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
@@ -41,14 +41,15 @@ async fn test_connect() {
 }
 
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
-    let hello: Arc<str> = format!("hello{}", suffix).into();
+    let hello = format!("hello{}", suffix);
     let world = format!("world{}", suffix);
     // Get a key, data is missing
-    let get = Get {
-        key: SimpleType::String(hello.clone()),
-    };
-    let cmd = &get.into_cmd_bytes()[..];
-    stream.write_all(cmd).await.unwrap();
+    let get: Vec<u8> = Frame::Array(vec![
+        Frame::Simple("GET".to_owned()),
+        Frame::Simple(hello.clone()),
+    ])
+    .into();
+    stream.write_all(&get).await.unwrap();
 
     // Read nil response
     let mut response = [0; 5];
@@ -75,11 +76,7 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
     stream.read_exact(&mut response).await.unwrap();
     assert_eq!(b"+OK\r\n", &response);
 
-    // Get the key, data is present
-    let get = Get {
-        key: SimpleType::String(hello),
-    };
-    stream.write_all(&get.into_cmd_bytes()[..]).await.unwrap();
+    stream.write_all(&get).await.unwrap();
 
     // Shutdown the write half
     stream.shutdown().await.unwrap();

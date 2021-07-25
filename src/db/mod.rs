@@ -57,7 +57,7 @@ impl Db {
     pub fn get_slot_by_id(&self, slot_id: &u16) -> &Slot {
         self.slots.get(slot_id).unwrap()
     }
-    
+
     fn get_slot(&self, key: &SimpleType) -> &Slot {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();

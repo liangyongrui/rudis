@@ -20,18 +20,6 @@ impl<'a> From<&'a Get> for crate::slot::cmd::simple::get::Req<'a> {
     }
 }
 impl Get {
-    /// Create a new `Get` command which fetches `key`.
-    pub fn new(key: impl ToString) -> Get {
-        Get {
-            key: SimpleType::String(key.to_string().into()),
-        }
-    }
-
-    /// Get the key
-    pub fn key(&self) -> &SimpleType {
-        &self.key
-    }
-
     /// Apply the `Get` command to the specified `Db` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order

@@ -82,33 +82,6 @@ impl Zadd {
         })
     }
 
-    pub fn into_cmd_bytes(self) -> Vec<u8> {
-        // let mut res = vec![Frame::Simple("ZADD".to_owned()), self.key.into()];
-        // match self.nx_xx {
-        //     NxXx::Nx => res.push(Frame::Simple("NX".to_owned())),
-        //     NxXx::Xx => res.push(Frame::Simple("XX".to_owned())),
-        //     NxXx::None => (),
-        // }
-        // match self.gt_lt {
-        //     GtLt::Gt => res.push(Frame::Simple("GT".to_owned())),
-        //     GtLt::Lt => res.push(Frame::Simple("LT".to_owned())),
-        //     GtLt::None => (),
-        // }
-        // if self.ch {
-        //     res.push(Frame::Simple("CH".to_owned()))
-        // }
-        // if self.incr {
-        //     res.push(Frame::Simple("INCR".to_owned()))
-        // }
-        // for node in self.nodes {
-        //     res.push(Frame::Simple(node.score.to_string()));
-        //     res.push(node.key.into());
-        // }
-        // Frame::Array(res).into()
-
-        todo!()
-    }
-
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let ch = self.ch;

@@ -1,5 +1,4 @@
 pub mod frame;
-pub mod to_bytes;
 
 use std::{fmt, str, vec};
 

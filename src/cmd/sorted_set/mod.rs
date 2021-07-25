@@ -4,6 +4,7 @@ pub mod zrangebylex;
 pub mod zrangebyscore;
 pub mod zrank;
 pub mod zrem;
+pub mod zremrangebylex;
 pub mod zremrangebyrank;
 pub mod zremrangebyscore;
 pub mod zrevrange;

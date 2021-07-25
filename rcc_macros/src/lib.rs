@@ -141,24 +141,6 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
         })
         .collect::<proc_macro2::TokenStream>();
 
-    let cmd_name = struct_name.to_string().to_uppercase();
-    let args_len = utils::derive_get_struct_fields(&ast)
-        .unwrap()
-        .iter()
-        .count();
-    let cmd = quote!(crate::parse::to_bytes::build_cmd(#cmd_name.to_string() , #args_len););
-
-    let cmd_args = utils::derive_get_struct_fields(&ast)
-        .unwrap()
-        .iter()
-        .map(|field| {
-            let field_name = field.ident.as_ref();
-            quote! {
-                crate::parse::to_bytes::append_arg(&mut cmd, self.#field_name);
-            }
-        })
-        .collect::<proc_macro2::TokenStream>();
-
     let res = quote! {
         impl #struct_name {
             pub fn parse_frames(parse: &mut crate::parse::Parse) -> crate::Result<Self> {
@@ -166,11 +148,6 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                 Ok(Self {
                     #self_token
                 })
-            }
-            pub fn into_cmd_bytes(self) -> Vec<u8> {
-                let mut cmd = #cmd
-                #cmd_args
-                cmd
             }
         }
     };
