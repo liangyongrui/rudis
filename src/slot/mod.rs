@@ -26,7 +26,7 @@ pub mod dict;
 pub struct Slot {
     slot_id: u16,
     next_id: AtomicU64,
-    dict: RwLock<Dict>,
+    pub dict: RwLock<Dict>,
     bg_task: BgTask,
 }
 

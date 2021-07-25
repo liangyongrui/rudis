@@ -20,7 +20,7 @@ impl From<Zremrangebyscore> for crate::slot::cmd::sorted_set::remove_by_score_ra
         Self {
             key: old.key,
             rev: false,
-            range: (old.range.0.map(|f| Float(f)), old.range.1.map(|f| Float(f))),
+            range: (old.range.0.map(Float), old.range.1.map(Float)),
         }
     }
 }

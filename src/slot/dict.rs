@@ -6,7 +6,7 @@ use std::{
 use chrono::{DateTime, Utc};
 
 use super::data_type::{DataType, SimpleType};
-
+#[derive(Debug, Default)]
 pub struct Dict {
     /// 最后一次写操作的id
     pub last_write_op_id: u64,
@@ -22,10 +22,7 @@ pub struct Value {
 impl Dict {
     #[inline]
     pub fn new() -> Self {
-        Self {
-            last_write_op_id: 0,
-            inner: HashMap::new(),
-        }
+        Default::default()
     }
 
     #[inline]

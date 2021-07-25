@@ -117,7 +117,7 @@ impl Zrange {
                 let cmd = crate::slot::cmd::sorted_set::range_by_score::Req {
                     key,
                     rev,
-                    range: (b.map(|f| Float(f)), e.map(|f| Float(f))),
+                    range: (b.map(Float), e.map(Float)),
                     limit,
                 };
                 db.sorted_set_range_by_score(cmd)?

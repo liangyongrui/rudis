@@ -72,7 +72,7 @@ impl Zrevrangebyscore {
         let cmd = crate::slot::cmd::sorted_set::range_by_score::Req {
             key,
             rev: true,
-            range: (e.map(|f| Float(f)), b.map(|f| Float(f))),
+            range: (e.map(Float), b.map(Float)),
             limit,
         };
         let response = db.sorted_set_range_by_score(cmd)?;

@@ -1,8 +1,8 @@
-use std::{
-    borrow::{Borrow, BorrowMut},
-    collections::BTreeSet,
-    sync::Arc,
-};
+//! 自动过期处理task
+//!
+//! 异步删除key，减少持有锁的时间
+
+use std::{borrow::Borrow, collections::BTreeSet, sync::Arc};
 
 use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
@@ -10,12 +10,13 @@ use tokio::{
     sync::{mpsc, Notify},
     time,
 };
+use tracing::debug;
 
 use crate::{db::Db, slot::data_type::SimpleType};
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
 pub struct Entry {
     pub expires_at: DateTime<Utc>,
     pub slot: u16,
@@ -86,7 +87,7 @@ impl Expiration {
         db: Arc<Db>,
     ) {
         loop {
-            let next = Expiration::purge_expired_keys(data.lock().borrow_mut(), db.borrow());
+            let next = Expiration::purge_expired_keys(&data, db.borrow());
             if let Some(when) = next {
                 tokio::select! {
                     _ = time::sleep((when - Utc::now()).to_std().unwrap()) =>{}
@@ -100,34 +101,41 @@ impl Expiration {
         }
     }
 
-    fn purge_expired_keys(data: &mut BTreeSet<Entry>, _db: &Db) -> Option<DateTime<Utc>> {
+    fn purge_expired_keys(data: &Mutex<BTreeSet<Entry>>, db: &Db) -> Option<DateTime<Utc>> {
         let now = Utc::now();
-        // 因为只需要处理头部元素，所有这里每次产生一个新的迭代器是安全的, 等 #![feature(map_first_last)] stable 可以替换
-        while let Some(Entry {
-            expires_at,
-            slot: _,
-            id: _,
-            key: _,
-        }) = data.iter().next()
-        {
-            let expires_at = *expires_at;
+        loop {
+            // 减少持有锁的时间
+            let entry = {
+                let mut btree_lock = data.lock();
+                //  等 #![feature(map_first_last)] stable 可以替换
+                let entry = match btree_lock.iter().next() {
+                    Some(e) => e.clone(),
+                    None => return None,
+                };
+                btree_lock.remove(&entry);
+                entry
+            };
+
+            let expires_at = entry.expires_at;
             if expires_at > now {
                 return Some(expires_at);
             }
-            // TODO 判断是否需要删除，需要则删除
 
-            // 新线程析构
-            // let need_remove = entry.process_mut(key, |e| match e {
-            //     Some(e) => e.id == id,
-            //     None => false,
-            // });
+            let slot = db.get_slot_by_id(&entry.slot);
+            // 取出数据之后再析构，避免持有过长时间的slot锁
+            let expired_data = {
+                let mut lock = slot.dict.write();
+                match lock.get(&entry.key) {
+                    Some(value) if value.id == entry.id => Some(lock.remove(&entry.key)),
+                    _ => None,
+                }
+            };
 
-            // if need_remove {
-            //     entry.remove(key);
-            //     debug!("purge_expired_keys: {:?}", key);
-            // }
-            // data.expirations.remove(&(when, id));
+            if expired_data.is_some() {
+                debug!("purge expired: {:?}", entry);
+            } else {
+                debug!("purge covered: {:?}", entry);
+            }
         }
-        None
     }
 }
