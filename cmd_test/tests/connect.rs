@@ -2,7 +2,7 @@
 
 use std::net::SocketAddr;
 
-use rcc::{server, Frame};
+use component::{server, Frame};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
@@ -10,10 +10,9 @@ use tokio::{
 use tracing::Level;
 
 async fn start_server() -> SocketAddr {
-    tracing_subscriber::fmt::Subscriber::builder()
+    let _ = tracing_subscriber::fmt::Subscriber::builder()
         .with_max_level(Level::INFO)
-        .try_init()
-        .unwrap();
+        .try_init();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
 

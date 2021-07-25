@@ -3,26 +3,9 @@
 
 use std::sync::Arc;
 
-use rcc::{server, Frame};
-use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
-    net::{TcpListener, TcpStream},
-};
-use tracing::{debug, Level};
-
-async fn start_server() -> TcpStream {
-    tracing_subscriber::fmt::Subscriber::builder()
-        .with_max_level(Level::DEBUG)
-        .try_init()
-        .unwrap();
-    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let addr = listener.local_addr().unwrap();
-    debug!("789");
-
-    tokio::spawn(async move { server::run(listener, tokio::signal::ctrl_c()).await });
-    debug!("aaaa");
-    TcpStream::connect(addr).await.unwrap()
-}
+use cmd_test::start_server;
+use component::Frame;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 #[tokio::test]
 async fn decr() {
