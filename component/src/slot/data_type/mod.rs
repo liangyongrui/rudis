@@ -82,7 +82,7 @@ impl From<i64> for DataType {
 }
 
 /// 集合类型
-#[derive(Debug,PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum CollectionType {
     Kvp(Kvp),
     Deque(Deque),

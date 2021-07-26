@@ -6,7 +6,5 @@ struct AofStatus {
 }
 
 impl AofStatus {
-    pub fn send(){
-        
-    }
+    pub fn send() {}
 }

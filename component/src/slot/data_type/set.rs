@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::data_type::SimpleType;
 
-#[derive(Debug, Serialize, Deserialize,PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Set {
     inner: HashTrieSetSync<SimpleType>,
 }

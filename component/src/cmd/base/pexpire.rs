@@ -15,7 +15,8 @@ impl From<Pexpire> for crate::slot::cmd::simple::expire::Req {
     fn from(old: Pexpire) -> Self {
         Self {
             key: old.key,
-            expires_at: Utc::now().checked_add_signed(Duration::milliseconds(old.milliseconds as _)),
+            expires_at: Utc::now()
+                .checked_add_signed(Duration::milliseconds(old.milliseconds as _)),
         }
     }
 }

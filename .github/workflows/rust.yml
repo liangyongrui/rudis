@@ -26,7 +26,7 @@ jobs:
       - name: clean
         run: cargo clean
       - name: fmt
-        run: rustup component add rustfmt && cargo fmt -- --check
+        run: rustup component add rustfmt && cargo +nightly fmt -- --check
       - name: clippy
         run: rustup component add clippy && cargo clippy
       - name: Build

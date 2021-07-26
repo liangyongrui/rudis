@@ -1,2 +1,2 @@
-mod snapshot;
 mod aof;
+mod snapshot;
