@@ -33,10 +33,30 @@ pub enum SimpleType {
     Float(Float),
     Null,
 }
-
+#[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Hash, Clone, Deserialize, Serialize)]
+pub enum KeyType {
+    String(Arc<str>),
+    Bytes(Arc<[u8]>),
+}
 impl From<&str> for SimpleType {
     fn from(s: &str) -> Self {
         SimpleType::String(s.into())
+    }
+}
+impl From<String> for SimpleType {
+    fn from(s: String) -> Self {
+        SimpleType::String(s.into())
+    }
+}
+
+impl From<&str> for KeyType {
+    fn from(s: &str) -> Self {
+        KeyType::String(s.into())
+    }
+}
+impl From<String> for KeyType {
+    fn from(s: String) -> Self {
+        KeyType::String(s.into())
     }
 }
 

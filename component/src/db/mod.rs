@@ -12,7 +12,7 @@ use crate::{
     forward::{self, Forward},
     slot::{
         cmd,
-        data_type::{self, SimpleType},
+        data_type::{self, KeyType, SimpleType},
         dict, Slot,
     },
 };
@@ -58,7 +58,7 @@ impl Db {
         self.slots.get(slot_id).unwrap()
     }
 
-    fn get_slot(&self, key: &SimpleType) -> &Slot {
+    fn get_slot(&self, key: &KeyType) -> &Slot {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();
         key.hash(&mut s);

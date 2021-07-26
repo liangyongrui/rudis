@@ -54,6 +54,11 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                             let #field_name = parse.next_simple_type()?;
                         };
                     }
+                    if *ident == "KeyType" {
+                        return quote! {
+                            let #field_name = parse.next_key()?;
+                        };
+                    }
                     if *ident == "i64" || *ident == "u64" {
                         return quote! {
                             let #field_name = parse.next_int()? as #field_type;
@@ -75,6 +80,18 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                             let mut #field_name = vec![parse.next_simple_type()?];
                                             loop {
                                                 match parse.next_simple_type() {
+                                                    Ok(key) => #field_name.push(key),
+                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(err) => return Err(err.into()),
+                                                }
+                                            }
+                                        };
+                                    }
+                                    if *ident == "KeyType" {
+                                        return quote! {
+                                            let mut #field_name = vec![parse.next_key()?];
+                                            loop {
+                                                match parse.next_key() {
                                                     Ok(key) => #field_name.push(key),
                                                     Err(crate::parse::ParseError::EndOfStream) => break,
                                                     Err(err) => return Err(err.into()),

@@ -2,11 +2,11 @@ use std::borrow::Borrow;
 
 use parking_lot::RwLock;
 
-use crate::slot::{cmd::Read, data_type::SimpleType, dict::Dict};
+use crate::slot::{cmd::Read, data_type::KeyType, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a SimpleType,
+    pub key: &'a KeyType,
     pub start: i64,
     pub stop: i64,
     /// `(offset, count)`

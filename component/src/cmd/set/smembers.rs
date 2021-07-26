@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{slot::data_type::KeyType, Db, Frame};
 
 /// https://redis.io/commands/smembers
 #[derive(Debug, ParseFrames)]
 pub struct Smembers {
-    pub key: SimpleType,
+    pub key: KeyType,
 }
 
 impl<'a> From<&'a Smembers> for crate::slot::cmd::set::get_all::Req<'a> {

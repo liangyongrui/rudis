@@ -1,10 +1,10 @@
 use parking_lot::RwLock;
 
-use crate::slot::{cmd::Read, data_type::SimpleType, dict::Dict};
+use crate::slot::{cmd::Read, data_type::KeyType, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a SimpleType,
+    pub key: &'a KeyType,
 }
 
 impl<'a> Read<bool> for Req<'a> {

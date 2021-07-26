@@ -3,12 +3,12 @@ use std::ops::Bound;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{slot::data_type::KeyType, Db, Frame};
 
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub min: String,
     pub max: String,
 }
@@ -21,16 +21,16 @@ impl From<Zremrangebylex> for crate::slot::cmd::sorted_set::remove_by_lex_range:
             let min = if min == "-" {
                 Bound::Unbounded
             } else if let Some(s) = min.strip_prefix('(') {
-                Bound::Excluded(SimpleType::String(s.into()))
+                Bound::Excluded(s.into())
             } else {
-                Bound::Included(SimpleType::String(min[1..].into()))
+                Bound::Included(min[1..].into())
             };
             let max = if max == "+" {
                 Bound::Unbounded
             } else if let Some(s) = max.strip_prefix('(') {
-                Bound::Excluded(SimpleType::String(s.into()))
+                Bound::Excluded(s.into())
             } else {
-                Bound::Included(SimpleType::String(max[1..].into()))
+                Bound::Included(max[1..].into())
             };
             (min, max)
         };

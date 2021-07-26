@@ -3,7 +3,7 @@ use std::ops::Bound;
 use tracing::instrument;
 
 use crate::{
-    slot::data_type::{Float, SimpleType},
+    slot::data_type::{Float, KeyType},
     utils::BoundExt,
     Db, Frame, Parse,
 };
@@ -11,7 +11,7 @@ use crate::{
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
 pub struct Zremrangebyscore {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub range: (Bound<f64>, Bound<f64>),
 }
 
@@ -27,7 +27,7 @@ impl From<Zremrangebyscore> for crate::slot::cmd::sorted_set::remove_by_score_ra
 
 impl Zremrangebyscore {
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let range = {

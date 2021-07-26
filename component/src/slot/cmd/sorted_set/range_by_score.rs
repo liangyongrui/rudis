@@ -7,13 +7,13 @@ use parking_lot::RwLock;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{Float, SimpleType},
+    data_type::{Float, KeyType},
     dict::Dict,
 };
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a SimpleType,
+    pub key: &'a KeyType,
     /// 这里的得分区间(小, 大)
     pub range: (Bound<Float>, Bound<Float>),
     //  (offset, count)

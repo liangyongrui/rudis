@@ -4,7 +4,7 @@ use parking_lot::RwLock;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{CollectionType, DataType, SimpleType},
+    data_type::{CollectionType, DataType, KeyType, SimpleType},
     dict::Dict,
 };
 
@@ -16,7 +16,7 @@ use crate::slot::{
 /// It will treat it like the last element of the list.
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a SimpleType,
+    pub key: &'a KeyType,
     pub start: i64,
     pub stop: i64,
 }

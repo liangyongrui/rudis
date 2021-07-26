@@ -1,11 +1,15 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{
+    db::Db,
+    slot::data_type::{KeyType, SimpleType},
+    Frame,
+};
 /// https://redis.io/commands/hincrby
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub field: SimpleType,
     pub value: i64,
 }

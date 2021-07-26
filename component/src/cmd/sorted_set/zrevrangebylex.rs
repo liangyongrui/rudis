@@ -2,19 +2,19 @@ use std::ops::Bound;
 
 use tracing::instrument;
 
-use crate::{parse::ParseError, slot::data_type::SimpleType, utils::BoundExt, Db, Frame, Parse};
+use crate::{parse::ParseError, slot::data_type::KeyType, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrangebylex
 #[derive(Debug)]
 pub struct Zrevrangebylex {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub range_item: (Bound<String>, Bound<String>),
     pub limit: Option<(i64, i64)>,
 }
 
 impl Zrevrangebylex {
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let mut limit = None;
@@ -63,10 +63,7 @@ impl Zrevrangebylex {
         let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
             key,
             rev: true,
-            range: (
-                e.map(|f| SimpleType::String(f.into())),
-                b.map(|f| SimpleType::String(f.into())),
-            ),
+            range: (e.map(|f| f.into()), b.map(|f| f.into())),
             limit,
         };
         let response = db.sorted_set_range_by_lex(cmd)?;

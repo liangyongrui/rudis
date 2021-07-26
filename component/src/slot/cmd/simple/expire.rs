@@ -3,13 +3,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd, WriteResp},
-    data_type::SimpleType,
+    data_type::KeyType,
     dict::Dict,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub expires_at: Option<DateTime<Utc>>,
 }
 impl From<Req> for WriteCmd {

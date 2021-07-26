@@ -1,11 +1,11 @@
 use tracing::instrument;
 
-use crate::{parse::ParseError, slot::data_type::SimpleType, Db, Frame, Parse};
+use crate::{parse::ParseError, slot::data_type::KeyType, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]
 pub struct Zrevrange {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub range: (i64, i64),
     pub withscores: bool,
 }
@@ -23,7 +23,7 @@ impl<'a> From<&'a Zrevrange> for crate::slot::cmd::sorted_set::range_by_rank::Re
 }
 impl Zrevrange {
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let mut withscores = false;

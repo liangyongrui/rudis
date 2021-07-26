@@ -216,6 +216,29 @@ mod test {
 
     #[test]
     fn test2() {
+        let hello = "hello".to_owned();
+        let world = "world".to_owned();
+        let s = format!(
+            "*3\r\n$3\r\nSET\r\n${}\r\n{}\r\n${}\r\n{}\r\n",
+            hello.len(),
+            hello,
+            world.len(),
+            world
+        );
+        let b = s.as_bytes();
+        let raw = Frame::Array(vec![
+            Frame::Bulk("SET".into()),
+            Frame::Bulk(hello.into()),
+            Frame::Bulk(world.into()),
+        ]);
+        let set: Vec<u8> = raw.clone().into();
+        assert_eq!(&set[..], b);
+        let (_, f) = parse(s.as_bytes()).unwrap();
+        assert_eq!(raw, f);
+    }
+
+    #[test]
+    fn test3() {
         fn f(x: i32) -> i32 {
             x + 1
         }

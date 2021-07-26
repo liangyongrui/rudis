@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd, WriteResp},
-        data_type::{self, CollectionType, DataType, SimpleType, SortedSet},
+        data_type::{self, CollectionType, DataType, KeyType, SortedSet},
         dict::{self, Dict},
     },
     utils::options::{GtLt, NxXx},
@@ -11,7 +11,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub nodes: Vec<data_type::sorted_set::Node>,
     /// - XX: Only update elements that already exist. Don't add new elements.
     /// - NX: Only add new elements. Don't update already existing elements.

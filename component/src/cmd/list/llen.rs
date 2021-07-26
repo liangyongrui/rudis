@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::KeyType, Frame};
 
 /// https://redis.io/commands/llen
 #[derive(Debug, ParseFrames)]
 pub struct Llen {
-    pub key: SimpleType,
+    pub key: KeyType,
 }
 
 impl<'a> From<&'a Llen> for crate::slot::cmd::deque::len::Req<'a> {

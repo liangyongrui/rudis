@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::KeyType, Frame};
 
 /// https://redis.io/commands/rpop
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Rpop {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub count: Option<i64>,
 }
 

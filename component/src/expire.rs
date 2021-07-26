@@ -12,7 +12,7 @@ use tokio::{
 };
 use tracing::debug;
 
-use crate::{db::Db, slot::data_type::SimpleType};
+use crate::{db::Db, slot::data_type::KeyType};
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
@@ -21,7 +21,7 @@ pub struct Entry {
     pub expires_at: DateTime<Utc>,
     pub slot: u16,
     pub id: u64,
-    pub key: SimpleType,
+    pub key: KeyType,
 }
 
 #[derive(Debug)]

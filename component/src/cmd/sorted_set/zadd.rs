@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     parse::ParseError,
-    slot::data_type::{sorted_set::Node, SimpleType},
+    slot::data_type::{sorted_set::Node, KeyType, SimpleType},
     utils::options::{GtLt, NxXx},
     Db, Frame, Parse,
 };
@@ -12,7 +12,7 @@ use crate::{
 /// https://redis.io/commands/zadd
 #[derive(Debug, Clone)]
 pub struct Zadd {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub nx_xx: NxXx,
     pub gt_lt: GtLt,
     pub ch: bool,
@@ -34,14 +34,18 @@ impl From<Zadd> for crate::slot::cmd::sorted_set::add::Req {
 
 impl Zadd {
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
         let mut nx_xx = NxXx::None;
         let mut gt_lt = GtLt::None;
         let mut ch = false;
         let mut incr = false;
         let score = loop {
             match parse.next_simple_type()? {
-                SimpleType::String(s) => {
+                SimpleType::Bytes(s) => {
+                    let s = match String::from_utf8((&*s).into()) {
+                        Ok(s) => s,
+                        Err(_) => break SimpleType::Bytes(s),
+                    };
                     let lowercase = s.to_lowercase();
                     match &lowercase[..] {
                         "nx" => nx_xx = NxXx::Nx,
@@ -50,7 +54,7 @@ impl Zadd {
                         "lt" => gt_lt = GtLt::Lt,
                         "incr" => incr = true,
                         "ch" => ch = true,
-                        _ => break SimpleType::String(s),
+                        _ => break SimpleType::Bytes(s.as_bytes().into()),
                     }
                 }
                 t => break t,

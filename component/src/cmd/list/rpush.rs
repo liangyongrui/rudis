@@ -1,12 +1,16 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{
+    db::Db,
+    slot::data_type::{KeyType, SimpleType},
+    Frame,
+};
 
 /// https://redis.io/commands/rpush
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Rpush {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub values: Vec<SimpleType>,
 }
 

@@ -4,7 +4,7 @@ use tracing::instrument;
 use crate::{
     cmd::{Parse, ParseError},
     db::Db,
-    slot::data_type::SimpleType,
+    slot::data_type::{KeyType, SimpleType},
     utils::options::{ExpiresAt, NxXx},
     Frame,
 };
@@ -15,7 +15,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Set {
     /// the lookup key
-    pub key: SimpleType,
+    pub key: KeyType,
     /// the value to be stored
     pub value: SimpleType,
     // None not set, true nx, false xx
@@ -46,7 +46,7 @@ impl From<Set> for crate::slot::cmd::simple::set::Req {
 impl Set {
     /// Create a new `Set` command which sets `key` to `value`.
     pub fn new(
-        key: SimpleType,
+        key: KeyType,
         value: SimpleType,
         nx_xx: NxXx,
         expires_at: Option<DateTime<Utc>>,
@@ -87,7 +87,7 @@ impl Set {
         use ParseError::EndOfStream;
 
         // Read the key to set. This is a required field
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
 
         // Read the value to set. This is a required field.
         let value = parse.next_simple_type()?;

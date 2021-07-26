@@ -2,13 +2,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd, WriteResp},
-    data_type::SimpleType,
+    data_type::KeyType,
     dict::{Dict, Value},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: SimpleType,
+    pub key: KeyType,
 }
 
 impl From<Req> for WriteCmd {
@@ -42,7 +42,11 @@ mod test {
 
     use super::*;
     use crate::{
-        slot::{cmd::simple::*, data_type::DataType, dict::Dict},
+        slot::{
+            cmd::simple::*,
+            data_type::{DataType, SimpleType},
+            dict::Dict,
+        },
         utils::options::{ExpiresAt, NxXx},
     };
 

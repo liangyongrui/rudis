@@ -2,13 +2,13 @@ use parking_lot::RwLock;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{CollectionType, DataType, SimpleType},
+    data_type::{CollectionType, DataType, KeyType},
     dict::Dict,
 };
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a SimpleType,
+    pub key: &'a KeyType,
 }
 
 impl<'a> Read<usize> for Req<'a> {

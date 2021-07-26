@@ -4,7 +4,7 @@ use rpds::RedBlackTreeSetSync;
 
 use crate::{
     slot::{
-        data_type::{sorted_set::Node, CollectionType, DataType, Float},
+        data_type::{sorted_set::Node, CollectionType, DataType, Float, KeyType},
         dict, SimpleType,
     },
     utils::BoundExt,
@@ -21,7 +21,7 @@ pub mod remove_by_rank_range;
 pub mod remove_by_score_range;
 
 pub(self) fn get_value(
-    key: &SimpleType,
+    key: &KeyType,
     dict: &dict::Dict,
 ) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
     if let Some(v) = dict.d_get(key) {

@@ -1,12 +1,15 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{
+    slot::data_type::{KeyType, SimpleType},
+    Db, Frame,
+};
 
 /// https://redis.io/commands/srem
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Srem {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub values: Vec<SimpleType>,
 }
 

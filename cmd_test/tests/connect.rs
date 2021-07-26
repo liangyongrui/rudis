@@ -11,7 +11,7 @@ use tracing::Level;
 
 async fn start_server() -> SocketAddr {
     let _ = tracing_subscriber::fmt::Subscriber::builder()
-        .with_max_level(Level::INFO)
+        .with_max_level(Level::DEBUG)
         .try_init();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
@@ -45,7 +45,7 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
     // Get a key, data is missing
     let get: Vec<u8> = Frame::Array(vec![
         Frame::Simple("GET".to_owned()),
-        Frame::Simple(hello.clone()),
+        Frame::Bulk(hello.clone().into()),
     ])
     .into();
     stream.write_all(&get).await.unwrap();
@@ -54,21 +54,14 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
     let mut response = [0; 5];
     stream.read_exact(&mut response).await.unwrap();
     assert_eq!(b"$-1\r\n", &response);
-
+    let set: Vec<u8> = Frame::Array(vec![
+        Frame::Bulk("SET".into()),
+        Frame::Bulk(hello.into()),
+        Frame::Bulk(world.clone().into()),
+    ])
+    .into();
     // Set a key
-    stream
-        .write_all(
-            format!(
-                "*3\r\n$3\r\nSET\r\n${}\r\n{}\r\n${}\r\n{}\r\n",
-                hello.len(),
-                hello,
-                world.len(),
-                world
-            )
-            .as_bytes(),
-        )
-        .await
-        .unwrap();
+    stream.write_all(&set).await.unwrap();
 
     // Read OK
     let mut response = [0; 5];

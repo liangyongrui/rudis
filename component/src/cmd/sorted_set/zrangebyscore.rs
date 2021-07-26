@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     parse::ParseError,
-    slot::data_type::{Float, SimpleType},
+    slot::data_type::{Float, KeyType},
     utils::BoundExt,
     Db, Frame, Parse,
 };
@@ -12,7 +12,7 @@ use crate::{
 /// https://redis.io/commands/zrangebyscore
 #[derive(Debug)]
 pub struct Zrangebyscore {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub range_item: (Bound<f64>, Bound<f64>),
     pub limit: Option<(i64, i64)>,
     pub withscores: bool,
@@ -20,7 +20,7 @@ pub struct Zrangebyscore {
 
 impl Zrangebyscore {
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let mut limit = None;

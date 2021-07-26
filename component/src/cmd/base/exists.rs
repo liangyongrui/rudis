@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::KeyType, Frame};
 
 /// https://redis.io/commands/exists
 #[derive(Debug, ParseFrames)]
 pub struct Exists {
-    pub keys: Vec<SimpleType>,
+    pub keys: Vec<KeyType>,
 }
 
 impl Exists {

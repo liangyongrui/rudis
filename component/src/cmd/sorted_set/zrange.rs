@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     parse::ParseError,
-    slot::data_type::{Float, SimpleType},
+    slot::data_type::{Float, KeyType},
     utils::{other_type::ZrangeItem, BoundExt},
     Db, Frame, Parse,
 };
@@ -18,7 +18,7 @@ enum By {
 /// https://redis.io/commands/zrange
 #[derive(Debug)]
 pub struct Zrange {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub range_item: ZrangeItem,
     pub rev: bool,
     pub limit: Option<(i64, i64)>,
@@ -27,7 +27,7 @@ pub struct Zrange {
 
 impl Zrange {
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Self> {
-        let key = parse.next_simple_type()?;
+        let key = parse.next_key()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;
         let mut by = By::Rank;
@@ -126,10 +126,7 @@ impl Zrange {
                 let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
                     key,
                     rev,
-                    range: (
-                        b.map(|f| SimpleType::String(f.into())),
-                        e.map(|f| SimpleType::String(f.into())),
-                    ),
+                    range: (b.map(|f| f.into()), e.map(|f| f.into())),
                     limit,
                 };
                 db.sorted_set_range_by_lex(cmd)?

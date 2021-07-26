@@ -337,6 +337,7 @@ impl Handler {
                 Some(frame) => frame,
                 None => return Ok(()),
             };
+            debug!("read frame: {:?}", frame);
 
             // Convert the redis frame into a command struct. This returns an
             // error if the frame is not a valid redis command or it is an
@@ -365,6 +366,7 @@ impl Handler {
                 Ok(f) => f,
                 Err(e) => Frame::Error(e.to_string()),
             };
+            debug!(?res);
             self.connection.write_frame(&res).await?;
         }
 

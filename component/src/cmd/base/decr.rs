@@ -3,14 +3,14 @@ use tracing::instrument;
 
 use crate::{
     db::Db,
-    slot::{self, data_type::SimpleType},
+    slot::{self, data_type::KeyType},
     Frame,
 };
 
 /// https://redis.io/commands/decr
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Decr {
-    pub key: SimpleType,
+    pub key: KeyType,
 }
 
 impl From<Decr> for slot::cmd::simple::incr::Req {

@@ -2,12 +2,12 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::KeyType, Frame};
 
 /// https://redis.io/commands/expireat
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Expireat {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub s_timestamp: u64,
 }
 

@@ -2,11 +2,16 @@ use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, utils::options::NxXx, Frame};
+use crate::{
+    db::Db,
+    slot::data_type::{KeyType, SimpleType},
+    utils::options::NxXx,
+    Frame,
+};
 /// https://redis.io/commands/psetex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Psetex {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub milliseconds: u64,
     pub value: SimpleType,
 }

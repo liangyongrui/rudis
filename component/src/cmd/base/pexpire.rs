@@ -2,12 +2,12 @@ use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::KeyType, Frame};
 
 /// https://redis.io/commands/pexpire
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Pexpire {
-    pub key: SimpleType,
+    pub key: KeyType,
     pub milliseconds: u64,
 }
 

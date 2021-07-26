@@ -1,7 +1,7 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::KeyType, Frame};
 
 /// Get the value of key.
 ///
@@ -12,7 +12,7 @@ use crate::{db::Db, slot::data_type::SimpleType, Frame};
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get
-    pub key: SimpleType,
+    pub key: KeyType,
 }
 impl<'a> From<&'a Get> for crate::slot::cmd::simple::get::Req<'a> {
     fn from(old: &'a Get) -> Self {
