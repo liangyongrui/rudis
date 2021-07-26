@@ -12,6 +12,7 @@ pub struct Req {
     pub members: Vec<SimpleType>,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub struct Resp {
     /// 原来的大小
     pub old_len: usize,

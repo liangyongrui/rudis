@@ -10,7 +10,6 @@ mod hdp;
 mod replica;
 mod slot;
 mod utils;
-use cmd::Command;
 
 mod connection;
 pub use connection::Connection;

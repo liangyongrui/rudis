@@ -48,6 +48,11 @@ impl From<String> for SimpleType {
         SimpleType::String(s.into())
     }
 }
+impl From<i64> for SimpleType {
+    fn from(s: i64) -> Self {
+        SimpleType::Integer(s)
+    }
+}
 
 impl From<&str> for KeyType {
     fn from(s: &str) -> Self {

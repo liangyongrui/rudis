@@ -17,6 +17,7 @@ chrono = { version = "0.4", features = ["serde"] }
 rpds = { version = "0.9", features = ["serde"] }
 nom = "7.0.0-alpha1"
 rcc_macros = { path = "../rcc_macros" }
+fixed_queue = { path = "../fixed_queue" }
 nix = "0.22"
 bincode = "1"
 serde = { version = "1", features = ["derive", "rc"] }
@@ -24,7 +25,6 @@ serde_with = "1"
 toml = "0.5"
 once_cell = "1"
 parking_lot = "0.11"
-fixed-vec-deque = "0.1"
 
 [dev-dependencies]
 # Enable test-utilities in dev mode only. This is mostly for tests.

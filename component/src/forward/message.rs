@@ -22,11 +22,11 @@ impl Default for Message {
 
 impl Message {
     /// stream 编码
-    async fn stream_encode<W: AsyncWrite + Unpin>(
-        self,
+    pub async fn stream_encode<W: AsyncWrite + Unpin>(
+        &self,
         w: &mut W,
     ) -> Result<(), Box<bincode::ErrorKind>> {
-        let bc = bincode::serialize(&self)?;
+        let bc = bincode::serialize(self)?;
         w.write_all(&(bc.len() as u32).to_be_bytes()).await?;
         w.write_all(&bc).await?;
         w.flush().await?;
@@ -34,7 +34,7 @@ impl Message {
     }
 
     /// stream 解码
-    async fn stream_decode<R: AsyncRead + Unpin>(
+    pub async fn stream_decode<R: AsyncRead + Unpin>(
         self,
         r: &mut R,
     ) -> Result<Message, Box<bincode::ErrorKind>> {

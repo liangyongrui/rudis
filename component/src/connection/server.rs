@@ -7,7 +7,9 @@ use tokio::{
 };
 use tracing::{debug, error, info, instrument};
 
-use crate::{config::CONFIG, utils::other_type::Role, Command, Connection, Db, Frame, Shutdown};
+use crate::{
+    cmd::Command, config::CONFIG, utils::other_type::Role, Connection, Db, Frame, Shutdown,
+};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.

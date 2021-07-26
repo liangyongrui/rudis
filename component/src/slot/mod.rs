@@ -48,24 +48,24 @@ impl Slot {
 
     async fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
         let id = self.next_id();
-        let _ = self
-            .bg_task
-            .forward_sender
-            .send(forward::Message {
-                id,
-                slot: self.slot_id,
-                cmd: cmd.clone().into(),
-            })
-            .await;
         let WriteResp {
             new_expires_at,
             payload,
         } = {
             let mut dict = self.dict.write();
             dict.last_write_op_id = id;
-            let res = cmd.apply(id, dict.borrow_mut())?;
+            let res = cmd.clone().apply(id, dict.borrow_mut())?;
             res
         };
+        let _ = self
+            .bg_task
+            .forward_sender
+            .send(forward::Message {
+                id,
+                slot: self.slot_id,
+                cmd: cmd.into(),
+            })
+            .await;
         if let Some((ea, key)) = new_expires_at {
             let _ = self
                 .bg_task

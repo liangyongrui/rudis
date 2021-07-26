@@ -51,4 +51,80 @@ impl Write<i64> for Req {
     }
 }
 
-// todo utest
+#[cfg(test)]
+mod test {
+    use std::borrow::BorrowMut;
+
+    use parking_lot::RwLock;
+
+    use crate::{
+        slot::{cmd::kvp::*, dict::Dict, Read, Write},
+        utils::options::NxXx,
+    };
+
+    #[test]
+    fn test1() {
+        let dict = RwLock::new(Dict::new());
+        let res = set::Req {
+            key: "hello".into(),
+            entries: vec![("k1".into(), "1".into()), ("k2".into(), "2".into())],
+            nx_xx: NxXx::None,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            set::Resp {
+                old_len: 0,
+                new_len: 2
+            }
+        );
+
+        let res = incr::Req {
+            key: "hello".into(),
+            field: "k1".into(),
+            value: 1,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(res, 2);
+
+        let res = incr::Req {
+            key: "hello".into(),
+            field: "k3".into(),
+            value: 10,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(res, 10);
+
+        let res = get_all::Req {
+            key: &"hello".into(),
+        }
+        .apply(&dict)
+        .unwrap()
+        .unwrap();
+        assert_eq!(
+            {
+                let mut v = res
+                    .into_iter()
+                    .map(|kv| (kv.0.clone(), kv.1.clone()))
+                    .collect::<Vec<_>>();
+                v.sort();
+                v
+            },
+            {
+                let mut v = vec![
+                    ("k1".into(), 2.into()),
+                    ("k2".into(), "2".into()),
+                    ("k3".into(), 10.into()),
+                ];
+                v.sort();
+                v
+            }
+        );
+    }
+}
