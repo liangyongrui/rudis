@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::data_type::SimpleType;
 /// key value pairs
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Kvp {
     inner: HashTrieMapSync<SimpleType, SimpleType>,
 }

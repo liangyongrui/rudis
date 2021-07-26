@@ -30,23 +30,34 @@ pub struct Config {
     pub replica: bool,
     #[serde(default)]
     pub master_addr: Option<SocketAddr>,
+    #[serde(default = "HdpConfig::default")]
+    pub hdp: HdpConfig,
+    /// 转发最多积压条数 (aof、主从同步)
+    pub forward_max_backlog: u64,
+}
 
+/// hdp 相关 配置
+#[serde_as]
+#[derive(Deserialize, Debug)]
+pub struct HdpConfig {
     /// 每隔x秒，至少有y条数据发现变化，触发 bg_save
     #[serde(default)]
     #[serde_as(as = "Vec<(serde_with::DurationSeconds, _)>")]
-    pub save_hds: Vec<(Duration, u64)>,
-    /// 持久化文件保存目录
-    #[serde(default)]
-    pub save_hds_dir: PathBuf,
-    /// 是否要从hds文件中加载
-    pub load_hds_path: Option<PathBuf>,
-    /// aof 最多积压条数 (0 表示不开启 aof)
-    #[serde(default)]
-    pub aof_max_backlog: u64,
-    /// 保存aof文件的文件夹
-    pub save_aof_dir: Option<PathBuf>,
-    /// 加载aof文件的路径
-    pub load_aof_path: Option<PathBuf>,
+    pub save_frequency: Vec<(Duration, u64)>,
+    /// 保存hdp文件的目录
+    pub save_hdp_dir: Option<PathBuf>,
+    /// 加载hdp文件的目录
+    pub load_hdp_dir: Option<PathBuf>,
+}
+
+impl Default for HdpConfig {
+    fn default() -> Self {
+        Self {
+            save_frequency: vec![(Duration::from_secs(600), 1)],
+            save_hdp_dir: None,
+            load_hdp_dir: None,
+        }
+    }
 }
 
 #[derive(Deserialize, Debug)]

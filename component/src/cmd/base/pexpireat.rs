@@ -22,7 +22,7 @@ impl From<Pexpireat> for crate::slot::cmd::simple::expire::Req {
         let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
         Self {
             key: old.key,
-            expire_at: Some(datetime),
+            expires_at: Some(datetime),
         }
     }
 }

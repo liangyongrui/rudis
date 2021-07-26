@@ -5,6 +5,8 @@ mod config;
 mod expire;
 /// 请求转发
 mod forward;
+/// Hard disk persistence
+mod hdp;
 mod replica;
 mod slot;
 mod utils;

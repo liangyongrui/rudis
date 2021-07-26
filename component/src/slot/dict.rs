@@ -12,7 +12,7 @@ pub struct Dict {
     pub last_write_op_id: u64,
     pub inner: HashMap<SimpleType, Value>,
 }
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Value {
     pub id: u64,
     pub data: DataType,

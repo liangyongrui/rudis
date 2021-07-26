@@ -52,4 +52,44 @@ impl Write<i64> for Req {
     }
 }
 
-// todo utest
+#[cfg(test)]
+mod test {
+    use std::borrow::BorrowMut;
+
+    use parking_lot::RwLock;
+
+    use crate::slot::{
+        cmd::{simple::*, WriteResp},
+        dict::Dict,
+        Write,
+    };
+
+    #[test]
+    fn test1() {
+        let dict = RwLock::new(Dict::new());
+        let cmd = incr::Req {
+            key: "hello".into(),
+            value: 10,
+        };
+        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        assert_eq!(
+            res,
+            WriteResp {
+                payload: 10,
+                new_expires_at: None,
+            }
+        );
+        let cmd = incr::Req {
+            key: "hello".into(),
+            value: -5,
+        };
+        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        assert_eq!(
+            res,
+            WriteResp {
+                payload: 5,
+                new_expires_at: None,
+            }
+        );
+    }
+}

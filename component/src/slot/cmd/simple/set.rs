@@ -94,6 +94,7 @@ fn data_type_to_simple(dt: DataType) -> SimpleType {
         DataType::CollectionType(_) => SimpleType::Null,
     }
 }
+
 #[cfg(test)]
 mod test {
     use std::{borrow::BorrowMut, thread::sleep};

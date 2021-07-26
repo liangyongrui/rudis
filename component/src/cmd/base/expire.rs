@@ -15,7 +15,7 @@ impl From<Expire> for crate::slot::cmd::simple::expire::Req {
     fn from(old: Expire) -> Self {
         Self {
             key: old.key,
-            expire_at: Utc::now().checked_add_signed(Duration::seconds(old.seconds as _)),
+            expires_at: Utc::now().checked_add_signed(Duration::seconds(old.seconds as _)),
         }
     }
 }
