@@ -10,15 +10,15 @@ use crate::{
 };
 
 /// 追加entries, 如果key 不存在，插入新的再追加
-/// nx_xx 根据 kvp 的 key 决定
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: KeyType,
     // key-value list
     pub entries: Vec<(SimpleType, SimpleType)>,
+    /// nx_xx 根据 kvp 的 key 决定
     pub nx_xx: NxXx,
 }
-
+#[derive(Debug, PartialEq, Eq)]
 pub struct Resp {
     /// 原来的大小
     pub old_len: usize,
@@ -73,4 +73,110 @@ impl Write<Resp> for Req {
     }
 }
 
-// todo utest
+#[cfg(test)]
+mod test {
+    use std::borrow::BorrowMut;
+
+    use parking_lot::RwLock;
+
+    use crate::{
+        slot::{cmd::kvp::*, dict::Dict, Read, Write},
+        utils::options::NxXx,
+    };
+
+    #[test]
+    fn test1() {
+        let dict = RwLock::new(Dict::new());
+        let res = set::Req {
+            key: "hello".into(),
+            entries: vec![
+                ("k1".into(), "v1".into()),
+                ("k2".into(), "v2".into()),
+                ("k3".into(), "v3".into()),
+            ],
+            nx_xx: NxXx::None,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            set::Resp {
+                old_len: 0,
+                new_len: 3
+            }
+        );
+        let res = get_all::Req {
+            key: &"hello".into(),
+        }
+        .apply(&dict)
+        .unwrap()
+        .unwrap();
+        assert_eq!(
+            {
+                let mut v = res
+                    .into_iter()
+                    .map(|kv| (kv.0.clone(), kv.1.clone()))
+                    .collect::<Vec<_>>();
+                v.sort();
+                v
+            },
+            {
+                let mut v = vec![
+                    ("k1".into(), "v1".into()),
+                    ("k2".into(), "v2".into()),
+                    ("k3".into(), "v3".into()),
+                ];
+                v.sort();
+                v
+            }
+        );
+        let res = set::Req {
+            key: "hello".into(),
+            entries: vec![
+                ("k1".into(), "v1".into()),
+                ("k4".into(), "v4".into()),
+                ("k5".into(), "v5".into()),
+            ],
+            nx_xx: NxXx::Nx,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            set::Resp {
+                old_len: 3,
+                new_len: 5
+            }
+        );
+
+        let res = get_all::Req {
+            key: &"hello".into(),
+        }
+        .apply(&dict)
+        .unwrap()
+        .unwrap();
+        assert_eq!(
+            {
+                let mut v = res
+                    .into_iter()
+                    .map(|kv| (kv.0.clone(), kv.1.clone()))
+                    .collect::<Vec<_>>();
+                v.sort();
+                v
+            },
+            {
+                let mut v = vec![
+                    ("k1".into(), "v1".into()),
+                    ("k2".into(), "v2".into()),
+                    ("k3".into(), "v3".into()),
+                    ("k4".into(), "v4".into()),
+                    ("k5".into(), "v5".into()),
+                ];
+                v.sort();
+                v
+            }
+        );
+    }
+}
