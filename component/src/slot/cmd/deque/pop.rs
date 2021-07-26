@@ -53,4 +53,65 @@ impl Write<Vec<SimpleType>> for Req {
     }
 }
 
-// todo utest
+#[cfg(test)]
+mod test {
+    use std::borrow::BorrowMut;
+
+    use parking_lot::RwLock;
+
+    use crate::{
+        slot::{cmd::deque::*, dict::Dict, Write},
+        utils::options::NxXx,
+    };
+
+    #[test]
+    fn test1() {
+        let dict = RwLock::new(Dict::new());
+        let res = push::Req {
+            key: "hello".into(),
+            elements: vec![
+                "0".into(),
+                "1".into(),
+                "2".into(),
+                "3".into(),
+                "4".into(),
+                "5".into(),
+                "6".into(),
+                "7".into(),
+                "8".into(),
+                "9".into(),
+            ],
+            left: false,
+            nx_xx: NxXx::None,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            push::Resp {
+                old_len: 0,
+                new_len: 10
+            }
+        );
+
+        let res = pop::Req {
+            key: "hello".into(),
+            count: 3,
+            left: false,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(res, vec!["9".into(), "8".into(), "7".into(),]);
+        let res = pop::Req {
+            key: "hello".into(),
+            count: 4,
+            left: true,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(res, vec!["0".into(), "1".into(), "2".into(), "3".into()]);
+    }
+}

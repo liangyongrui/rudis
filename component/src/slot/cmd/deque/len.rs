@@ -24,4 +24,47 @@ impl<'a> Read<usize> for Req<'a> {
     }
 }
 
-// todo utest
+#[cfg(test)]
+mod test {
+    use std::borrow::BorrowMut;
+
+    use parking_lot::RwLock;
+
+    use crate::{
+        slot::{cmd::deque::*, dict::Dict, Read, Write},
+        utils::options::NxXx,
+    };
+
+    #[test]
+    fn test1() {
+        let dict = RwLock::new(Dict::new());
+        let res = len::Req {
+            key: &"hello".into(),
+        }
+        .apply(&dict)
+        .unwrap();
+        assert_eq!(res, 0);
+        let res = push::Req {
+            key: "hello".into(),
+            elements: vec!["a".into(), "b".into(), "c".into()],
+            left: false,
+            nx_xx: NxXx::None,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            push::Resp {
+                old_len: 0,
+                new_len: 3
+            }
+        );
+        let res = len::Req {
+            key: &"hello".into(),
+        }
+        .apply(&dict)
+        .unwrap();
+        assert_eq!(res, 3);
+    }
+}

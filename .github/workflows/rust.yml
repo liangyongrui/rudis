@@ -34,7 +34,7 @@ jobs:
       - name: Run tests
         run: cargo test --all --verbose -- --exact --nocapture
       - name: Generate code coverage
-        run: rustup toolchain install nightly && cargo install cargo-tarpaulin && cargo tarpaulin --run-types Doctests Tests --verbose --all-features --workspace --timeout 120 --out Xml
+        run: rustup toolchain install nightly && cargo install cargo-tarpaulin && cargo +nightly tarpaulin --verbose --all-features --workspace --timeout 120 --out Xml
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1
         with:

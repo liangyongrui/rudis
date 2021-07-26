@@ -17,6 +17,7 @@ pub struct Req {
     pub left: bool,
     pub nx_xx: NxXx,
 }
+#[derive(Debug, PartialEq, Eq)]
 pub struct Resp {
     /// 原来的大小
     pub old_len: usize,
@@ -100,4 +101,122 @@ impl Write<Resp> for Req {
     }
 }
 
-// todo utest
+#[cfg(test)]
+mod test {
+    use std::borrow::BorrowMut;
+
+    use parking_lot::RwLock;
+
+    use crate::{
+        slot::{cmd::deque::*, dict::Dict, Read, Write},
+        utils::options::NxXx,
+    };
+
+    #[test]
+    fn test1() {
+        let dict = RwLock::new(Dict::new());
+        let res = push::Req {
+            key: "hello".into(),
+            elements: vec![
+                "0".into(),
+                "1".into(),
+                "2".into(),
+                "3".into(),
+                "4".into(),
+                "5".into(),
+            ],
+            left: false,
+            nx_xx: NxXx::Xx,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            push::Resp {
+                old_len: 0,
+                new_len: 0
+            }
+        );
+        let res = push::Req {
+            key: "hello".into(),
+            elements: vec![
+                "0".into(),
+                "1".into(),
+                "2".into(),
+                "3".into(),
+                "4".into(),
+                "5".into(),
+            ],
+            left: false,
+            nx_xx: NxXx::None,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            push::Resp {
+                old_len: 0,
+                new_len: 6
+            }
+        );
+
+        let res = range::Req {
+            key: &"hello".into(),
+            start: 0,
+            stop: -1,
+        }
+        .apply(&dict)
+        .unwrap();
+        assert_eq!(
+            res,
+            vec![
+                "0".into(),
+                "1".into(),
+                "2".into(),
+                "3".into(),
+                "4".into(),
+                "5".into(),
+            ]
+        );
+
+        let res = push::Req {
+            key: "hello".into(),
+            elements: vec!["0".into(), "1".into(), "2".into()],
+            left: true,
+            nx_xx: NxXx::Xx,
+        }
+        .apply(1, dict.write().borrow_mut())
+        .unwrap()
+        .payload;
+        assert_eq!(
+            res,
+            push::Resp {
+                old_len: 6,
+                new_len: 9
+            }
+        );
+        let res = range::Req {
+            key: &"hello".into(),
+            start: 0,
+            stop: -1,
+        }
+        .apply(&dict)
+        .unwrap();
+        assert_eq!(
+            res,
+            vec![
+                "2".into(),
+                "1".into(),
+                "0".into(),
+                "0".into(),
+                "1".into(),
+                "2".into(),
+                "3".into(),
+                "4".into(),
+                "5".into(),
+            ]
+        );
+    }
+}
