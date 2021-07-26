@@ -7,7 +7,7 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
 };
-use tracing::Level;
+use tracing::{debug, Level};
 
 async fn start_server() -> SocketAddr {
     let _ = tracing_subscriber::fmt::Subscriber::builder()
@@ -15,7 +15,7 @@ async fn start_server() -> SocketAddr {
         .try_init();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let addr = listener.local_addr().unwrap();
-
+    debug!(?addr);
     tokio::spawn(async move { server::run(listener, tokio::signal::ctrl_c()).await });
 
     addr

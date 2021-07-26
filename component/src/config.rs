@@ -14,18 +14,18 @@ pub struct Config {
     ///
     /// When this limit is reached, the server will stop accepting connections until
     /// an active connection terminates.
-    #[serde(default)]
+    #[serde(default = "max_connections")]
     pub max_connections: usize,
     #[serde(default)]
-    pub port: u16,
+    pub _port: u16,
     #[serde(default)]
-    pub bind: String,
+    pub _bind: String,
     #[serde(default)]
-    pub timeout: u64,
+    pub _timeout: u64,
     #[serde(default)]
-    pub tcp_keepalive: u64,
+    pub _tcp_keepalive: u64,
     #[serde(default)]
-    pub log_level: String,
+    pub _log_level: String,
     #[serde(default)]
     pub replica: bool,
     #[serde(default)]
@@ -33,9 +33,13 @@ pub struct Config {
     #[serde(default = "HdpConfig::default")]
     pub hdp: HdpConfig,
     /// 转发最多积压条数 (aof、主从同步)
+    #[serde(default)]
     pub forward_max_backlog: u64,
 }
 
+const fn max_connections() -> usize {
+    1000
+}
 /// hdp 相关 配置
 #[serde_as]
 #[derive(Deserialize, Debug)]
