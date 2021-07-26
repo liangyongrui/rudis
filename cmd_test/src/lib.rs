@@ -2,7 +2,7 @@
 
 use component::server;
 use tokio::net::{TcpListener, TcpStream};
-use tracing::{Level, debug};
+use tracing::{debug, Level};
 
 pub fn new_cmd() {}
 
