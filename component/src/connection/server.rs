@@ -129,7 +129,7 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     // Initialize the listener state
     let mut server = Listener {
         listener,
-        db: Db::new(),
+        db: Db::new().await,
         limit_connections: Arc::new(Semaphore::new(CONFIG.max_connections)),
         notify_shutdown,
         shutdown_complete_tx,

@@ -44,10 +44,9 @@ const fn max_connections() -> usize {
 #[serde_as]
 #[derive(Deserialize, Debug)]
 pub struct HdpConfig {
-    /// 每隔x秒，至少有y条数据发现变化，触发 bg_save
+    /// aof 条数达到指定值，触发snapshot，0为不触发
     #[serde(default)]
-    #[serde_as(as = "Vec<(serde_with::DurationSeconds, _)>")]
-    pub save_frequency: Vec<(Duration, u64)>,
+    pub aof_count: u64,
     /// 保存hdp文件的目录
     pub save_hdp_dir: Option<PathBuf>,
     /// 加载hdp文件的目录
@@ -57,7 +56,7 @@ pub struct HdpConfig {
 impl Default for HdpConfig {
     fn default() -> Self {
         Self {
-            save_frequency: vec![(Duration::from_secs(600), 1)],
+            aof_count: 0,
             save_hdp_dir: None,
             load_hdp_dir: None,
         }

@@ -48,24 +48,31 @@ impl Slot {
 
     async fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
         let id = self.next_id();
-        let WriteResp {
-            new_expires_at,
-            payload,
-        } = {
+
+        // 加锁执行命令
+        let res = {
             let mut dict = self.dict.write();
             dict.last_write_op_id = id;
-            let res = cmd.clone().apply(id, dict.borrow_mut())?;
-            res
+            cmd.clone().apply(id, dict.borrow_mut())
         };
+
+        // 转发执行完成的请求
         let _ = self
             .bg_task
             .forward_sender
             .send(forward::Message {
                 id,
                 slot: self.slot_id,
-                cmd: cmd.into(),
+                cmd: cmd.clone().into(),
             })
             .await;
+
+        let WriteResp {
+            new_expires_at,
+            payload,
+        } = res?;
+
+        // 设置自动过期
         if let Some((ea, key)) = new_expires_at {
             let _ = self
                 .bg_task

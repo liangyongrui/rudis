@@ -4,16 +4,17 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 use super::data_type::{DataType, KeyType};
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
     /// 最后一次写操作的id
     pub last_write_op_id: u64,
     pub inner: HashMap<KeyType, Value>,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Value {
     pub id: u64,
     pub data: DataType,

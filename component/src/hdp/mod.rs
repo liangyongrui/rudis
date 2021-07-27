@@ -1,17 +1,13 @@
 //! 这个模块用命令模式来驱动
 //! 性能不是很敏感，单线程执行
 
-use std::{
-    collections::HashMap,
-    path::PathBuf,
-    time::{Duration, Instant},
-};
+use std::{borrow::Borrow, collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 
 use tokio::{sync::mpsc, time};
 use tracing::error;
 
-use self::{aof::AofStatus, snapshot::SnapshotStatus};
-use crate::{config::CONFIG, forward::Message};
+use self::aof::AofStatus;
+use crate::{config::CONFIG, db::Db, forward::Message};
 
 mod aof;
 mod snapshot;
@@ -23,9 +19,8 @@ pub enum HdpCmd {
 pub struct HdpStatus {
     pub tx: mpsc::Sender<HdpCmd>,
     rx: mpsc::Receiver<HdpCmd>,
-    aof_status_map: HashMap<u16, AofStatus>,
-    snapshot_status: HashMap<u16, SnapshotStatus>,
-    save_hdp_dir: PathBuf,
+    pub aof_status_map: HashMap<u16, AofStatus>,
+    pub save_hdp_dir: PathBuf,
 }
 
 impl HdpStatus {
@@ -39,13 +34,12 @@ impl HdpStatus {
             tx,
             rx,
             aof_status_map: HashMap::new(),
-            snapshot_status: HashMap::new(),
             save_hdp_dir,
         })
     }
 
     /// 执行
-    async fn process(mut self) {
+    pub async fn process(mut self, db: Arc<Db>) {
         let mut aof_flush_interval = time::interval(Duration::from_secs(1));
         loop {
             tokio::select! {
@@ -57,8 +51,9 @@ impl HdpStatus {
                         Some(cmd) => cmd,
                         _ => break
                     };
-                    self.process_cmd(cmd).await;
-                    // todo 执行cmd
+                    match cmd {
+                        HdpCmd::ForwardWrite(msg) => self.process_forward_write(msg, db.borrow()).await,
+                    }
                 }
             }
         }
@@ -73,28 +68,26 @@ impl HdpStatus {
         }
     }
 
-    async fn process_cmd(&mut self, cmd: HdpCmd) {
-        async fn write_aof(aof_status: &mut AofStatus, msg: &Message) {
-            match aof_status.write(msg).await {
-                Ok(_) => (),
-                Err(e) => error!(?e),
-            }
-        }
-
-        match cmd {
-            HdpCmd::ForwardWrite(msg) => match self.aof_status_map.entry(msg.slot) {
-                std::collections::hash_map::Entry::Occupied(mut e) => {
-                    write_aof(e.get_mut(), &msg).await
+    async fn process_forward_write(&mut self, msg: Message, db: &Db) {
+        match self.aof_status_map.entry(msg.slot) {
+            std::collections::hash_map::Entry::Occupied(mut e) => {
+                if e.get_mut().write(&msg).await {
+                    snapshot::process(self, msg.slot, db)
                 }
-                std::collections::hash_map::Entry::Vacant(e) => {
-                    match AofStatus::new(&self.save_hdp_dir).await {
-                        Ok(status) => write_aof(e.insert(status), &msg).await,
-                        Err(err) => {
-                            error!(?err);
+            }
+            std::collections::hash_map::Entry::Vacant(e) => {
+                // 第一次 还没有snapshot 从这里创建 aofStatus
+                match AofStatus::new(&self.save_hdp_dir, 0, msg.slot) {
+                    Ok(status) => {
+                        if e.insert(status).write(&msg).await {
+                            snapshot::process(self, msg.slot, db)
                         }
                     }
+                    Err(err) => {
+                        error!(?err);
+                    }
                 }
-            },
+            }
         }
     }
 }

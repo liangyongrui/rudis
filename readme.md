@@ -77,6 +77,7 @@ rust cloud cache
 1. [ ] 带 size 的持久化红黑树/btree/b+tree
 1. [ ] lua 脚本
 1. [ ] 集群 proxy
+1. [ ] 分布式事务
 
 ## 支持的命令
 

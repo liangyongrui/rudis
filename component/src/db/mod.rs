@@ -10,6 +10,7 @@ use tokio::sync::mpsc;
 use crate::{
     expire::{self, Expiration},
     forward::{self, Forward},
+    hdp::HdpStatus,
     slot::{
         cmd,
         data_type::{self, KeyType, SimpleType},
@@ -25,16 +26,16 @@ pub struct BgTask {
     pub forward_sender: mpsc::Sender<forward::Message>,
 }
 pub struct Db {
-    _bg_task: BgTask,
-    slots: HashMap<u16, Slot>,
+    pub slots: HashMap<u16, Slot>,
 }
 
 const SIZE: u16 = 1024;
 
 impl Db {
-    pub fn new() -> Arc<Self> {
+    pub async fn new() -> Arc<Self> {
         let expiration = Expiration::new();
-        let forward = Forward::new();
+        let hdp = HdpStatus::new().await;
+        let forward = Forward::new(hdp.as_ref().map(|t| t.tx.clone()));
         let bg_task = BgTask {
             expire_sender: expiration.tx.clone(),
             forward_sender: forward.tx.clone(),
@@ -45,12 +46,13 @@ impl Db {
                 .entry(i)
                 .or_insert_with(|| Slot::new(i, bg_task.clone()));
         }
-        let db = Arc::new(Self {
-            _bg_task: bg_task,
-            slots,
-        });
+        let db = Arc::new(Self { slots });
         expiration.listen(Arc::clone(&db));
         forward.listen();
+        if let Some(hdp) = hdp {
+            let db = Arc::clone(&db);
+            tokio::spawn(hdp.process(db));
+        }
         db
     }
 
