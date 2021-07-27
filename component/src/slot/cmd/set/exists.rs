@@ -24,5 +24,3 @@ impl<'a> Read<bool> for Req<'a> {
         Ok(false)
     }
 }
-
-// todo utest

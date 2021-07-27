@@ -61,11 +61,7 @@ impl Parse {
             Frame::Integer(i) => Ok(KeyType::String(i.to_string().into())),
             Frame::Simple(s) => Ok(KeyType::String(s.into())),
             Frame::Bulk(b) => Ok(KeyType::Bytes(b.to_vec().into())),
-            frame => Err(format!(
-                "protocol error; expected simple frame or bulk frame, got {:?}",
-                frame
-            )
-            .into()),
+            frame => Err(format!("protocol error;  got {:?}", frame).into()),
         }
     }
 
@@ -73,11 +69,8 @@ impl Parse {
         match self.next()? {
             Frame::Integer(i) => Ok(SimpleType::Integer(i)),
             Frame::Bulk(b) => Ok(SimpleType::Bytes(b.to_vec().into())),
-            frame => Err(format!(
-                "protocol error; expected simple frame or bulk frame, got {:?}",
-                frame
-            )
-            .into()),
+            Frame::Simple(s) => Ok(SimpleType::String(s.into())),
+            frame => Err(format!("protocol error;  got {:?}", frame).into()),
         }
     }
     /// Return the next entry as a string.
@@ -94,11 +87,7 @@ impl Parse {
             Frame::Bulk(data) => str::from_utf8(&data[..])
                 .map(|s| s.to_string())
                 .map_err(|_| "protocol error; invalid string".into()),
-            frame => Err(format!(
-                "protocol error; expected simple frame or bulk frame, got {:?}",
-                frame
-            )
-            .into()),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
 

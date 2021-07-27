@@ -44,45 +44,6 @@ impl From<Set> for crate::slot::cmd::simple::set::Req {
 }
 
 impl Set {
-    /// Create a new `Set` command which sets `key` to `value`.
-    pub fn new(
-        key: KeyType,
-        value: SimpleType,
-        nx_xx: NxXx,
-        expires_at: Option<DateTime<Utc>>,
-        keepttl: bool,
-        get: bool,
-    ) -> Set {
-        Set {
-            key,
-            value,
-            nx_xx,
-            expires_at,
-            keepttl,
-            get,
-        }
-    }
-
-    /// Parse a `Set` instance from a received frame.
-    ///
-    /// The `Parse` argument provides a cursor-like API to read fields from the
-    /// `Frame`. At this point, the entire frame has already been received from
-    /// the socket.
-    ///
-    /// The `SET` string has already been consumed.
-    ///
-    /// # Returns
-    ///
-    /// Returns the `Set` value on success. If the frame is malformed, `Err` is
-    /// returned.
-    ///
-    /// # Format
-    ///
-    /// Expects an array frame containing at least 3 entries.
-    ///
-    /// ```text
-    /// SET key value [EX seconds|PX milliseconds]
-    /// ```
     pub fn parse_frames(parse: &mut Parse) -> crate::Result<Set> {
         use ParseError::EndOfStream;
 
@@ -101,69 +62,61 @@ impl Set {
         loop {
             // Attempt to parse another string.
             match parse.next_string() {
-                Ok(s) => {
-                    match &s.to_uppercase()[..] {
-                        "NX" => {
-                            if !nx_xx.is_none() {
-                                return Err("`NX` or `XX` already set".into());
-                            }
-                            nx_xx = NxXx::Nx
+                Ok(s) => match &s.to_uppercase()[..] {
+                    "NX" => {
+                        if !nx_xx.is_none() {
+                            return Err("`NX` or `XX` already set".into());
                         }
-                        "XX" => {
-                            if !nx_xx.is_none() {
-                                return Err("`NX` or `XX` already set".into());
-                            }
-                            nx_xx = NxXx::Xx
-                        }
-                        "EX" => {
-                            if expires_at.is_some() {
-                                return Err("expiration already set".into());
-                            }
-                            // An expiration is specified in seconds. The next value is an
-                            // integer.
-                            let secs = parse.next_int()?;
-                            expires_at = Utc::now().checked_add_signed(Duration::seconds(secs));
-                        }
-                        "PX" => {
-                            if expires_at.is_some() {
-                                return Err("expiration already set".into());
-                            }
-                            // An expiration is specified in milliseconds. The next value is
-                            // an integer.
-                            let ms = parse.next_int()?;
-                            expires_at = Utc::now().checked_add_signed(Duration::milliseconds(ms));
-                        }
-                        "EXAT" => {
-                            if expires_at.is_some() {
-                                return Err("expiration already set".into());
-                            }
-                            let secs_timestamp = parse.next_int()?;
-                            expires_at = Some(DateTime::<Utc>::from_utc(
-                                NaiveDateTime::from_timestamp(secs_timestamp, 0),
-                                Utc,
-                            ));
-                        }
-                        "PXAT" => {
-                            if expires_at.is_some() {
-                                return Err("expiration already set".into());
-                            }
-                            let ms_timestamp = parse.next_int()?;
-                            expires_at = Some(DateTime::<Utc>::from_utc(
-                                NaiveDateTime::from_timestamp(ms_timestamp / 1000, 0),
-                                Utc,
-                            ));
-                        }
-                        "KEEPTTL" => {
-                            keepttl = true;
-                        }
-                        "GET" => {
-                            get = true;
-                        }
-                        not_support => {
-                            return Err(format!("not support cmd: {}", not_support).into())
-                        }
+                        nx_xx = NxXx::Nx
                     }
-                }
+                    "XX" => {
+                        if !nx_xx.is_none() {
+                            return Err("`NX` or `XX` already set".into());
+                        }
+                        nx_xx = NxXx::Xx
+                    }
+                    "EX" => {
+                        if expires_at.is_some() {
+                            return Err("expiration already set".into());
+                        }
+                        let secs = parse.next_int()?;
+                        expires_at = Utc::now().checked_add_signed(Duration::seconds(secs));
+                    }
+                    "PX" => {
+                        if expires_at.is_some() {
+                            return Err("expiration already set".into());
+                        }
+                        let ms = parse.next_int()?;
+                        expires_at = Utc::now().checked_add_signed(Duration::milliseconds(ms));
+                    }
+                    "EXAT" => {
+                        if expires_at.is_some() {
+                            return Err("expiration already set".into());
+                        }
+                        let secs_timestamp = parse.next_int()?;
+                        expires_at = Some(DateTime::<Utc>::from_utc(
+                            NaiveDateTime::from_timestamp(secs_timestamp, 0),
+                            Utc,
+                        ));
+                    }
+                    "PXAT" => {
+                        if expires_at.is_some() {
+                            return Err("expiration already set".into());
+                        }
+                        let ms_timestamp = parse.next_int()?;
+                        expires_at = Some(DateTime::<Utc>::from_utc(
+                            NaiveDateTime::from_timestamp(ms_timestamp / 1000, 0),
+                            Utc,
+                        ));
+                    }
+                    "KEEPTTL" => {
+                        keepttl = true;
+                    }
+                    "GET" => {
+                        get = true;
+                    }
+                    not_support => return Err(format!("not support cmd: {}", not_support).into()),
+                },
                 Err(EndOfStream) => {
                     break;
                 }
@@ -171,13 +124,16 @@ impl Set {
             }
         }
 
-        Ok(Self::new(key, value, nx_xx, expires_at, keepttl, get))
+        Ok(Set {
+            key,
+            value,
+            nx_xx,
+            expires_at,
+            keepttl,
+            get,
+        })
     }
 
-    /// Apply the `Set` command to the specified `Db` instance.
-    ///
-    /// The response is written to `dst`. This is called by the server in order
-    /// to execute a received command.
     #[instrument(skip(self, db))]
     pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
         let get = self.get;

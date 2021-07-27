@@ -24,5 +24,3 @@ impl<'a> Read<Option<HashTrieSetSync<SimpleType>>> for Req<'a> {
         Ok(None)
     }
 }
-
-// todo utest

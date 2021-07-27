@@ -48,5 +48,3 @@ impl Write<Resp> for Req {
         }
     }
 }
-
-// todo utest
