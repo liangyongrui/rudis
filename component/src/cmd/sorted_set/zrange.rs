@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     parse::ParseError,
-    slot::data_type::{Float, KeyType},
+    slot::data_type::Float,
     utils::{other_type::ZrangeItem, BoundExt},
     Db, Frame, Parse,
 };
@@ -18,7 +18,7 @@ enum By {
 /// https://redis.io/commands/zrange
 #[derive(Debug)]
 pub struct Zrange {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub range_item: ZrangeItem,
     pub rev: bool,
     pub limit: Option<(i64, i64)>,

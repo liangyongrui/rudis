@@ -38,7 +38,7 @@ pub struct Config {
 }
 
 const fn max_connections() -> usize {
-    1000
+    2000
 }
 /// hdp 相关 配置
 #[serde_as]
@@ -72,8 +72,8 @@ pub struct MasterConfig {
 fn get_config() -> Config {
     info!("loading config");
     // todo 根据环境变量设置配置文件路径
-    // let file_path = "./config.toml";
-    let file_path = "/Users/liangyongrui/code/github/rcc/conf/config.toml";
+    let file_path = "./config.toml";
+    // let file_path = "/Users/liangyongrui/code/github/rcc/conf/config.toml";
     let str_val = match File::open(file_path) {
         Ok(mut file) => {
             let mut str_val = String::new();

@@ -3,7 +3,7 @@
 //! 实现内部的命令 不需要兼容redis
 //! slot 层的操作，加锁的时间粒度降为最小
 
-use std::{borrow::BorrowMut, sync::atomic::AtomicU64};
+use std::borrow::BorrowMut;
 
 use parking_lot::RwLock;
 use rpds::{HashTrieMapSync, HashTrieSetSync};
@@ -25,7 +25,6 @@ pub mod dict;
 
 pub struct Slot {
     slot_id: u16,
-    next_id: AtomicU64,
     pub dict: RwLock<Dict>,
     bg_task: BgTask,
 }
@@ -35,25 +34,40 @@ impl Slot {
         // todo load from disk
         Self {
             slot_id,
-            next_id: AtomicU64::new(0),
             dict: RwLock::new(Dict::new()),
             bg_task,
         }
     }
-    #[inline]
-    fn next_id(&self) -> u64 {
-        self.next_id
-            .fetch_add(1, std::sync::atomic::Ordering::SeqCst)
-    }
-
     async fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
-        let id = self.next_id();
-
         // 加锁执行命令
-        let res = {
+        let (res, id) = {
             let mut dict = self.dict.write();
-            dict.last_write_op_id = id;
-            cmd.clone().apply(id, dict.borrow_mut())
+            let dict = dict.borrow_mut();
+            let id = dict.next_id();
+            (cmd.clone().apply(id, dict), id)
+        };
+
+        let res = match res {
+            Ok(WriteResp {
+                new_expires_at,
+                payload,
+            }) => {
+                // 设置自动过期
+                if let Some((ea, key)) = new_expires_at {
+                    let _ = self
+                        .bg_task
+                        .expire_sender
+                        .send(crate::expire::Entry {
+                            expires_at: ea,
+                            slot: self.slot_id,
+                            id,
+                            key,
+                        })
+                        .await;
+                }
+                Ok(payload)
+            }
+            Err(e) => Err(e),
         };
 
         // 转发执行完成的请求
@@ -63,29 +77,11 @@ impl Slot {
             .send(forward::Message {
                 id,
                 slot: self.slot_id,
-                cmd: cmd.clone().into(),
+                cmd: cmd.into(),
             })
             .await;
 
-        let WriteResp {
-            new_expires_at,
-            payload,
-        } = res?;
-
-        // 设置自动过期
-        if let Some((ea, key)) = new_expires_at {
-            let _ = self
-                .bg_task
-                .expire_sender
-                .send(crate::expire::Entry {
-                    expires_at: ea,
-                    slot: self.slot_id,
-                    id,
-                    key,
-                })
-                .await;
-        }
-        Ok(payload)
+        res
     }
 }
 

@@ -2,13 +2,12 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd, WriteResp},
-    data_type::KeyType,
     dict::{Dict, Value},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: KeyType,
+    pub key: Vec<u8>,
 }
 
 impl From<Req> for WriteCmd {

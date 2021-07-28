@@ -17,7 +17,7 @@ pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
     }
     .dict
     .read();
-    let base_id = lock.last_write_op_id;
+    let base_id = lock.last_write_op_id();
     // fork 子进程做snapshot， 减少持有锁的时间
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child }) => {

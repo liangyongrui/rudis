@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     parse::ParseError,
-    slot::data_type::{sorted_set::Node, KeyType, SimpleType},
+    slot::data_type::{sorted_set::Node, SimpleType},
     utils::options::{GtLt, NxXx},
     Db, Frame, Parse,
 };
@@ -12,7 +12,7 @@ use crate::{
 /// https://redis.io/commands/zadd
 #[derive(Debug, Clone)]
 pub struct Zadd {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub nx_xx: NxXx,
     pub gt_lt: GtLt,
     pub ch: bool,

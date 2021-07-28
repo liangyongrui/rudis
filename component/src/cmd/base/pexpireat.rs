@@ -2,12 +2,12 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::KeyType, Frame};
+use crate::{db::Db, Frame};
 
 /// https://redis.io/commands/pexpireat
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Pexpireat {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub ms_timestamp: u64,
 }
 impl From<Pexpireat> for crate::slot::cmd::simple::expire::Req {

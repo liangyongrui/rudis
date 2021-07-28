@@ -1,13 +1,12 @@
 //! 测试用的一些基础函数
 
+use bytes::Bytes;
 use component::{server, Frame};
-use opentelemetry::sdk::export::trace::stdout;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
 };
-use tracing::{debug, error, span, Level};
-use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, Registry};
+use tracing::{debug, Level};
 trait NewCmd {
     fn cmd(self) -> Vec<u8>;
 }
@@ -16,7 +15,7 @@ impl NewCmd for &str {
     fn cmd(self) -> Vec<u8> {
         let args = self
             .split_ascii_whitespace()
-            .map(|t| Frame::Simple(t.to_owned()))
+            .map(|t| Frame::Bulk(Bytes::copy_from_slice(t.as_bytes())))
             .collect();
         Frame::Array(args).into()
     }
@@ -24,12 +23,13 @@ impl NewCmd for &str {
 
 pub async fn write_cmd(stream: &mut TcpStream, cmd: &str) {
     stream.write_all(&cmd.cmd()).await.unwrap();
+    stream.flush().await.unwrap();
 }
 
 pub async fn read_assert_eq(stream: &mut TcpStream, right: &[u8]) {
     let mut response = vec![0; right.len()];
     stream.read_exact(&mut response).await.unwrap();
-    assert_eq!(right, &response);
+    assert_eq!(&response, right);
 }
 
 pub async fn start_server() -> TcpStream {

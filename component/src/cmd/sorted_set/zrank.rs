@@ -1,14 +1,11 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{
-    slot::data_type::{KeyType, SimpleType},
-    Db, Frame,
-};
+use crate::{slot::data_type::SimpleType, Db, Frame};
 /// https://redis.io/commands/zrank
 #[derive(Debug, ParseFrames)]
 pub struct Zrank {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub member: SimpleType,
 }
 

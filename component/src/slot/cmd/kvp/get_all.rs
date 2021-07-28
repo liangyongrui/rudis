@@ -3,13 +3,13 @@ use rpds::HashTrieMapSync;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{CollectionType, DataType, KeyType, SimpleType},
+    data_type::{CollectionType, DataType, SimpleType},
     dict::Dict,
 };
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a KeyType,
+    pub key: &'a Vec<u8>,
 }
 
 impl<'a> Read<Option<HashTrieMapSync<SimpleType, SimpleType>>> for Req<'a> {

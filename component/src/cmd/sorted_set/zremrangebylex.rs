@@ -3,12 +3,12 @@ use std::ops::Bound;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::KeyType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub min: String,
     pub max: String,
 }

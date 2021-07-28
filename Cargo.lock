@@ -150,6 +150,7 @@ dependencies = [
 name = "cmd_test"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "component",
  "opentelemetry",
  "opentelemetry-jaeger",

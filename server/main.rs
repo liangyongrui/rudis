@@ -9,7 +9,6 @@
 use component::{server, DEFAULT_PORT};
 use structopt::StructOpt;
 use tokio::{net::TcpListener, signal};
-use tracing::Level;
 
 #[tokio::main]
 pub async fn main() -> component::Result<()> {

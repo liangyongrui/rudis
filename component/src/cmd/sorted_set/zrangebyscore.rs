@@ -2,17 +2,12 @@ use std::ops::Bound;
 
 use tracing::instrument;
 
-use crate::{
-    parse::ParseError,
-    slot::data_type::{Float, KeyType},
-    utils::BoundExt,
-    Db, Frame, Parse,
-};
+use crate::{parse::ParseError, slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrangebyscore
 #[derive(Debug)]
 pub struct Zrangebyscore {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub range_item: (Bound<f64>, Bound<f64>),
     pub limit: Option<(i64, i64)>,
     pub withscores: bool,

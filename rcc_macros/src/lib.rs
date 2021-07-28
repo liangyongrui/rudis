@@ -54,11 +54,6 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                             let #field_name = parse.next_simple_type()?;
                         };
                     }
-                    if *ident == "KeyType" {
-                        return quote! {
-                            let #field_name = parse.next_key()?;
-                        };
-                    }
                     if *ident == "i64" || *ident == "u64" {
                         return quote! {
                             let #field_name = parse.next_int()? as #field_type;
@@ -74,7 +69,34 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                 ..
                             })) = args.first().unwrap()
                             {
-                                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                                if let Some(syn::PathSegment { ident, arguments }) = segments.last() {
+                                    if *ident == "Vec" {
+                                        if let syn::PathArguments::AngleBracketed(
+                                            syn::AngleBracketedGenericArguments { args, .. },
+                                        ) = arguments
+                                        {
+                                            if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
+                                                path: syn::Path { ref segments, .. },
+                                                ..
+                                            })) = args.first().unwrap()
+                                            {
+                                                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                                                    if *ident == "u8" {
+                                                        return quote! {
+                                                            let mut #field_name = vec![parse.next_key()?];
+                                                            loop {
+                                                                match parse.next_key() {
+                                                                    Ok(key) => #field_name.push(key),
+                                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                                    Err(err) => return Err(err.into()),
+                                                                }
+                                                            }
+                                                        };
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                     if *ident == "SimpleType" {
                                         return quote! {
                                             let mut #field_name = vec![parse.next_simple_type()?];
@@ -87,16 +109,9 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                             }
                                         };
                                     }
-                                    if *ident == "KeyType" {
+                                    if *ident == "u8" {
                                         return quote! {
-                                            let mut #field_name = vec![parse.next_key()?];
-                                            loop {
-                                                match parse.next_key() {
-                                                    Ok(key) => #field_name.push(key),
-                                                    Err(crate::parse::ParseError::EndOfStream) => break,
-                                                    Err(err) => return Err(err.into()),
-                                                }
-                                            }
+                                            let #field_name = parse.next_key()?;
                                         };
                                     }
                                     if *ident == "SimpleTypePair" {

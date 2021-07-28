@@ -19,3 +19,4 @@ tracing-opentelemetry = "0.14"
 opentelemetry = { version = "0.15", default-features = false, features = [
     "trace"
 ] }
+bytes = "1"

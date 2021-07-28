@@ -13,7 +13,7 @@ use crate::{
     hdp::HdpStatus,
     slot::{
         cmd,
-        data_type::{self, KeyType, SimpleType},
+        data_type::{self, SimpleType},
         dict, Slot,
     },
 };
@@ -60,7 +60,7 @@ impl Db {
         self.slots.get(slot_id).unwrap()
     }
 
-    fn get_slot(&self, key: &KeyType) -> &Slot {
+    fn get_slot(&self, key: &Vec<u8>) -> &Slot {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();
         key.hash(&mut s);

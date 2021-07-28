@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::KeyType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebyrank {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub range: (i64, i64),
 }
 

@@ -3,11 +3,11 @@ use std::vec;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::KeyType, Frame};
+use crate::{db::Db, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
-    pub key: KeyType,
+    pub key: Vec<u8>,
 }
 
 impl<'a> From<&'a Hgetall> for crate::slot::cmd::kvp::get_all::Req<'a> {

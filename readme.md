@@ -25,6 +25,12 @@ rust cloud cache
   - 主从之间通过 raft 来调度
 - 整个集群分成 x 个 slot, 每个 group 包含多个 slot
 
+## To be optimized
+
+1. [ ] 换掉 tokio::channel
+1. [ ] 一次执行中，除了 io 没有 await
+1. [ ] io_uring
+
 ## todo
 
 1. [ ] 新 db 和 slot 的模板代码 换成宏

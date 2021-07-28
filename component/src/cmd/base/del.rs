@@ -1,11 +1,11 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::KeyType, Frame};
+use crate::{db::Db, Frame};
 /// https://redis.io/commands/del
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
-    pub keys: Vec<KeyType>,
+    pub keys: Vec<Vec<u8>>,
 }
 
 impl Del {

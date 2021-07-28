@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::KeyType, Frame};
+use crate::{db::Db, Frame};
 
 /// https://redis.io/commands/lpop
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Lpop {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub count: Option<i64>,
 }
 

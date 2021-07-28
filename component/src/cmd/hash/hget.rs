@@ -1,16 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{
-    db::Db,
-    slot::data_type::{KeyType, SimpleType},
-    Frame,
-};
+use crate::{db::Db, slot::data_type::SimpleType, Frame};
 
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub field: SimpleType,
 }
 

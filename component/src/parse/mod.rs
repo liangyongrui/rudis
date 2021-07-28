@@ -4,10 +4,7 @@ use std::{fmt, str, vec};
 
 pub use frame::parse;
 
-use crate::{
-    slot::data_type::{KeyType, SimpleType},
-    Frame,
-};
+use crate::{slot::data_type::SimpleType, Frame};
 
 /// Utility for parsing a command
 ///
@@ -56,12 +53,10 @@ impl Parse {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
-    pub fn next_key(&mut self) -> Result<KeyType, ParseError> {
+    pub fn next_key(&mut self) -> Result<Vec<u8>, ParseError> {
         match self.next()? {
-            Frame::Integer(i) => Ok(KeyType::String(i.to_string().into())),
-            Frame::Simple(s) => Ok(KeyType::String(s.into())),
-            Frame::Bulk(b) => Ok(KeyType::Bytes(b.to_vec().into())),
-            frame => Err(format!("protocol error;  got {:?}", frame).into()),
+            Frame::Bulk(b) => Ok(b.to_vec()),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
 

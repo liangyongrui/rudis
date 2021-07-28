@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd, WriteResp},
-    data_type::{sorted_set::Node, CollectionType, DataType, Float, KeyType},
+    data_type::{sorted_set::Node, CollectionType, DataType, Float},
     dict::Dict,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     /// 这里的得分区间(小, 大)
     pub range: (Bound<Float>, Bound<Float>),
     pub rev: bool,

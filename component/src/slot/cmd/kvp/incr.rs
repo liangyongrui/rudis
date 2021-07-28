@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd, WriteResp},
-    data_type::{CollectionType, DataType, KeyType, Kvp, SimpleType},
+    data_type::{CollectionType, DataType, Kvp, SimpleType},
     dict::{self, Dict},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub field: SimpleType,
     pub value: i64,
 }

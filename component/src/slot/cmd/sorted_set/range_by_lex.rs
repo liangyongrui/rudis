@@ -5,7 +5,7 @@ use parking_lot::RwLock;
 use crate::{
     slot::{
         cmd::Read,
-        data_type::{sorted_set::Node, KeyType, SimpleType},
+        data_type::{sorted_set::Node, SimpleType},
         dict::Dict,
     },
     utils::BoundExt,
@@ -13,7 +13,7 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a KeyType,
+    pub key: &'a Vec<u8>,
     /// 这里的得分区间(小, 大)
     pub range: (Bound<SimpleType>, Bound<SimpleType>),
     //  (offset, count)

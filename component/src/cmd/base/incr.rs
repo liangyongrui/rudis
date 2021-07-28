@@ -1,12 +1,12 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::KeyType, Frame};
+use crate::{db::Db, Frame};
 
 /// https://redis.io/commands/incr
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Incr {
-    pub key: KeyType,
+    pub key: Vec<u8>,
 }
 
 impl From<Incr> for crate::slot::cmd::simple::incr::Req {

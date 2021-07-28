@@ -2,12 +2,12 @@ use std::ops::Bound;
 
 use tracing::instrument;
 
-use crate::{parse::ParseError, slot::data_type::KeyType, utils::BoundExt, Db, Frame, Parse};
+use crate::{parse::ParseError, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrangebylex
 #[derive(Debug)]
 pub struct Zrevrangebylex {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub range_item: (Bound<String>, Bound<String>),
     pub limit: Option<(i64, i64)>,
 }

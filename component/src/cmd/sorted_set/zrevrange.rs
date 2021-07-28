@@ -1,11 +1,11 @@
 use tracing::instrument;
 
-use crate::{parse::ParseError, slot::data_type::KeyType, Db, Frame, Parse};
+use crate::{parse::ParseError, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]
 pub struct Zrevrange {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub range: (i64, i64),
     pub withscores: bool,
 }

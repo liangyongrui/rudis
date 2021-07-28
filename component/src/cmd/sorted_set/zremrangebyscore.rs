@@ -2,16 +2,12 @@ use std::ops::Bound;
 
 use tracing::instrument;
 
-use crate::{
-    slot::data_type::{Float, KeyType},
-    utils::BoundExt,
-    Db, Frame, Parse,
-};
+use crate::{slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
 pub struct Zremrangebyscore {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub range: (Bound<f64>, Bound<f64>),
 }
 

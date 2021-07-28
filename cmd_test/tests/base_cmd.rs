@@ -14,7 +14,7 @@ async fn decr() {
 
     write_cmd(&mut stream, "GET decr_test").await;
     read_assert_eq(&mut stream, b":-1\r\n").await;
-    
+
     write_cmd(&mut stream, "SET mykey 10").await;
     read_assert_eq(&mut stream, b"+OK\r\n").await;
 

@@ -33,11 +33,7 @@ pub enum SimpleType {
     Float(Float),
     Null,
 }
-#[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Hash, Clone, Deserialize, Serialize)]
-pub enum KeyType {
-    String(Arc<str>),
-    Bytes(Arc<[u8]>),
-}
+
 impl From<&str> for SimpleType {
     fn from(s: &str) -> Self {
         SimpleType::String(s.into())
@@ -54,16 +50,16 @@ impl From<i64> for SimpleType {
     }
 }
 
-impl From<&str> for KeyType {
-    fn from(s: &str) -> Self {
-        KeyType::String(s.into())
-    }
-}
-impl From<String> for KeyType {
-    fn from(s: String) -> Self {
-        KeyType::String(s.into())
-    }
-}
+// impl From<&str> for Vec<u8> {
+//     fn from(s: &str) -> Self {
+//         Vec<u8>::String(s.into())
+//     }
+// }
+// impl From<String> for Vec<u8> {
+//     fn from(s: String) -> Self {
+//         Vec<u8>::String(s.into())
+//     }
+// }
 
 impl TryFrom<&SimpleType> for i64 {
     type Error = crate::Error;
@@ -71,7 +67,7 @@ impl TryFrom<&SimpleType> for i64 {
     fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
         let res = match value {
             SimpleType::String(s) => s.parse()?,
-            SimpleType::Bytes(b) => atoi::atoi(b).ok_or("type error")?,
+            SimpleType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
             SimpleType::Integer(i) => *i,
             SimpleType::Float(_) => return Err("type error".into()),
             SimpleType::Null => 0,
@@ -86,11 +82,8 @@ impl TryFrom<&SimpleType> for f64 {
 
     fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
         let res = match value {
-            SimpleType::String(s) => s.to_string().parse().map_err(|_| "type error")?,
-            SimpleType::Bytes(b) => {
-                let s = std::str::from_utf8(&b).map_err(|_| "type error")?;
-                s.parse().map_err(|_| "type error")?
-            }
+            SimpleType::String(s) => s.to_string().parse()?,
+            SimpleType::Bytes(b) => std::str::from_utf8(&b)?.parse()?,
             SimpleType::Integer(i) => *i as _,
             SimpleType::Float(f) => f.0,
             SimpleType::Null => 0f64,

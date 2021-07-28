@@ -1,11 +1,11 @@
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::KeyType, utils::other_type::SimpleTypePair, Frame};
+use crate::{db::Db, utils::other_type::SimpleTypePair, Frame};
 /// https://redis.io/commands/hset
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Hset {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub pairs: Vec<SimpleTypePair>,
 }
 

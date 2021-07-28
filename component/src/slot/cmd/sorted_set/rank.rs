@@ -5,13 +5,13 @@ use rpds::RedBlackTreeSetSync;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{sorted_set::Node, CollectionType, DataType, KeyType, SimpleType},
+    data_type::{sorted_set::Node, CollectionType, DataType, SimpleType},
     dict::Dict,
 };
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a KeyType,
+    pub key: &'a Vec<u8>,
     pub member: &'a SimpleType,
     /// true 大的在前， false 小的在前
     pub rev: bool,

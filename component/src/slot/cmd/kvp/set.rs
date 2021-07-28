@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd, WriteResp},
-        data_type::{CollectionType, DataType, KeyType, Kvp, SimpleType},
+        data_type::{CollectionType, DataType, Kvp, SimpleType},
         dict::{self, Dict},
     },
     utils::options::NxXx,
@@ -12,7 +12,7 @@ use crate::{
 /// 追加entries, 如果key 不存在，插入新的再追加
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     // key-value list
     pub entries: Vec<(SimpleType, SimpleType)>,
     /// nx_xx 根据 kvp 的 key 决定

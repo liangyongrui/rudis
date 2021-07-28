@@ -4,7 +4,7 @@ use tracing::instrument;
 use crate::{
     cmd::{Parse, ParseError},
     db::Db,
-    slot::data_type::{KeyType, SimpleType},
+    slot::data_type::SimpleType,
     utils::options::{ExpiresAt, NxXx},
     Frame,
 };
@@ -15,7 +15,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Set {
     /// the lookup key
-    pub key: KeyType,
+    pub key: Vec<u8>,
     /// the value to be stored
     pub value: SimpleType,
     // None not set, true nx, false xx

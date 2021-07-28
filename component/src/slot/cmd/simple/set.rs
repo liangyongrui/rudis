@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd, WriteResp},
-        data_type::{DataType, KeyType, SimpleType},
+        data_type::{DataType, SimpleType},
         dict::{self, Dict},
     },
     utils::options::{ExpiresAt, NxXx},
@@ -11,7 +11,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: KeyType,
+    pub key: Vec<u8>,
     pub value: SimpleType,
     pub expires_at: ExpiresAt,
     pub nx_xx: NxXx,
