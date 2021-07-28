@@ -60,7 +60,7 @@ impl Db {
         self.slots.get(slot_id).unwrap()
     }
 
-    fn get_slot(&self, key: &Vec<u8>) -> &Slot {
+    fn get_slot(&self, key: &[u8]) -> &Slot {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();
         key.hash(&mut s);
