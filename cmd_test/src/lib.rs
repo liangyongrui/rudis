@@ -1,12 +1,13 @@
 //! 测试用的一些基础函数
 
 use component::{server, Frame};
+use opentelemetry::sdk::export::trace::stdout;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
 };
-use tracing::{debug, Level};
-
+use tracing::{debug, error, span, Level};
+use tracing_subscriber::{fmt::format::FmtSpan, layer::SubscriberExt, Registry};
 trait NewCmd {
     fn cmd(self) -> Vec<u8>;
 }

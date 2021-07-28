@@ -15,6 +15,7 @@ rust cloud cache
 1. cluster
 1. ha
 1. 自动化运维
+1. tracing
 
 ## 整体设计
 
@@ -37,23 +38,19 @@ rust cloud cache
 1. [x] 接收字符串的地方 都改成 基础类型(string, blob, i64, f64)
 1. [x] hds(rdb)
 1. [x] 所有操作都判断一下 key 是否过期，过期就不处理了（不用删除，等待异步删除即可）
-1. [ ] aof
+1. [x] aof
    - [x] 写
-     - [ ] 混合持久化
-     - [ ] appendfsync
    - [ ] 读
 1. [ ] 实现主从
    - [ ] 全量同步
    - [ ] 部分重同步
    - [ ] 密码验证
-   - [ ] replica 的 replica 自动挂到 master 上
+   - [ ] 暂时不允许 replica 的 replica
 1. [ ] cluster 模式
    - [ ] 支持主从读写分离
 1. [ ] #[instrument] 用法
 1. [ ] 多个建立连接同时请求报错
 1. [x] 测试命令 demo
-1. [ ] 测试各个命令
-1. [ ] sorted set 模块测试
 1. [ ] 高可用
 1. [ ] 单 key，多次更新聚合
 1. [ ] 持久化

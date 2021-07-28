@@ -16,9 +16,9 @@ pub async fn main() -> component::Result<()> {
     // enable logging
     // see https://docs.rs/tracing for more info
     // tracing_subscriber::fmt::try_init()?;
-    tracing_subscriber::fmt::Subscriber::builder()
-        .with_max_level(Level::DEBUG)
-        .try_init()?;
+    // tracing_subscriber::fmt::Subscriber::builder()
+    //     .with_max_level(Level::DEBUG)
+    //     .try_init()?;
 
     let cli = Cli::from_args();
     let port = cli.port.as_deref().unwrap_or(DEFAULT_PORT);
