@@ -5,7 +5,7 @@ use std::{
 };
 
 use rpds::{HashTrieMapSync, HashTrieSetSync};
-use tokio::sync::mpsc;
+use tokio::{net::{TcpStream, ToSocketAddrs}, sync::mpsc};
 
 use crate::{
     expire::{self, Expiration},
@@ -32,6 +32,10 @@ pub struct Db {
 const SIZE: u16 = 1024;
 
 impl Db {
+    pub async fn from_master<A: ToSocketAddrs>(addr: A) -> Arc<Self> {
+        todo!()
+    }
+
     pub async fn new() -> Arc<Self> {
         let expiration = Expiration::new();
         let hdp = HdpStatus::new().await;

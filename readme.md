@@ -2,6 +2,8 @@
 
 rust cloud cache
 
+(希望有人能起个更好听的名字)
+
 ## 特点
 
 1. 兼容 redis client
@@ -55,7 +57,9 @@ rcc 差不多是 redis 的 3.19 倍
 
 ## bug
 
+1. [ ] snapshot 正在执行的时候 不允许创建新的 snapshot
 1. [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs)
+1. [ ] 修复一下未处理的 Err 和 unwrap
 
 ## todo
 
@@ -138,7 +142,7 @@ zset
 
 1. [x] zadd
 1. [x] zrange
-   - 根据排名查询的时候，假设范围是 m 到 n 时间复杂度为 O(n)
+   - 根据排名查询的时候，假设范围是 m 到 n，时间复杂度为 O(n)
 1. [x] zrevrank
    - O(n)
 1. [x] zrank

@@ -10,7 +10,7 @@ use self::aof::AofStatus;
 use crate::{config::CONFIG, db::Db, forward::Message};
 
 mod aof;
-mod snapshot;
+pub mod snapshot;
 
 pub enum HdpCmd {
     ForwardWrite(Message),
@@ -76,15 +76,25 @@ impl HdpStatus {
                 }
             }
             std::collections::hash_map::Entry::Vacant(e) => {
-                // 第一次 还没有snapshot 从这里创建 aofStatus
-                match AofStatus::new(&self.save_hdp_dir, 0, msg.slot) {
-                    Ok(status) => {
-                        if e.insert(status).write(&msg).await {
-                            snapshot::process(self, msg.slot, db)
+                if snapshot::IN_PROGRESS
+                    .compare_exchange(
+                        false,
+                        true,
+                        std::sync::atomic::Ordering::SeqCst,
+                        std::sync::atomic::Ordering::SeqCst,
+                    )
+                    .is_ok()
+                {
+                    // 第一次 还没有snapshot 从这里创建 aofStatus
+                    match AofStatus::new(&self.save_hdp_dir, 0, msg.slot) {
+                        Ok(status) => {
+                            if e.insert(status).write(&msg).await {
+                                snapshot::process(self, msg.slot, db)
+                            }
                         }
-                    }
-                    Err(err) => {
-                        error!(?err);
+                        Err(err) => {
+                            error!(?err);
+                        }
                     }
                 }
             }

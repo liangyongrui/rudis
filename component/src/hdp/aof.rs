@@ -6,7 +6,7 @@ use tokio::{
 };
 use tracing::error;
 
-use crate::{config::CONFIG, forward::Message};
+use crate::{config::CONFIG, forward::Message, hdp::snapshot};
 
 /// 每个 slot 都有一个aof_status
 pub struct AofStatus {
@@ -56,6 +56,15 @@ impl AofStatus {
         };
         self.next_id += 1;
         self.count += 1;
-        CONFIG.hdp.aof_count > 0 && self.count >= CONFIG.hdp.aof_count
+        CONFIG.hdp.aof_count > 0
+            && self.count >= CONFIG.hdp.aof_count
+            && snapshot::IN_PROGRESS
+                .compare_exchange(
+                    false,
+                    true,
+                    std::sync::atomic::Ordering::SeqCst,
+                    std::sync::atomic::Ordering::SeqCst,
+                )
+                .is_ok()
     }
 }

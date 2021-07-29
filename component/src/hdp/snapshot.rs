@@ -1,10 +1,12 @@
-use std::{borrow::Borrow, fs::File, io::BufWriter, process::exit};
+use std::{borrow::Borrow, fs::File, io::BufWriter, process::exit, sync::atomic::AtomicBool};
 
 use nix::unistd::{fork, ForkResult};
 use tracing::{error, info};
 
 use super::{aof::AofStatus, HdpStatus};
-use crate::{db::Db, slot::dict::Dict};
+use crate::{child_process, db::Db, slot::dict::Dict};
+
+pub static IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
 /// 执行snapshot, 替换新的AofStatus
 pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
@@ -32,6 +34,7 @@ pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
                 Err(e) => error!(?e),
             }
             drop(lock);
+            child_process::add(child, child_process::ChildProcessInfo::Snapshot { base_id });
         }
         Ok(ForkResult::Child) => {
             let path = hdp
