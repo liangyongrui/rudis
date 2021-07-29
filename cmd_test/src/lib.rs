@@ -17,7 +17,7 @@ impl NewCmd for &str {
             .split_ascii_whitespace()
             .map(|t| Frame::Bulk(Bytes::copy_from_slice(t.as_bytes())))
             .collect();
-        Frame::Array(args).into()
+        (&Frame::Array(args)).into()
     }
 }
 

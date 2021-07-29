@@ -51,7 +51,7 @@ mod test {
                     .into_iter()
                     .map(|kv| (kv.0.clone(), kv.1.clone()))
                     .collect::<Vec<_>>();
-                v.sort();
+                v.sort_unstable();
                 v
             },
             {
@@ -60,7 +60,7 @@ mod test {
                     ("k2".into(), "v2".into()),
                     ("k3".into(), "v3".into()),
                 ];
-                v.sort();
+                v.sort_unstable();
                 v
             }
         );
@@ -96,7 +96,7 @@ mod test {
                     .into_iter()
                     .map(|kv| (kv.0.clone(), kv.1.clone()))
                     .collect::<Vec<_>>();
-                v.sort();
+                v.sort_unstable();
                 v
             },
             {
@@ -107,7 +107,7 @@ mod test {
                     ("k4".into(), "v4".into()),
                     ("k5".into(), "v5".into()),
                 ];
-                v.sort();
+                v.sort_unstable();
                 v
             }
         );

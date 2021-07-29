@@ -43,6 +43,7 @@ impl From<&SimpleType> for Frame {
         }
     }
 }
+
 impl PartialEq<&str> for Frame {
     fn eq(&self, other: &&str) -> bool {
         match self {
@@ -154,10 +155,9 @@ pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     ))(i)
 }
 
-impl From<Frame> for Vec<u8> {
-    fn from(frame: Frame) -> Self {
-        let mut res = vec![];
-        match frame {
+impl Frame {
+    pub fn write(&self, res: &mut Vec<u8>) {
+        match self {
             Frame::Simple(a) => {
                 res.push(b'+');
                 res.extend_from_slice(a.as_bytes());
@@ -186,10 +186,17 @@ impl From<Frame> for Vec<u8> {
                 res.extend_from_slice(a.len().to_string().as_bytes());
                 res.extend_from_slice(b"\r\n");
                 for v in a {
-                    res.append(&mut v.into());
+                    v.write(res);
                 }
             }
         }
+    }
+}
+
+impl From<&Frame> for Vec<u8> {
+    fn from(frame: &Frame) -> Self {
+        let mut res = Vec::with_capacity(128);
+        frame.write(&mut res);
         res
     }
 }
@@ -210,7 +217,7 @@ mod test {
             Frame::Simple("abc".to_owned()),
         ]);
         assert_eq!(t, f);
-        let v: Vec<u8> = f.into();
+        let v: Vec<u8> = (&f).into();
         assert_eq!(&v[..], s.as_bytes());
     }
 
@@ -231,7 +238,7 @@ mod test {
             Frame::Bulk(hello.into()),
             Frame::Bulk(world.into()),
         ]);
-        let set: Vec<u8> = raw.clone().into();
+        let set: Vec<u8> = (&raw).into();
         assert_eq!(&set[..], b);
         let (_, f) = parse(s.as_bytes()).unwrap();
         assert_eq!(raw, f);

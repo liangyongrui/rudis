@@ -2,7 +2,6 @@
 mod child_process;
 /// redis 命令
 mod cmd;
-mod cmd_reader;
 mod config;
 /// 过期处理
 mod expire;

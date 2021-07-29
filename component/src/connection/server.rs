@@ -324,7 +324,7 @@ impl Handler {
             // While reading a request frame, also listen for the shutdown
             // signal.
             let maybe_frame = tokio::select! {
-                res = self.connection.reader.read_frame() => res?,
+                res = self.connection.read_frame() => res?,
                 _ = self.shutdown.recv() => {
                     // If a shutdown signal is received, return from `run`.
                     // This will result in the task terminating.

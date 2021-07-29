@@ -38,12 +38,12 @@ mod test {
         assert_eq!(
             {
                 let mut v = res.into_iter().cloned().collect::<Vec<_>>();
-                v.sort();
+                v.sort_unstable();
                 v
             },
             {
                 let mut v = vec!["k1".into(), "k2".into(), "k3".into()];
-                v.sort();
+                v.sort_unstable();
                 v
             }
         );
@@ -71,7 +71,7 @@ mod test {
         assert_eq!(
             {
                 let mut v = res.into_iter().cloned().collect::<Vec<_>>();
-                v.sort();
+                v.sort_unstable();
                 v
             },
             {
@@ -82,7 +82,7 @@ mod test {
                     "k4".into(),
                     "k5".into(),
                 ];
-                v.sort();
+                v.sort_unstable();
                 v
             }
         );
