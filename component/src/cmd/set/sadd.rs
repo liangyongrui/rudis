@@ -21,8 +21,8 @@ impl From<Sadd> for crate::slot::cmd::set::add::Req {
 
 impl Sadd {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.set_add(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.set_add(self.into())?;
         Ok(Frame::Integer((res.new_len - res.old_len) as _))
     }
 }

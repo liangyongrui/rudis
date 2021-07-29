@@ -11,7 +11,7 @@ pub struct Exists {
 
 impl Exists {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let mut res = 0;
         for cmd in self
             .keys

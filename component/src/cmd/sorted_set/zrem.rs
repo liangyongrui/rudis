@@ -21,8 +21,8 @@ impl From<Zrem> for crate::slot::cmd::sorted_set::remove::Req {
 
 impl Zrem {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let resp = db.sorted_set_remove(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let resp = db.sorted_set_remove(self.into())?;
         Ok(Frame::Integer((resp.old_len - resp.new_len) as _))
     }
 }

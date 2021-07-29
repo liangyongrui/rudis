@@ -26,7 +26,9 @@ async fn decr() {
 
     write_cmd(&mut stream, "DECR mykey").await;
     read_assert_eq(&mut stream, b"-number too large to fit in target type\r\n").await;
+    dbg!("end1");
 
     write_cmd(&mut stream, "DECR mykey").await;
     read_assert_eq(&mut stream, b"-number too large to fit in target type\r\n").await;
+    dbg!("end2");
 }

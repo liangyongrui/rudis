@@ -17,7 +17,7 @@ impl<'a> From<&'a Smismember> for crate::slot::cmd::set::get_all::Req<'a> {
 
 impl Smismember {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         if let Some(res) = db.set_get_all((&self).into())? {
             Ok(Frame::Array(
                 self.values

@@ -13,7 +13,7 @@ pub struct Hmget {
 
 impl Hmget {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         if let Some(all) = db.kvp_get_all(crate::slot::cmd::kvp::get_all::Req { key: &self.key })? {
             let res = self
                 .fields

@@ -47,8 +47,8 @@ impl Zremrangebyscore {
     }
 
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.sorted_set_remove_by_score_range(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.sorted_set_remove_by_score_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))
     }
 }

@@ -21,8 +21,8 @@ impl From<Hset> for crate::slot::cmd::kvp::set::Req {
 
 impl Hset {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.kvp_set(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.kvp_set(self.into())?;
         Ok(Frame::Integer((res.new_len - res.old_len) as _))
     }
 }

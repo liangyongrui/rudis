@@ -44,8 +44,8 @@ impl From<Zremrangebylex> for crate::slot::cmd::sorted_set::remove_by_lex_range:
 
 impl Zremrangebylex {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.sorted_set_remove_by_lex_range(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.sorted_set_remove_by_lex_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))
     }
 }

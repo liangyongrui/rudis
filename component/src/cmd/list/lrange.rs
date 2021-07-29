@@ -22,7 +22,7 @@ impl<'a> From<&'a Lrange> for crate::slot::cmd::deque::range::Req<'a> {
 }
 impl Lrange {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = db.deque_range((&self).into())?;
         Ok(Frame::Array(response.iter().map(|t| t.into()).collect()))
     }

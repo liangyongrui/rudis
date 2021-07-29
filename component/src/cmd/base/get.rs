@@ -25,7 +25,7 @@ impl Get {
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         // Get the value from the shared database state
 
         let response = (&db.get((&self).into())?).into();

@@ -20,7 +20,7 @@ impl<'a> From<&'a Zrevrank> for crate::slot::cmd::sorted_set::rank::Req<'a> {
 
 impl Zrevrank {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = match db.sorted_set_rank((&self).into())? {
             None => Frame::Null,
             Some(v) => Frame::Integer(v as _),

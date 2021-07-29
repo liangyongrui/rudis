@@ -87,9 +87,9 @@ impl Zadd {
     }
 
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let ch = self.ch;
-        let res = db.sorted_set_add(self.into()).await?;
+        let res = db.sorted_set_add(self.into())?;
         if ch {
             Ok(Frame::Integer(res.new_len as _))
         } else {

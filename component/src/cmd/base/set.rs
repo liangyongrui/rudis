@@ -135,9 +135,9 @@ impl Set {
     }
 
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let get = self.get;
-        let res = db.set(self.into()).await?;
+        let res = db.set(self.into())?;
         let response = if get {
             (&res).into()
         } else {

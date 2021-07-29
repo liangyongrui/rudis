@@ -26,7 +26,7 @@ impl Unknown {
     ///
     /// This usually means the command is not yet implemented by `rcc`.
     #[instrument(skip(self))]
-    pub async fn apply(self) -> crate::Result<Frame> {
+    pub fn apply(self) -> crate::Result<Frame> {
         let response = Frame::Error(format!("ERR unknown command '{}'", self.command_name));
         Ok(response)
     }

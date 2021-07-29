@@ -17,7 +17,7 @@ impl<'a> From<&'a Llen> for crate::slot::cmd::deque::len::Req<'a> {
 
 impl Llen {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let i = db.deque_len((&self).into())?;
         Ok(Frame::Integer(i as _))
     }

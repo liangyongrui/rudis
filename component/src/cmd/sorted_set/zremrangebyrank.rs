@@ -23,8 +23,8 @@ impl From<Zremrangebyrank> for crate::slot::cmd::sorted_set::remove_by_rank_rang
 
 impl Zremrangebyrank {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.sorted_set_remove_by_rank_range(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.sorted_set_remove_by_rank_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))
     }
 }

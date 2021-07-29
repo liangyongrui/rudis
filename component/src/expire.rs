@@ -6,10 +6,7 @@ use std::{borrow::Borrow, collections::BTreeSet, sync::Arc};
 
 use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
-use tokio::{
-    sync::{mpsc, Notify},
-    time,
-};
+use tokio::{sync::Notify, time};
 use tracing::debug;
 
 use crate::db::Db;
@@ -28,13 +25,13 @@ pub struct Entry {
 pub struct Expiration {
     data: Arc<Mutex<BTreeSet<Entry>>>,
     notify: Arc<Notify>,
-    pub tx: mpsc::Sender<Entry>,
-    rx: mpsc::Receiver<Entry>,
+    pub tx: flume::Sender<Entry>,
+    rx: flume::Receiver<Entry>,
 }
 
 impl Expiration {
     pub fn new() -> Self {
-        let (tx, rx) = mpsc::channel(1024);
+        let (tx, rx) = flume::unbounded();
 
         Self {
             tx,
@@ -44,7 +41,7 @@ impl Expiration {
         }
     }
 
-    pub fn listen(self, db: Arc<Db>) -> mpsc::Sender<Entry> {
+    pub fn listen(self, db: Arc<Db>) -> flume::Sender<Entry> {
         let Expiration {
             data,
             notify,
@@ -52,11 +49,9 @@ impl Expiration {
             rx,
         } = self;
 
-        tokio::spawn(Expiration::recv_task(
-            Arc::clone(&data),
-            Arc::clone(&notify),
-            rx,
-        ));
+        let data_c = Arc::clone(&data);
+        let notify_c = Arc::clone(&notify);
+        tokio::spawn(Expiration::recv_task(data_c, notify_c, rx));
         tokio::spawn(Expiration::purge_expired_task(data, notify, db));
         tx
     }
@@ -64,9 +59,9 @@ impl Expiration {
     async fn recv_task(
         data: Arc<Mutex<BTreeSet<Entry>>>,
         notify: Arc<Notify>,
-        mut rx: mpsc::Receiver<Entry>,
+        rx: flume::Receiver<Entry>,
     ) {
-        while let Some(e) = rx.recv().await {
+        while let Ok(e) = rx.recv_async().await {
             let mut lock = data.lock();
             let need_notify = lock
                 .iter()

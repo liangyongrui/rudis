@@ -21,8 +21,8 @@ impl From<Decrby> for crate::slot::cmd::simple::incr::Req {
 
 impl Decrby {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = db.incr(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let response = db.incr(self.into())?;
         Ok(Frame::Integer(response))
     }
 }

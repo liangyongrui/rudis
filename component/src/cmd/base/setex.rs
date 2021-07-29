@@ -26,8 +26,8 @@ impl From<Setex> for crate::slot::cmd::simple::set::Req {
 
 impl Setex {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        db.set(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        db.set(self.into())?;
         Ok(Frame::Simple("OK".to_string()))
     }
 }

@@ -11,7 +11,7 @@ rust cloud cache
    - 读写公平锁
    - 单次请求只持有一次锁，并且时间粒度尽量小
    - slot 之间并发，空间粒度也尽量小
-   - COW/MVCC
+   - 大 key COW
 1. 过期异步删除
    - 大 key 也是 O(1)的删除
 1. cluster
@@ -41,8 +41,6 @@ rcc 差不多是 redis 的 3.19 倍
 
 ### Performance
 
-1. [ ] 换掉 tokio::channel
-1. [ ] 一次执行中，除了 io 没有 await
 1. [ ] io_uring
 1. [ ] 单 key，多次更新聚合
 1. [ ] 小数据结构，特大数据结构（持久化）

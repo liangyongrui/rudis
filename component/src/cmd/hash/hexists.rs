@@ -21,7 +21,7 @@ impl<'a> From<&'a Hexists> for crate::slot::cmd::kvp::exists::Req<'a> {
 
 impl Hexists {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.kvp_exists((&self).into())?;
         Ok(Frame::Integer(if res { 1 } else { 0 }))
     }

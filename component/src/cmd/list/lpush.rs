@@ -23,8 +23,8 @@ impl From<Lpush> for crate::slot::cmd::deque::push::Req {
 
 impl Lpush {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let response = db.deque_push(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let response = db.deque_push(self.into())?;
         Ok(Frame::Integer(response.new_len as _))
     }
 }

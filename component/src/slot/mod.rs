@@ -38,7 +38,12 @@ impl Slot {
             bg_task,
         }
     }
-    async fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
+
+    pub fn update_dict(&self, dict: Dict) {
+        // todo
+    }
+
+    fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
         // 加锁执行命令
         let (res, id) = {
             let mut dict = self.dict.write();
@@ -54,16 +59,12 @@ impl Slot {
             }) => {
                 // 设置自动过期
                 if let Some((ea, key)) = new_expires_at {
-                    let _ = self
-                        .bg_task
-                        .expire_sender
-                        .send(crate::expire::Entry {
-                            expires_at: ea,
-                            slot: self.slot_id,
-                            id,
-                            key,
-                        })
-                        .await;
+                    let _ = self.bg_task.expire_sender.send(crate::expire::Entry {
+                        expires_at: ea,
+                        slot: self.slot_id,
+                        id,
+                        key,
+                    });
                 }
                 Ok(payload)
             }
@@ -71,15 +72,11 @@ impl Slot {
         };
 
         // 转发执行完成的请求
-        let _ = self
-            .bg_task
-            .forward_sender
-            .send(forward::Message {
-                id,
-                slot: self.slot_id,
-                cmd: cmd.into(),
-            })
-            .await;
+        let _ = self.bg_task.forward_sender.send(forward::Message {
+            id,
+            slot: self.slot_id,
+            cmd: cmd.into(),
+        });
 
         res
     }
@@ -87,74 +84,68 @@ impl Slot {
 
 /// 写命令
 impl Slot {
-    pub async fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
-        self.call_write(cmd).await
+    pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
+        self.call_write(cmd)
     }
-    pub async fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<Value>> {
-        self.call_write(cmd).await
+    pub fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<Value>> {
+        self.call_write(cmd)
     }
-    pub async fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
-        self.call_write(cmd).await
+    pub fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
+        self.call_write(cmd)
     }
-    pub async fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
-        self.call_write(cmd).await
+    pub fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
+        self.call_write(cmd)
     }
-    pub async fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
-        self.call_write(cmd).await
+    pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
+        self.call_write(cmd)
     }
-    pub async fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> crate::Result<cmd::kvp::del::Resp> {
-        self.call_write(cmd).await
+    pub fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> crate::Result<cmd::kvp::del::Resp> {
+        self.call_write(cmd)
     }
-    pub async fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> crate::Result<i64> {
-        self.call_write(cmd).await
+    pub fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> crate::Result<i64> {
+        self.call_write(cmd)
     }
-    pub async fn deque_push(
-        &self,
-        cmd: cmd::deque::push::Req,
-    ) -> crate::Result<cmd::deque::push::Resp> {
-        self.call_write(cmd).await
+    pub fn deque_push(&self, cmd: cmd::deque::push::Req) -> crate::Result<cmd::deque::push::Resp> {
+        self.call_write(cmd)
     }
-    pub async fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
-        self.call_write(cmd).await
+    pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
+        self.call_write(cmd)
     }
-    pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
-        self.call_write(cmd).await
+    pub fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
+        self.call_write(cmd)
     }
-    pub async fn set_remove(
-        &self,
-        cmd: cmd::set::remove::Req,
-    ) -> crate::Result<cmd::set::remove::Resp> {
-        self.call_write(cmd).await
+    pub fn set_remove(&self, cmd: cmd::set::remove::Req) -> crate::Result<cmd::set::remove::Resp> {
+        self.call_write(cmd)
     }
-    pub async fn sorted_set_add(
+    pub fn sorted_set_add(
         &self,
         cmd: cmd::sorted_set::add::Req,
     ) -> crate::Result<cmd::sorted_set::add::Resp> {
-        self.call_write(cmd).await
+        self.call_write(cmd)
     }
-    pub async fn sorted_set_remove(
+    pub fn sorted_set_remove(
         &self,
         cmd: cmd::sorted_set::remove::Req,
     ) -> crate::Result<cmd::sorted_set::remove::Resp> {
-        self.call_write(cmd).await
+        self.call_write(cmd)
     }
-    pub async fn sorted_set_remove_by_lex_range(
+    pub fn sorted_set_remove_by_lex_range(
         &self,
         cmd: cmd::sorted_set::remove_by_lex_range::Req,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.call_write(cmd).await
+        self.call_write(cmd)
     }
-    pub async fn sorted_set_remove_by_rank_range(
+    pub fn sorted_set_remove_by_rank_range(
         &self,
         cmd: cmd::sorted_set::remove_by_rank_range::Req,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.call_write(cmd).await
+        self.call_write(cmd)
     }
-    pub async fn sorted_set_remove_by_score_range(
+    pub fn sorted_set_remove_by_score_range(
         &self,
         cmd: cmd::sorted_set::remove_by_score_range::Req,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.call_write(cmd).await
+        self.call_write(cmd)
     }
 }
 

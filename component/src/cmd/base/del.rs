@@ -10,14 +10,14 @@ pub struct Del {
 
 impl Del {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let mut res = 0;
         for cmd in self
             .keys
             .into_iter()
             .map(|key| crate::slot::cmd::simple::del::Req { key })
         {
-            if db.del(cmd).await?.is_some() {
+            if db.del(cmd)?.is_some() {
                 res += 1;
             }
         }

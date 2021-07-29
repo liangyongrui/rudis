@@ -5,7 +5,6 @@ use std::{
 };
 
 use rpds::{HashTrieMapSync, HashTrieSetSync};
-use tokio::sync::mpsc;
 
 use crate::{
     expire::{self, Expiration},
@@ -14,16 +13,17 @@ use crate::{
     slot::{
         cmd,
         data_type::{self, SimpleType},
-        dict, Slot,
+        dict::{self, Dict},
+        Slot,
     },
 };
 
 #[derive(Clone)]
 pub struct BgTask {
     // 过期task
-    pub expire_sender: mpsc::Sender<expire::Entry>,
+    pub expire_sender: flume::Sender<expire::Entry>,
     // 转发task
-    pub forward_sender: mpsc::Sender<forward::Message>,
+    pub forward_sender: flume::Sender<forward::Message>,
 }
 pub struct Db {
     pub slots: HashMap<u16, Slot>,
@@ -68,6 +68,10 @@ impl Db {
         // todo cluster move
         self.slots.get(&(i as u16)).unwrap()
     }
+
+    pub fn update_dict(&self, slot_id: u16, dict: Dict) {
+        self.slots.get(&slot_id).unwrap().update_dict(dict);
+    }
 }
 
 /// cmd
@@ -75,29 +79,29 @@ impl Db {
     pub fn get(&self, cmd: cmd::simple::get::Req) -> crate::Result<SimpleType> {
         self.get_slot(cmd.key).get(cmd)
     }
-    pub async fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
-        self.get_slot(&cmd.key).set(cmd).await
+    pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
+        self.get_slot(&cmd.key).set(cmd)
     }
-    pub async fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<dict::Value>> {
-        self.get_slot(&cmd.key).del(cmd).await
+    pub fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<dict::Value>> {
+        self.get_slot(&cmd.key).del(cmd)
     }
-    pub async fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
-        self.get_slot(&cmd.key).expire(cmd).await
+    pub fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
+        self.get_slot(&cmd.key).expire(cmd)
     }
     pub fn exists(&self, cmd: cmd::simple::exists::Req) -> crate::Result<bool> {
         self.get_slot(&cmd.key).exists(cmd)
     }
-    pub async fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
-        self.get_slot(&cmd.key).incr(cmd).await
+    pub fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
+        self.get_slot(&cmd.key).incr(cmd)
     }
-    pub async fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> crate::Result<i64> {
-        self.get_slot(&cmd.key).kvp_incr(cmd).await
+    pub fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> crate::Result<i64> {
+        self.get_slot(&cmd.key).kvp_incr(cmd)
     }
-    pub async fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> crate::Result<cmd::kvp::del::Resp> {
-        self.get_slot(&cmd.key).kvp_del(cmd).await
+    pub fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> crate::Result<cmd::kvp::del::Resp> {
+        self.get_slot(&cmd.key).kvp_del(cmd)
     }
-    pub async fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
-        self.get_slot(&cmd.key).kvp_set(cmd).await
+    pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> crate::Result<cmd::kvp::set::Resp> {
+        self.get_slot(&cmd.key).kvp_set(cmd)
     }
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req) -> crate::Result<bool> {
         self.get_slot(cmd.key).kvp_exists(cmd)
@@ -117,23 +121,17 @@ impl Db {
     pub fn deque_len(&self, cmd: cmd::deque::len::Req) -> crate::Result<usize> {
         self.get_slot(cmd.key).deque_len(cmd)
     }
-    pub async fn deque_push(
-        &self,
-        cmd: cmd::deque::push::Req,
-    ) -> crate::Result<cmd::deque::push::Resp> {
-        self.get_slot(&cmd.key).deque_push(cmd).await
+    pub fn deque_push(&self, cmd: cmd::deque::push::Req) -> crate::Result<cmd::deque::push::Resp> {
+        self.get_slot(&cmd.key).deque_push(cmd)
     }
-    pub async fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
-        self.get_slot(&cmd.key).deque_pop(cmd).await
+    pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
+        self.get_slot(&cmd.key).deque_pop(cmd)
     }
-    pub async fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
-        self.get_slot(&cmd.key).set_add(cmd).await
+    pub fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
+        self.get_slot(&cmd.key).set_add(cmd)
     }
-    pub async fn set_remove(
-        &self,
-        cmd: cmd::set::remove::Req,
-    ) -> crate::Result<cmd::set::remove::Resp> {
-        self.get_slot(&cmd.key).set_remove(cmd).await
+    pub fn set_remove(&self, cmd: cmd::set::remove::Req) -> crate::Result<cmd::set::remove::Resp> {
+        self.get_slot(&cmd.key).set_remove(cmd)
     }
     pub fn set_get_all(
         &self,
@@ -168,40 +166,35 @@ impl Db {
     ) -> crate::Result<Option<usize>> {
         self.get_slot(&cmd.key).sorted_set_rank(cmd)
     }
-    pub async fn sorted_set_add(
+    pub fn sorted_set_add(
         &self,
         cmd: cmd::sorted_set::add::Req,
     ) -> crate::Result<cmd::sorted_set::add::Resp> {
-        self.get_slot(&cmd.key).sorted_set_add(cmd).await
+        self.get_slot(&cmd.key).sorted_set_add(cmd)
     }
-    pub async fn sorted_set_remove(
+    pub fn sorted_set_remove(
         &self,
         cmd: cmd::sorted_set::remove::Req,
     ) -> crate::Result<cmd::sorted_set::remove::Resp> {
-        self.get_slot(&cmd.key).sorted_set_remove(cmd).await
+        self.get_slot(&cmd.key).sorted_set_remove(cmd)
     }
-    pub async fn sorted_set_remove_by_lex_range(
+    pub fn sorted_set_remove_by_lex_range(
         &self,
         cmd: cmd::sorted_set::remove_by_lex_range::Req,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.get_slot(&cmd.key)
-            .sorted_set_remove_by_lex_range(cmd)
-            .await
+        self.get_slot(&cmd.key).sorted_set_remove_by_lex_range(cmd)
     }
-    pub async fn sorted_set_remove_by_rank_range(
+    pub fn sorted_set_remove_by_rank_range(
         &self,
         cmd: cmd::sorted_set::remove_by_rank_range::Req,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.get_slot(&cmd.key)
-            .sorted_set_remove_by_rank_range(cmd)
-            .await
+        self.get_slot(&cmd.key).sorted_set_remove_by_rank_range(cmd)
     }
-    pub async fn sorted_set_remove_by_score_range(
+    pub fn sorted_set_remove_by_score_range(
         &self,
         cmd: cmd::sorted_set::remove_by_score_range::Req,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
         self.get_slot(&cmd.key)
             .sorted_set_remove_by_score_range(cmd)
-            .await
     }
 }

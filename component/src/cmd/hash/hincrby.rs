@@ -22,8 +22,8 @@ impl From<Hincrby> for crate::slot::cmd::kvp::incr::Req {
 
 impl Hincrby {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let i = db.kvp_incr(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let i = db.kvp_incr(self.into())?;
         Ok(Frame::Integer(i))
     }
 }

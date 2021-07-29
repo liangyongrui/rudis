@@ -46,7 +46,7 @@ impl Zrevrange {
     }
 
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let withscores = self.withscores;
         let response = db.sorted_set_range_by_rank((&self).into())?;
         let mut res = vec![];

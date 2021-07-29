@@ -57,7 +57,7 @@ impl Zrangebyscore {
         })
     }
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let limit = self
             .limit
             .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));

@@ -20,8 +20,8 @@ impl From<Srem> for crate::slot::cmd::set::remove::Req {
 }
 impl Srem {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.set_remove(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.set_remove(self.into())?;
         Ok(Frame::Integer((res.old_len - res.new_len) as _))
     }
 }

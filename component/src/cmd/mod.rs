@@ -216,113 +216,76 @@ impl Command {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         match self {
-            Command::ReadCmd(cmd) => cmd.apply(db).await,
-            Command::WriteCmd(cmd) => cmd.apply(db).await,
-            Command::Unknown(cmd) => cmd.apply().await,
+            Command::ReadCmd(cmd) => cmd.apply(db),
+            Command::WriteCmd(cmd) => cmd.apply(db),
+            Command::Unknown(cmd) => cmd.apply(),
         }
     }
 }
 
 impl WriteCmd {
-    async fn apply0(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         use WriteCmd::*;
         match self {
-            Set(cmd) => cmd.apply(db).await,
-            Psetex(cmd) => cmd.apply(db).await,
-            Setex(cmd) => cmd.apply(db).await,
-            Del(cmd) => cmd.apply(db).await,
-            Pexpireat(cmd) => cmd.apply(db).await,
-            Expireat(cmd) => cmd.apply(db).await,
-            Expire(cmd) => cmd.apply(db).await,
-            Pexpire(cmd) => cmd.apply(db).await,
-            Incrby(cmd) => cmd.apply(db).await,
-            Incr(cmd) => cmd.apply(db).await,
-            Decr(cmd) => cmd.apply(db).await,
-            Decrby(cmd) => cmd.apply(db).await,
-            Lpush(cmd) => cmd.apply(db).await,
-            Rpush(cmd) => cmd.apply(db).await,
-            Lpushx(cmd) => cmd.apply(db).await,
-            Rpushx(cmd) => cmd.apply(db).await,
-            Lpop(cmd) => cmd.apply(db).await,
-            Rpop(cmd) => cmd.apply(db).await,
-            Hset(cmd) => cmd.apply(db).await,
-            Hdel(cmd) => cmd.apply(db).await,
-            Hsetnx(cmd) => cmd.apply(db).await,
-            Hincrby(cmd) => cmd.apply(db).await,
-            Sadd(cmd) => cmd.apply(db).await,
-            Srem(cmd) => cmd.apply(db).await,
-            Zadd(cmd) => cmd.apply(db).await,
-            Zrem(cmd) => cmd.apply(db).await,
-            Zremrangebyrank(cmd) => cmd.apply(db).await,
-            Zremrangebyscore(cmd) => cmd.apply(db).await,
-            Zremrangebylex(cmd) => cmd.apply(db).await,
+            Set(cmd) => cmd.apply(db),
+            Psetex(cmd) => cmd.apply(db),
+            Setex(cmd) => cmd.apply(db),
+            Del(cmd) => cmd.apply(db),
+            Pexpireat(cmd) => cmd.apply(db),
+            Expireat(cmd) => cmd.apply(db),
+            Expire(cmd) => cmd.apply(db),
+            Pexpire(cmd) => cmd.apply(db),
+            Incrby(cmd) => cmd.apply(db),
+            Incr(cmd) => cmd.apply(db),
+            Decr(cmd) => cmd.apply(db),
+            Decrby(cmd) => cmd.apply(db),
+            Lpush(cmd) => cmd.apply(db),
+            Rpush(cmd) => cmd.apply(db),
+            Lpushx(cmd) => cmd.apply(db),
+            Rpushx(cmd) => cmd.apply(db),
+            Lpop(cmd) => cmd.apply(db),
+            Rpop(cmd) => cmd.apply(db),
+            Hset(cmd) => cmd.apply(db),
+            Hdel(cmd) => cmd.apply(db),
+            Hsetnx(cmd) => cmd.apply(db),
+            Hincrby(cmd) => cmd.apply(db),
+            Sadd(cmd) => cmd.apply(db),
+            Srem(cmd) => cmd.apply(db),
+            Zadd(cmd) => cmd.apply(db),
+            Zrem(cmd) => cmd.apply(db),
+            Zremrangebyrank(cmd) => cmd.apply(db),
+            Zremrangebyscore(cmd) => cmd.apply(db),
+            Zremrangebylex(cmd) => cmd.apply(db),
         }
     }
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        self.apply0(db).await
-    }
-
-    // todo clean code
-    // pub fn into_cmd_bytes(self) -> Vec<u8> {
-    //     match self {
-    //         WriteCmd::Zrem(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Zremrangebyrank(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Zremrangebyscore(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Zadd(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Sadd(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Srem(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Hincrby(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Hdel(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Hsetnx(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Hset(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Lpop(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Rpop(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Lpush(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Rpush(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Lpushx(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Rpushx(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Incrby(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Incr(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Decr(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Decrby(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Set(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Del(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Psetex(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Setex(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Pexpireat(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Expireat(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Expire(cmd) => cmd.into_cmd_bytes(),
-    //         WriteCmd::Pexpire(cmd) => cmd.into_cmd_bytes(),
-    //     }
-    // }
 }
 
 impl ReadCmd {
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         use ReadCmd::*;
 
         match self {
-            Get(cmd) => cmd.apply(db).await,
-            Llen(cmd) => cmd.apply(db).await,
-            Hgetall(cmd) => cmd.apply(db).await,
-            Hget(cmd) => cmd.apply(db).await,
-            Hmget(cmd) => cmd.apply(db).await,
-            Hexists(cmd) => cmd.apply(db).await,
-            Sismember(cmd) => cmd.apply(db).await,
-            Smembers(cmd) => cmd.apply(db).await,
-            Smismember(cmd) => cmd.apply(db).await,
-            Zrangebylex(cmd) => cmd.apply(db).await,
-            Zrangebyscore(cmd) => cmd.apply(db).await,
-            Zrank(cmd) => cmd.apply(db).await,
-            Zrevrange(cmd) => cmd.apply(db).await,
-            Zrevrangebylex(cmd) => cmd.apply(db).await,
-            Zrevrangebyscore(cmd) => cmd.apply(db).await,
-            Zrevrank(cmd) => cmd.apply(db).await,
-            Zrange(cmd) => cmd.apply(db).await,
-            Lrange(cmd) => cmd.apply(db).await,
-            Exists(cmd) => cmd.apply(db).await,
+            Get(cmd) => cmd.apply(db),
+            Llen(cmd) => cmd.apply(db),
+            Hgetall(cmd) => cmd.apply(db),
+            Hget(cmd) => cmd.apply(db),
+            Hmget(cmd) => cmd.apply(db),
+            Hexists(cmd) => cmd.apply(db),
+            Sismember(cmd) => cmd.apply(db),
+            Smembers(cmd) => cmd.apply(db),
+            Smismember(cmd) => cmd.apply(db),
+            Zrangebylex(cmd) => cmd.apply(db),
+            Zrangebyscore(cmd) => cmd.apply(db),
+            Zrank(cmd) => cmd.apply(db),
+            Zrevrange(cmd) => cmd.apply(db),
+            Zrevrangebylex(cmd) => cmd.apply(db),
+            Zrevrangebyscore(cmd) => cmd.apply(db),
+            Zrevrank(cmd) => cmd.apply(db),
+            Zrange(cmd) => cmd.apply(db),
+            Lrange(cmd) => cmd.apply(db),
+            Exists(cmd) => cmd.apply(db),
         }
     }
 }

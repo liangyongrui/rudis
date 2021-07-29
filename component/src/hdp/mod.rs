@@ -3,8 +3,8 @@
 
 use std::{borrow::Borrow, collections::HashMap, path::PathBuf, sync::Arc, time::Duration};
 
-use tokio::{sync::mpsc, time};
-use tracing::error;
+use tokio::time;
+use tracing::{error, warn};
 
 use self::aof::AofStatus;
 use crate::{config::CONFIG, db::Db, forward::Message};
@@ -17,8 +17,8 @@ pub enum HdpCmd {
 }
 
 pub struct HdpStatus {
-    pub tx: mpsc::Sender<HdpCmd>,
-    rx: mpsc::Receiver<HdpCmd>,
+    pub tx: flume::Sender<HdpCmd>,
+    rx: flume::Receiver<HdpCmd>,
     pub aof_status_map: HashMap<u16, AofStatus>,
     pub save_hdp_dir: PathBuf,
 }
@@ -29,7 +29,7 @@ impl HdpStatus {
             Some(ref s) => s.clone(),
             None => return None,
         };
-        let (tx, rx) = mpsc::channel(1024);
+        let (tx, rx) = flume::unbounded();
         Some(Self {
             tx,
             rx,
@@ -46,10 +46,13 @@ impl HdpStatus {
                 _ = aof_flush_interval.tick() => {
                     self.flush_all_aof().await;
                 }
-                cmd = self.rx.recv() => {
+                cmd = self.rx.recv_async() => {
                     let cmd = match cmd {
-                        Some(cmd) => cmd,
-                        _ => break
+                        Ok(cmd) => cmd,
+                        Err(e) => {
+                            warn!(?e);
+                            break;
+                        }
                     };
                     match cmd {
                         HdpCmd::ForwardWrite(msg) => self.process_forward_write(msg, db.borrow()).await,

@@ -22,8 +22,8 @@ impl From<Expire> for crate::slot::cmd::simple::expire::Req {
 
 impl Expire {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.expire(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.expire(self.into())?;
         let response = Frame::Integer(if res { 1 } else { 0 });
         Ok(response)
     }

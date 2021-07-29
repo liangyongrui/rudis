@@ -21,7 +21,7 @@ impl<'a> From<&'a Hget> for crate::slot::cmd::kvp::get::Req<'a> {
 
 impl Hget {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         Ok((&db.kvp_get((&self).into())?).into())
     }
 }

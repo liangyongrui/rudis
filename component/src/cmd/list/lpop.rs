@@ -22,8 +22,8 @@ impl From<Lpop> for crate::slot::cmd::deque::pop::Req {
 
 impl Lpop {
     #[instrument(skip(self, db))]
-    pub async fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.deque_pop(self.into()).await?;
+    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
+        let res = db.deque_pop(self.into())?;
         Ok(Frame::Array(res.iter().map(|t| t.into()).collect()))
     }
 }
