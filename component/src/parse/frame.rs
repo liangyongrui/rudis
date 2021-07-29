@@ -43,7 +43,6 @@ impl From<&SimpleType> for Frame {
     }
 }
 
-
 impl fmt::Display for Frame {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         use std::str;

@@ -6,15 +6,17 @@ use nix::{
 };
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use tracing::{error, warn};
+use tracing::{error, info, warn};
 
 static STATUS: Lazy<Mutex<HashMap<Pid, ChildProcessInfo>>> = Lazy::new(|| {
     tokio::task::spawn_blocking(loop_status);
     Mutex::new(HashMap::new())
 });
 
+#[derive(Debug)]
 pub enum ChildProcessInfo {
-    Snapshot { base_id: u64 },
+    HdpSnapshot { base_id: u64 },
+    SyncSnapshot,
 }
 
 async fn loop_status() {
@@ -22,7 +24,8 @@ async fn loop_status() {
         sleep(Duration::from_secs(1));
         match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
             Ok(nix::sys::wait::WaitStatus::Exited(pid, _)) => match STATUS.lock().remove(&pid) {
-                Some(ChildProcessInfo::Snapshot { base_id }) => finsh_snapshot(pid, base_id),
+                Some(ChildProcessInfo::HdpSnapshot { base_id }) => finsh_snapshot(pid, base_id),
+                Some(e) => info!("{:?} exited: {}", e, pid),
                 None => error!("unknown pid: {}", pid),
             },
             Ok(nix::sys::wait::WaitStatus::StillAlive) => (),
@@ -37,11 +40,11 @@ pub fn add(pid: Pid, info: ChildProcessInfo) {
 }
 
 fn finsh_snapshot(pid: Pid, base_id: u64) {
+    info!("snapshot exited: {}, {}", pid, base_id);
     let _ = crate::hdp::snapshot::IN_PROGRESS.compare_exchange(
         true,
         false,
         std::sync::atomic::Ordering::SeqCst,
         std::sync::atomic::Ordering::SeqCst,
     );
-    // todo 主从复制
 }

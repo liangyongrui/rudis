@@ -8,6 +8,12 @@ use tokio::{
 
 use crate::{db::Db, slot::dict::Dict, Frame};
 
+/// 向主节点要快照
+pub async fn process_snapshot<A: ToSocketAddrs>(addr: A, db: Arc<Db>) {
+    let stream = TcpStream::connect(addr).await.unwrap();
+    // bincode::deserialize_from(reader)
+}
+
 pub struct Connection {
     db: Arc<Db>,
     buffer: BytesMut,

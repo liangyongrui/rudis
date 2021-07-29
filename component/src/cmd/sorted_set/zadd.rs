@@ -41,10 +41,10 @@ impl Zadd {
         let mut incr = false;
         let score = loop {
             match parse.next_simple_type()? {
-                SimpleType::Bytes(s) => {
-                    let s = match String::from_utf8((&*s).into()) {
+                SimpleType::Bytes(avu) => {
+                    let s = match std::str::from_utf8(&avu) {
                         Ok(s) => s,
-                        Err(_) => break SimpleType::Bytes(s),
+                        Err(_) => break SimpleType::Bytes(avu),
                     };
                     let lowercase = s.to_lowercase();
                     match &lowercase[..] {
@@ -54,7 +54,7 @@ impl Zadd {
                         "lt" => gt_lt = GtLt::Lt,
                         "incr" => incr = true,
                         "ch" => ch = true,
-                        _ => break SimpleType::Bytes(s.as_bytes().into()),
+                        _ => break SimpleType::Bytes(avu),
                     }
                 }
                 t => break t,

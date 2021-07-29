@@ -150,6 +150,7 @@ dependencies = [
 name = "cmd_test"
 version = "0.1.0"
 dependencies = [
+ "bincode",
  "bytes",
  "component",
  "opentelemetry",

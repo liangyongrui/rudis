@@ -28,7 +28,7 @@ pub enum SimpleType {
     /// 占位，用于排序
     Big,
     String(Arc<str>),
-    Bytes(Arc<[u8]>),
+    Bytes(Arc<Vec<u8>>),
     Integer(i64),
     Float(Float),
     Null,

@@ -34,7 +34,10 @@ pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
                 Err(e) => error!(?e),
             }
             drop(lock);
-            child_process::add(child, child_process::ChildProcessInfo::Snapshot { base_id });
+            child_process::add(
+                child,
+                child_process::ChildProcessInfo::HdpSnapshot { base_id },
+            );
         }
         Ok(ForkResult::Child) => {
             let path = hdp

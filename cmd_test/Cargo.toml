@@ -11,6 +11,11 @@ path = "./bin/simple_bench.rs"
 name = "read_write_file"
 path = "./bin/read_write_file.rs"
 
+[[bin]]
+name = "read_write_bincode"
+path = "./bin/read_write_bincode.rs"
+
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 tokio = { version = "1", features = ["full"] }
@@ -24,3 +29,4 @@ opentelemetry = { version = "0.15", default-features = false, features = [
     "trace"
 ] }
 bytes = "1"
+bincode = "1"

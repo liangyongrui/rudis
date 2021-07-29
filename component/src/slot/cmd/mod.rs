@@ -51,5 +51,7 @@ pub enum WriteCmd {
     SortedSetRemoveByRankRange(sorted_set::remove_by_rank_range::Req),
     SortedSetRemoveByScoreRange(sorted_set::remove_by_score_range::Req),
     SortedSetRemoveByLexRange(sorted_set::remove_by_lex_range::Req),
+    // 维持主从心跳
+    HeartBeat,
     None,
 }
