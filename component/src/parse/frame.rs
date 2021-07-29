@@ -6,7 +6,6 @@
 
 use std::{fmt, vec};
 
-use bytes::Bytes;
 use nom::{
     branch::alt,
     bytes::streaming::{tag, take_while, take_while1, take_while_m_n},
@@ -26,7 +25,7 @@ pub enum Frame {
     Simple(String),
     Error(String),
     Integer(i64),
-    Bulk(Bytes),
+    Bulk(Vec<u8>),
     Null,
     Array(Vec<Frame>),
 }
@@ -36,7 +35,7 @@ impl From<&SimpleType> for Frame {
         match st {
             SimpleType::Big => Frame::Null,
             SimpleType::String(s) => Frame::Simple(s.to_string()),
-            SimpleType::Bytes(b) => Frame::Bulk(Bytes::copy_from_slice(&b)),
+            SimpleType::Bytes(b) => Frame::Bulk(b.to_vec()),
             SimpleType::Integer(i) => Frame::Integer(*i),
             SimpleType::Float(f) => Frame::Simple(format!("{}", f.0)),
             SimpleType::Null => Frame::Null,
@@ -44,15 +43,6 @@ impl From<&SimpleType> for Frame {
     }
 }
 
-impl PartialEq<&str> for Frame {
-    fn eq(&self, other: &&str) -> bool {
-        match self {
-            Frame::Simple(s) => s.eq(other),
-            Frame::Bulk(s) => s.eq(other),
-            _ => false,
-        }
-    }
-}
 
 impl fmt::Display for Frame {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
@@ -122,7 +112,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         let len = len as usize;
         let (i, data) = take_while_m_n(len, len, |_| true)(i)?;
         let (i, _) = tag(b"\r\n")(i)?;
-        Ok((i, Frame::Bulk(Bytes::copy_from_slice(data))))
+        Ok((i, Frame::Bulk(data.to_vec())))
     }
 }
 
@@ -211,7 +201,7 @@ mod test {
         let t = Frame::Array(vec![
             Frame::Array(vec![
                 Frame::Integer(1),
-                Frame::Bulk(Bytes::from_static(b"hello")),
+                Frame::Bulk(b"hello"[..].into()),
                 Frame::Integer(2),
             ]),
             Frame::Simple("abc".to_owned()),

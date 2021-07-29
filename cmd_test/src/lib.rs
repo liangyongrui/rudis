@@ -1,6 +1,5 @@
 //! 测试用的一些基础函数
 
-use bytes::Bytes;
 use component::{server, Frame};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -15,7 +14,7 @@ impl NewCmd for &str {
     fn cmd(self) -> Vec<u8> {
         let args = self
             .split_ascii_whitespace()
-            .map(|t| Frame::Bulk(Bytes::copy_from_slice(t.as_bytes())))
+            .map(|t| Frame::Bulk(t.as_bytes().into()))
             .collect();
         (&Frame::Array(args)).into()
     }

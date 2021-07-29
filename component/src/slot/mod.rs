@@ -39,6 +39,7 @@ impl Slot {
         }
     }
 
+    /// 更新整个 dict
     pub fn update_dict(&self, dict: Dict) {
         // todo
     }

@@ -55,7 +55,7 @@ impl Parse {
 
     pub fn next_key(&mut self) -> Result<Vec<u8>, ParseError> {
         match self.next()? {
-            Frame::Bulk(b) => Ok(b.to_vec()),
+            Frame::Bulk(b) => Ok(b),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
@@ -63,7 +63,7 @@ impl Parse {
     pub fn next_simple_type(&mut self) -> Result<SimpleType, ParseError> {
         match self.next()? {
             Frame::Integer(i) => Ok(SimpleType::Integer(i)),
-            Frame::Bulk(b) => Ok(SimpleType::Bytes(b.to_vec().into())),
+            Frame::Bulk(b) => Ok(SimpleType::Bytes(b.into())),
             Frame::Simple(s) => Ok(SimpleType::String(s.into())),
             frame => Err(format!("protocol error;  got {:?}", frame).into()),
         }
