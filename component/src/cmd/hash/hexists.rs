@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -6,7 +8,7 @@ use crate::{db::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/hexists
 #[derive(Debug, ParseFrames)]
 pub struct Hexists {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub field: SimpleType,
 }
 

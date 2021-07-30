@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
+    sync::Arc,
 };
 
 use chrono::{DateTime, Utc};
@@ -10,7 +11,7 @@ use super::data_type::DataType;
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
     next_id: u64,
-    pub inner: HashMap<Vec<u8>, Value>,
+    pub inner: HashMap<Arc<[u8]>, Value>,
 }
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -56,7 +57,7 @@ impl Dict {
     /// todo 这里可能可以优化一下
     pub fn d_get_mut_or_insert_with<F: FnOnce() -> Value>(
         &mut self,
-        key: Vec<u8>,
+        key: Arc<[u8]>,
         f: F,
     ) -> &mut Value {
         match self.entry(key.clone()) {
@@ -74,7 +75,7 @@ impl Dict {
 }
 
 impl Deref for Dict {
-    type Target = HashMap<Vec<u8>, Value>;
+    type Target = HashMap<Arc<[u8]>, Value>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

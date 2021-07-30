@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ use crate::slot::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub field: SimpleType,
     pub value: i64,
 }
@@ -66,7 +66,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = set::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             entries: vec![("k1".into(), "1".into()), ("k2".into(), "2".into())],
             nx_xx: NxXx::None,
         }
@@ -82,7 +82,7 @@ mod test {
         );
 
         let res = incr::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             field: "k1".into(),
             value: 1,
         }
@@ -92,7 +92,7 @@ mod test {
         assert_eq!(res, 2);
 
         let res = incr::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             field: "k3".into(),
             value: 10,
         }
@@ -102,7 +102,7 @@ mod test {
         assert_eq!(res, 10);
 
         let res = get_all::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap()

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -6,7 +8,7 @@ use crate::{db::Db, Frame};
 /// https://redis.io/commands/rpop
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Rpop {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub count: Option<i64>,
 }
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub nodes: Vec<data_type::sorted_set::Node>,
     /// - XX: Only update elements that already exist. Don't add new elements.
     /// - NX: Only add new elements. Don't update already existing elements.

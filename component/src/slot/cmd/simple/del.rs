@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
@@ -7,7 +9,7 @@ use crate::slot::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
 }
 
 impl From<Req> for WriteCmd {
@@ -53,7 +55,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = del::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(2, dict.write().borrow_mut())
         .unwrap()
@@ -61,7 +63,7 @@ mod test {
         assert_eq!(res, None);
         let date_time = Utc::now() + Duration::seconds(1);
         let cmd = set::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world".into(),
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
@@ -71,11 +73,11 @@ mod test {
             res,
             WriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some((date_time, "hello".into()))
+                new_expires_at: Some((date_time, b"hello"[..].into()))
             }
         );
         let res = del::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(2, dict.write().borrow_mut())
         .unwrap()

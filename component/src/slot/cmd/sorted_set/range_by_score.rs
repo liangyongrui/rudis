@@ -9,7 +9,7 @@ use crate::slot::{cmd::Read, data_type::Float, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
     /// 这里的得分区间(小, 大)
     pub range: (Bound<Float>, Bound<Float>),
     //  (offset, count)

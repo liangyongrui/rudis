@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -5,7 +7,7 @@ use crate::{db::Db, Frame};
 /// https://redis.io/commands/del
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
-    pub keys: Vec<Vec<u8>>,
+    pub keys: Vec<Arc<[u8]>>,
 }
 
 impl Del {

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -6,7 +8,7 @@ use crate::{db::Db, Frame};
 /// https://redis.io/commands/exists
 #[derive(Debug, ParseFrames)]
 pub struct Exists {
-    pub keys: Vec<Vec<u8>>,
+    pub keys: Vec<Arc<[u8]>>,
 }
 
 impl Exists {

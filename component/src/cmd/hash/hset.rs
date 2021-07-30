@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -5,7 +7,7 @@ use crate::{db::Db, utils::other_type::SimpleTypePair, Frame};
 /// https://redis.io/commands/hset
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Hset {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub pairs: Vec<SimpleTypePair>,
 }
 

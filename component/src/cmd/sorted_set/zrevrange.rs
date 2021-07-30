@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use tracing::instrument;
 
 use crate::{parse::ParseError, Db, Frame, Parse};
@@ -5,7 +7,7 @@ use crate::{parse::ParseError, Db, Frame, Parse};
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]
 pub struct Zrevrange {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub range: (i64, i64),
     pub withscores: bool,
 }

@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, sync::Arc};
 
 use tracing::instrument;
 
@@ -12,7 +12,7 @@ use crate::{
 /// https://redis.io/commands/zadd
 #[derive(Debug, Clone)]
 pub struct Zadd {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub nx_xx: NxXx,
     pub gt_lt: GtLt,
     pub ch: bool,

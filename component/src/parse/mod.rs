@@ -1,6 +1,6 @@
 pub mod frame;
 
-use std::{fmt, str, vec};
+use std::{fmt, str, sync::Arc, vec};
 
 pub use frame::parse;
 
@@ -53,7 +53,7 @@ impl Parse {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
-    pub fn next_key(&mut self) -> Result<Vec<u8>, ParseError> {
+    pub fn next_key(&mut self) -> Result<Arc<[u8]>, ParseError> {
         match self.next()? {
             Frame::Bulk(b) => Ok(b),
             frame => Err(format!("protocol error; got {:?}", frame).into()),

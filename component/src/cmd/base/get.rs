@@ -1,8 +1,9 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
 use crate::{db::Db, Frame};
-
 /// Get the value of key.
 ///
 /// If the key does not exist the special value nil is returned. An error is
@@ -12,7 +13,7 @@ use crate::{db::Db, Frame};
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
 }
 impl<'a> From<&'a Get> for crate::slot::cmd::simple::get::Req<'a> {
     fn from(old: &'a Get) -> Self {

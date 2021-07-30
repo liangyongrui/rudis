@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -8,7 +10,7 @@ use crate::slot::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub expires_at: Option<DateTime<Utc>>,
 }
 impl From<Req> for WriteCmd {
@@ -57,7 +59,7 @@ mod test {
         let dict = RwLock::new(Dict::new());
         let date_time = Utc::now() + Duration::seconds(1);
         let cmd = set::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world".into(),
             expires_at: ExpiresAt::None,
             nx_xx: NxXx::None,
@@ -71,14 +73,14 @@ mod test {
             }
         );
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert!(res);
 
         let cmd = expire::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             expires_at: Some(date_time),
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
@@ -86,11 +88,11 @@ mod test {
             res,
             WriteResp {
                 payload: true,
-                new_expires_at: Some((date_time, "hello".into()))
+                new_expires_at: Some((date_time, b"hello"[..].into()))
             }
         );
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
@@ -98,7 +100,7 @@ mod test {
 
         sleep(Duration::seconds(1).to_std().unwrap());
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();

@@ -1,4 +1,4 @@
-use std::vec;
+use std::{sync::Arc, vec};
 
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -7,7 +7,7 @@ use crate::{db::Db, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
 }
 
 impl<'a> From<&'a Hgetall> for crate::slot::cmd::kvp::get_all::Req<'a> {

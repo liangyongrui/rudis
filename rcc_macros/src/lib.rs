@@ -59,6 +59,11 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                             let #field_name = parse.next_int()? as #field_type;
                         };
                     }
+                    if *ident == "Arc" {
+                        return quote! {
+                            let #field_name = parse.next_key()?;
+                        };
+                    }
                     if *ident == "Vec" {
                         if let syn::PathArguments::AngleBracketed(
                             syn::AngleBracketedGenericArguments { args, .. },
@@ -69,33 +74,18 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                 ..
                             })) = args.first().unwrap()
                             {
-                                if let Some(syn::PathSegment { ident, arguments }) = segments.last() {
-                                    if *ident == "Vec" {
-                                        if let syn::PathArguments::AngleBracketed(
-                                            syn::AngleBracketedGenericArguments { args, .. },
-                                        ) = arguments
-                                        {
-                                            if let syn::GenericArgument::Type(syn::Type::Path(syn::TypePath {
-                                                path: syn::Path { ref segments, .. },
-                                                ..
-                                            })) = args.first().unwrap()
-                                            {
-                                                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
-                                                    if *ident == "u8" {
-                                                        return quote! {
-                                                            let mut #field_name = vec![parse.next_key()?];
-                                                            loop {
-                                                                match parse.next_key() {
-                                                                    Ok(key) => #field_name.push(key),
-                                                                    Err(crate::parse::ParseError::EndOfStream) => break,
-                                                                    Err(err) => return Err(err.into()),
-                                                                }
-                                                            }
-                                                        };
-                                                    }
+                                if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                                    if *ident == "Arc" {
+                                        return quote! {
+                                            let mut #field_name = vec![parse.next_key()?];
+                                            loop {
+                                                match parse.next_key() {
+                                                    Ok(key) => #field_name.push(key),
+                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(err) => return Err(err.into()),
                                                 }
                                             }
-                                        }
+                                        };
                                     }
                                     if *ident == "SimpleType" {
                                         return quote! {

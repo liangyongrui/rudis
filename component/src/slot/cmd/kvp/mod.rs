@@ -21,7 +21,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = set::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             entries: vec![
                 ("k1".into(), "v1".into()),
                 ("k2".into(), "v2".into()),
@@ -40,7 +40,7 @@ mod test {
             }
         );
         let res = get_all::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap()
@@ -65,7 +65,7 @@ mod test {
             }
         );
         let res = set::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             entries: vec![
                 ("k1".into(), "v1".into()),
                 ("k4".into(), "v4".into()),
@@ -85,7 +85,7 @@ mod test {
         );
 
         let res = get_all::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap()
@@ -113,21 +113,21 @@ mod test {
         );
 
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             field: &"k1".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "v1".into());
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             field: &"k6".into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, SimpleType::Null);
         let res = get::Req {
-            key: &"hello2".into(),
+            key: b"hello2"[..].into(),
             field: &"k1".into(),
         }
         .apply(&dict)
@@ -135,7 +135,7 @@ mod test {
         assert_eq!(res, SimpleType::Null);
 
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             field: &"k1".into(),
         }
         .apply(&dict)
@@ -143,7 +143,7 @@ mod test {
         assert!(res);
 
         let res = del::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             fields: vec!["k1".into(), "k10".into()],
         }
         .apply(1, dict.write().borrow_mut())
@@ -158,7 +158,7 @@ mod test {
         );
 
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             field: &"k1".into(),
         }
         .apply(&dict)

@@ -1,4 +1,4 @@
-use std::vec;
+use std::{sync::Arc, vec};
 
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -7,7 +7,7 @@ use crate::{db::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/hmget
 #[derive(Debug, ParseFrames)]
 pub struct Hmget {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub fields: Vec<SimpleType>,
 }
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -6,7 +8,7 @@ use crate::{db::Db, slot, Frame};
 /// https://redis.io/commands/decr
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Decr {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
 }
 
 impl From<Decr> for slot::cmd::simple::incr::Req {

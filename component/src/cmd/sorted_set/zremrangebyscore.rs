@@ -1,4 +1,4 @@
-use std::ops::Bound;
+use std::{ops::Bound, sync::Arc};
 
 use tracing::instrument;
 
@@ -7,7 +7,7 @@ use crate::{slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
 pub struct Zremrangebyscore {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub range: (Bound<f64>, Bound<f64>),
 }
 

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use tracing::instrument;
 
@@ -15,7 +17,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Set {
     /// the lookup key
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     /// the value to be stored
     pub value: SimpleType,
     // None not set, true nx, false xx

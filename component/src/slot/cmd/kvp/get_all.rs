@@ -9,7 +9,7 @@ use crate::slot::{
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
 }
 
 impl<'a> Read<Option<HashTrieMapSync<SimpleType, SimpleType>>> for Req<'a> {

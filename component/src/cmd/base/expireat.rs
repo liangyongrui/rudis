@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{DateTime, NaiveDateTime, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -7,7 +9,7 @@ use crate::{db::Db, Frame};
 /// https://redis.io/commands/expireat
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Expireat {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub s_timestamp: u64,
 }
 

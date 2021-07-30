@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -6,7 +8,7 @@ use crate::{db::Db, slot::data_type::SimpleType, Frame};
 /// https://redis.io/commands/lpushx
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Lpushx {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub values: Vec<SimpleType>,
 }
 

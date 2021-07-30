@@ -18,7 +18,7 @@ pub struct Entry {
     pub expires_at: DateTime<Utc>,
     pub slot: u16,
     pub id: u64,
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
 }
 
 pub enum Message {

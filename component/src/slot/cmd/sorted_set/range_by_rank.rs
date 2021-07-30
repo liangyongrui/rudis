@@ -6,7 +6,7 @@ use crate::slot::{cmd::Read, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
     pub start: i64,
     pub stop: i64,
     /// `(offset, count)`

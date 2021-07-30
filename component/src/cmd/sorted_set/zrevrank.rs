@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -5,7 +7,7 @@ use crate::{slot::data_type::SimpleType, Db, Frame};
 /// https://redis.io/commands/zrevrank
 #[derive(Debug, ParseFrames)]
 pub struct Zrevrank {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub member: SimpleType,
 }
 impl<'a> From<&'a Zrevrank> for crate::slot::cmd::sorted_set::rank::Req<'a> {

@@ -1,3 +1,5 @@
+#![allow(unstable_name_collisions)]
+
 /// 子进程管理
 mod child_process;
 /// redis 命令

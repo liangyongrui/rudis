@@ -4,7 +4,7 @@
 //! 目前使用的是 RESP2
 //! todo 支持 RESP3
 
-use std::{fmt, vec};
+use std::{fmt, sync::Arc, vec};
 
 use nom::{
     branch::alt,
@@ -25,7 +25,7 @@ pub enum Frame {
     Simple(String),
     Error(String),
     Integer(i64),
-    Bulk(Vec<u8>),
+    Bulk(Arc<[u8]>),
     Null,
     Array(Vec<Frame>),
 }
@@ -35,7 +35,7 @@ impl From<&SimpleType> for Frame {
         match st {
             SimpleType::Big => Frame::Null,
             SimpleType::String(s) => Frame::Simple(s.to_string()),
-            SimpleType::Bytes(b) => Frame::Bulk(b.to_vec()),
+            SimpleType::Bytes(b) => Frame::Bulk(b.clone()),
             SimpleType::Integer(i) => Frame::Integer(*i),
             SimpleType::Float(f) => Frame::Simple(format!("{}", f.0)),
             SimpleType::Null => Frame::Null,
@@ -111,7 +111,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         let len = len as usize;
         let (i, data) = take_while_m_n(len, len, |_| true)(i)?;
         let (i, _) = tag(b"\r\n")(i)?;
-        Ok((i, Frame::Bulk(data.to_vec())))
+        Ok((i, Frame::Bulk(data.into())))
     }
 }
 
@@ -212,8 +212,8 @@ mod test {
 
     #[test]
     fn test2() {
-        let hello = "hello".to_owned();
-        let world = "world".to_owned();
+        let hello = "hello";
+        let world = "world";
         let s = format!(
             "*3\r\n$3\r\nSET\r\n${}\r\n{}\r\n${}\r\n{}\r\n",
             hello.len(),
@@ -223,9 +223,9 @@ mod test {
         );
         let b = s.as_bytes();
         let raw = Frame::Array(vec![
-            Frame::Bulk("SET".into()),
-            Frame::Bulk(hello.into()),
-            Frame::Bulk(world.into()),
+            Frame::Bulk(b"SET"[..].into()),
+            Frame::Bulk(hello.as_bytes().into()),
+            Frame::Bulk(world.as_bytes().into()),
         ]);
         let set: Vec<u8> = (&raw).into();
         assert_eq!(&set[..], b);

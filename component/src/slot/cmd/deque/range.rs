@@ -16,7 +16,7 @@ use crate::slot::{
 /// It will treat it like the last element of the list.
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
     pub start: i64,
     pub stop: i64,
 }

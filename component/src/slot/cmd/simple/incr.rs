@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ use crate::slot::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub value: i64,
 }
 impl From<Req> for WriteCmd {
@@ -68,7 +68,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let cmd = incr::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: 10,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
@@ -80,7 +80,7 @@ mod test {
             }
         );
         let cmd = incr::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: -5,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();

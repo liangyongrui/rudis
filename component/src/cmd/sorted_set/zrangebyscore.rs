@@ -1,4 +1,4 @@
-use std::ops::Bound;
+use std::{ops::Bound, sync::Arc};
 
 use tracing::instrument;
 
@@ -7,7 +7,7 @@ use crate::{parse::ParseError, slot::data_type::Float, utils::BoundExt, Db, Fram
 /// https://redis.io/commands/zrangebyscore
 #[derive(Debug)]
 pub struct Zrangebyscore {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub range_item: (Bound<f64>, Bound<f64>),
     pub limit: Option<(i64, i64)>,
     pub withscores: bool,

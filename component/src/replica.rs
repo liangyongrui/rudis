@@ -1,6 +1,6 @@
 use std::{
     io::BufReader,
-    net::{SocketAddr, TcpStream, ToSocketAddrs},
+    net::{TcpStream, ToSocketAddrs},
     sync::Arc,
 };
 

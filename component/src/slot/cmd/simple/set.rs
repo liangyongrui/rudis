@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub value: SimpleType,
     pub expires_at: ExpiresAt,
     pub nx_xx: NxXx,
@@ -113,7 +115,7 @@ mod test {
         let dict = RwLock::new(Dict::new());
         let date_time = Utc::now() + Duration::seconds(1);
         let cmd = Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world".into(),
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
@@ -123,20 +125,24 @@ mod test {
             res,
             WriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some((date_time, "hello".into()))
+                new_expires_at: Some((date_time, b"hello"[..].into()))
             }
         );
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req {
+            key: b"n"[..].into(),
+        }
+        .apply(&dict)
+        .unwrap();
         assert_eq!(res, SimpleType::Null);
         // xx
         let cmd = Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world2".into(),
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Xx,
@@ -146,11 +152,11 @@ mod test {
             res,
             WriteResp {
                 payload: "world".into(),
-                new_expires_at: Some((date_time, "hello".into()))
+                new_expires_at: Some((date_time, b"hello"[..].into()))
             }
         );
         let cmd = Req {
-            key: "n".into(),
+            key: b"n"[..].into(),
             value: "world2".into(),
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Xx,
@@ -164,16 +170,20 @@ mod test {
             }
         );
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world2".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req {
+            key: b"n"[..].into(),
+        }
+        .apply(&dict)
+        .unwrap();
         assert_eq!(res, SimpleType::Null);
         // nx
         let cmd = Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world3".into(),
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Nx,
@@ -187,7 +197,7 @@ mod test {
             }
         );
         let cmd = Req {
-            key: "n".into(),
+            key: b"n"[..].into(),
             value: "world3".into(),
             expires_at: ExpiresAt::None,
             nx_xx: NxXx::Nx,
@@ -201,16 +211,20 @@ mod test {
             }
         );
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world2".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req {
+            key: b"n"[..].into(),
+        }
+        .apply(&dict)
+        .unwrap();
         assert_eq!(res, "world3".into());
         // time
         let cmd = Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world".into(),
             expires_at: ExpiresAt::Last,
             nx_xx: NxXx::None,
@@ -220,25 +234,33 @@ mod test {
             res,
             WriteResp {
                 payload: "world2".into(),
-                new_expires_at: Some((date_time, "hello".into()))
+                new_expires_at: Some((date_time, b"hello"[..].into()))
             }
         );
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "world".into());
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req {
+            key: b"n"[..].into(),
+        }
+        .apply(&dict)
+        .unwrap();
         assert_eq!(res, "world3".into());
         sleep(std::time::Duration::from_secs(1));
         let res = get::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, SimpleType::Null);
-        let res = get::Req { key: &"n".into() }.apply(&dict).unwrap();
+        let res = get::Req {
+            key: b"n"[..].into(),
+        }
+        .apply(&dict)
+        .unwrap();
         assert_eq!(res, "world3".into());
     }
 }

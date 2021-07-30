@@ -1,4 +1,4 @@
-use std::ops::Bound;
+use std::{ops::Bound, sync::Arc};
 
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -8,7 +8,7 @@ use crate::{Db, Frame};
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub min: String,
     pub max: String,
 }

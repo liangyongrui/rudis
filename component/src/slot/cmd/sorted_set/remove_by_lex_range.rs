@@ -1,4 +1,4 @@
-use std::ops::Bound;
+use std::{ops::Bound, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     /// 这里的得分区间(小, 大)
     pub range: (Bound<SimpleType>, Bound<SimpleType>),
     pub rev: bool,

@@ -11,7 +11,7 @@ use crate::slot::{
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
     pub member: &'a SimpleType,
     /// true 大的在前， false 小的在前
     pub rev: bool,

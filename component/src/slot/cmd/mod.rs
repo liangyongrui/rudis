@@ -22,7 +22,7 @@ pub struct WriteResp<T> {
     /// 当不需要更新过期时间时
     /// - 这个为None
     /// - 且 value 的id 不能更新, 避免自动过期失效
-    pub new_expires_at: Option<(DateTime<Utc>, Vec<u8>)>,
+    pub new_expires_at: Option<(DateTime<Utc>, Arc<[u8]>)>,
 }
 
 pub enum ExpiresStatus {

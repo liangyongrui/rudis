@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub elements: Vec<SimpleType>,
     // true left, false right
     pub left: bool,
@@ -116,7 +118,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = push::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             elements: vec![
                 "0".into(),
                 "1".into(),
@@ -139,7 +141,7 @@ mod test {
             }
         );
         let res = push::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             elements: vec![
                 "0".into(),
                 "1".into(),
@@ -163,7 +165,7 @@ mod test {
         );
 
         let res = range::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             start: 0,
             stop: -1,
         }
@@ -182,7 +184,7 @@ mod test {
         );
 
         let res = push::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             elements: vec!["0".into(), "1".into(), "2".into()],
             left: true,
             nx_xx: NxXx::Xx,
@@ -198,7 +200,7 @@ mod test {
             }
         );
         let res = range::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             start: 0,
             stop: -1,
         }

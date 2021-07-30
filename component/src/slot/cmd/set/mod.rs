@@ -16,7 +16,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = add::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             members: vec!["k1".into(), "k2".into(), "k3".into()],
         }
         .apply(1, dict.write().borrow_mut())
@@ -30,7 +30,7 @@ mod test {
             }
         );
         let res = get_all::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap()
@@ -48,7 +48,7 @@ mod test {
             }
         );
         let res = add::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             members: vec!["k1".into(), "k4".into(), "k5".into()],
         }
         .apply(1, dict.write().borrow_mut())
@@ -63,7 +63,7 @@ mod test {
         );
 
         let res = get_all::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap()
@@ -88,7 +88,7 @@ mod test {
         );
 
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             field: &"k1".into(),
         }
         .apply(&dict)
@@ -96,7 +96,7 @@ mod test {
         assert!(res);
 
         let res = remove::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             members: vec!["k1".into(), "k10".into()],
         }
         .apply(1, dict.write().borrow_mut())
@@ -111,7 +111,7 @@ mod test {
         );
 
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
             field: &"k1".into(),
         }
         .apply(&dict)

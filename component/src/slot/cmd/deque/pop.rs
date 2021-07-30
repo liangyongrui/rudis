@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
@@ -8,7 +10,7 @@ use crate::slot::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub count: usize,
     // true left, false right
     pub left: bool,
@@ -68,7 +70,7 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = push::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             elements: vec![
                 "0".into(),
                 "1".into(),
@@ -96,7 +98,7 @@ mod test {
         );
 
         let res = pop::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             count: 3,
             left: false,
         }
@@ -105,7 +107,7 @@ mod test {
         .payload;
         assert_eq!(res, vec!["9".into(), "8".into(), "7".into(),]);
         let res = pop::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             count: 4,
             left: true,
         }

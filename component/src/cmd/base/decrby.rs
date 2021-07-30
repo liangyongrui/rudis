@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -6,7 +8,7 @@ use crate::{db::Db, Frame};
 /// https://redis.io/commands/decrby
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Decrby {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub value: i64,
 }
 

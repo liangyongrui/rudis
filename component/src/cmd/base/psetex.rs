@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
@@ -6,7 +8,7 @@ use crate::{db::Db, slot::data_type::SimpleType, utils::options::NxXx, Frame};
 /// https://redis.io/commands/psetex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Psetex {
-    pub key: Vec<u8>,
+    pub key: Arc<[u8]>,
     pub milliseconds: u64,
     pub value: SimpleType,
 }

@@ -8,7 +8,7 @@ use crate::slot::{
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
 }
 
 impl<'a> Read<usize> for Req<'a> {
@@ -38,14 +38,10 @@ mod test {
     #[test]
     fn test1() {
         let dict = RwLock::new(Dict::new());
-        let res = len::Req {
-            key: &"hello".into(),
-        }
-        .apply(&dict)
-        .unwrap();
+        let res = len::Req { key: &b"hello"[..] }.apply(&dict).unwrap();
         assert_eq!(res, 0);
         let res = push::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             elements: vec!["a".into(), "b".into(), "c".into()],
             left: false,
             nx_xx: NxXx::None,
@@ -60,11 +56,7 @@ mod test {
                 new_len: 3
             }
         );
-        let res = len::Req {
-            key: &"hello".into(),
-        }
-        .apply(&dict)
-        .unwrap();
+        let res = len::Req { key: &b"hello"[..] }.apply(&dict).unwrap();
         assert_eq!(res, 3);
     }
 }

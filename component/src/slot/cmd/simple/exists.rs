@@ -4,7 +4,7 @@ use crate::slot::{cmd::Read, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
-    pub key: &'a Vec<u8>,
+    pub key: &'a [u8],
 }
 
 impl<'a> Read<bool> for Req<'a> {
@@ -34,14 +34,14 @@ mod test {
     fn test1() {
         let dict = RwLock::new(Dict::new());
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
         assert!(!res);
         let date_time = Utc::now() + Duration::seconds(1);
         let cmd = set::Req {
-            key: "hello".into(),
+            key: b"hello"[..].into(),
             value: "world".into(),
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
@@ -51,11 +51,11 @@ mod test {
             res,
             WriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some((date_time, "hello".into()))
+                new_expires_at: Some((date_time, b"hello"[..].into()))
             }
         );
         let res = exists::Req {
-            key: &"hello".into(),
+            key: b"hello"[..].into(),
         }
         .apply(&dict)
         .unwrap();
