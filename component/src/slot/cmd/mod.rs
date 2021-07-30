@@ -7,6 +7,8 @@ pub mod set;
 pub mod simple;
 pub mod sorted_set;
 
+use std::sync::Arc;
+
 use chrono::{DateTime, Utc};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
@@ -22,6 +24,17 @@ pub struct WriteResp<T> {
     /// - 且 value 的id 不能更新, 避免自动过期失效
     pub new_expires_at: Option<(DateTime<Utc>, Vec<u8>)>,
 }
+
+pub enum ExpiresStatus {
+    None,
+    Update {
+        key: Arc<[u8]>,
+        /// before 和 new 不会相同，相同使用 None
+        before: Option<DateTime<Utc>>,
+        new: Option<DateTime<Utc>>,
+    },
+}
+
 pub trait Write<T>
 where
     Self: Into<WriteCmd>,

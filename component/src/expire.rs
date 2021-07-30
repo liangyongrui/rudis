@@ -13,7 +13,7 @@ use crate::db::Db;
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Entry {
     pub expires_at: DateTime<Utc>,
     pub slot: u16,
@@ -21,12 +21,19 @@ pub struct Entry {
     pub key: Vec<u8>,
 }
 
+pub enum Message {
+    /// 清空指定slot
+    /// 用于移动slot，替换dict
+    Clear(u16),
+    Add(Entry),
+}
+
 #[derive(Debug)]
 pub struct Expiration {
     data: Arc<Mutex<BTreeSet<Entry>>>,
     notify: Arc<Notify>,
-    pub tx: flume::Sender<Entry>,
-    rx: flume::Receiver<Entry>,
+    pub tx: flume::Sender<Message>,
+    rx: flume::Receiver<Message>,
 }
 
 impl Expiration {
@@ -41,7 +48,7 @@ impl Expiration {
         }
     }
 
-    pub fn listen(self, db: Arc<Db>) -> flume::Sender<Entry> {
+    pub fn listen(self, db: Arc<Db>) -> flume::Sender<Message> {
         let Expiration {
             data,
             notify,
@@ -59,19 +66,26 @@ impl Expiration {
     async fn recv_task(
         data: Arc<Mutex<BTreeSet<Entry>>>,
         notify: Arc<Notify>,
-        rx: flume::Receiver<Entry>,
+        rx: flume::Receiver<Message>,
     ) {
         while let Ok(e) = rx.recv_async().await {
-            let mut lock = data.lock();
-            let need_notify = lock
-                .iter()
-                .next()
-                .map(|ne| ne.expires_at > e.expires_at)
-                .unwrap_or(true);
-            lock.insert(e);
-            drop(lock);
-            if need_notify {
-                notify.notify_one();
+            match e {
+                Message::Clear(slot) => {
+                    data.lock().retain(|e| e.slot != slot);
+                }
+                Message::Add(e) => {
+                    let mut lock = data.lock();
+                    let need_notify = lock
+                        .iter()
+                        .next()
+                        .map(|ne| ne.expires_at > e.expires_at)
+                        .unwrap_or(true);
+                    lock.insert(e);
+                    drop(lock);
+                    if need_notify {
+                        notify.notify_one();
+                    }
+                }
             }
         }
     }

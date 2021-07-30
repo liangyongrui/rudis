@@ -15,7 +15,7 @@ use self::{
 };
 use crate::{
     db::BgTask,
-    forward,
+    expire, forward,
     slot::cmd::{Read, Write},
 };
 
@@ -60,12 +60,15 @@ impl Slot {
             }) => {
                 // 设置自动过期
                 if let Some((ea, key)) = new_expires_at {
-                    let _ = self.bg_task.expire_sender.send(crate::expire::Entry {
-                        expires_at: ea,
-                        slot: self.slot_id,
-                        id,
-                        key,
-                    });
+                    let _ = self
+                        .bg_task
+                        .expire_sender
+                        .send(expire::Message::Add(expire::Entry {
+                            expires_at: ea,
+                            slot: self.slot_id,
+                            id,
+                            key,
+                        }));
                 }
                 Ok(payload)
             }

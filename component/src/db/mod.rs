@@ -1,7 +1,7 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
-    sync::Arc,
+    sync::{atomic::AtomicBool, Arc},
 };
 
 use rpds::{HashTrieMapSync, HashTrieSetSync};
@@ -21,11 +21,14 @@ use crate::{
 #[derive(Clone)]
 pub struct BgTask {
     // 过期task
-    pub expire_sender: flume::Sender<expire::Entry>,
+    pub expire_sender: flume::Sender<expire::Message>,
     // 转发task
     pub forward_sender: flume::Sender<forward::Message>,
 }
 pub struct Db {
+    /// dicts 是否 ready
+    /// 只有从节点复制请求的时候需要判断
+    pub dicts_ready: AtomicBool,
     pub slots: HashMap<u16, Slot>,
 }
 
@@ -46,7 +49,10 @@ impl Db {
                 .entry(i)
                 .or_insert_with(|| Slot::new(i, bg_task.clone()));
         }
-        let db = Arc::new(Self { slots });
+        let db = Arc::new(Self {
+            slots,
+            dicts_ready: AtomicBool::new(true),
+        });
         expiration.listen(Arc::clone(&db));
         forward.listen();
         if let Some(hdp) = hdp {
@@ -89,7 +95,7 @@ impl Db {
         self.get_slot(&cmd.key).expire(cmd)
     }
     pub fn exists(&self, cmd: cmd::simple::exists::Req) -> crate::Result<bool> {
-        self.get_slot(&cmd.key).exists(cmd)
+        self.get_slot(cmd.key).exists(cmd)
     }
     pub fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
         self.get_slot(&cmd.key).incr(cmd)
@@ -146,25 +152,25 @@ impl Db {
         &self,
         cmd: cmd::sorted_set::range_by_lex::Req<'_>,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.get_slot(&cmd.key).sorted_set_range_by_lex(cmd)
+        self.get_slot(cmd.key).sorted_set_range_by_lex(cmd)
     }
     pub fn sorted_set_range_by_rank(
         &self,
         cmd: cmd::sorted_set::range_by_rank::Req<'_>,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.get_slot(&cmd.key).sorted_set_range_by_rank(cmd)
+        self.get_slot(cmd.key).sorted_set_range_by_rank(cmd)
     }
     pub fn sorted_set_range_by_score(
         &self,
         cmd: cmd::sorted_set::range_by_score::Req<'_>,
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
-        self.get_slot(&cmd.key).sorted_set_range_by_score(cmd)
+        self.get_slot(cmd.key).sorted_set_range_by_score(cmd)
     }
     pub fn sorted_set_rank(
         &self,
         cmd: cmd::sorted_set::rank::Req<'_>,
     ) -> crate::Result<Option<usize>> {
-        self.get_slot(&cmd.key).sorted_set_rank(cmd)
+        self.get_slot(cmd.key).sorted_set_rank(cmd)
     }
     pub fn sorted_set_add(
         &self,
