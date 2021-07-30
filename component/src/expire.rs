@@ -9,7 +9,7 @@ use parking_lot::Mutex;
 use tokio::{sync::Notify, time};
 use tracing::debug;
 
-use crate::db::Db;
+use crate::{db::Db, slot::cmd::ExpiresStatusUpdate};
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
@@ -25,7 +25,11 @@ pub enum Message {
     /// 清空指定slot
     /// 用于移动slot，替换dict
     Clear(u16),
-    Add(Entry),
+    Update {
+        status: ExpiresStatusUpdate,
+        id: u64,
+        slot: u16,
+    },
 }
 
 #[derive(Debug)]
@@ -73,14 +77,32 @@ impl Expiration {
                 Message::Clear(slot) => {
                     data.lock().retain(|e| e.slot != slot);
                 }
-                Message::Add(e) => {
+                Message::Update { slot, id, status } => {
                     let mut lock = data.lock();
-                    let need_notify = lock
-                        .iter()
-                        .next()
-                        .map(|ne| ne.expires_at > e.expires_at)
-                        .unwrap_or(true);
-                    lock.insert(e);
+                    let need_notify = if let Some(n) = status.new {
+                        let res = lock
+                            .iter()
+                            .next()
+                            .map(|ne| ne.expires_at > n)
+                            .unwrap_or(true);
+                        lock.insert(Entry {
+                            expires_at: n,
+                            slot,
+                            id,
+                            key: status.key.clone(),
+                        });
+                        res
+                    } else {
+                        false
+                    };
+                    if let Some(oea) = status.before {
+                        lock.remove(&Entry {
+                            expires_at: oea,
+                            slot,
+                            id,
+                            key: status.key,
+                        });
+                    }
                     drop(lock);
                     if need_notify {
                         notify.notify_one();

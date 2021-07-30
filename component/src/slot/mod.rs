@@ -79,19 +79,14 @@ impl Slot {
             }) => {
                 match expires_status {
                     cmd::ExpiresStatus::None => (),
-                    cmd::ExpiresStatus::Update { key, before, new } => {
-                        // todo
-                        // if let Some((ea, key)) = new_expires_at {
-                        //     let _ = self
-                        //         .bg_task
-                        //         .expire_sender
-                        //         .send(expire::Message::Add(expire::Entry {
-                        //             expires_at: ea,
-                        //             slot: self.slot_id,
-                        //             id,
-                        //             key,
-                        //         }));
-                        //
+                    cmd::ExpiresStatus::Update(u) => {
+                        if u.before != u.new {
+                            let _ = self.bg_task.expire_sender.send(expire::Message::Update {
+                                status: u,
+                                slot: self.slot_id,
+                                id,
+                            });
+                        }
                     }
                 }
                 Ok(payload)

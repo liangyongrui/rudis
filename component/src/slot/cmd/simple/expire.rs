@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{ExpiresStatus, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+    cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
     dict::Dict,
 };
 
@@ -22,11 +22,11 @@ impl From<Req> for WriteCmd {
 impl ExpiresWrite<bool> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<bool>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
-            let expires_status = ExpiresStatus::Update {
+            let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
                 key: self.key,
                 before: v.expires_at,
                 new: self.expires_at,
-            };
+            });
             v.id = id;
             v.expires_at = self.expires_at;
             Ok(ExpiresWriteResp {
@@ -51,7 +51,7 @@ mod test {
 
     use crate::{
         slot::{
-            cmd::{simple::*, ExpiresStatus, ExpiresWriteResp},
+            cmd::{simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWriteResp},
             data_type::SimpleType,
             dict::Dict,
             ExpiresWrite, Read,
@@ -93,11 +93,11 @@ mod test {
             res,
             ExpiresWriteResp {
                 payload: true,
-                expires_status: ExpiresStatus::Update {
+                expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,
                     new: Some(date_time)
-                }
+                })
             }
         );
         let res = exists::Req {

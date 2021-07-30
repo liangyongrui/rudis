@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{ExpiresStatus, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+    cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
     dict::{Dict, Value},
 };
 
@@ -26,10 +26,12 @@ impl ExpiresWrite<Option<Value>> for Req {
             let expires_status = res
                 .as_ref()
                 .and_then(|v| {
-                    v.expires_at.map(|e| ExpiresStatus::Update {
-                        key: self.key,
-                        before: Some(e),
-                        new: None,
+                    v.expires_at.map(|e| {
+                        ExpiresStatus::Update(ExpiresStatusUpdate {
+                            key: self.key,
+                            before: Some(e),
+                            new: None,
+                        })
                     })
                 })
                 .unwrap_or(ExpiresStatus::None);
@@ -57,7 +59,7 @@ mod test {
     use super::*;
     use crate::{
         slot::{
-            cmd::simple::*,
+            cmd::{simple::*, ExpiresStatusUpdate},
             data_type::{DataType, SimpleType},
             dict::Dict,
         },
@@ -86,11 +88,11 @@ mod test {
             res,
             ExpiresWriteResp {
                 payload: SimpleType::Null,
-                expires_status: ExpiresStatus::Update {
+                expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,
                     new: Some(date_time),
-                }
+                })
             }
         );
         let res = del::Req {

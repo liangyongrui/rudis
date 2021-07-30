@@ -20,19 +20,22 @@ pub struct ExpiresWriteResp<T> {
     pub payload: T,
     pub expires_status: ExpiresStatus,
 }
-#[derive(Debug, PartialEq, Eq)]
+
 /// 当不需要更新过期时间时
 /// 这个为None
+#[derive(Debug, PartialEq, Eq)]
 pub enum ExpiresStatus {
     None,
-    /// 删除before 添加new
-    Update {
-        key: Arc<[u8]>,
-        before: Option<DateTime<Utc>>,
-        new: Option<DateTime<Utc>>,
-    },
+    Update(ExpiresStatusUpdate),
 }
 
+/// 删除before 添加new
+#[derive(Debug, PartialEq, Eq)]
+pub struct ExpiresStatusUpdate {
+    pub key: Arc<[u8]>,
+    pub before: Option<DateTime<Utc>>,
+    pub new: Option<DateTime<Utc>>,
+}
 pub trait ExpiresWrite<T>
 where
     Self: Into<WriteCmd>,

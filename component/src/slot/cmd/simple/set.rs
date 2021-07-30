@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     slot::{
-        cmd::{ExpiresStatus, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+        cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
         data_type::{DataType, SimpleType},
         dict::{self, Dict},
     },
@@ -51,11 +51,11 @@ impl ExpiresWrite<SimpleType> for Req {
                     },
                 )
                 .unwrap();
-            let expires_status = ExpiresStatus::Update {
+            let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
                 key,
                 before: old.expires_at,
                 new: expires_at,
-            };
+            });
             Ok(ExpiresWriteResp {
                 payload: data_type_to_simple(old.data),
                 expires_status,
@@ -82,11 +82,11 @@ impl ExpiresWrite<SimpleType> for Req {
             let expires_status = if expires_at.is_none() {
                 ExpiresStatus::None
             } else {
-                ExpiresStatus::Update {
+                ExpiresStatus::Update(ExpiresStatusUpdate {
                     key,
                     before: None,
                     new: expires_at,
-                }
+                })
             };
             Ok(ExpiresWriteResp {
                 payload: SimpleType::Null,
@@ -139,11 +139,11 @@ mod test {
             res,
             ExpiresWriteResp {
                 payload: SimpleType::Null,
-                expires_status: ExpiresStatus::Update {
+                expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,
                     new: Some(date_time)
-                }
+                })
             }
         );
         let res = get::Req {
@@ -170,11 +170,11 @@ mod test {
             res,
             ExpiresWriteResp {
                 payload: "world".into(),
-                expires_status: ExpiresStatus::Update {
+                expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: Some(date_time),
                     new: Some(date_time)
-                }
+                })
             }
         );
         let cmd = Req {
@@ -256,11 +256,11 @@ mod test {
             res,
             ExpiresWriteResp {
                 payload: "world2".into(),
-                expires_status: ExpiresStatus::Update {
+                expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: Some(date_time),
                     new: Some(date_time)
-                }
+                })
             }
         );
         let res = get::Req {

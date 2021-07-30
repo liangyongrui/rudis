@@ -22,7 +22,7 @@ mod test {
 
     use crate::{
         slot::{
-            cmd::{simple::*, ExpiresStatus, ExpiresWriteResp},
+            cmd::{simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWriteResp},
             data_type::SimpleType,
             dict::Dict,
             ExpiresWrite, Read,
@@ -51,11 +51,11 @@ mod test {
             res,
             ExpiresWriteResp {
                 payload: SimpleType::Null,
-                expires_status: ExpiresStatus::Update {
+                expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,
                     new: Some(date_time)
-                }
+                })
             }
         );
         let res = exists::Req {
