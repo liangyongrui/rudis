@@ -365,6 +365,7 @@ impl Handler {
             // the case of pub/sub, multiple frames may be send back to the
             // peer.
             let res = match cmd.apply(&self.db) {
+                Ok(Frame::DoNothing) => continue,
                 Ok(f) => f,
                 Err(e) => Frame::Error(e.to_string()),
             };

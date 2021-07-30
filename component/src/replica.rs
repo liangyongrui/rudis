@@ -1,90 +1,89 @@
 use std::{
-    io::BufReader,
+    io::{BufReader, Write},
     net::{TcpStream, ToSocketAddrs},
     sync::Arc,
+    thread,
+    time::Duration,
 };
 
-use bytes::BytesMut;
+use tokio::sync::{broadcast, Notify};
 
-use crate::{db::Db, slot::dict::Dict};
-
-/// 向主节点要快照
+use crate::{
+    cmd::{SYNC_CMD, SYNC_CMD_PING, SYNC_SNAPSHOT},
+    db::Db,
+    forward,
+    shutdown::Shutdown,
+    slot::dict::Dict,
+};
+/// 发起主从复制
 ///
 /// warn: 这个函数是阻塞的
-pub fn process_snapshot<A: ToSocketAddrs>(addr: A, db: Arc<Db>) -> crate::Result<()> {
+/// 返回的 sender 被 drop 后， 连接就断开了
+pub fn process<A: ToSocketAddrs + Clone>(
+    addr: A,
+    db: Arc<Db>,
+) -> crate::Result<broadcast::Sender<()>> {
+    let notify = Arc::new(Notify::new());
+    let res = process_cmd_forward(addr.clone(), db.clone(), notify.clone())?;
+    process_snapshot(addr, db)?;
+    notify.notify_one();
+    Ok(res)
+}
+
+/// 向主节点要快照
+fn process_snapshot<A: ToSocketAddrs + Clone>(addr: A, db: Arc<Db>) -> crate::Result<()> {
     let mut stream = BufReader::new(TcpStream::connect(addr)?);
+    stream.get_mut().write_all(SYNC_SNAPSHOT)?;
     loop {
         let slot_id: u16 = match bincode::deserialize_from(&mut stream)? {
             Some(slot) => slot,
             None => return Ok(()),
         };
         let dict: Dict = bincode::deserialize_from(&mut stream)?;
-        db.update_dict(slot_id, dict);
+        db.replace_dict(slot_id, dict);
     }
 }
 
-pub struct Connection {
+/// 同步主节点的 write cmd
+///
+pub fn process_cmd_forward<A: ToSocketAddrs>(
+    addr: A,
     db: Arc<Db>,
-    buffer: BytesMut,
-    stream: BufReader<TcpStream>,
+    notify: Arc<Notify>,
+) -> crate::Result<broadcast::Sender<()>> {
+    let stream = TcpStream::connect(addr)?;
+    let mut writer = stream.try_clone()?;
+    writer.write_all(SYNC_CMD).unwrap();
+    let (shutdown_sender, _) = broadcast::channel(1);
+    let (tx, rx) = flume::unbounded();
+
+    // 读取转发来的消息
+    let mut reader = BufReader::new(stream);
+    let mut shutdown = Shutdown::new(shutdown_sender.subscribe());
+    tokio::task::spawn_blocking(move || {
+        while !shutdown.check_shutdown() {
+            let message: forward::Message = bincode::deserialize_from(&mut reader).unwrap();
+            tx.send(message).unwrap();
+        }
+    });
+
+    // 定时心跳
+    let mut shutdown = Shutdown::new(shutdown_sender.subscribe());
+    tokio::task::spawn_blocking(move || {
+        while !shutdown.check_shutdown() {
+            thread::sleep(Duration::from_secs(10));
+            writer.write_all(SYNC_CMD_PING).unwrap();
+        }
+    });
+
+    // 消费channel
+    tokio::spawn(async move {
+        // 等snapshot准备好
+        notify.notified().await;
+        while let Ok(msg) = rx.recv_async().await {
+            db.process_forward(msg);
+        }
+    });
+
+    Ok(shutdown_sender)
 }
-
-// impl Connection {
-//     /// 创建主从连接
-//     async fn new<A: ToSocketAddrs>(addr: A, db: Arc<Db>) -> Self {
-//         let stream = TcpStream::connect(addr).await.unwrap();
-//         Self {
-//             db,
-//             stream: BufReader::new(stream),
-//             buffer: BytesMut::with_capacity(8 * 1024),
-//         }
-//     }
-
-//     async fn send_sync_cmd(&mut self) -> Result<(), std::io::Error> {
-//         let f = Frame::Array(vec![Frame::Bulk(b"sync"[..].into())]);
-//         let b: Vec<u8> = (&f).into();
-//         self.stream.write_all(&b).await
-//     }
-
-//     async fn listen_master(&mut self) -> crate::Result<()> {
-//         // 读dict
-//         loop {
-//             let (slot, dict) = match self.read_dict().await? {
-//                 Some(r) => r,
-//                 None => break,
-//             };
-//             self.db.update_dict(slot, dict);
-//         }
-//         Ok(())
-//     }
-//     /// 读取一个 dict
-//     ///
-//     /// # WARN
-//     /// - 32 位平台单 dict 最多 2GB 的数据
-//     /// - 64 位平台单 dict 可以有 2^33GB 的数据
-//     async fn read_dict(&mut self) -> crate::Result<Option<(u16, Dict)>> {
-//         let mut slot_id_buf = [0u8; 2];
-//         self.stream.read_exact(&mut slot_id_buf).await?;
-//         let slot_id = u16::from_be_bytes(slot_id_buf);
-//         if slot_id == u16::MAX {
-//             // dict 读完了
-//             return Ok(None);
-//         }
-
-//         let mut len_buf = [0u8; 8];
-//         self.stream.read_exact(&mut len_buf).await?;
-//         let len = u64::from_be_bytes(len_buf);
-//         if len > isize::MAX as u64 {
-//             return Err("The copied data is too large.".into());
-//         }
-//         let mut dict_bincode_buf = vec![0u8; len as _];
-//         self.stream.read_exact(&mut dict_bincode_buf).await?;
-//         let slot_id = u16::from_be_bytes(slot_id_buf);
-//         let dict: Dict = bincode::deserialize(&dict_bincode_buf)?;
-//         return Ok(Some((slot_id, dict)));
-//     }
-// }
-
-// pub(crate) fn update_master(_master_addr: SocketAddr) {
-//     // todo!()
-// }

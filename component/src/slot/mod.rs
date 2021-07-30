@@ -3,6 +3,8 @@
 //! 实现内部的命令 不需要兼容redis
 //! slot 层的操作，加锁的时间粒度降为最小
 
+pub mod copy_master;
+
 use std::borrow::BorrowMut;
 
 use parking_lot::RwLock;
@@ -40,17 +42,40 @@ impl Slot {
     }
 
     /// 更新整个 dict
-    pub fn update_dict(&self, dict: Dict) {
-        // todo
+    ///
+    /// dict 中的过期数据最好提前清理一下,
+    /// 如果快照复制过来的, 过期数据并不多
+    pub fn replace_dict(&self, dict: Dict) {
+        let _ = self
+            .bg_task
+            .expire_sender
+            .send(expire::Message::Clear(self.slot_id));
+        let expires_add = dict
+            .inner
+            .iter()
+            .filter_map(|(k, v)| {
+                v.expires_at.map(|expires_at| expire::Entry {
+                    expires_at,
+                    slot: self.slot_id,
+                    id: v.id,
+                    key: k.clone(),
+                })
+            })
+            .collect();
+        *self.dict.write() = dict;
+        let _ = self
+            .bg_task
+            .expire_sender
+            .send(expire::Message::BatchAdd(expires_add));
     }
 
     fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
+        let cc = cmd.clone();
         // 加锁执行命令
         let (res, id) = {
             let mut dict = self.dict.write();
-            let dict = dict.borrow_mut();
             let id = dict.next_id();
-            (cmd.clone().apply(id, dict), id)
+            (cc.apply(id, dict.borrow_mut()), id)
         };
 
         // 转发执行完成的请求
@@ -64,12 +89,12 @@ impl Slot {
     }
 
     fn call_expires_write<T, C: ExpiresWrite<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
+        let cc = cmd.clone();
         // 加锁执行命令
         let (res, id) = {
             let mut dict = self.dict.write();
-            let dict = dict.borrow_mut();
             let id = dict.next_id();
-            (cmd.clone().apply(id, dict), id)
+            (cc.apply(id, dict.borrow_mut()), id)
         };
 
         let res = match res {
@@ -81,11 +106,13 @@ impl Slot {
                     cmd::ExpiresStatus::None => (),
                     cmd::ExpiresStatus::Update(u) => {
                         if u.before != u.new {
-                            let _ = self.bg_task.expire_sender.send(expire::Message::Update {
-                                status: u,
-                                slot: self.slot_id,
-                                id,
-                            });
+                            let _ = self.bg_task.expire_sender.send(expire::Message::Update(
+                                expire::Update {
+                                    status: u,
+                                    slot: self.slot_id,
+                                    id,
+                                },
+                            ));
                         }
                     }
                 }

@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use super::data_type::DataType;
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
-    next_id: u64,
+    pub write_id: u64,
     pub inner: HashMap<Arc<[u8]>, Value>,
 }
 
@@ -29,12 +29,12 @@ impl Dict {
 
     #[inline]
     pub fn next_id(&mut self) -> u64 {
-        self.next_id += 1;
-        self.next_id
+        self.write_id += 1;
+        self.write_id
     }
 
     pub fn last_write_op_id(&self) -> u64 {
-        self.next_id
+        self.write_id
     }
 
     #[inline]

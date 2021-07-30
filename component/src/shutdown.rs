@@ -1,4 +1,4 @@
-use tokio::sync::broadcast;
+use tokio::sync::broadcast::{self, error::TryRecvError};
 
 /// Listens for the server shutdown signal.
 ///
@@ -30,6 +30,17 @@ impl Shutdown {
     /// Returns `true` if the shutdown signal has been received.
     pub fn is_shutdown(&self) -> bool {
         self.shutdown
+    }
+
+    /// Returns `true` if the shutdown signal has been received.
+    pub fn check_shutdown(&mut self) -> bool {
+        match self.notify.try_recv() {
+            Err(TryRecvError::Empty) => false,
+            _ => {
+                self.shutdown = true;
+                true
+            }
+        }
     }
 
     /// Receive the shutdown notice, waiting if necessary.

@@ -4,6 +4,10 @@ mod list;
 mod set;
 mod sorted_set;
 
+pub const SYNC_SNAPSHOT: &[u8] = b"*1\r\n$12\r\nsyncsnapshot\r\n";
+pub const SYNC_CMD: &[u8] = b"*1\r\n$7\r\nsynccmd\r\n";
+pub const SYNC_CMD_PING: &[u8] = b"*1\r\n$11\r\nsynccmdping\r\n";
+
 use self::{
     base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,

@@ -25,11 +25,15 @@ pub enum Message {
     /// 清空指定slot
     /// 用于移动slot，替换dict
     Clear(u16),
-    Update {
-        status: ExpiresStatusUpdate,
-        id: u64,
-        slot: u16,
-    },
+    Update(Update),
+    /// 批量插入
+    BatchAdd(Vec<Entry>),
+}
+
+pub struct Update {
+    pub status: ExpiresStatusUpdate,
+    pub id: u64,
+    pub slot: u16,
 }
 
 #[derive(Debug)]
@@ -77,7 +81,7 @@ impl Expiration {
                 Message::Clear(slot) => {
                     data.lock().retain(|e| e.slot != slot);
                 }
-                Message::Update { slot, id, status } => {
+                Message::Update(Update { slot, id, status }) => {
                     let mut lock = data.lock();
                     let need_notify = if let Some(n) = status.new {
                         let res = lock
@@ -107,6 +111,14 @@ impl Expiration {
                     if need_notify {
                         notify.notify_one();
                     }
+                }
+                Message::BatchAdd(vs) => {
+                    let mut lock = data.lock();
+                    for v in vs {
+                        lock.insert(v);
+                    }
+                    drop(lock);
+                    notify.notify_one();
                 }
             }
         }

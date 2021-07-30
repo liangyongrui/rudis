@@ -10,8 +10,7 @@ use component::{server, DEFAULT_PORT};
 use structopt::StructOpt;
 use tokio::{net::TcpListener, signal};
 
-#[tokio::main]
-pub async fn main() -> component::Result<()> {
+pub fn main() -> component::Result<()> {
     // enable logging
     // see https://docs.rs/tracing for more info
     // tracing_subscriber::fmt::try_init()?;
@@ -21,11 +20,17 @@ pub async fn main() -> component::Result<()> {
 
     let cli = Cli::from_args();
     let port = cli.port.as_deref().unwrap_or(DEFAULT_PORT);
+    tokio::runtime::Builder::new_multi_thread()
+        // .worker_threads(4)    
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            // Bind a TCP listener
+            let listener = TcpListener::bind(&format!("127.0.0.1:{}", port)).await?;
 
-    // Bind a TCP listener
-    let listener = TcpListener::bind(&format!("127.0.0.1:{}", port)).await?;
-
-    server::run(listener, signal::ctrl_c()).await
+            server::run(listener, signal::ctrl_c()).await
+        })
 }
 
 #[derive(StructOpt, Debug)]

@@ -50,17 +50,6 @@ impl From<i64> for SimpleType {
     }
 }
 
-// impl From<&str> for Vec<u8> {
-//     fn from(s: &str) -> Self {
-//         Vec<u8>::String(s.into())
-//     }
-// }
-// impl From<String> for Vec<u8> {
-//     fn from(s: String) -> Self {
-//         Vec<u8>::String(s.into())
-//     }
-// }
-
 impl TryFrom<&SimpleType> for i64 {
     type Error = crate::Error;
 

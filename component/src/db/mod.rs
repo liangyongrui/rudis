@@ -1,14 +1,14 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
-    sync::{atomic::AtomicBool, Arc},
+    sync::Arc,
 };
 
 use rpds::{HashTrieMapSync, HashTrieSetSync};
 
 use crate::{
     expire::{self, Expiration},
-    forward::{self, Forward},
+    forward::{self, Forward, Message},
     hdp::HdpStatus,
     slot::{
         cmd,
@@ -26,9 +26,6 @@ pub struct BgTask {
     pub forward_sender: flume::Sender<forward::Message>,
 }
 pub struct Db {
-    /// dicts 是否 ready
-    /// 只有从节点复制请求的时候需要判断
-    pub dicts_ready: AtomicBool,
     pub slots: HashMap<u16, Slot>,
 }
 
@@ -49,10 +46,7 @@ impl Db {
                 .entry(i)
                 .or_insert_with(|| Slot::new(i, bg_task.clone()));
         }
-        let db = Arc::new(Self {
-            slots,
-            dicts_ready: AtomicBool::new(true),
-        });
+        let db = Arc::new(Self { slots });
         expiration.listen(Arc::clone(&db));
         forward.listen();
         if let Some(hdp) = hdp {
@@ -75,8 +69,8 @@ impl Db {
         self.slots.get(&(i as u16)).unwrap()
     }
 
-    pub fn update_dict(&self, slot_id: u16, dict: Dict) {
-        self.slots.get(&slot_id).unwrap().update_dict(dict);
+    pub fn replace_dict(&self, slot_id: u16, dict: Dict) {
+        self.slots.get(&slot_id).unwrap().replace_dict(dict);
     }
 }
 
@@ -202,5 +196,35 @@ impl Db {
     ) -> crate::Result<Vec<data_type::sorted_set::Node>> {
         self.get_slot(&cmd.key)
             .sorted_set_remove_by_score_range(cmd)
+    }
+}
+
+impl Db {
+    pub fn process_forward(&self, Message { id, slot, cmd }: Message) {
+        match cmd {
+            cmd::WriteCmd::Del(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
+            cmd::WriteCmd::Expire(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
+            cmd::WriteCmd::Incr(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::Set(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
+            cmd::WriteCmd::KvpDel(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::KvpIncr(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::KvpSet(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::DequePop(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::DequePush(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::SetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::SetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::SortedSetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::SortedSetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
+            cmd::WriteCmd::SortedSetRemoveByRankRange(req) => {
+                self.get_slot_by_id(&slot).call_update(id, req)
+            }
+            cmd::WriteCmd::SortedSetRemoveByScoreRange(req) => {
+                self.get_slot_by_id(&slot).call_update(id, req)
+            }
+            cmd::WriteCmd::SortedSetRemoveByLexRange(req) => {
+                self.get_slot_by_id(&slot).call_update(id, req)
+            }
+            cmd::WriteCmd::None => (),
+        }
     }
 }
