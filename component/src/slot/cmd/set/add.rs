@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{Write, WriteCmd},
     data_type::{CollectionType, DataType, Set, SimpleType},
     dict::{self, Dict},
 };
@@ -27,23 +27,20 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<Resp>> {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
             data: DataType::CollectionType(CollectionType::Set(Set::new())),
-            expire_at: None,
+            expires_at: None,
         });
         if let DataType::CollectionType(CollectionType::Set(ref mut set)) = old.data {
             let old_len = set.size();
             for m in self.members {
                 set.insert_mut(m);
             }
-            Ok(WriteResp {
-                new_expires_at: None,
-                payload: Resp {
-                    old_len,
-                    new_len: set.size(),
-                },
+            Ok(Resp {
+                old_len,
+                new_len: set.size(),
             })
         } else {
             Err("error type".into())

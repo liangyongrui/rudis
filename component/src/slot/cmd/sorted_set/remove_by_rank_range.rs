@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{Write, WriteCmd},
     data_type::{sorted_set::Node, CollectionType, DataType},
     dict::Dict,
 };
@@ -22,7 +22,7 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Vec<Node>> for Req {
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<WriteResp<Vec<Node>>> {
+    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<Node>> {
         if let Some(old) = dict.d_get_mut(&self.key) {
             if let DataType::CollectionType(CollectionType::SortedSet(ref mut sorted_set)) =
                 old.data
@@ -56,18 +56,12 @@ impl Write<Vec<Node>> for Req {
                         }
                     }
                 }
-                Ok(WriteResp {
-                    new_expires_at: None,
-                    payload: res,
-                })
+                Ok(res)
             } else {
                 Err("error type".into())
             }
         } else {
-            Ok(WriteResp {
-                new_expires_at: None,
-                payload: vec![],
-            })
+            Ok(vec![])
         }
     }
 }

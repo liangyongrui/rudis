@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{ExpiresStatus, ExpiresWrite, ExpiresWriteResp, WriteCmd},
     dict::Dict,
 };
 
@@ -19,19 +19,24 @@ impl From<Req> for WriteCmd {
     }
 }
 /// 返回 是否更新成功
-impl Write<bool> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<bool>> {
+impl ExpiresWrite<bool> for Req {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<bool>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
+            let expires_status = ExpiresStatus::Update {
+                key: self.key,
+                before: v.expires_at,
+                new: self.expires_at,
+            };
             v.id = id;
-            v.expire_at = self.expires_at;
-            Ok(WriteResp {
+            v.expires_at = self.expires_at;
+            Ok(ExpiresWriteResp {
                 payload: true,
-                new_expires_at: self.expires_at.map(|ea| (ea, self.key)),
+                expires_status,
             })
         } else {
-            Ok(WriteResp {
+            Ok(ExpiresWriteResp {
                 payload: false,
-                new_expires_at: None,
+                expires_status: ExpiresStatus::None,
             })
         }
     }
@@ -46,10 +51,10 @@ mod test {
 
     use crate::{
         slot::{
-            cmd::{simple::*, WriteResp},
+            cmd::{simple::*, ExpiresStatus, ExpiresWriteResp},
             data_type::SimpleType,
             dict::Dict,
-            Read, Write,
+            ExpiresWrite, Read,
         },
         utils::options::{ExpiresAt, NxXx},
     };
@@ -67,9 +72,9 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: None,
+                expires_status: ExpiresStatus::None
             }
         );
         let res = exists::Req {
@@ -86,9 +91,13 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: true,
-                new_expires_at: Some((date_time, b"hello"[..].into()))
+                expires_status: ExpiresStatus::Update {
+                    key: b"hello"[..].into(),
+                    before: None,
+                    new: Some(date_time)
+                }
             }
         );
         let res = exists::Req {

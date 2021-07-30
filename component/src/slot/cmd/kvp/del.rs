@@ -28,30 +28,24 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<crate::slot::cmd::WriteResp<Resp>> {
+    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::CollectionType(CollectionType::Kvp(ref mut kvp)) = v.data {
                 let old_len = kvp.size();
                 for f in self.fields {
                     kvp.remove_mut(&f);
                 }
-                return Ok(crate::slot::cmd::WriteResp {
-                    payload: Resp {
-                        old_len,
-                        new_len: kvp.size(),
-                    },
-                    new_expires_at: None,
+                return Ok(Resp {
+                    old_len,
+                    new_len: kvp.size(),
                 });
             } else {
                 return Err("error type".into());
             }
         }
-        Ok(crate::slot::cmd::WriteResp {
-            payload: Resp {
-                old_len: 0,
-                new_len: 0,
-            },
-            new_expires_at: None,
+        Ok(Resp {
+            old_len: 0,
+            new_len: 0,
         })
     }
 }

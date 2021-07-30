@@ -3,7 +3,7 @@ use std::{convert::TryInto, sync::Arc};
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{Write, WriteCmd},
     data_type::SimpleType,
     dict::{self, Dict},
 };
@@ -21,17 +21,14 @@ impl From<Req> for WriteCmd {
 
 /// 返回 更新后的值
 impl Write<i64> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<i64>> {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             match v.data {
                 crate::slot::data_type::DataType::SimpleType(ref mut s) => {
                     let old: i64 = (&*s).try_into()?;
                     let new = old + self.value;
                     *s = SimpleType::Integer(new);
-                    Ok(WriteResp {
-                        new_expires_at: None,
-                        payload: new,
-                    })
+                    Ok(new)
                 }
                 crate::slot::data_type::DataType::CollectionType(_) => Err("error type".into()),
             }
@@ -39,15 +36,12 @@ impl Write<i64> for Req {
             dict.insert(
                 self.key,
                 dict::Value {
-                    expire_at: None,
+                    expires_at: None,
                     id,
                     data: self.value.into(),
                 },
             );
-            Ok(WriteResp {
-                new_expires_at: None,
-                payload: self.value,
-            })
+            Ok(self.value)
         }
     }
 }
@@ -58,11 +52,7 @@ mod test {
 
     use parking_lot::RwLock;
 
-    use crate::slot::{
-        cmd::{simple::*, WriteResp},
-        dict::Dict,
-        Write,
-    };
+    use crate::slot::{cmd::simple::*, dict::Dict, Write};
 
     #[test]
     fn test1() {
@@ -72,24 +62,12 @@ mod test {
             value: 10,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
-        assert_eq!(
-            res,
-            WriteResp {
-                payload: 10,
-                new_expires_at: None,
-            }
-        );
+        assert_eq!(res, 10);
         let cmd = incr::Req {
             key: b"hello"[..].into(),
             value: -5,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
-        assert_eq!(
-            res,
-            WriteResp {
-                payload: 5,
-                new_expires_at: None,
-            }
-        );
+        assert_eq!(res, 5);
     }
 }

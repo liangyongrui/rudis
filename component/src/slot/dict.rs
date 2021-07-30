@@ -18,7 +18,7 @@ pub struct Dict {
 pub struct Value {
     pub id: u64,
     pub data: DataType,
-    pub expire_at: Option<DateTime<Utc>>,
+    pub expires_at: Option<DateTime<Utc>>,
 }
 
 impl Dict {
@@ -45,13 +45,13 @@ impl Dict {
     #[inline]
     pub fn d_get(&self, key: &[u8]) -> Option<&Value> {
         self.get(key)
-            .filter(|v| v.expire_at.filter(|x| *x <= Utc::now()).is_none())
+            .filter(|v| v.expires_at.filter(|x| *x <= Utc::now()).is_none())
     }
 
     #[inline]
     pub fn d_get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
         self.get_mut(key)
-            .filter(|v| v.expire_at.filter(|x| *x <= Utc::now()).is_none())
+            .filter(|v| v.expires_at.filter(|x| *x <= Utc::now()).is_none())
     }
 
     /// todo 这里可能可以优化一下
@@ -62,7 +62,7 @@ impl Dict {
     ) -> &mut Value {
         match self.entry(key.clone()) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
-                if o.get().expire_at.filter(|x| *x <= Utc::now()).is_some() {
+                if o.get().expires_at.filter(|x| *x <= Utc::now()).is_some() {
                     o.insert(f());
                 }
             }

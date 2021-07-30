@@ -3,7 +3,7 @@ use std::{convert::TryInto, sync::Arc};
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{Write, WriteCmd},
     data_type::{CollectionType, DataType, Kvp, SimpleType},
     dict::{self, Dict},
 };
@@ -22,9 +22,9 @@ impl From<Req> for WriteCmd {
 
 /// 返回 更新后的值
 impl Write<i64> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<i64>> {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
         let v = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
-            expire_at: None,
+            expires_at: None,
             id,
             data: DataType::CollectionType(CollectionType::Kvp(Kvp::new())),
         });
@@ -34,16 +34,10 @@ impl Write<i64> for Req {
                     let old: i64 = (&*s).try_into()?;
                     let new = old + self.value;
                     *s = SimpleType::Integer(new);
-                    Ok(WriteResp {
-                        new_expires_at: None,
-                        payload: new,
-                    })
+                    Ok(new)
                 } else {
                     kvp.insert_mut(self.field, SimpleType::Integer(self.value));
-                    Ok(WriteResp {
-                        new_expires_at: None,
-                        payload: self.value,
-                    })
+                    Ok(self.value)
                 }
             }
             _ => Err("error type".into()),
@@ -71,8 +65,7 @@ mod test {
             nx_xx: NxXx::None,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             set::Resp {
@@ -87,8 +80,7 @@ mod test {
             value: 1,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(res, 2);
 
         let res = incr::Req {
@@ -97,8 +89,7 @@ mod test {
             value: 10,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(res, 10);
 
         let res = get_all::Req {

@@ -41,6 +41,7 @@ rcc 差不多是 redis 的 3.19 倍
 
 ### Performance
 
+1. [ ] arc<[u8]> 替换成 bytes (这个不确定对性能的影响是好是坏)
 1. [ ] io_uring
 1. [ ] 单 key，多次更新聚合
 1. [ ] 根据 value 的大小 和 读写规律 来使用 可持久化数据结构

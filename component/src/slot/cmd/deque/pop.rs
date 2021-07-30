@@ -22,11 +22,7 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Vec<SimpleType>> for Req {
-    fn apply(
-        self,
-        _id: u64,
-        dict: &mut Dict,
-    ) -> crate::Result<crate::slot::cmd::WriteResp<Vec<SimpleType>>> {
+    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<SimpleType>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::CollectionType(CollectionType::Deque(ref mut deque)) = v.data {
                 let mut res = vec![];
@@ -40,18 +36,12 @@ impl Write<Vec<SimpleType>> for Req {
                         res.push(deque.pop_back().unwrap())
                     }
                 }
-                return Ok(crate::slot::cmd::WriteResp {
-                    payload: res,
-                    new_expires_at: None,
-                });
+                return Ok(res);
             } else {
                 return Err("error type".into());
             }
         }
-        Ok(crate::slot::cmd::WriteResp {
-            payload: vec![],
-            new_expires_at: None,
-        })
+        Ok(vec![])
     }
 }
 
@@ -87,8 +77,7 @@ mod test {
             nx_xx: NxXx::None,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             push::Resp {
@@ -103,8 +92,7 @@ mod test {
             left: false,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(res, vec!["9".into(), "8".into(), "7".into(),]);
         let res = pop::Req {
             key: b"hello"[..].into(),
@@ -112,8 +100,7 @@ mod test {
             left: true,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(res, vec!["0".into(), "1".into(), "2".into(), "3".into()]);
     }
 }

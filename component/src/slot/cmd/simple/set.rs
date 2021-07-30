@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     slot::{
-        cmd::{Write, WriteCmd, WriteResp},
+        cmd::{ExpiresStatus, ExpiresWrite, ExpiresWriteResp, WriteCmd},
         data_type::{DataType, SimpleType},
         dict::{self, Dict},
     },
@@ -25,20 +25,20 @@ impl From<Req> for WriteCmd {
 }
 /// 返回 原始值
 /// 如果原始值的类型不为SimpleType, 则返回 null
-impl Write<SimpleType> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<SimpleType>> {
+impl ExpiresWrite<SimpleType> for Req {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<SimpleType>> {
         let key = self.key.clone();
         if let Some(v) = dict.d_get(&self.key) {
             if self.nx_xx.is_nx() {
                 let old_value = data_type_copy_to_simple(&v.data);
-                return Ok(WriteResp {
+                return Ok(ExpiresWriteResp {
                     payload: old_value,
-                    new_expires_at: None,
+                    expires_status: ExpiresStatus::None,
                 });
             }
-            let expire_at = match self.expires_at {
+            let expires_at = match self.expires_at {
                 ExpiresAt::Specific(i) => Some(i),
-                ExpiresAt::Last => v.expire_at,
+                ExpiresAt::Last => v.expires_at,
                 ExpiresAt::None => None,
             };
             let old = dict
@@ -47,22 +47,27 @@ impl Write<SimpleType> for Req {
                     dict::Value {
                         id,
                         data: DataType::SimpleType(self.value),
-                        expire_at,
+                        expires_at,
                     },
                 )
                 .unwrap();
-            Ok(WriteResp {
+            let expires_status = ExpiresStatus::Update {
+                key,
+                before: old.expires_at,
+                new: expires_at,
+            };
+            Ok(ExpiresWriteResp {
                 payload: data_type_to_simple(old.data),
-                new_expires_at: expire_at.map(|ea| (ea, key)),
+                expires_status,
             })
         } else {
             if self.nx_xx.is_xx() {
-                return Ok(WriteResp {
+                return Ok(ExpiresWriteResp {
                     payload: SimpleType::Null,
-                    new_expires_at: None,
+                    expires_status: ExpiresStatus::None,
                 });
             }
-            let expire_at = match self.expires_at {
+            let expires_at = match self.expires_at {
                 ExpiresAt::Specific(i) => Some(i),
                 _ => None,
             };
@@ -71,12 +76,21 @@ impl Write<SimpleType> for Req {
                 dict::Value {
                     id,
                     data: DataType::SimpleType(self.value),
-                    expire_at,
+                    expires_at,
                 },
             );
-            Ok(WriteResp {
+            let expires_status = if expires_at.is_none() {
+                ExpiresStatus::None
+            } else {
+                ExpiresStatus::Update {
+                    key,
+                    before: None,
+                    new: expires_at,
+                }
+            };
+            Ok(ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: expire_at.map(|ea| (ea, key)),
+                expires_status,
             })
         }
     }
@@ -123,9 +137,13 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some((date_time, b"hello"[..].into()))
+                expires_status: ExpiresStatus::Update {
+                    key: b"hello"[..].into(),
+                    before: None,
+                    new: Some(date_time)
+                }
             }
         );
         let res = get::Req {
@@ -150,9 +168,13 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: "world".into(),
-                new_expires_at: Some((date_time, b"hello"[..].into()))
+                expires_status: ExpiresStatus::Update {
+                    key: b"hello"[..].into(),
+                    before: Some(date_time),
+                    new: Some(date_time)
+                }
             }
         );
         let cmd = Req {
@@ -164,9 +186,9 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: None,
+                expires_status: ExpiresStatus::None
             }
         );
         let res = get::Req {
@@ -191,9 +213,9 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: "world2".into(),
-                new_expires_at: None
+                expires_status: ExpiresStatus::None
             }
         );
         let cmd = Req {
@@ -205,9 +227,9 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: None
+                expires_status: ExpiresStatus::None
             }
         );
         let res = get::Req {
@@ -232,9 +254,13 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: "world2".into(),
-                new_expires_at: Some((date_time, b"hello"[..].into()))
+                expires_status: ExpiresStatus::Update {
+                    key: b"hello"[..].into(),
+                    before: Some(date_time),
+                    new: Some(date_time)
+                }
             }
         );
         let res = get::Req {

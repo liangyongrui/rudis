@@ -35,7 +35,7 @@ impl From<&SimpleType> for Frame {
         match st {
             SimpleType::Big => Frame::Null,
             SimpleType::String(s) => Frame::Simple(s.to_string()),
-            SimpleType::Bytes(b) => Frame::Bulk(b.clone()),
+            SimpleType::Bytes(b) => Frame::Bulk(Arc::clone(b)),
             SimpleType::Integer(i) => Frame::Integer(*i),
             SimpleType::Float(f) => Frame::Simple(format!("{}", f.0)),
             SimpleType::Null => Frame::Null,

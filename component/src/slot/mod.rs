@@ -9,7 +9,7 @@ use parking_lot::RwLock;
 use rpds::{HashTrieMapSync, HashTrieSetSync};
 
 use self::{
-    cmd::WriteResp,
+    cmd::{ExpiresWrite, ExpiresWriteResp},
     data_type::SimpleType,
     dict::{Dict, Value},
 };
@@ -53,22 +53,46 @@ impl Slot {
             (cmd.clone().apply(id, dict), id)
         };
 
+        // 转发执行完成的请求
+        let _ = self.bg_task.forward_sender.send(forward::Message {
+            id,
+            slot: self.slot_id,
+            cmd: cmd.into(),
+        });
+
+        res
+    }
+
+    fn call_expires_write<T, C: ExpiresWrite<T> + Clone>(&self, cmd: C) -> crate::Result<T> {
+        // 加锁执行命令
+        let (res, id) = {
+            let mut dict = self.dict.write();
+            let dict = dict.borrow_mut();
+            let id = dict.next_id();
+            (cmd.clone().apply(id, dict), id)
+        };
+
         let res = match res {
-            Ok(WriteResp {
-                new_expires_at,
+            Ok(ExpiresWriteResp {
+                expires_status,
                 payload,
             }) => {
-                // 设置自动过期
-                if let Some((ea, key)) = new_expires_at {
-                    let _ = self
-                        .bg_task
-                        .expire_sender
-                        .send(expire::Message::Add(expire::Entry {
-                            expires_at: ea,
-                            slot: self.slot_id,
-                            id,
-                            key,
-                        }));
+                match expires_status {
+                    cmd::ExpiresStatus::None => (),
+                    cmd::ExpiresStatus::Update { key, before, new } => {
+                        // todo
+                        // if let Some((ea, key)) = new_expires_at {
+                        //     let _ = self
+                        //         .bg_task
+                        //         .expire_sender
+                        //         .send(expire::Message::Add(expire::Entry {
+                        //             expires_at: ea,
+                        //             slot: self.slot_id,
+                        //             id,
+                        //             key,
+                        //         }));
+                        //
+                    }
                 }
                 Ok(payload)
             }
@@ -89,13 +113,13 @@ impl Slot {
 /// 写命令
 impl Slot {
     pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
-        self.call_write(cmd)
+        self.call_expires_write(cmd)
     }
     pub fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<Value>> {
-        self.call_write(cmd)
+        self.call_expires_write(cmd)
     }
     pub fn expire(&self, cmd: cmd::simple::expire::Req) -> crate::Result<bool> {
-        self.call_write(cmd)
+        self.call_expires_write(cmd)
     }
     pub fn incr(&self, cmd: cmd::simple::incr::Req) -> crate::Result<i64> {
         self.call_write(cmd)

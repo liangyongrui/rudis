@@ -16,30 +16,34 @@ use serde::{Deserialize, Serialize};
 use super::dict::Dict;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct WriteResp<T> {
+pub struct ExpiresWriteResp<T> {
     pub payload: T,
-    /// # WARN
-    /// 当不需要更新过期时间时
-    /// - 这个为None
-    /// - 且 value 的id 不能更新, 避免自动过期失效
-    pub new_expires_at: Option<(DateTime<Utc>, Arc<[u8]>)>,
+    pub expires_status: ExpiresStatus,
 }
-
+#[derive(Debug, PartialEq, Eq)]
+/// 当不需要更新过期时间时
+/// 这个为None
 pub enum ExpiresStatus {
     None,
+    /// 删除before 添加new
     Update {
         key: Arc<[u8]>,
-        /// before 和 new 不会相同，相同使用 None
         before: Option<DateTime<Utc>>,
         new: Option<DateTime<Utc>>,
     },
 }
 
+pub trait ExpiresWrite<T>
+where
+    Self: Into<WriteCmd>,
+{
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<T>>;
+}
 pub trait Write<T>
 where
     Self: Into<WriteCmd>,
 {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<T>>;
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<T>;
 }
 
 pub trait Read<T> {

@@ -33,17 +33,14 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<crate::slot::cmd::WriteResp<Resp>> {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::CollectionType(CollectionType::Deque(ref mut deque)) = v.data {
                 let old_len = deque.len();
                 if self.nx_xx.is_nx() {
-                    return Ok(crate::slot::cmd::WriteResp {
-                        payload: Resp {
-                            new_len: old_len,
-                            old_len,
-                        },
-                        new_expires_at: None,
+                    return Ok(Resp {
+                        new_len: old_len,
+                        old_len,
                     });
                 }
                 if self.left {
@@ -56,21 +53,15 @@ impl Write<Resp> for Req {
                     }
                 }
                 let new_len = deque.len();
-                Ok(crate::slot::cmd::WriteResp {
-                    payload: Resp { old_len, new_len },
-                    new_expires_at: None,
-                })
+                Ok(Resp { old_len, new_len })
             } else {
                 Err("error type".into())
             }
         } else {
             if self.nx_xx.is_xx() {
-                return Ok(crate::slot::cmd::WriteResp {
-                    payload: Resp {
-                        new_len: 0,
-                        old_len: 0,
-                    },
-                    new_expires_at: None,
+                return Ok(Resp {
+                    new_len: 0,
+                    old_len: 0,
                 });
             }
             let mut deque = Deque::new();
@@ -89,15 +80,12 @@ impl Write<Resp> for Req {
                 dict::Value {
                     id,
                     data: DataType::CollectionType(CollectionType::Deque(deque)),
-                    expire_at: None,
+                    expires_at: None,
                 },
             );
-            Ok(crate::slot::cmd::WriteResp {
-                payload: Resp {
-                    new_len,
-                    old_len: 0,
-                },
-                new_expires_at: None,
+            Ok(Resp {
+                new_len,
+                old_len: 0,
             })
         }
     }
@@ -131,8 +119,7 @@ mod test {
             nx_xx: NxXx::Xx,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             push::Resp {
@@ -154,8 +141,7 @@ mod test {
             nx_xx: NxXx::None,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             push::Resp {
@@ -190,8 +176,7 @@ mod test {
             nx_xx: NxXx::Xx,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             push::Resp {

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     slot::{
-        cmd::{Write, WriteCmd, WriteResp},
+        cmd::{Write, WriteCmd},
         data_type::{self, CollectionType, DataType, SortedSet},
         dict::{self, Dict},
     },
@@ -40,11 +40,11 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<Resp>> {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
             data: DataType::CollectionType(CollectionType::SortedSet(SortedSet::new())),
-            expire_at: None,
+            expires_at: None,
         });
         if let DataType::CollectionType(CollectionType::SortedSet(ref mut sorted_set)) = old.data {
             let old_len = sorted_set.hash.len();
@@ -77,13 +77,10 @@ impl Write<Resp> for Req {
                     sorted_set.value.insert_mut(node);
                 }
             }
-            Ok(WriteResp {
-                new_expires_at: None,
-                payload: Resp {
-                    old_len,
-                    update_len,
-                    new_len: sorted_set.hash.len(),
-                },
+            Ok(Resp {
+                old_len,
+                update_len,
+                new_len: sorted_set.hash.len(),
             })
         } else {
             Err("error type".into())

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     slot::{
-        cmd::{Write, WriteCmd, WriteResp},
+        cmd::{Write, WriteCmd},
         data_type::{CollectionType, DataType, Kvp, SimpleType},
         dict::{self, Dict},
     },
@@ -33,11 +33,11 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<WriteResp<Resp>> {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
             data: DataType::CollectionType(CollectionType::Kvp(Kvp::new())),
-            expire_at: None,
+            expires_at: None,
         });
         if let DataType::CollectionType(CollectionType::Kvp(ref mut kvp)) = old.data {
             let old_len = kvp.size();
@@ -62,12 +62,9 @@ impl Write<Resp> for Req {
                     }
                 }
             }
-            Ok(WriteResp {
-                new_expires_at: None,
-                payload: Resp {
-                    old_len,
-                    new_len: kvp.size(),
-                },
+            Ok(Resp {
+                old_len,
+                new_len: kvp.size(),
             })
         } else {
             Err("error type".into())

@@ -22,10 +22,10 @@ mod test {
 
     use crate::{
         slot::{
-            cmd::{simple::*, WriteResp},
+            cmd::{simple::*, ExpiresStatus, ExpiresWriteResp},
             data_type::SimpleType,
             dict::Dict,
-            Read, Write,
+            ExpiresWrite, Read,
         },
         utils::options::{ExpiresAt, NxXx},
     };
@@ -49,9 +49,13 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some((date_time, b"hello"[..].into()))
+                expires_status: ExpiresStatus::Update {
+                    key: b"hello"[..].into(),
+                    before: None,
+                    new: Some(date_time)
+                }
             }
         );
         let res = exists::Req {

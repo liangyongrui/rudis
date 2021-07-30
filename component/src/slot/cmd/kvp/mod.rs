@@ -30,8 +30,7 @@ mod test {
             nx_xx: NxXx::None,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             set::Resp {
@@ -74,8 +73,7 @@ mod test {
             nx_xx: NxXx::Nx,
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             set::Resp {
@@ -147,8 +145,7 @@ mod test {
             fields: vec!["k1".into(), "k10".into()],
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             del::Resp {

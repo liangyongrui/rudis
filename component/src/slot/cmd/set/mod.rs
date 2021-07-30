@@ -20,8 +20,7 @@ mod test {
             members: vec!["k1".into(), "k2".into(), "k3".into()],
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             add::Resp {
@@ -52,8 +51,7 @@ mod test {
             members: vec!["k1".into(), "k4".into(), "k5".into()],
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             add::Resp {
@@ -100,8 +98,7 @@ mod test {
             members: vec!["k1".into(), "k10".into()],
         }
         .apply(1, dict.write().borrow_mut())
-        .unwrap()
-        .payload;
+        .unwrap();
         assert_eq!(
             res,
             remove::Resp {

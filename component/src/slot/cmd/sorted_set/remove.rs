@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{Write, WriteCmd},
     data_type::{CollectionType, DataType, SimpleType},
     dict::Dict,
 };
@@ -26,7 +26,7 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<WriteResp<Resp>> {
+    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(old) = dict.d_get_mut(&self.key) {
             if let DataType::CollectionType(CollectionType::SortedSet(ref mut sorted_set)) =
                 old.data
@@ -37,23 +37,17 @@ impl Write<Resp> for Req {
                         sorted_set.value.remove_mut(on);
                     }
                 }
-                Ok(WriteResp {
-                    new_expires_at: None,
-                    payload: Resp {
-                        old_len,
-                        new_len: sorted_set.hash.len(),
-                    },
+                Ok(Resp {
+                    old_len,
+                    new_len: sorted_set.hash.len(),
                 })
             } else {
                 Err("error type".into())
             }
         } else {
-            Ok(WriteResp {
-                new_expires_at: None,
-                payload: Resp {
-                    old_len: 0,
-                    new_len: 0,
-                },
+            Ok(Resp {
+                old_len: 0,
+                new_len: 0,
             })
         }
     }

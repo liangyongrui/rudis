@@ -3,7 +3,7 @@ use std::sync::Arc;
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
-    cmd::{Write, WriteCmd, WriteResp},
+    cmd::{ExpiresStatus, ExpiresWrite, ExpiresWriteResp, WriteCmd},
     dict::{Dict, Value},
 };
 
@@ -18,17 +18,30 @@ impl From<Req> for WriteCmd {
     }
 }
 /// 返回 原始值
-impl Write<Option<Value>> for Req {
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<WriteResp<Option<Value>>> {
+impl ExpiresWrite<Option<Value>> for Req {
+    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<Option<Value>>> {
         if dict.d_exists(&self.key) {
-            Ok(WriteResp {
-                payload: dict.remove(&self.key),
-                new_expires_at: None,
+            let res = dict.remove(&self.key);
+
+            let expires_status = res
+                .as_ref()
+                .and_then(|v| {
+                    v.expires_at.map(|e| ExpiresStatus::Update {
+                        key: self.key,
+                        before: Some(e),
+                        new: None,
+                    })
+                })
+                .unwrap_or(ExpiresStatus::None);
+
+            Ok(ExpiresWriteResp {
+                payload: res,
+                expires_status,
             })
         } else {
-            Ok(WriteResp {
+            Ok(ExpiresWriteResp {
                 payload: None,
-                new_expires_at: None,
+                expires_status: ExpiresStatus::None,
             })
         }
     }
@@ -71,9 +84,13 @@ mod test {
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
-            WriteResp {
+            ExpiresWriteResp {
                 payload: SimpleType::Null,
-                new_expires_at: Some((date_time, b"hello"[..].into()))
+                expires_status: ExpiresStatus::Update {
+                    key: b"hello"[..].into(),
+                    before: None,
+                    new: Some(date_time),
+                }
             }
         );
         let res = del::Req {
