@@ -50,7 +50,7 @@ impl Connection {
 
     fn parse_frame(&mut self) -> crate::Result<Option<Frame>> {
         let old_len = self.read_buffer.len();
-        match parse::parse(&self.read_buffer[..]) {
+        match parse::parse(self.read_buffer.as_ref()) {
             Ok((left, frame)) => {
                 let len = old_len - left.len();
                 self.read_buffer.advance(len);

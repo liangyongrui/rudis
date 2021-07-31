@@ -22,7 +22,7 @@ use crate::{
 ///
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Frame {
-    Simple(String),
+    Simple(Arc<str>),
     Error(String),
     Integer(i64),
     Bulk(Arc<[u8]>),
@@ -32,13 +32,32 @@ pub enum Frame {
     DoNothing,
 }
 
+impl Frame {
+    pub fn ok() -> Self {
+        Frame::Simple("OK".into())
+    }
+}
+
+impl From<DataType> for Frame {
+    fn from(st: DataType) -> Self {
+        match st {
+            DataType::String(s) => Frame::Simple(s),
+            DataType::Bytes(b) => Frame::Bulk(b),
+            DataType::Integer(i) => Frame::Integer(i),
+            DataType::Float(f) => Frame::Simple(format!("{}", f.0).into()),
+            DataType::Null => Frame::Null,
+            _ => Frame::Error("type not support".into()),
+        }
+    }
+}
+
 impl From<&DataType> for Frame {
     fn from(st: &DataType) -> Self {
         match st {
-            DataType::String(s) => Frame::Simple(s.to_string()),
-            DataType::Bytes(b) => Frame::Bulk(Arc::clone(b)),
+            DataType::String(s) => Frame::Simple(s.clone()),
+            DataType::Bytes(b) => Frame::Bulk(b.clone()),
             DataType::Integer(i) => Frame::Integer(*i),
-            DataType::Float(f) => Frame::Simple(format!("{}", f.0)),
+            DataType::Float(f) => Frame::Simple(format!("{}", f.0).into()),
             DataType::Null => Frame::Null,
             _ => Frame::Error("type not support".into()),
         }
@@ -88,7 +107,14 @@ fn parse_error(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         take_while1(|c| c != b'\r' && c != b'\n'),
         tag(b"\r\n"),
     )(i)?;
-    Ok((i, Frame::Error(u8_to_string(resp))))
+    Ok((
+        i,
+        Frame::Error(
+            std::str::from_utf8(resp)
+                .expect("protocol error; invalid string")
+                .to_string(),
+        ),
+    ))
 }
 
 fn parse_int(i: &[u8]) -> nom::IResult<&[u8], Frame> {
@@ -114,7 +140,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         let len = len as usize;
         let (i, data) = take_while_m_n(len, len, |_| true)(i)?;
         let (i, _) = tag(b"\r\n")(i)?;
-        Ok((i, Frame::Bulk(data.into())))
+        Ok((i, Frame::Bulk(Arc::from(Box::from(data)))))
     }
 }
 
@@ -207,7 +233,7 @@ mod test {
                 Frame::Bulk(b"hello"[..].into()),
                 Frame::Integer(2),
             ]),
-            Frame::Simple("abc".to_owned()),
+            Frame::Simple("abc".into()),
         ]);
         assert_eq!(t, f);
         let v: Vec<u8> = (&f).into();

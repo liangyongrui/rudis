@@ -22,7 +22,7 @@ impl Hgetall {
         if let Some(v) = db.kvp_get_all((&self).into())? {
             Ok(Frame::Array(
                 v.into_iter()
-                    .flat_map(|(k, v)| vec![Frame::Simple(k.clone()), v.into()].into_iter())
+                    .flat_map(|(k, v)| vec![Frame::Simple((&k[..]).into()), v.into()].into_iter())
                     .collect(),
             ))
         } else {

@@ -3,7 +3,7 @@ pub mod options;
 pub mod other_type;
 pub mod pointer;
 
-use std::ops::Bound;
+use std::{ops::Bound, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 pub trait BoundExt<T> {
@@ -20,9 +20,9 @@ impl<T> BoundExt<T> for Bound<T> {
     }
 }
 
-pub fn u8_to_string(data: &[u8]) -> String {
+pub fn u8_to_string(data: &[u8]) -> Arc<str> {
     std::str::from_utf8(data)
-        .map(|s| s.to_string())
+        .map(|s| s.into())
         .expect("protocol error; invalid string")
 }
 

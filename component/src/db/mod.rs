@@ -42,7 +42,7 @@ pub struct Db {
     pub role: Mutex<Role>,
 }
 
-const SIZE: u16 = 1024;
+const SIZE: u16 = 1 << 14;
 
 impl Db {
     pub async fn new() -> Arc<Self> {

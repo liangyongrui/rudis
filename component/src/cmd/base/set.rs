@@ -140,11 +140,7 @@ impl Set {
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let get = self.get;
         let res = db.set(self.into())?;
-        let response = if get {
-            (&res).into()
-        } else {
-            Frame::Simple("OK".to_string())
-        };
+        let response = if get { res.into() } else { Frame::ok() };
         Ok(response)
     }
 }

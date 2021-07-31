@@ -29,7 +29,7 @@ impl Get {
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         // Get the value from the shared database state
 
-        let response = (&db.get((&self).into())?).into();
+        let response = db.get((&self).into())?.into();
         // Write the response back to the client
         Ok(response)
     }

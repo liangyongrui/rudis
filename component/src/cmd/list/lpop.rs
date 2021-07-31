@@ -26,6 +26,6 @@ impl Lpop {
     #[instrument(skip(self, db))]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.deque_pop(self.into())?;
-        Ok(Frame::Array(res.iter().map(|t| t.into()).collect()))
+        Ok(Frame::Array(res.into_iter().map(|t| t.into()).collect()))
     }
 }

@@ -40,7 +40,7 @@ fn main() {
                 streams.push(stream);
             }
             dbg!("connect");
-            for i in 0..1600 {
+            for i in 0..1500 {
                 let stream = streams.pop().unwrap();
                 let h = tokio::spawn(async move {
                     // Establish a connection to the server
@@ -58,7 +58,7 @@ fn main() {
 }
 
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
-    for i in 0..5000 {
+    for i in 0..1000 {
         write_cmd(&mut stream, &format!("SET hello{}_{} world", suffix, i)).await;
         read_assert_eq(&mut stream, b"+OK\r\n").await;
     }

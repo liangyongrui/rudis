@@ -18,6 +18,7 @@ pub struct Dict {
 pub struct Value {
     pub id: u64,
     pub data: DataType,
+    /// todo 这里的内存可以优化
     pub expires_at: Option<DateTime<Utc>>,
 }
 

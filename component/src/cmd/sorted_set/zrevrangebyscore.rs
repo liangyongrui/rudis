@@ -74,9 +74,9 @@ impl Zrevrangebyscore {
 
         let mut res = vec![];
         for n in response {
-            res.push(Frame::Simple(n.key));
+            res.push(Frame::Simple(n.key.into()));
             if self.withscores {
-                res.push(Frame::Simple(n.score.0.to_string()));
+                res.push(Frame::Simple(n.score.0.to_string().into()));
             }
         }
         Ok(Frame::Array(res))

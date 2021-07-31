@@ -71,6 +71,19 @@ impl ExpiresWrite<DataType> for Req {
                 ExpiresAt::Specific(i) => Some(i),
                 _ => None,
             };
+            // warn!(
+            //     "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
+            //     self.key.len(),
+            //     std::mem::size_of::<DataType>(),
+            //     std::mem::size_of::<dict::Value>(),
+            //     std::mem::size_of::<crate::forward::Message>(),
+            //     std::mem::size_of::<bytes::Bytes>(),
+            //     std::mem::size_of::<Arc<[u8]>>(),
+            //     std::mem::size_of::<&[u8]>(),
+            //     std::mem::size_of::<Arc<str>>(),
+            //     std::mem::size_of::<&str>(),
+            //     std::mem::size_of::<crate::slot::data_type::Kvp>(),
+            // );
             dict.insert(
                 self.key,
                 dict::Value {
@@ -79,6 +92,7 @@ impl ExpiresWrite<DataType> for Req {
                     expires_at,
                 },
             );
+
             let expires_status = if expires_at.is_none() {
                 ExpiresStatus::None
             } else {

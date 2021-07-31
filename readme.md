@@ -41,6 +41,7 @@ rcc 差不多是 redis 的 3 倍
 
 ### Performance
 
+1. [ ] 读取数据的时候减少一次内存copy
 1. [ ] 判断是否可写
 1. [ ] arc<[u8]> 替换成 bytes (这个不确定对性能的影响是好是坏)
 1. [ ] io_uring

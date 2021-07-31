@@ -26,6 +26,8 @@ impl Lrange {
     #[instrument(skip(self, db))]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = db.deque_range((&self).into())?;
-        Ok(Frame::Array(response.iter().map(|t| t.into()).collect()))
+        Ok(Frame::Array(
+            response.into_iter().map(|t| t.into()).collect(),
+        ))
     }
 }
