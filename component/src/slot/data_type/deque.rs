@@ -5,11 +5,11 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::slot::data_type::SimpleType;
+use crate::slot::data_type::DataType;
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Deque {
-    inner: VecDeque<SimpleType>,
+    inner: VecDeque<DataType>,
 }
 
 impl Deque {
@@ -46,7 +46,7 @@ impl Default for Deque {
     }
 }
 impl Deref for Deque {
-    type Target = VecDeque<SimpleType>;
+    type Target = VecDeque<DataType>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

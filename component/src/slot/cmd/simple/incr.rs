@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::SimpleType,
+    data_type::DataType,
     dict::{self, Dict},
 };
 
@@ -23,15 +23,10 @@ impl From<Req> for WriteCmd {
 impl Write<i64> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
         if let Some(v) = dict.d_get_mut(&self.key) {
-            match v.data {
-                crate::slot::data_type::DataType::SimpleType(ref mut s) => {
-                    let old: i64 = (&*s).try_into()?;
-                    let new = old + self.value;
-                    *s = SimpleType::Integer(new);
-                    Ok(new)
-                }
-                crate::slot::data_type::DataType::CollectionType(_) => Err("error type".into()),
-            }
+            let old: i64 = (&v.data).try_into()?;
+            let new = old + self.value;
+            v.data = DataType::Integer(new);
+            Ok(new)
         } else {
             dict.insert(
                 self.key,

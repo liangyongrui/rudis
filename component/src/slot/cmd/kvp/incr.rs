@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{CollectionType, DataType, Kvp, SimpleType},
+    data_type::{CollectionType, DataType, Kvp},
     dict::{self, Dict},
 };
 
@@ -33,10 +33,10 @@ impl Write<i64> for Req {
                 if let Some(s) = kvp.get_mut(&self.field) {
                     let old: i64 = (&*s).try_into()?;
                     let new = old + self.value;
-                    *s = SimpleType::Integer(new);
+                    *s = DataType::Integer(new);
                     Ok(new)
                 } else {
-                    kvp.insert_mut(self.field, SimpleType::Integer(self.value));
+                    kvp.insert_mut(self.field, DataType::Integer(self.value));
                     Ok(self.value)
                 }
             }

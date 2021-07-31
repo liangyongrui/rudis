@@ -60,7 +60,7 @@ mod test {
     use crate::{
         slot::{
             cmd::{simple::*, ExpiresStatusUpdate},
-            data_type::{DataType, SimpleType},
+            data_type::DataType,
             dict::Dict,
         },
         utils::options::{ExpiresAt, NxXx},
@@ -87,7 +87,7 @@ mod test {
         assert_eq!(
             res,
             ExpiresWriteResp {
-                payload: SimpleType::Null,
+                payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,
@@ -103,6 +103,6 @@ mod test {
         .payload
         .unwrap()
         .data;
-        assert_eq!(res, DataType::SimpleType("world".into()));
+        assert_eq!(res, DataType::String("world".into()));
     }
 }

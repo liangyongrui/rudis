@@ -20,7 +20,7 @@ impl Node {
     }
 }
 /// key value pairs
-#[derive(Debug, Serialize, Deserialize, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct SortedSet {
     pub hash: HashMap<String, Node>,
     pub value: RedBlackTreeSetSync<Node>,

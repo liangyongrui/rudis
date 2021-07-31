@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{CollectionType, DataType, SimpleType},
+    data_type::{CollectionType, DataType},
     dict::Dict,
 };
 
@@ -21,8 +21,8 @@ impl From<Req> for WriteCmd {
         Self::DequePop(req)
     }
 }
-impl Write<Vec<SimpleType>> for Req {
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<SimpleType>> {
+impl Write<Vec<DataType>> for Req {
+    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::CollectionType(CollectionType::Deque(ref mut deque)) = v.data {
                 let mut res = vec![];

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
-        data_type::{DataType, SimpleType},
+        data_type::DataType,
         dict::{self, Dict},
     },
     utils::options::{ExpiresAt, NxXx},
@@ -14,7 +14,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub value: SimpleType,
+    pub value: DataType,
     pub expires_at: ExpiresAt,
     pub nx_xx: NxXx,
 }
@@ -25,14 +25,13 @@ impl From<Req> for WriteCmd {
 }
 /// 返回 原始值
 /// 如果原始值的类型不为SimpleType, 则返回 null
-impl ExpiresWrite<SimpleType> for Req {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<SimpleType>> {
+impl ExpiresWrite<DataType> for Req {
+    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<DataType>> {
         let key = self.key.clone();
         if let Some(v) = dict.d_get(&self.key) {
             if self.nx_xx.is_nx() {
-                let old_value = data_type_copy_to_simple(&v.data);
                 return Ok(ExpiresWriteResp {
-                    payload: old_value,
+                    payload: v.data.clone(),
                     expires_status: ExpiresStatus::None,
                 });
             }
@@ -46,7 +45,7 @@ impl ExpiresWrite<SimpleType> for Req {
                     self.key,
                     dict::Value {
                         id,
-                        data: DataType::SimpleType(self.value),
+                        data: self.value,
                         expires_at,
                     },
                 )
@@ -57,13 +56,13 @@ impl ExpiresWrite<SimpleType> for Req {
                 new: expires_at,
             });
             Ok(ExpiresWriteResp {
-                payload: data_type_to_simple(old.data),
+                payload: old.data,
                 expires_status,
             })
         } else {
             if self.nx_xx.is_xx() {
                 return Ok(ExpiresWriteResp {
-                    payload: SimpleType::Null,
+                    payload: DataType::Null,
                     expires_status: ExpiresStatus::None,
                 });
             }
@@ -75,7 +74,7 @@ impl ExpiresWrite<SimpleType> for Req {
                 self.key,
                 dict::Value {
                     id,
-                    data: DataType::SimpleType(self.value),
+                    data: self.value,
                     expires_at,
                 },
             );
@@ -89,25 +88,10 @@ impl ExpiresWrite<SimpleType> for Req {
                 })
             };
             Ok(ExpiresWriteResp {
-                payload: SimpleType::Null,
+                payload: DataType::Null,
                 expires_status,
             })
         }
-    }
-}
-#[inline]
-fn data_type_copy_to_simple(dt: &DataType) -> SimpleType {
-    match dt {
-        DataType::SimpleType(s) => s.clone(),
-        DataType::CollectionType(_) => SimpleType::Null,
-    }
-}
-
-#[inline]
-fn data_type_to_simple(dt: DataType) -> SimpleType {
-    match dt {
-        DataType::SimpleType(s) => s,
-        DataType::CollectionType(_) => SimpleType::Null,
     }
 }
 
@@ -138,7 +122,7 @@ mod test {
         assert_eq!(
             res,
             ExpiresWriteResp {
-                payload: SimpleType::Null,
+                payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,
@@ -157,7 +141,7 @@ mod test {
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, SimpleType::Null);
+        assert_eq!(res, DataType::Null);
         // xx
         let cmd = Req {
             key: b"hello"[..].into(),
@@ -187,7 +171,7 @@ mod test {
         assert_eq!(
             res,
             ExpiresWriteResp {
-                payload: SimpleType::Null,
+                payload: DataType::Null,
                 expires_status: ExpiresStatus::None
             }
         );
@@ -202,7 +186,7 @@ mod test {
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, SimpleType::Null);
+        assert_eq!(res, DataType::Null);
         // nx
         let cmd = Req {
             key: b"hello"[..].into(),
@@ -228,7 +212,7 @@ mod test {
         assert_eq!(
             res,
             ExpiresWriteResp {
-                payload: SimpleType::Null,
+                payload: DataType::Null,
                 expires_status: ExpiresStatus::None
             }
         );
@@ -281,7 +265,7 @@ mod test {
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, SimpleType::Null);
+        assert_eq!(res, DataType::Null);
         let res = get::Req {
             key: b"n"[..].into(),
         }

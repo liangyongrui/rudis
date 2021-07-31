@@ -4,7 +4,7 @@ use parking_lot::RwLock;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{CollectionType, DataType, SimpleType},
+    data_type::{CollectionType, DataType},
     dict::Dict,
 };
 
@@ -21,8 +21,8 @@ pub struct Req<'a> {
     pub stop: i64,
 }
 
-impl<'a> Read<Vec<SimpleType>> for Req<'a> {
-    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<SimpleType>> {
+impl<'a> Read<Vec<DataType>> for Req<'a> {
+    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Deque(ref deque)) = v.data {
                 let (b, e) = deque.shape(self.start, self.stop);

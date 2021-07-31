@@ -3,11 +3,11 @@ use std::ops::{Deref, DerefMut};
 use rpds::HashTrieMapSync;
 use serde::{Deserialize, Serialize};
 
-use crate::slot::data_type::SimpleType;
+use crate::slot::data_type::DataType;
 /// key value pairs
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Kvp {
-    inner: HashTrieMapSync<String, SimpleType>,
+    pub inner: HashTrieMapSync<String, DataType>,
 }
 
 impl Kvp {
@@ -24,7 +24,7 @@ impl Default for Kvp {
     }
 }
 impl Deref for Kvp {
-    type Target = HashTrieMapSync<String, SimpleType>;
+    type Target = HashTrieMapSync<String, DataType>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

@@ -12,7 +12,7 @@ use rpds::{HashTrieMapSync, HashTrieSetSync};
 
 use self::{
     cmd::{ExpiresWrite, ExpiresWriteResp},
-    data_type::SimpleType,
+    data_type::DataType,
     dict::{Dict, Value},
 };
 use crate::{
@@ -134,7 +134,7 @@ impl Slot {
 
 /// 写命令
 impl Slot {
-    pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
+    pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<DataType> {
         self.call_expires_write(cmd)
     }
     pub fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<Value>> {
@@ -158,7 +158,7 @@ impl Slot {
     pub fn deque_push(&self, cmd: cmd::deque::push::Req) -> crate::Result<cmd::deque::push::Resp> {
         self.call_write(cmd)
     }
-    pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
+    pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<DataType>> {
         self.call_write(cmd)
     }
     pub fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {
@@ -201,7 +201,7 @@ impl Slot {
 
 /// 读命令
 impl Slot {
-    pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> crate::Result<SimpleType> {
+    pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> crate::Result<DataType> {
         cmd.apply(&self.dict)
     }
     pub fn exists(&self, cmd: cmd::simple::exists::Req<'_>) -> crate::Result<bool> {
@@ -210,19 +210,19 @@ impl Slot {
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> crate::Result<bool> {
         cmd.apply(&self.dict)
     }
-    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<SimpleType> {
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<DataType> {
         cmd.apply(&self.dict)
     }
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieMapSync<String, SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieMapSync<String, DataType>>> {
         cmd.apply(&self.dict)
     }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> crate::Result<usize> {
         cmd.apply(&self.dict)
     }
-    pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> crate::Result<Vec<SimpleType>> {
+    pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> crate::Result<Vec<DataType>> {
         cmd.apply(&self.dict)
     }
     pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {

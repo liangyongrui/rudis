@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd},
-        data_type::{CollectionType, DataType, Deque, SimpleType},
+        data_type::{CollectionType, DataType, Deque},
         dict::{self, Dict},
     },
     utils::options::NxXx,
@@ -14,7 +14,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub elements: Vec<SimpleType>,
+    pub elements: Vec<DataType>,
     // true left, false right
     pub left: bool,
     pub nx_xx: NxXx,

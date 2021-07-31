@@ -23,7 +23,7 @@ mod test {
     use crate::{
         slot::{
             cmd::{simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWriteResp},
-            data_type::SimpleType,
+            data_type::DataType,
             dict::Dict,
             ExpiresWrite, Read,
         },
@@ -50,7 +50,7 @@ mod test {
         assert_eq!(
             res,
             ExpiresWriteResp {
-                payload: SimpleType::Null,
+                payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: None,

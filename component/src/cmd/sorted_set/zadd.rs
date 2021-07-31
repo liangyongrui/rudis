@@ -4,7 +4,7 @@ use tracing::instrument;
 
 use crate::{
     parse::ParseError,
-    slot::data_type::{sorted_set::Node, SimpleType},
+    slot::data_type::{sorted_set::Node, DataType},
     utils::options::{GtLt, NxXx},
     Db, Frame, Parse,
 };
@@ -40,11 +40,11 @@ impl Zadd {
         let mut ch = false;
         let mut incr = false;
         let score = loop {
-            match parse.next_simple_type()? {
-                SimpleType::Bytes(avu) => {
+            match parse.next_data()? {
+                DataType::Bytes(avu) => {
                     let s = match std::str::from_utf8(&avu) {
                         Ok(s) => s,
-                        Err(_) => break SimpleType::Bytes(avu),
+                        Err(_) => break DataType::Bytes(avu),
                     };
                     let lowercase = s.to_lowercase();
                     match &lowercase[..] {
@@ -54,7 +54,7 @@ impl Zadd {
                         "lt" => gt_lt = GtLt::Lt,
                         "incr" => incr = true,
                         "ch" => ch = true,
-                        _ => break SimpleType::Bytes(avu),
+                        _ => break DataType::Bytes(avu),
                     }
                 }
                 t => break t,
@@ -65,7 +65,7 @@ impl Zadd {
         loop {
             nodes.push(Node::new(
                 parse.next_string()?,
-                match parse.next_simple_type() {
+                match parse.next_data() {
                     Ok(s) => (&s).try_into()?,
                     Err(ParseError::EndOfStream) => break,
                     Err(err) => return Err(err.into()),

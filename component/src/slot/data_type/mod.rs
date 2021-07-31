@@ -14,13 +14,17 @@ pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
 pub use crate::utils::float::Float;
 
 /// slot value 的类型
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum DataType {
-    SimpleType(SimpleType),
+    Null,
+    String(Arc<str>),
+    Bytes(Arc<[u8]>),
+    Integer(i64),
+    Float(Float),
     CollectionType(CollectionType),
 }
 /// 集合类型
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum CollectionType {
     Kvp(Kvp),
     Deque(Deque),
@@ -28,86 +32,62 @@ pub enum CollectionType {
     SortedSet(SortedSet),
 }
 
-/// 简单类型
-///
-/// When derived on enums, variants are ordered by their top-to-bottom discriminant order.
-#[derive(PartialEq, Eq, Debug, Hash, Clone, Deserialize, Serialize)]
-pub enum SimpleType {
-    /// 占位，用于排序
-    Big,
-    String(Arc<str>),
-    Bytes(Arc<[u8]>),
-    Integer(i64),
-    Float(Float),
-    Null,
-}
-
-impl From<&str> for SimpleType {
+impl From<&str> for DataType {
     fn from(s: &str) -> Self {
-        SimpleType::String(s.into())
+        DataType::String(s.into())
     }
 }
-impl From<String> for SimpleType {
+impl From<String> for DataType {
     fn from(s: String) -> Self {
-        SimpleType::String(s.into())
+        DataType::String(s.into())
     }
 }
-impl From<i64> for SimpleType {
-    fn from(s: i64) -> Self {
-        SimpleType::Integer(s)
-    }
-}
-
-impl TryFrom<&SimpleType> for i64 {
-    type Error = crate::Error;
-
-    fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
-        let res = match value {
-            SimpleType::String(s) => s.parse()?,
-            SimpleType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
-            SimpleType::Integer(i) => *i,
-            SimpleType::Float(_) => return Err("type error".into()),
-            SimpleType::Null => 0,
-            SimpleType::Big => 0,
-        };
-        Ok(res)
-    }
-}
-
-impl TryFrom<&SimpleType> for String {
-    type Error = crate::Error;
-
-    fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
-        let res = match value {
-            SimpleType::String(s) => s.as_ref().to_owned(),
-            SimpleType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
-            SimpleType::Integer(i) => format!("{}", i),
-            SimpleType::Float(f) => format!("{}", f.0),
-            SimpleType::Null => "null".to_owned(),
-            SimpleType::Big => "Big".to_owned(),
-        };
-        Ok(res)
-    }
-}
-
-impl TryFrom<&SimpleType> for f64 {
-    type Error = crate::Error;
-
-    fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
-        let res = match value {
-            SimpleType::String(s) => s.to_string().parse()?,
-            SimpleType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
-            SimpleType::Integer(i) => *i as _,
-            SimpleType::Float(f) => f.0,
-            SimpleType::Null => 0f64,
-            SimpleType::Big => 0f64,
-        };
-        Ok(res)
-    }
-}
-
 impl From<i64> for DataType {
-    fn from(i: i64) -> Self {
-        DataType::SimpleType(SimpleType::Integer(i))
+    fn from(s: i64) -> Self {
+        DataType::Integer(s)
+    }
+}
+
+impl TryFrom<&DataType> for i64 {
+    type Error = crate::Error;
+
+    fn try_from(value: &DataType) -> Result<Self, Self::Error> {
+        let res = match value {
+            DataType::String(s) => s.parse()?,
+            DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
+            DataType::Integer(i) => *i,
+            _ => return Err("type error".into()),
+        };
+        Ok(res)
+    }
+}
+
+impl TryFrom<&DataType> for String {
+    type Error = crate::Error;
+
+    fn try_from(value: &DataType) -> Result<Self, Self::Error> {
+        let res = match value {
+            DataType::String(s) => s.as_ref().to_owned(),
+            DataType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
+            DataType::Integer(i) => format!("{}", i),
+            DataType::Float(f) => format!("{}", f.0),
+            _ => return Err("type error".into()),
+        };
+        Ok(res)
+    }
+}
+
+impl TryFrom<&DataType> for f64 {
+    type Error = crate::Error;
+
+    fn try_from(value: &DataType) -> Result<Self, Self::Error> {
+        let res = match value {
+            DataType::String(s) => s.to_string().parse()?,
+            DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
+            DataType::Integer(i) => *i as _,
+            DataType::Float(f) => f.0,
+            _ => return Err("type error".into()),
+        };
+        Ok(res)
     }
 }

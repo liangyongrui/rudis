@@ -4,7 +4,7 @@ use std::{fmt, str, sync::Arc, vec};
 
 pub use frame::parse;
 
-use crate::{slot::data_type::SimpleType, Frame};
+use crate::{slot::data_type::DataType, Frame};
 
 /// Utility for parsing a command
 ///
@@ -65,11 +65,11 @@ impl Parse {
         }
     }
 
-    pub fn next_simple_type(&mut self) -> Result<SimpleType, ParseError> {
+    pub fn next_data(&mut self) -> Result<DataType, ParseError> {
         match self.next()? {
-            Frame::Integer(i) => Ok(SimpleType::Integer(i)),
-            Frame::Bulk(b) => Ok(SimpleType::Bytes(b.into())),
-            Frame::Simple(s) => Ok(SimpleType::String(s.into())),
+            Frame::Integer(i) => Ok(DataType::Integer(i)),
+            Frame::Bulk(b) => Ok(DataType::Bytes(b.into())),
+            Frame::Simple(s) => Ok(DataType::String(s.into())),
             frame => Err(format!("protocol error;  got {:?}", frame).into()),
         }
     }

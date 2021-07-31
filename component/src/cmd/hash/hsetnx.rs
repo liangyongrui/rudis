@@ -3,14 +3,14 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::DataType, Frame};
 
 /// https://redis.io/commands/hsetnx
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: Arc<[u8]>,
     pub field: String,
-    pub value: SimpleType,
+    pub value: DataType,
 }
 
 impl From<Hsetnx> for crate::slot::cmd::kvp::set::Req {

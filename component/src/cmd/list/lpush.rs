@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, slot::data_type::DataType, Frame};
 
 /// https://redis.io/commands/lpush
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Lpush {
     pub key: Arc<[u8]>,
-    pub values: Vec<SimpleType>,
+    pub values: Vec<DataType>,
 }
 
 impl From<Lpush> for crate::slot::cmd::deque::push::Req {

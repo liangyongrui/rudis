@@ -13,7 +13,7 @@ mod test {
 
     use super::*;
     use crate::{
-        slot::{data_type::SimpleType, dict::Dict, Read, Write},
+        slot::{data_type::DataType, dict::Dict, Read, Write},
         utils::options::NxXx,
     };
 
@@ -115,14 +115,14 @@ mod test {
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, SimpleType::Null);
+        assert_eq!(res, DataType::Null);
         let res = get::Req {
             key: b"hello2"[..].into(),
             field: "k1",
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, SimpleType::Null);
+        assert_eq!(res, DataType::Null);
 
         let res = exists::Req {
             key: b"hello"[..].into(),

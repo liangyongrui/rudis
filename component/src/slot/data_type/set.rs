@@ -3,9 +3,9 @@ use std::ops::{Deref, DerefMut};
 use rpds::HashTrieSetSync;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Set {
-    inner: HashTrieSetSync<String>,
+    pub inner: HashTrieSetSync<String>,
 }
 
 impl Set {

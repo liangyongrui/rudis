@@ -14,7 +14,7 @@ use nom::{
 };
 
 use crate::{
-    slot::data_type::SimpleType,
+    slot::data_type::DataType,
     utils::{u8_to_i64, u8_to_string},
 };
 
@@ -32,15 +32,15 @@ pub enum Frame {
     DoNothing,
 }
 
-impl From<&SimpleType> for Frame {
-    fn from(st: &SimpleType) -> Self {
+impl From<&DataType> for Frame {
+    fn from(st: &DataType) -> Self {
         match st {
-            SimpleType::Big => Frame::Null,
-            SimpleType::String(s) => Frame::Simple(s.to_string()),
-            SimpleType::Bytes(b) => Frame::Bulk(Arc::clone(b)),
-            SimpleType::Integer(i) => Frame::Integer(*i),
-            SimpleType::Float(f) => Frame::Simple(format!("{}", f.0)),
-            SimpleType::Null => Frame::Null,
+            DataType::String(s) => Frame::Simple(s.to_string()),
+            DataType::Bytes(b) => Frame::Bulk(Arc::clone(b)),
+            DataType::Integer(i) => Frame::Integer(*i),
+            DataType::Float(f) => Frame::Simple(format!("{}", f.0)),
+            DataType::Null => Frame::Null,
+            _ => Frame::Error("type not support".into()),
         }
     }
 }

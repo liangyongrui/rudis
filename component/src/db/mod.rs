@@ -16,7 +16,7 @@ use crate::{
     replica,
     slot::{
         cmd,
-        data_type::{self, SimpleType},
+        data_type::{self, DataType},
         dict::{self, Dict},
         Slot,
     },
@@ -98,10 +98,10 @@ impl Db {
 
 /// cmd
 impl Db {
-    pub fn get(&self, cmd: cmd::simple::get::Req) -> crate::Result<SimpleType> {
+    pub fn get(&self, cmd: cmd::simple::get::Req) -> crate::Result<DataType> {
         self.get_slot(cmd.key).get(cmd)
     }
-    pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<SimpleType> {
+    pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<DataType> {
         self.get_slot(&cmd.key).set(cmd)
     }
     pub fn del(&self, cmd: cmd::simple::del::Req) -> crate::Result<Option<dict::Value>> {
@@ -128,16 +128,16 @@ impl Db {
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req) -> crate::Result<bool> {
         self.get_slot(cmd.key).kvp_exists(cmd)
     }
-    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<SimpleType> {
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<DataType> {
         self.get_slot(cmd.key).kvp_get(cmd)
     }
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieMapSync<String, SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieMapSync<String, DataType>>> {
         self.get_slot(cmd.key).kvp_get_all(cmd)
     }
-    pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> crate::Result<Vec<SimpleType>> {
+    pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> crate::Result<Vec<DataType>> {
         self.get_slot(cmd.key).deque_range(cmd)
     }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req) -> crate::Result<usize> {
@@ -146,7 +146,7 @@ impl Db {
     pub fn deque_push(&self, cmd: cmd::deque::push::Req) -> crate::Result<cmd::deque::push::Resp> {
         self.get_slot(&cmd.key).deque_push(cmd)
     }
-    pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<SimpleType>> {
+    pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> crate::Result<Vec<DataType>> {
         self.get_slot(&cmd.key).deque_pop(cmd)
     }
     pub fn set_add(&self, cmd: cmd::set::add::Req) -> crate::Result<cmd::set::add::Resp> {

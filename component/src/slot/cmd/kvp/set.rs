@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd},
-        data_type::{CollectionType, DataType, Kvp, SimpleType},
+        data_type::{CollectionType, DataType, Kvp},
         dict::{self, Dict},
     },
     utils::options::NxXx,
@@ -16,7 +16,7 @@ use crate::{
 pub struct Req {
     pub key: Arc<[u8]>,
     // key-value list
-    pub entries: Vec<(String, SimpleType)>,
+    pub entries: Vec<(String, DataType)>,
     /// nx_xx 根据 kvp 的 key 决定
     pub nx_xx: NxXx,
 }

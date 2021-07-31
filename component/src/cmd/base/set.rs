@@ -6,7 +6,7 @@ use tracing::instrument;
 use crate::{
     cmd::{Parse, ParseError},
     db::Db,
-    slot::data_type::SimpleType,
+    slot::data_type::DataType,
     utils::options::{ExpiresAt, NxXx},
     Frame,
 };
@@ -19,7 +19,7 @@ pub struct Set {
     /// the lookup key
     pub key: Arc<[u8]>,
     /// the value to be stored
-    pub value: SimpleType,
+    pub value: DataType,
     // None not set, true nx, false xx
     pub nx_xx: NxXx,
     /// When to expire the key
@@ -53,7 +53,7 @@ impl Set {
         let key = parse.next_key()?;
 
         // Read the value to set. This is a required field.
-        let value = parse.next_simple_type()?;
+        let value = parse.next_data()?;
 
         // The expiration is optional. If nothing else follows, then it is
         // `None`.
