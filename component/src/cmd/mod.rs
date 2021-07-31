@@ -41,6 +41,7 @@ use crate::{Db, Frame, Parse, ParseError};
 pub enum Command {
     ReadCmd(ReadCmd),
     WriteCmd(WriteCmd),
+    SyncCmd,
     Unknown(Unknown),
 }
 #[derive(Debug)]
@@ -196,6 +197,7 @@ impl Command {
             }
             "expire" => Command::WriteCmd(WriteCmd::Expire(Expire::parse_frames(&mut parse)?)),
             "pexpire" => Command::WriteCmd(WriteCmd::Pexpire(Pexpire::parse_frames(&mut parse)?)),
+            "synccmd" => Command::SyncCmd,
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -225,6 +227,7 @@ impl Command {
             Command::ReadCmd(cmd) => cmd.apply(db),
             Command::WriteCmd(cmd) => cmd.apply(db),
             Command::Unknown(cmd) => cmd.apply(),
+            Command::SyncCmd => todo!(),
         }
     }
 }

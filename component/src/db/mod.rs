@@ -1,15 +1,19 @@
 use std::{
     collections::{hash_map::DefaultHasher, HashMap},
     hash::{Hash, Hasher},
-    sync::Arc,
+    sync::{atomic::AtomicBool, Arc},
 };
 
+use parking_lot::Mutex;
 use rpds::{HashTrieMapSync, HashTrieSetSync};
+use tokio::sync::broadcast;
 
 use crate::{
+    config::CONFIG,
     expire::{self, Expiration},
     forward::{self, Forward, Message},
     hdp::HdpStatus,
+    replica,
     slot::{
         cmd,
         data_type::{self, SimpleType},
@@ -25,8 +29,17 @@ pub struct BgTask {
     // 转发task
     pub forward_sender: flume::Sender<forward::Message>,
 }
+
+pub enum Role {
+    Master,
+    Replica(broadcast::Sender<()>),
+}
+
 pub struct Db {
     pub slots: HashMap<u16, Slot>,
+    pub read_only: AtomicBool,
+    // 为了优雅退出，这里的角色只是存了一下连接状态
+    pub role: Mutex<Role>,
 }
 
 const SIZE: u16 = 1024;
@@ -46,7 +59,16 @@ impl Db {
                 .entry(i)
                 .or_insert_with(|| Slot::new(i, bg_task.clone()));
         }
-        let db = Arc::new(Self { slots });
+        let db = Arc::new(Self {
+            slots,
+            read_only: AtomicBool::new(CONFIG.read_only),
+            role: Mutex::new(Role::Master),
+        });
+        if let Some(addr) = CONFIG.master_addr {
+            let db = db.clone();
+            tokio::task::spawn_blocking(move || replica::process(addr, db));
+        }
+
         expiration.listen(Arc::clone(&db));
         forward.listen();
         if let Some(hdp) = hdp {

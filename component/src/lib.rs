@@ -27,7 +27,6 @@ pub use connection::server;
 use parse::{Parse, ParseError};
 
 mod shutdown;
-use shutdown::Shutdown;
 
 /// Default port that a redis server listens on.
 ///

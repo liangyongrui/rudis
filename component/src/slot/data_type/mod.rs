@@ -72,7 +72,7 @@ impl TryFrom<&SimpleType> for f64 {
     fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
         let res = match value {
             SimpleType::String(s) => s.to_string().parse()?,
-            SimpleType::Bytes(b) => std::str::from_utf8(&b)?.parse()?,
+            SimpleType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
             SimpleType::Integer(i) => *i as _,
             SimpleType::Float(f) => f.0,
             SimpleType::Null => 0f64,

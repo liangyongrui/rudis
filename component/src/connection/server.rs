@@ -2,14 +2,12 @@ use std::{future::Future, sync::Arc};
 
 use tokio::{
     net::{TcpListener, TcpStream},
-    sync::{broadcast, mpsc, Semaphore},
+    sync::Semaphore,
     time::{self, Duration},
 };
-use tracing::{debug, error, info, instrument};
+use tracing::{error, info, instrument};
 
-use crate::{
-    cmd::Command, config::CONFIG, utils::other_type::Role, Connection, Db, Frame, Shutdown,
-};
+use crate::{cmd::Command, config::CONFIG, Connection, Db, Frame};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.
@@ -35,31 +33,6 @@ struct Listener {
     /// When handlers complete processing a connection, the permit is returned
     /// to the semaphore.
     limit_connections: Arc<Semaphore>,
-
-    /// Broadcasts a shutdown signal to all active connections.
-    ///
-    /// The initial `shutdown` trigger is provided by the `run` caller. The
-    /// server is responsible for gracefully shutting down active connections.
-    /// When a connection task is spawned, it is passed a broadcast receiver
-    /// handle. When a graceful shutdown is initiated, a `()` value is sent via
-    /// the broadcast::Sender. Each active connection receives it, reaches a
-    /// safe terminal state, and completes the task.
-    notify_shutdown: broadcast::Sender<()>,
-
-    /// Used as part of the graceful shutdown process to wait for client
-    /// connections to complete processing.
-    ///
-    /// Tokio channels are closed once all `Sender` handles go out of scope.
-    /// When a channel is closed, the receiver receives `None`. This is
-    /// leveraged to detect all connection handlers completing. When a
-    /// connection handler is initialized, it is assigned a clone of
-    /// `shutdown_complete_tx`. When the listener shuts down, it drops the
-    /// sender held by this `shutdown_complete_tx` field. Once all handler tasks
-    /// complete, all clones of the `Sender` are also dropped. This results in
-    /// `shutdown_complete_rx.recv()` completing with `None`. At this point, it
-    /// is safe to exit the server process.
-    shutdown_complete_rx: mpsc::Receiver<()>,
-    shutdown_complete_tx: mpsc::Sender<()>,
 }
 
 /// Per-connection handler. Reads requests from `connection` and applies the
@@ -87,19 +60,6 @@ struct Handler {
     /// the listener is waiting for connections to close, it will be notified of
     /// the newly available permit and resume accepting connections.
     limit_connections: Arc<Semaphore>,
-
-    /// Listen for shutdown notifications.
-    ///
-    /// A wrapper around the `broadcast::Receiver` paired with the sender in
-    /// `Listener`. The connection handler processes requests from the
-    /// connection until the peer disconnects **or** a shutdown notification is
-    /// received from `shutdown`. In the latter case, any in-flight work being
-    /// processed for the peer is continued until it reaches a safe state, at
-    /// which point the connection is terminated.
-    shutdown: Shutdown,
-
-    /// Not used directly. Instead, when `Handler` is dropped...?
-    _shutdown_complete: mpsc::Sender<()>,
 }
 
 /// Run the rcc server.
@@ -112,28 +72,11 @@ struct Handler {
 /// `tokio::signal::ctrl_c()` can be used as the `shutdown` argument. This will
 /// listen for a SIGINT signal.
 pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<()> {
-    // When the provided `shutdown` future completes, we must send a shutdown
-    // message to all active connections. We use a broadcast channel for this
-    // purpose. The call below ignores the receiver of the broadcast pair, and when
-    // a receiver is needed, the subscribe() method on the sender is used to create
-    // one.
-    let (notify_shutdown, _) = broadcast::channel(1);
-    let (shutdown_complete_tx, shutdown_complete_rx) = mpsc::channel(1);
-
-    // todo role
-    let _role = if CONFIG.replica {
-        Role::Replica(CONFIG.master_addr)
-    } else {
-        Role::Master(vec![])
-    };
     // Initialize the listener state
     let mut server = Listener {
         listener,
         db: Db::new().await,
         limit_connections: Arc::new(Semaphore::new(CONFIG.max_connections)),
-        notify_shutdown,
-        shutdown_complete_tx,
-        shutdown_complete_rx,
     };
 
     // Concurrently run the server and listen for the `shutdown` signal. The
@@ -172,26 +115,6 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
             info!("shutting down");
         }
     }
-    // Extract the `shutdown_complete` receiver and transmitter
-    // explicitly drop `shutdown_transmitter`. This is important, as the
-    // `.await` below would otherwise never complete.
-    let Listener {
-        mut shutdown_complete_rx,
-        shutdown_complete_tx,
-        notify_shutdown,
-        ..
-    } = server;
-    // When `notify_shutdown` is dropped, all tasks which have `subscribe`d will
-    // receive the shutdown signal and can exit
-    drop(notify_shutdown);
-    // Drop final `Sender` so the `Receiver` below can complete
-    drop(shutdown_complete_tx);
-
-    // Wait for all active connections to finish processing. As the `Sender`
-    // handle held by the listener has been dropped above, the only remaining
-    // `Sender` instances are held by connection handler tasks. When those drop,
-    // the `mpsc` channel will close and `recv()` will return `None`.
-    let _ = shutdown_complete_rx.recv().await;
 
     Ok(())
 }
@@ -250,13 +173,6 @@ impl Listener {
                 // semaphore. When the handler is done processing the
                 // connection, a permit is added back to the semaphore.
                 limit_connections: self.limit_connections.clone(),
-
-                // Receive shutdown notifications.
-                shutdown: Shutdown::new(self.notify_shutdown.subscribe()),
-
-                // Notifies the receiver half once all clones are
-                // dropped.
-                _shutdown_complete: self.shutdown_complete_tx.clone(),
             };
 
             // Spawn a new task to process the connections. Tokio tasks are like
@@ -318,19 +234,8 @@ impl Handler {
     /// it reaches a safe state, at which point it is terminated.
     #[instrument(skip(self))]
     async fn run(&mut self) -> crate::Result<()> {
-        // As long as the shutdown signal has not been received, try to read a
-        // new request frame.
-        while !self.shutdown.is_shutdown() {
-            // While reading a request frame, also listen for the shutdown
-            // signal.
-            let maybe_frame = tokio::select! {
-                res = self.connection.read_frame() => res?,
-                _ = self.shutdown.recv() => {
-                    // If a shutdown signal is received, return from `run`.
-                    // This will result in the task terminating.
-                    return Ok(());
-                }
-            };
+        loop {
+            let maybe_frame = self.connection.read_frame().await?;
 
             // If `None` is returned from `read_frame()` then the peer closed
             // the socket. There is no further work to do and the task can be
@@ -339,23 +244,10 @@ impl Handler {
                 Some(frame) => frame,
                 None => return Ok(()),
             };
-            debug!("read frame: {:?}", frame);
-
             // Convert the redis frame into a command struct. This returns an
             // error if the frame is not a valid redis command or it is an
             // unsupported command.
             let cmd = Command::from_frame(frame)?;
-
-            // Logs the `cmd` object. The syntax here is a shorthand provided by
-            // the `tracing` crate. It can be thought of as similar to:
-            //
-            // ```
-            // debug!(cmd = format!("{:?}", cmd));
-            // ```
-            //
-            // `tracing` provides structured logging, so information is "logged"
-            // as key-value pairs.
-            debug!(?cmd);
 
             // Perform the work needed to apply the command. This may mutate the
             // database state as a result.
@@ -369,11 +261,8 @@ impl Handler {
                 Ok(f) => f,
                 Err(e) => Frame::Error(e.to_string()),
             };
-            debug!(?res);
             self.connection.write_frame(&res).await?;
         }
-
-        Ok(())
     }
 }
 

@@ -27,7 +27,7 @@ pub struct Config {
     #[serde(default)]
     pub _log_level: String,
     #[serde(default)]
-    pub replica: bool,
+    pub read_only: bool,
     #[serde(default)]
     pub master_addr: Option<SocketAddr>,
     #[serde(default = "HdpConfig::default")]

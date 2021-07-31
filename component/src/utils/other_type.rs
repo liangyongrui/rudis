@@ -1,4 +1,4 @@
-use std::{net::SocketAddr, ops::Bound};
+use std::ops::Bound;
 
 use crate::slot::data_type::SimpleType;
 
@@ -6,12 +6,6 @@ use crate::slot::data_type::SimpleType;
 pub struct SimpleTypePair {
     pub key: SimpleType,
     pub value: SimpleType,
-}
-
-#[derive(Debug)]
-pub enum Role {
-    Master(Vec<SocketAddr>),
-    Replica(Option<SocketAddr>),
 }
 
 #[derive(Debug)]

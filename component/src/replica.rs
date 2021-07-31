@@ -10,7 +10,7 @@ use tokio::sync::{broadcast, Notify};
 
 use crate::{
     cmd::{SYNC_CMD, SYNC_CMD_PING, SYNC_SNAPSHOT},
-    db::Db,
+    db::{Db, Role},
     forward,
     shutdown::Shutdown,
     slot::dict::Dict,
@@ -18,16 +18,13 @@ use crate::{
 /// 发起主从复制
 ///
 /// warn: 这个函数是阻塞的
-/// 返回的 sender 被 drop 后， 连接就断开了
-pub fn process<A: ToSocketAddrs + Clone>(
-    addr: A,
-    db: Arc<Db>,
-) -> crate::Result<broadcast::Sender<()>> {
+pub fn process<A: ToSocketAddrs + Clone>(addr: A, db: Arc<Db>) -> crate::Result<()> {
     let notify = Arc::new(Notify::new());
     let res = process_cmd_forward(addr.clone(), db.clone(), notify.clone())?;
-    process_snapshot(addr, db)?;
+    process_snapshot(addr, db.clone())?;
     notify.notify_one();
-    Ok(res)
+    *db.role.lock() = Role::Replica(res);
+    Ok(())
 }
 
 /// 向主节点要快照
@@ -45,8 +42,7 @@ fn process_snapshot<A: ToSocketAddrs + Clone>(addr: A, db: Arc<Db>) -> crate::Re
 }
 
 /// 同步主节点的 write cmd
-///
-pub fn process_cmd_forward<A: ToSocketAddrs>(
+fn process_cmd_forward<A: ToSocketAddrs>(
     addr: A,
     db: Arc<Db>,
     notify: Arc<Notify>,

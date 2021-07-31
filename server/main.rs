@@ -21,7 +21,7 @@ pub fn main() -> component::Result<()> {
     let cli = Cli::from_args();
     let port = cli.port.as_deref().unwrap_or(DEFAULT_PORT);
     tokio::runtime::Builder::new_multi_thread()
-        // .worker_threads(4)    
+        .worker_threads(4)
         .enable_all()
         .build()
         .unwrap()

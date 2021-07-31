@@ -24,31 +24,37 @@ async fn _start_server() -> SocketAddr {
     addr
 }
 
-#[tokio::main]
-async fn main() {
-    // let addr = start_server().await;
-    let addr = "127.0.0.1:6379";
-    let mut streams = vec![];
-    let mut v = vec![];
-    for _ in 0i32..1600 {
-        let stream = TcpStream::connect(addr).await.unwrap();
-        streams.push(stream);
-    }
-    dbg!("connect");
-    for i in 0..1600 {
-        let stream = streams.pop().unwrap();
-        let h = tokio::spawn(async move {
-            // Establish a connection to the server
-            key_value_get_set(stream, i).await
+fn main() {
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(4)
+        .enable_all()
+        .build()
+        .unwrap()
+        .block_on(async {
+            // let addr = start_server().await;
+            let addr = "127.0.0.1:6379";
+            let mut streams = vec![];
+            let mut v = vec![];
+            for _ in 0i32..1600 {
+                let stream = TcpStream::connect(addr).await.unwrap();
+                streams.push(stream);
+            }
+            dbg!("connect");
+            for i in 0..1600 {
+                let stream = streams.pop().unwrap();
+                let h = tokio::spawn(async move {
+                    // Establish a connection to the server
+                    key_value_get_set(stream, i).await
+                });
+                v.push(h);
+            }
+            dbg!("ready");
+            let now = Instant::now();
+            for ele in v {
+                let _ = ele.await;
+            }
+            dbg!(Instant::now() - now);
         });
-        v.push(h);
-    }
-    dbg!("ready");
-    let now = Instant::now();
-    for ele in v {
-        let _ = ele.await;
-    }
-    dbg!(Instant::now() - now);
 }
 
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
