@@ -13,7 +13,7 @@ impl Slot {
         let mut dict = self.dict.write();
         if id > dict.last_write_op_id() {
             dict.write_id = id;
-            cmd.apply(id, dict.borrow_mut());
+            let _ = cmd.apply(id, dict.borrow_mut());
         }
     }
 

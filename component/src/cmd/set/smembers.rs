@@ -21,7 +21,9 @@ impl Smembers {
     #[instrument(skip(self, db))]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         if let Some(res) = db.set_get_all((&self).into())? {
-            Ok(Frame::Array(res.iter().map(|t| t.into()).collect()))
+            Ok(Frame::Array(
+                res.iter().map(|t| Frame::Simple(t.to_owned())).collect(),
+            ))
         } else {
             Ok(Frame::Array(vec![]))
         }

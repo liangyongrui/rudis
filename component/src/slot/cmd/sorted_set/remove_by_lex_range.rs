@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd},
-        data_type::{sorted_set::Node, CollectionType, DataType, SimpleType},
+        data_type::{sorted_set::Node, CollectionType, DataType},
         dict::Dict,
     },
     utils::BoundExt,
@@ -15,7 +15,7 @@ use crate::{
 pub struct Req {
     pub key: Arc<[u8]>,
     /// 这里的得分区间(小, 大)
-    pub range: (Bound<SimpleType>, Bound<SimpleType>),
+    pub range: (Bound<String>, Bound<String>),
     pub rev: bool,
 }
 

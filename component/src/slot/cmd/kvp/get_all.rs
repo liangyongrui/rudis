@@ -12,11 +12,11 @@ pub struct Req<'a> {
     pub key: &'a [u8],
 }
 
-impl<'a> Read<Option<HashTrieMapSync<SimpleType, SimpleType>>> for Req<'a> {
+impl<'a> Read<Option<HashTrieMapSync<String, SimpleType>>> for Req<'a> {
     fn apply(
         self,
         dict: &RwLock<Dict>,
-    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieMapSync<String, SimpleType>>> {
         if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Kvp(ref kvp)) = v.data {
                 return Ok(Some((*kvp).clone()));

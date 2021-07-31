@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/zrem
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Zrem {
     pub key: Arc<[u8]>,
-    pub members: Vec<SimpleType>,
+    pub members: Vec<String>,
 }
 
 impl From<Zrem> for crate::slot::cmd::sorted_set::remove::Req {

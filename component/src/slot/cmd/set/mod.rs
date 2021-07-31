@@ -5,7 +5,7 @@ pub mod remove;
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
+    use std::{borrow::BorrowMut, convert::TryInto};
 
     use parking_lot::RwLock;
 
@@ -37,14 +37,10 @@ mod test {
         assert_eq!(
             {
                 let mut v = res.into_iter().cloned().collect::<Vec<_>>();
-                v.sort_unstable();
+                v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
                 v
             },
-            {
-                let mut v = vec!["k1".into(), "k2".into(), "k3".into()];
-                v.sort_unstable();
-                v
-            }
+            vec!["k1".to_owned(), "k2".to_owned(), "k3".to_owned()]
         );
         let res = add::Req {
             key: b"hello"[..].into(),
@@ -69,25 +65,21 @@ mod test {
         assert_eq!(
             {
                 let mut v = res.into_iter().cloned().collect::<Vec<_>>();
-                v.sort_unstable();
+                v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
                 v
             },
-            {
-                let mut v = vec![
-                    "k1".into(),
-                    "k2".into(),
-                    "k3".into(),
-                    "k4".into(),
-                    "k5".into(),
-                ];
-                v.sort_unstable();
-                v
-            }
+            vec![
+                "k1".to_owned(),
+                "k2".to_owned(),
+                "k3".to_owned(),
+                "k4".to_owned(),
+                "k5".to_owned(),
+            ]
         );
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: &"k1".into(),
+            field: "k1",
         }
         .apply(&dict)
         .unwrap();
@@ -109,7 +101,7 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: &"k1".into(),
+            field: "k1",
         }
         .apply(&dict)
         .unwrap();

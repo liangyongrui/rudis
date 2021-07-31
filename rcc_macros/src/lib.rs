@@ -75,6 +75,18 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                             })) = args.first().unwrap()
                             {
                                 if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+                                    if *ident == "String" {
+                                        return quote! {
+                                            let mut #field_name = vec![parse.next_string()?];
+                                            loop {
+                                                match parse.next_string() {
+                                                    Ok(key) => #field_name.push(key),
+                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(err) => return Err(err.into()),
+                                                }
+                                            }
+                                        };
+                                    }
                                     if *ident == "Arc" {
                                         return quote! {
                                             let mut #field_name = vec![parse.next_key()?];
@@ -106,11 +118,11 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                     }
                                     if *ident == "SimpleTypePair" {
                                         return quote! {
-                                            let p_key = parse.next_simple_type()?;
+                                            let p_key = parse.next_string()?;
                                             let p_value = parse.next_simple_type()?;
                                             let mut #field_name = vec![SimpleTypePair {key: p_key, value: p_value}];
                                             loop {
-                                                match (parse.next_simple_type(), parse.next_simple_type()) {
+                                                match (parse.next_string(), parse.next_simple_type()) {
                                                     (Ok(key), Ok(value)) => #field_name.push(SimpleTypePair {key, value}),
                                                     (Err(crate::parse::ParseError::EndOfStream), Err(crate::parse::ParseError::EndOfStream)) => break,
                                                     (Ok(_), Err(crate::parse::ParseError::EndOfStream)) => return Err("参数格式不对".to_owned().into()),

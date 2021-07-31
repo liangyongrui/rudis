@@ -53,7 +53,12 @@ impl Parse {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
+    #[inline]
     pub fn next_key(&mut self) -> Result<Arc<[u8]>, ParseError> {
+        self.next_bulk()
+    }
+
+    pub fn next_bulk(&mut self) -> Result<Arc<[u8]>, ParseError> {
         match self.next()? {
             Frame::Bulk(b) => Ok(b),
             frame => Err(format!("protocol error; got {:?}", frame).into()),

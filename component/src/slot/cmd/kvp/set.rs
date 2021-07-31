@@ -16,7 +16,7 @@ use crate::{
 pub struct Req {
     pub key: Arc<[u8]>,
     // key-value list
-    pub entries: Vec<(SimpleType, SimpleType)>,
+    pub entries: Vec<(String, SimpleType)>,
     /// nx_xx 根据 kvp 的 key 决定
     pub nx_xx: NxXx,
 }

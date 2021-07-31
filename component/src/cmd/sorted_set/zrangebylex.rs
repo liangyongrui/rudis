@@ -69,7 +69,7 @@ impl Zrangebylex {
         let response = db.sorted_set_range_by_lex(cmd)?;
         let mut res = vec![];
         for n in response {
-            res.push((&n.key).into());
+            res.push(Frame::Simple(n.key));
         }
         Ok(Frame::Array(res))
     }

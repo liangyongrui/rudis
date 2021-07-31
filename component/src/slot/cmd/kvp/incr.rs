@@ -11,7 +11,7 @@ use crate::slot::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub field: SimpleType,
+    pub field: String,
     pub value: i64,
 }
 impl From<Req> for WriteCmd {
@@ -47,7 +47,7 @@ impl Write<i64> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
+    use std::{borrow::BorrowMut, convert::TryInto};
 
     use parking_lot::RwLock;
 
@@ -102,20 +102,16 @@ mod test {
             {
                 let mut v = res
                     .into_iter()
-                    .map(|kv| (kv.0.clone(), kv.1.clone()))
-                    .collect::<Vec<_>>();
-                v.sort_unstable();
+                    .map(|kv| (kv.0.try_into().unwrap(), kv.1.clone()))
+                    .collect::<Vec<(String, _)>>();
+                v.sort_unstable_by_key(|t| t.0.clone());
                 v
             },
-            {
-                let mut v = vec![
-                    ("k1".into(), 2.into()),
-                    ("k2".into(), "2".into()),
-                    ("k3".into(), 10.into()),
-                ];
-                v.sort_unstable();
-                v
-            }
+            vec![
+                ("k1".to_owned(), 2.into()),
+                ("k2".to_owned(), "2".into()),
+                ("k3".to_owned(), 10.into())
+            ]
         );
     }
 }

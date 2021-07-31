@@ -2,9 +2,9 @@ use std::ops::Bound;
 
 use crate::slot::data_type::SimpleType;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SimpleTypePair {
-    pub key: SimpleType,
+    pub key: String,
     pub value: SimpleType,
 }
 

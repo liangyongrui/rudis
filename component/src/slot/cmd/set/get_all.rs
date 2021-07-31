@@ -3,7 +3,7 @@ use rpds::HashTrieSetSync;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{CollectionType, DataType, SimpleType},
+    data_type::{CollectionType, DataType},
     dict::Dict,
 };
 
@@ -12,8 +12,8 @@ pub struct Req<'a> {
     pub key: &'a [u8],
 }
 
-impl<'a> Read<Option<HashTrieSetSync<SimpleType>>> for Req<'a> {
-    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+impl<'a> Read<Option<HashTrieSetSync<String>>> for Req<'a> {
+    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Option<HashTrieSetSync<String>>> {
         if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::CollectionType(CollectionType::Set(ref set)) = v.data {
                 return Ok(Some((*set).clone()));

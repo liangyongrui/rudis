@@ -9,7 +9,7 @@ use crate::{db::Db, slot::data_type::SimpleType, Frame};
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: Arc<[u8]>,
-    pub field: SimpleType,
+    pub field: String,
     pub value: SimpleType,
 }
 

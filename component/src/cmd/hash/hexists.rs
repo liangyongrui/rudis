@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, Frame};
 
 /// https://redis.io/commands/hexists
 #[derive(Debug, ParseFrames)]
 pub struct Hexists {
     pub key: Arc<[u8]>,
-    pub field: SimpleType,
+    pub field: String,
 }
 
 impl<'a> From<&'a Hexists> for crate::slot::cmd::kvp::exists::Req<'a> {

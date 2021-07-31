@@ -3,11 +3,7 @@ use std::{borrow::Borrow, ops::Bound};
 use parking_lot::RwLock;
 
 use crate::{
-    slot::{
-        cmd::Read,
-        data_type::{sorted_set::Node, SimpleType},
-        dict::Dict,
-    },
+    slot::{cmd::Read, data_type::sorted_set::Node, dict::Dict},
     utils::BoundExt,
 };
 
@@ -15,7 +11,7 @@ use crate::{
 pub struct Req<'a> {
     pub key: &'a [u8],
     /// 这里的得分区间(小, 大)
-    pub range: (Bound<SimpleType>, Bound<SimpleType>),
+    pub range: (Bound<String>, Bound<String>),
     //  (offset, count)
     ///  A negative `count` returns all elements from the offset.
     pub limit: Option<(usize, i64)>,

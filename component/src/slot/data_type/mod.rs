@@ -19,11 +19,19 @@ pub enum DataType {
     SimpleType(SimpleType),
     CollectionType(CollectionType),
 }
+/// 集合类型
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+pub enum CollectionType {
+    Kvp(Kvp),
+    Deque(Deque),
+    Set(Set),
+    SortedSet(SortedSet),
+}
 
 /// 简单类型
 ///
 /// When derived on enums, variants are ordered by their top-to-bottom discriminant order.
-#[derive(PartialOrd, Ord, PartialEq, Eq, Debug, Hash, Clone, Deserialize, Serialize)]
+#[derive(PartialEq, Eq, Debug, Hash, Clone, Deserialize, Serialize)]
 pub enum SimpleType {
     /// 占位，用于排序
     Big,
@@ -66,6 +74,22 @@ impl TryFrom<&SimpleType> for i64 {
     }
 }
 
+impl TryFrom<&SimpleType> for String {
+    type Error = crate::Error;
+
+    fn try_from(value: &SimpleType) -> Result<Self, Self::Error> {
+        let res = match value {
+            SimpleType::String(s) => s.as_ref().to_owned(),
+            SimpleType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
+            SimpleType::Integer(i) => format!("{}", i),
+            SimpleType::Float(f) => format!("{}", f.0),
+            SimpleType::Null => "null".to_owned(),
+            SimpleType::Big => "Big".to_owned(),
+        };
+        Ok(res)
+    }
+}
+
 impl TryFrom<&SimpleType> for f64 {
     type Error = crate::Error;
 
@@ -86,13 +110,4 @@ impl From<i64> for DataType {
     fn from(i: i64) -> Self {
         DataType::SimpleType(SimpleType::Integer(i))
     }
-}
-
-/// 集合类型
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub enum CollectionType {
-    Kvp(Kvp),
-    Deque(Deque),
-    Set(Set),
-    SortedSet(SortedSet),
 }

@@ -9,7 +9,7 @@ use crate::slot::{
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    pub field: &'a SimpleType,
+    pub field: &'a str,
 }
 
 impl<'a> Read<SimpleType> for Req<'a> {

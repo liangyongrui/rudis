@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/sismember
 #[derive(Debug, ParseFrames)]
 pub struct Sismember {
     pub key: Arc<[u8]>,
-    pub value: SimpleType,
+    pub value: String,
 }
 
 impl<'a> From<&'a Sismember> for crate::slot::cmd::set::exists::Req<'a> {

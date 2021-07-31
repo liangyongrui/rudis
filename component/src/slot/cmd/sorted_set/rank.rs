@@ -5,14 +5,14 @@ use rpds::RedBlackTreeSetSync;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{sorted_set::Node, CollectionType, DataType, SimpleType},
+    data_type::{sorted_set::Node, CollectionType, DataType},
     dict::Dict,
 };
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    pub member: &'a SimpleType,
+    pub member: &'a str,
     /// true 大的在前， false 小的在前
     pub rev: bool,
 }
@@ -24,14 +24,14 @@ impl Read<Option<usize>> for Req<'_> {
             if self.rev {
                 for n in value.iter().rev() {
                     ans += 1;
-                    if &n.key == self.member {
+                    if n.key == self.member {
                         return Ok(Some(ans));
                     }
                 }
             } else {
                 for n in value.iter() {
                     ans += 1;
-                    if &n.key == self.member {
+                    if n.key == self.member {
                         return Ok(Some(ans));
                     }
                 }

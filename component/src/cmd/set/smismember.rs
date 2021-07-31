@@ -3,12 +3,12 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{Db, Frame};
 /// https://redis.io/commands/smismember
 #[derive(Debug, ParseFrames)]
 pub struct Smismember {
     pub key: Arc<[u8]>,
-    pub values: Vec<SimpleType>,
+    pub values: Vec<String>,
 }
 
 impl<'a> From<&'a Smismember> for crate::slot::cmd::set::get_all::Req<'a> {

@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/sadd
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Sadd {
     pub key: Arc<[u8]>,
-    pub values: Vec<SimpleType>,
+    pub values: Vec<String>,
 }
 
 impl From<Sadd> for crate::slot::cmd::set::add::Req {

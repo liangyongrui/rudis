@@ -4,14 +4,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{CollectionType, DataType, Set, SimpleType},
+    data_type::{CollectionType, DataType, Set},
     dict::{self, Dict},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub members: Vec<SimpleType>,
+    pub members: Vec<String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

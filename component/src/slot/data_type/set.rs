@@ -3,11 +3,9 @@ use std::ops::{Deref, DerefMut};
 use rpds::HashTrieSetSync;
 use serde::{Deserialize, Serialize};
 
-use crate::slot::data_type::SimpleType;
-
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Set {
-    inner: HashTrieSetSync<SimpleType>,
+    inner: HashTrieSetSync<String>,
 }
 
 impl Set {
@@ -24,7 +22,7 @@ impl Default for Set {
     }
 }
 impl Deref for Set {
-    type Target = HashTrieSetSync<SimpleType>;
+    type Target = HashTrieSetSync<String>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

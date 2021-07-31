@@ -134,7 +134,7 @@ impl Db {
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieMapSync<String, SimpleType>>> {
         self.get_slot(cmd.key).kvp_get_all(cmd)
     }
     pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> crate::Result<Vec<SimpleType>> {
@@ -158,7 +158,7 @@ impl Db {
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieSetSync<String>>> {
         self.get_slot(cmd.key).set_get_all(cmd)
     }
     pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {

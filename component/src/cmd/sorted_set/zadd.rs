@@ -60,22 +60,19 @@ impl Zadd {
                 t => break t,
             }
         };
-        let member = parse.next_simple_type()?;
+        let member = parse.next_string()?;
         let mut nodes = vec![Node::new(member, (&score).try_into()?)];
-        let mut values = vec![];
         loop {
-            match parse.next_simple_type() {
-                Ok(s) => values.push(s),
-                Err(ParseError::EndOfStream) => break,
-                Err(err) => return Err(err.into()),
-            };
+            nodes.push(Node::new(
+                parse.next_string()?,
+                match parse.next_simple_type() {
+                    Ok(s) => (&s).try_into()?,
+                    Err(ParseError::EndOfStream) => break,
+                    Err(err) => return Err(err.into()),
+                },
+            ));
         }
-        if values.len() % 2 != 0 {
-            return Err(format!("参数数量错误: {}", values.len()).into());
-        }
-        for p in values.windows(2) {
-            nodes.push(Node::new(p[1].to_owned(), (&p[0]).try_into()?));
-        }
+
         Ok(Self {
             key,
             nx_xx,

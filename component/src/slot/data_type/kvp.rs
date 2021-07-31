@@ -7,7 +7,7 @@ use crate::slot::data_type::SimpleType;
 /// key value pairs
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Kvp {
-    inner: HashTrieMapSync<SimpleType, SimpleType>,
+    inner: HashTrieMapSync<String, SimpleType>,
 }
 
 impl Kvp {
@@ -24,7 +24,7 @@ impl Default for Kvp {
     }
 }
 impl Deref for Kvp {
-    type Target = HashTrieMapSync<SimpleType, SimpleType>;
+    type Target = HashTrieMapSync<String, SimpleType>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

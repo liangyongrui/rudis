@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::SimpleType, Frame};
+use crate::{db::Db, Frame};
 
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
     pub key: Arc<[u8]>,
-    pub field: SimpleType,
+    pub field: String,
 }
 
 impl<'a> From<&'a Hget> for crate::slot::cmd::kvp::get::Req<'a> {

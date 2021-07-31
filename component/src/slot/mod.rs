@@ -216,7 +216,7 @@ impl Slot {
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieMapSync<SimpleType, SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieMapSync<String, SimpleType>>> {
         cmd.apply(&self.dict)
     }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> crate::Result<usize> {
@@ -231,7 +231,7 @@ impl Slot {
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieSetSync<SimpleType>>> {
+    ) -> crate::Result<Option<HashTrieSetSync<String>>> {
         cmd.apply(&self.dict)
     }
     pub fn sorted_set_range_by_lex(

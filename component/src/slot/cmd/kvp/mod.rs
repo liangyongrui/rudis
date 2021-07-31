@@ -7,7 +7,7 @@ pub mod set;
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
+    use std::{borrow::BorrowMut, convert::TryInto};
 
     use parking_lot::RwLock;
 
@@ -50,18 +50,14 @@ mod test {
                     .into_iter()
                     .map(|kv| (kv.0.clone(), kv.1.clone()))
                     .collect::<Vec<_>>();
-                v.sort_unstable();
+                v.sort_unstable_by_key::<String, _>(|t| (&t.0).try_into().unwrap());
                 v
             },
-            {
-                let mut v = vec![
-                    ("k1".into(), "v1".into()),
-                    ("k2".into(), "v2".into()),
-                    ("k3".into(), "v3".into()),
-                ];
-                v.sort_unstable();
-                v
-            }
+            vec![
+                ("k1".into(), "v1".into()),
+                ("k2".into(), "v2".into()),
+                ("k3".into(), "v3".into()),
+            ]
         );
         let res = set::Req {
             key: b"hello"[..].into(),
@@ -94,39 +90,35 @@ mod test {
                     .into_iter()
                     .map(|kv| (kv.0.clone(), kv.1.clone()))
                     .collect::<Vec<_>>();
-                v.sort_unstable();
+                v.sort_unstable_by_key::<String, _>(|t| (&t.0).try_into().unwrap());
                 v
             },
-            {
-                let mut v = vec![
-                    ("k1".into(), "v1".into()),
-                    ("k2".into(), "v2".into()),
-                    ("k3".into(), "v3".into()),
-                    ("k4".into(), "v4".into()),
-                    ("k5".into(), "v5".into()),
-                ];
-                v.sort_unstable();
-                v
-            }
+            vec![
+                ("k1".into(), "v1".into()),
+                ("k2".into(), "v2".into()),
+                ("k3".into(), "v3".into()),
+                ("k4".into(), "v4".into()),
+                ("k5".into(), "v5".into()),
+            ]
         );
 
         let res = get::Req {
             key: b"hello"[..].into(),
-            field: &"k1".into(),
+            field: "k1",
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, "v1".into());
         let res = get::Req {
             key: b"hello"[..].into(),
-            field: &"k6".into(),
+            field: "k6",
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, SimpleType::Null);
         let res = get::Req {
             key: b"hello2"[..].into(),
-            field: &"k1".into(),
+            field: "k1",
         }
         .apply(&dict)
         .unwrap();
@@ -134,7 +126,7 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: &"k1".into(),
+            field: "k1",
         }
         .apply(&dict)
         .unwrap();
@@ -156,7 +148,7 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: &"k1".into(),
+            field: "k1",
         }
         .apply(&dict)
         .unwrap();

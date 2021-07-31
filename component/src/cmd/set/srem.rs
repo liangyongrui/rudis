@@ -3,13 +3,13 @@ use std::sync::Arc;
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{slot::data_type::SimpleType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/srem
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Srem {
     pub key: Arc<[u8]>,
-    pub values: Vec<SimpleType>,
+    pub values: Vec<String>,
 }
 
 impl From<Srem> for crate::slot::cmd::set::remove::Req {

@@ -5,7 +5,7 @@ use rpds::RedBlackTreeSetSync;
 use crate::{
     slot::{
         data_type::{sorted_set::Node, CollectionType, DataType, Float},
-        dict, SimpleType,
+        dict,
     },
     utils::BoundExt,
 };
@@ -66,11 +66,11 @@ pub(self) fn bigger_range(range: (Bound<Float>, Bound<Float>)) -> (Bound<Node>, 
     (
         range.0.map(|f| Node {
             score: f,
-            key: SimpleType::Null,
+            key: "".to_owned(),
         }),
         range.1.map(|f| Node {
-            score: f,
-            key: SimpleType::Big,
+            score: Float(f.0 + f64::EPSILON),
+            key: "".to_owned(),
         }),
     )
 }
