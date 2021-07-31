@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd},
-        data_type::{CollectionType, DataType, Deque},
+        data_type::{DataType, Deque},
         dict::{self, Dict},
     },
     utils::options::NxXx,
@@ -35,7 +35,7 @@ impl From<Req> for WriteCmd {
 impl Write<Resp> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
-            if let DataType::CollectionType(CollectionType::Deque(ref mut deque)) = v.data {
+            if let DataType::Deque(ref mut deque) = v.data {
                 let old_len = deque.len();
                 if self.nx_xx.is_nx() {
                     return Ok(Resp {
@@ -79,7 +79,7 @@ impl Write<Resp> for Req {
                 self.key,
                 dict::Value {
                     id,
-                    data: DataType::CollectionType(CollectionType::Deque(deque)),
+                    data: DataType::Deque(deque),
                     expires_at: None,
                 },
             );

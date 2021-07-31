@@ -7,13 +7,13 @@ use crate::slot::data_type::DataType;
 /// key value pairs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Kvp {
-    pub inner: HashTrieMapSync<String, DataType>,
+    pub inner: Box<HashTrieMapSync<String, DataType>>,
 }
 
 impl Kvp {
     pub fn new() -> Self {
         Self {
-            inner: HashTrieMapSync::new_sync(),
+            inner: Box::new(HashTrieMapSync::new_sync()),
         }
     }
 }

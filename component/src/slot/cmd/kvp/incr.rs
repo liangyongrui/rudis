@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{CollectionType, DataType, Kvp},
+    data_type::{DataType, Kvp},
     dict::{self, Dict},
 };
 
@@ -26,10 +26,10 @@ impl Write<i64> for Req {
         let v = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             expires_at: None,
             id,
-            data: DataType::CollectionType(CollectionType::Kvp(Kvp::new())),
+            data: DataType::Kvp(Kvp::new()),
         });
         match v.data {
-            crate::slot::data_type::DataType::CollectionType(CollectionType::Kvp(ref mut kvp)) => {
+            crate::slot::data_type::DataType::Kvp(ref mut kvp) => {
                 if let Some(s) = kvp.get_mut(&self.field) {
                     let old: i64 = (&*s).try_into()?;
                     let new = old + self.value;

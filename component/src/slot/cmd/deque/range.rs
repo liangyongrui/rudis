@@ -2,11 +2,7 @@ use std::vec;
 
 use parking_lot::RwLock;
 
-use crate::slot::{
-    cmd::Read,
-    data_type::{CollectionType, DataType},
-    dict::Dict,
-};
+use crate::slot::{cmd::Read, data_type::DataType, dict::Dict};
 
 /// These offsets can also be negative numbers indicating offsets starting at the end of the list.
 /// For example, -1 is the last element of the list, -2 the penultimate, and so on.
@@ -24,7 +20,7 @@ pub struct Req<'a> {
 impl<'a> Read<Vec<DataType>> for Req<'a> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::CollectionType(CollectionType::Deque(ref deque)) = v.data {
+            if let DataType::Deque(ref deque) = v.data {
                 let (b, e) = deque.shape(self.start, self.stop);
                 return Ok(deque.range(b..e).cloned().collect());
             } else {

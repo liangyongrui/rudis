@@ -1,10 +1,6 @@
 use parking_lot::RwLock;
 
-use crate::slot::{
-    cmd::Read,
-    data_type::{CollectionType, DataType},
-    dict::Dict,
-};
+use crate::slot::{cmd::Read, data_type::DataType, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
@@ -14,7 +10,7 @@ pub struct Req<'a> {
 impl<'a> Read<usize> for Req<'a> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<usize> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::CollectionType(CollectionType::Deque(ref deque)) = v.data {
+            if let DataType::Deque(ref deque) = v.data {
                 return Ok(deque.len());
             } else {
                 return Err("error type".into());

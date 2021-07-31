@@ -5,13 +5,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Set {
-    pub inner: HashTrieSetSync<String>,
+    pub inner: Box<HashTrieSetSync<String>>,
 }
 
 impl Set {
     pub fn new() -> Self {
         Self {
-            inner: HashTrieSetSync::new_sync(),
+            inner: Box::new(HashTrieSetSync::new_sync()),
         }
     }
 }

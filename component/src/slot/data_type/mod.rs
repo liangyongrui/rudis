@@ -21,11 +21,6 @@ pub enum DataType {
     Bytes(Arc<[u8]>),
     Integer(i64),
     Float(Float),
-    CollectionType(CollectionType),
-}
-/// 集合类型
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum CollectionType {
     Kvp(Kvp),
     Deque(Deque),
     Set(Set),

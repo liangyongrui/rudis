@@ -1,11 +1,7 @@
 use parking_lot::RwLock;
 use rpds::HashTrieMapSync;
 
-use crate::slot::{
-    cmd::Read,
-    data_type::{CollectionType, DataType},
-    dict::Dict,
-};
+use crate::slot::{cmd::Read, data_type::DataType, dict::Dict};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
@@ -18,8 +14,8 @@ impl<'a> Read<Option<HashTrieMapSync<String, DataType>>> for Req<'a> {
         dict: &RwLock<Dict>,
     ) -> crate::Result<Option<HashTrieMapSync<String, DataType>>> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::CollectionType(CollectionType::Kvp(ref kvp)) = v.data {
-                return Ok(Some(kvp.inner.clone()));
+            if let DataType::Kvp(ref kvp) = v.data {
+                return Ok(Some(*kvp.inner.clone()));
             } else {
                 return Err("error type".into());
             }

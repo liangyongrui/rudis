@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     slot::{
         cmd::{Write, WriteCmd},
-        data_type::{CollectionType, DataType, Kvp},
+        data_type::{DataType, Kvp},
         dict::{self, Dict},
     },
     utils::options::NxXx,
@@ -36,10 +36,10 @@ impl Write<Resp> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
-            data: DataType::CollectionType(CollectionType::Kvp(Kvp::new())),
+            data: DataType::Kvp(Kvp::new()),
             expires_at: None,
         });
-        if let DataType::CollectionType(CollectionType::Kvp(ref mut kvp)) = old.data {
+        if let DataType::Kvp(ref mut kvp) = old.data {
             let old_len = kvp.size();
             match self.nx_xx {
                 NxXx::Nx => {

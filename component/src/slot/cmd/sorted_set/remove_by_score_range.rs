@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{sorted_set::Node, CollectionType, DataType, Float},
+    data_type::{sorted_set::Node, DataType, Float},
     dict::Dict,
 };
 
@@ -27,9 +27,7 @@ impl From<Req> for WriteCmd {
 impl Write<Vec<Node>> for Req {
     fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<Node>> {
         if let Some(old) = dict.d_get_mut(&self.key) {
-            if let DataType::CollectionType(CollectionType::SortedSet(ref mut sorted_set)) =
-                old.data
-            {
+            if let DataType::SortedSet(ref mut sorted_set) = old.data {
                 let mut res = vec![];
                 let bigger_range = super::bigger_range(self.range);
                 let value_clone = sorted_set.value.clone();

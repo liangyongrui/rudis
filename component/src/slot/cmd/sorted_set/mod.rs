@@ -4,7 +4,7 @@ use rpds::RedBlackTreeSetSync;
 
 use crate::{
     slot::{
-        data_type::{sorted_set::Node, CollectionType, DataType, Float},
+        data_type::{sorted_set::Node, DataType, Float},
         dict,
     },
     utils::BoundExt,
@@ -25,8 +25,8 @@ pub(self) fn get_value(
     dict: &dict::Dict,
 ) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
     if let Some(v) = dict.d_get(key) {
-        if let DataType::CollectionType(CollectionType::SortedSet(ref sorted_set)) = v.data {
-            Ok(Some(sorted_set.value.clone()))
+        if let DataType::SortedSet(ref sorted_set) = v.data {
+            Ok(Some(*sorted_set.value.clone()))
         } else {
             Err("error type".into())
         }

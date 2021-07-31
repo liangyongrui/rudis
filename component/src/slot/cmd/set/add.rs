@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{CollectionType, DataType, Set},
+    data_type::{DataType, Set},
     dict::{self, Dict},
 };
 
@@ -30,10 +30,10 @@ impl Write<Resp> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
-            data: DataType::CollectionType(CollectionType::Set(Set::new())),
+            data: DataType::Set(Set::new()),
             expires_at: None,
         });
-        if let DataType::CollectionType(CollectionType::Set(ref mut set)) = old.data {
+        if let DataType::Set(ref mut set) = old.data {
             let old_len = set.size();
             for m in self.members {
                 set.insert_mut(m);

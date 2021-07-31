@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::{
     cmd::{Write, WriteCmd},
-    data_type::{CollectionType, DataType},
+    data_type::DataType,
     dict::Dict,
 };
 
@@ -30,7 +30,7 @@ impl From<Req> for WriteCmd {
 impl Write<Resp> for Req {
     fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
-            if let DataType::CollectionType(CollectionType::Kvp(ref mut kvp)) = v.data {
+            if let DataType::Kvp(ref mut kvp) = v.data {
                 let old_len = kvp.size();
                 for f in self.fields {
                     kvp.remove_mut(&f);

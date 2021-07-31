@@ -9,13 +9,13 @@ use crate::slot::data_type::DataType;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Deque {
-    inner: VecDeque<DataType>,
+    inner: Box<VecDeque<DataType>>,
 }
 
 impl Deque {
     pub fn new() -> Self {
         Deque {
-            inner: VecDeque::new(),
+            inner: Box::new(VecDeque::new()),
         }
     }
 

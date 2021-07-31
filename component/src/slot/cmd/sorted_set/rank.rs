@@ -5,7 +5,7 @@ use rpds::RedBlackTreeSetSync;
 
 use crate::slot::{
     cmd::Read,
-    data_type::{sorted_set::Node, CollectionType, DataType},
+    data_type::{sorted_set::Node, DataType},
     dict::Dict,
 };
 
@@ -43,11 +43,11 @@ impl Read<Option<usize>> for Req<'_> {
 impl Req<'_> {
     fn apply_in_lock(&self, dict: &Dict) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
         if let Some(v) = dict.d_get(self.key) {
-            if let DataType::CollectionType(CollectionType::SortedSet(ref sorted_set)) = v.data {
+            if let DataType::SortedSet(ref sorted_set) = v.data {
                 if !sorted_set.hash.contains_key(self.member) {
                     Ok(None)
                 } else {
-                    Ok(Some(sorted_set.value.clone()))
+                    Ok(Some(*sorted_set.value.clone()))
                 }
             } else {
                 Err("error type".into())
