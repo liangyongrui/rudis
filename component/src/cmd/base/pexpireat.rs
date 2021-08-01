@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, NaiveDateTime, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
@@ -14,17 +13,9 @@ pub struct Pexpireat {
 }
 impl From<Pexpireat> for crate::slot::cmd::simple::expire::Req {
     fn from(old: Pexpireat) -> Self {
-        // Create a NaiveDateTime from the timestamp
-        let naive = NaiveDateTime::from_timestamp(
-            (old.ms_timestamp / 1000) as _,
-            ((old.ms_timestamp % 1000) as u32) * 1000000,
-        );
-
-        // Create a normal DateTime from the NaiveDateTime
-        let datetime: DateTime<Utc> = DateTime::from_utc(naive, Utc);
         Self {
             key: old.key,
-            expires_at: Some(datetime),
+            expires_at: old.ms_timestamp,
         }
     }
 }

@@ -1,10 +1,17 @@
 use std::sync::Arc;
 
-use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, slot::data_type::DataType, utils::options::NxXx, Frame};
+use crate::{
+    db::Db,
+    slot::data_type::DataType,
+    utils::{
+        now_timestamp_ms,
+        options::{ExpiresAt, NxXx},
+    },
+    Frame,
+};
 /// https://redis.io/commands/setex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Setex {
@@ -18,9 +25,7 @@ impl From<Setex> for crate::slot::cmd::simple::set::Req {
         Self {
             key: old.key,
             value: old.value,
-            expires_at: Utc::now()
-                .checked_add_signed(Duration::seconds(old.seconds as _))
-                .into(),
+            expires_at: ExpiresAt::Specific(now_timestamp_ms() + old.seconds * 1000),
             nx_xx: NxXx::None,
         }
     }

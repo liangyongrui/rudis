@@ -1,5 +1,4 @@
 use bytes::Bytes;
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
@@ -50,18 +49,8 @@ pub enum GtLt {
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum ExpiresAt {
-    // 指定时间
-    Specific(DateTime<Utc>),
+    // 指定时间, 0 不会过期
+    Specific(u64),
     // 上一次时间
     Last,
-    // 不会过期
-    None,
-}
-impl From<Option<DateTime<Utc>>> for ExpiresAt {
-    fn from(f: Option<DateTime<Utc>>) -> Self {
-        match f {
-            Some(ea) => Self::Specific(ea),
-            None => Self::None,
-        }
-    }
 }

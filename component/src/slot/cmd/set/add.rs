@@ -31,7 +31,7 @@ impl Write<Resp> for Req {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
             data: DataType::Set(Set::new()),
-            expires_at: None,
+            expires_at: 0,
         });
         if let DataType::Set(ref mut set) = old.data {
             let old_len = set.size();

@@ -35,12 +35,12 @@ fn main() {
             let addr = "127.0.0.1:6379";
             let mut streams = vec![];
             let mut v = vec![];
-            for _ in 0i32..1600 {
+            for _ in 0i32..2000 {
                 let stream = TcpStream::connect(addr).await.unwrap();
                 streams.push(stream);
             }
             dbg!("connect");
-            for i in 0..1500 {
+            for i in 0..2000 {
                 let stream = streams.pop().unwrap();
                 let h = tokio::spawn(async move {
                     // Establish a connection to the server

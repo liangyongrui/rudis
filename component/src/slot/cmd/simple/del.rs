@@ -25,14 +25,16 @@ impl ExpiresWrite<Option<Value>> for Req {
 
             let expires_status = res
                 .as_ref()
-                .and_then(|v| {
-                    v.expires_at.map(|e| {
+                .map(|v| {
+                    if v.expires_at > 0 {
                         ExpiresStatus::Update(ExpiresStatusUpdate {
                             key: self.key,
-                            before: Some(e),
-                            new: None,
+                            before: v.expires_at,
+                            new: 0,
                         })
-                    })
+                    } else {
+                        ExpiresStatus::None
+                    }
                 })
                 .unwrap_or(ExpiresStatus::None);
 
@@ -53,7 +55,6 @@ impl ExpiresWrite<Option<Value>> for Req {
 mod test {
     use std::borrow::BorrowMut;
 
-    use chrono::{Duration, Utc};
     use parking_lot::RwLock;
 
     use super::*;
@@ -63,7 +64,10 @@ mod test {
             data_type::DataType,
             dict::Dict,
         },
-        utils::options::{ExpiresAt, NxXx},
+        utils::{
+            now_timestamp_ms,
+            options::{ExpiresAt, NxXx},
+        },
     };
 
     #[test]
@@ -76,7 +80,7 @@ mod test {
         .unwrap()
         .payload;
         assert_eq!(res, None);
-        let date_time = Utc::now() + Duration::seconds(1);
+        let date_time = now_timestamp_ms() + 1000;
         let cmd = set::Req {
             key: b"hello"[..].into(),
             value: "world".into(),
@@ -90,8 +94,8 @@ mod test {
                 payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
-                    before: None,
-                    new: Some(date_time),
+                    before: 0,
+                    new: date_time,
                 })
             }
         );

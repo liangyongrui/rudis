@@ -53,13 +53,12 @@ impl Slot {
         let expires_add = dict
             .inner
             .iter()
-            .filter_map(|(k, v)| {
-                v.expires_at.map(|expires_at| expire::Entry {
-                    expires_at,
-                    slot: self.slot_id,
-                    id: v.id,
-                    key: k.clone(),
-                })
+            .filter(|(_, v)| v.expires_at > 0)
+            .map(|(k, v)| expire::Entry {
+                expires_at: v.expires_at,
+                slot: self.slot_id,
+                id: v.id,
+                key: k.clone(),
             })
             .collect();
         *self.dict.write() = dict;

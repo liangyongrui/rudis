@@ -31,7 +31,7 @@ impl Write<i64> for Req {
             dict.insert(
                 self.key,
                 dict::Value {
-                    expires_at: None,
+                    expires_at: 0,
                     id,
                     data: self.value.into(),
                 },

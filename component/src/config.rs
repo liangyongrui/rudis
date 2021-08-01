@@ -38,7 +38,7 @@ pub struct Config {
 }
 
 const fn max_connections() -> usize {
-    2000
+    3000
 }
 /// hdp 相关 配置
 #[serde_as]

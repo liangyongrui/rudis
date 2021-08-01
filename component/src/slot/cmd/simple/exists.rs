@@ -17,7 +17,6 @@ impl<'a> Read<bool> for Req<'a> {
 mod test {
     use std::borrow::BorrowMut;
 
-    use chrono::{Duration, Utc};
     use parking_lot::RwLock;
 
     use crate::{
@@ -39,7 +38,7 @@ mod test {
         .apply(&dict)
         .unwrap();
         assert!(!res);
-        let date_time = Utc::now() + Duration::seconds(1);
+        let date_time = crate::utils::now_timestamp_ms() + 1000;
         let cmd = set::Req {
             key: b"hello"[..].into(),
             value: "world".into(),
@@ -53,8 +52,8 @@ mod test {
                 payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
-                    before: None,
-                    new: Some(date_time)
+                    before: 0,
+                    new: date_time
                 })
             }
         );

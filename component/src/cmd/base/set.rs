@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, Duration, NaiveDateTime, Utc};
 use tracing::instrument;
 
 use crate::{
     cmd::{Parse, ParseError},
     db::Db,
     slot::data_type::DataType,
-    utils::options::{ExpiresAt, NxXx},
+    utils::{
+        now_timestamp_ms,
+        options::{ExpiresAt, NxXx},
+    },
     Frame,
 };
 
@@ -25,7 +27,7 @@ pub struct Set {
     /// When to expire the key
     ///
     /// unix timestatmp ms
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: u64,
     pub keepttl: bool,
     pub get: bool,
 }
@@ -38,7 +40,7 @@ impl From<Set> for crate::slot::cmd::simple::set::Req {
             expires_at: if old.keepttl {
                 ExpiresAt::Last
             } else {
-                old.expires_at.into()
+                ExpiresAt::Specific(old.expires_at)
             },
             nx_xx: old.nx_xx,
         }
@@ -57,7 +59,7 @@ impl Set {
 
         // The expiration is optional. If nothing else follows, then it is
         // `None`.
-        let mut expires_at = None;
+        let mut expires_at = 0;
         let mut nx_xx = NxXx::None;
         let mut keepttl = false;
         let mut get = false;
@@ -78,38 +80,32 @@ impl Set {
                         nx_xx = NxXx::Xx
                     }
                     "EX" => {
-                        if expires_at.is_some() {
+                        if expires_at > 0 {
                             return Err("expiration already set".into());
                         }
                         let secs = parse.next_int()?;
-                        expires_at = Utc::now().checked_add_signed(Duration::seconds(secs));
+                        expires_at = now_timestamp_ms() + secs as u64 * 1000;
                     }
                     "PX" => {
-                        if expires_at.is_some() {
+                        if expires_at > 0 {
                             return Err("expiration already set".into());
                         }
                         let ms = parse.next_int()?;
-                        expires_at = Utc::now().checked_add_signed(Duration::milliseconds(ms));
+                        expires_at = now_timestamp_ms() + ms as u64;
                     }
                     "EXAT" => {
-                        if expires_at.is_some() {
+                        if expires_at > 0 {
                             return Err("expiration already set".into());
                         }
                         let secs_timestamp = parse.next_int()?;
-                        expires_at = Some(DateTime::<Utc>::from_utc(
-                            NaiveDateTime::from_timestamp(secs_timestamp, 0),
-                            Utc,
-                        ));
+                        expires_at = secs_timestamp as u64 * 1000;
                     }
                     "PXAT" => {
-                        if expires_at.is_some() {
+                        if expires_at > 0 {
                             return Err("expiration already set".into());
                         }
                         let ms_timestamp = parse.next_int()?;
-                        expires_at = Some(DateTime::<Utc>::from_utc(
-                            NaiveDateTime::from_timestamp(ms_timestamp / 1000, 0),
-                            Utc,
-                        ));
+                        expires_at = ms_timestamp as _;
                     }
                     "KEEPTTL" => {
                         keepttl = true;

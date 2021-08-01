@@ -4,8 +4,9 @@ use std::{
     sync::Arc,
 };
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+
+use crate::utils::now_timestamp_ms;
 
 use super::data_type::DataType;
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -18,8 +19,9 @@ pub struct Dict {
 pub struct Value {
     pub id: u64,
     pub data: DataType,
-    /// todo 这里的内存可以优化
-    pub expires_at: Option<DateTime<Utc>>,
+    /// unix timestamp ms
+    /// 0 表示不过期
+    pub expires_at: u64,
 }
 
 impl Dict {
@@ -46,13 +48,13 @@ impl Dict {
     #[inline]
     pub fn d_get(&self, key: &[u8]) -> Option<&Value> {
         self.get(key)
-            .filter(|v| v.expires_at.filter(|x| *x <= Utc::now()).is_none())
+            .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
     #[inline]
     pub fn d_get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
         self.get_mut(key)
-            .filter(|v| v.expires_at.filter(|x| *x <= Utc::now()).is_none())
+            .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
     /// todo 这里可能可以优化一下
@@ -63,7 +65,8 @@ impl Dict {
     ) -> &mut Value {
         match self.entry(key.clone()) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
-                if o.get().expires_at.filter(|x| *x <= Utc::now()).is_some() {
+                let expires_at = o.get().expires_at;
+                if expires_at > 0 && expires_at <= now_timestamp_ms() {
                     o.insert(f());
                 }
             }

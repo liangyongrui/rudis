@@ -2,20 +2,19 @@
 //!
 //! 异步删除key，减少持有锁的时间
 
-use std::{borrow::Borrow, collections::BTreeSet, sync::Arc};
+use std::{borrow::Borrow, collections::BTreeSet, sync::Arc, time::Duration};
 
-use chrono::{DateTime, Utc};
 use parking_lot::Mutex;
 use tokio::{sync::Notify, time};
 use tracing::debug;
 
-use crate::{db::Db, slot::cmd::ExpiresStatusUpdate};
+use crate::{db::Db, slot::cmd::ExpiresStatusUpdate, utils::now_timestamp_ms};
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Entry {
-    pub expires_at: DateTime<Utc>,
+    pub expires_at: u64,
     pub slot: u16,
     pub id: u64,
     pub key: Arc<[u8]>,
@@ -83,14 +82,14 @@ impl Expiration {
                 }
                 Message::Update(Update { slot, id, status }) => {
                     let mut lock = data.lock();
-                    let need_notify = if let Some(n) = status.new {
+                    let need_notify = if status.new > 0 {
                         let res = lock
                             .iter()
                             .next()
-                            .map(|ne| ne.expires_at > n)
+                            .map(|ne| ne.expires_at > status.new)
                             .unwrap_or(true);
                         lock.insert(Entry {
-                            expires_at: n,
+                            expires_at: status.new,
                             slot,
                             id,
                             key: status.key.clone(),
@@ -99,9 +98,9 @@ impl Expiration {
                     } else {
                         false
                     };
-                    if let Some(oea) = status.before {
+                    if status.before > 0 {
                         lock.remove(&Entry {
-                            expires_at: oea,
+                            expires_at: status.before,
                             slot,
                             id,
                             key: status.key,
@@ -131,9 +130,9 @@ impl Expiration {
     ) {
         loop {
             let next = Expiration::purge_expired_keys(&data, db.borrow());
-            if let Some(when) = next {
+            if next > 0 {
                 tokio::select! {
-                    _ = time::sleep((when - Utc::now()).to_std().unwrap()) =>{}
+                    _ = time::sleep(Duration::from_millis(next - now_timestamp_ms()) ) =>{}
                     _ = notify.notified() => {}
                 }
             } else {
@@ -144,8 +143,8 @@ impl Expiration {
         }
     }
 
-    fn purge_expired_keys(data: &Mutex<BTreeSet<Entry>>, db: &Db) -> Option<DateTime<Utc>> {
-        let now = Utc::now();
+    fn purge_expired_keys(data: &Mutex<BTreeSet<Entry>>, db: &Db) -> u64 {
+        let now =now_timestamp_ms();
         loop {
             // 减少持有锁的时间
             let entry = {
@@ -153,7 +152,7 @@ impl Expiration {
                 //  等 #![feature(map_first_last)] stable 可以替换
                 let entry = match btree_lock.iter().next() {
                     Some(e) => e.clone(),
-                    None => return None,
+                    None => return 0,
                 };
                 btree_lock.remove(&entry);
                 entry
@@ -161,7 +160,7 @@ impl Expiration {
 
             let expires_at = entry.expires_at;
             if expires_at > now {
-                return Some(expires_at);
+                return expires_at;
             }
 
             let slot = db.get_slot_by_id(&entry.slot);

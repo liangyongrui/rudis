@@ -44,7 +44,7 @@ impl Write<Resp> for Req {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
             data: DataType::SortedSet(SortedSet::new()),
-            expires_at: None,
+            expires_at: 0,
         });
         if let DataType::SortedSet(ref mut sorted_set) = old.data {
             let old_len = sorted_set.hash.len();

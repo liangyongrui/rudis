@@ -9,7 +9,6 @@ pub mod sorted_set;
 
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 
@@ -33,8 +32,8 @@ pub enum ExpiresStatus {
 #[derive(Debug, PartialEq, Eq)]
 pub struct ExpiresStatusUpdate {
     pub key: Arc<[u8]>,
-    pub before: Option<DateTime<Utc>>,
-    pub new: Option<DateTime<Utc>>,
+    pub before: u64,
+    pub new: u64,
 }
 pub trait ExpiresWrite<T>
 where

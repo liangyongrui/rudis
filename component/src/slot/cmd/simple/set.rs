@@ -36,9 +36,8 @@ impl ExpiresWrite<DataType> for Req {
                 });
             }
             let expires_at = match self.expires_at {
-                ExpiresAt::Specific(i) => Some(i),
+                ExpiresAt::Specific(i) => i,
                 ExpiresAt::Last => v.expires_at,
-                ExpiresAt::None => None,
             };
             let old = dict
                 .insert(
@@ -67,10 +66,10 @@ impl ExpiresWrite<DataType> for Req {
                 });
             }
             let expires_at = match self.expires_at {
-                ExpiresAt::Specific(i) => Some(i),
-                _ => None,
+                ExpiresAt::Specific(i) => i,
+                _ => 0,
             };
-            
+
             dict.insert(
                 self.key,
                 dict::Value {
@@ -80,12 +79,12 @@ impl ExpiresWrite<DataType> for Req {
                 },
             );
 
-            let expires_status = if expires_at.is_none() {
+            let expires_status = if expires_at == 0 {
                 ExpiresStatus::None
             } else {
                 ExpiresStatus::Update(ExpiresStatusUpdate {
                     key,
-                    before: None,
+                    before: 0,
                     new: expires_at,
                 })
             };
@@ -101,7 +100,6 @@ impl ExpiresWrite<DataType> for Req {
 mod test {
     use std::{borrow::BorrowMut, thread::sleep};
 
-    use chrono::{Duration, Utc};
     use parking_lot::RwLock;
 
     use super::*;
@@ -113,7 +111,7 @@ mod test {
     #[test]
     fn test1() {
         let dict = RwLock::new(Dict::new());
-        let date_time = Utc::now() + Duration::seconds(1);
+        let date_time = crate::utils::now_timestamp_ms() + 1000;
         let cmd = Req {
             key: b"hello"[..].into(),
             value: "world".into(),
@@ -127,8 +125,8 @@ mod test {
                 payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
-                    before: None,
-                    new: Some(date_time)
+                    before: 0,
+                    new: date_time
                 })
             }
         );
@@ -158,8 +156,8 @@ mod test {
                 payload: "world".into(),
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
-                    before: Some(date_time),
-                    new: Some(date_time)
+                    before: date_time,
+                    new: date_time
                 })
             }
         );
@@ -207,7 +205,7 @@ mod test {
         let cmd = Req {
             key: b"n"[..].into(),
             value: "world3".into(),
-            expires_at: ExpiresAt::None,
+            expires_at: ExpiresAt::Specific(0),
             nx_xx: NxXx::Nx,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
@@ -244,8 +242,8 @@ mod test {
                 payload: "world2".into(),
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
-                    before: Some(date_time),
-                    new: Some(date_time)
+                    before: date_time,
+                    new: date_time
                 })
             }
         );

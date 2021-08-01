@@ -37,7 +37,7 @@ impl Write<Resp> for Req {
         let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             id,
             data: DataType::Kvp(Kvp::new()),
-            expires_at: None,
+            expires_at: 0,
         });
         if let DataType::Kvp(ref mut kvp) = old.data {
             let old_len = kvp.size();

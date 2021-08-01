@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Frame};
+use crate::{db::Db, utils::now_timestamp_ms, Frame};
 
 /// https://redis.io/commands/pexpire
 #[derive(Debug, Clone, ParseFrames)]
@@ -17,8 +16,7 @@ impl From<Pexpire> for crate::slot::cmd::simple::expire::Req {
     fn from(old: Pexpire) -> Self {
         Self {
             key: old.key,
-            expires_at: Utc::now()
-                .checked_add_signed(Duration::milliseconds(old.milliseconds as _)),
+            expires_at: now_timestamp_ms() + old.milliseconds,
         }
     }
 }

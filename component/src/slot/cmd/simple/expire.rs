@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::slot::{
@@ -11,7 +10,7 @@ use crate::slot::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub expires_at: Option<DateTime<Utc>>,
+    pub expires_at: u64,
 }
 impl From<Req> for WriteCmd {
     fn from(req: Req) -> Self {
@@ -46,7 +45,7 @@ impl ExpiresWrite<bool> for Req {
 mod test {
     use std::{borrow::BorrowMut, thread::sleep};
 
-    use chrono::{Duration, Utc};
+    use chrono::Duration;
     use parking_lot::RwLock;
 
     use crate::{
@@ -62,11 +61,11 @@ mod test {
     #[test]
     fn test1() {
         let dict = RwLock::new(Dict::new());
-        let date_time = Utc::now() + Duration::seconds(1);
+        let date_time = crate::utils::now_timestamp_ms() + 1000;
         let cmd = set::Req {
             key: b"hello"[..].into(),
             value: "world".into(),
-            expires_at: ExpiresAt::None,
+            expires_at: ExpiresAt::Specific(0),
             nx_xx: NxXx::None,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
@@ -86,7 +85,7 @@ mod test {
 
         let cmd = expire::Req {
             key: b"hello"[..].into(),
-            expires_at: Some(date_time),
+            expires_at: date_time,
         };
         let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
         assert_eq!(
@@ -95,8 +94,8 @@ mod test {
                 payload: true,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
-                    before: None,
-                    new: Some(date_time)
+                    before: 0,
+                    new: date_time
                 })
             }
         );

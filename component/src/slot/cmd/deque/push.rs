@@ -80,7 +80,7 @@ impl Write<Resp> for Req {
                 dict::Value {
                     id,
                     data: DataType::Deque(deque),
-                    expires_at: None,
+                    expires_at: 0,
                 },
             );
             Ok(Resp {

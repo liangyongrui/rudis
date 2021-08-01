@@ -3,7 +3,11 @@ pub mod options;
 pub mod other_type;
 pub mod pointer;
 
-use std::{ops::Bound, sync::Arc};
+use std::{
+    ops::Bound,
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use serde::{Deserialize, Serialize};
 pub trait BoundExt<T> {
@@ -18,6 +22,13 @@ impl<T> BoundExt<T> for Bound<T> {
             Bound::Unbounded => Bound::Unbounded,
         }
     }
+}
+
+pub fn now_timestamp_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64
 }
 
 pub fn u8_to_string(data: &[u8]) -> Arc<str> {

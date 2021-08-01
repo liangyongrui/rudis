@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
-use chrono::{Duration, Utc};
 use rcc_macros::ParseFrames;
 use tracing::instrument;
 
-use crate::{db::Db, Frame};
+use crate::{db::Db, utils::now_timestamp_ms, Frame};
 
 /// https://redis.io/commands/expire
 #[derive(Debug, Clone, ParseFrames)]
@@ -17,7 +16,7 @@ impl From<Expire> for crate::slot::cmd::simple::expire::Req {
     fn from(old: Expire) -> Self {
         Self {
             key: old.key,
-            expires_at: Utc::now().checked_add_signed(Duration::seconds(old.seconds as _)),
+            expires_at: now_timestamp_ms() + old.seconds * 1000,
         }
     }
 }

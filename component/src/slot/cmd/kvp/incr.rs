@@ -24,7 +24,7 @@ impl From<Req> for WriteCmd {
 impl Write<i64> for Req {
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
         let v = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
-            expires_at: None,
+            expires_at: 0,
             id,
             data: DataType::Kvp(Kvp::new()),
         });
