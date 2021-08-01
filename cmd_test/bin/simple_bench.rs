@@ -58,7 +58,7 @@ fn main() {
 }
 
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
-    for i in 0..1000 {
+    for i in 0..10000 {
         write_cmd(&mut stream, &format!("SET hello{}_{} world", suffix, i)).await;
         read_assert_eq(&mut stream, b"+OK\r\n").await;
     }

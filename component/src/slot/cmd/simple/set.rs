@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
-use tracing::warn;
 
 use crate::{
     slot::{
@@ -71,19 +70,7 @@ impl ExpiresWrite<DataType> for Req {
                 ExpiresAt::Specific(i) => Some(i),
                 _ => None,
             };
-            // warn!(
-            //     "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}",
-            //     self.key.len(),
-            //     std::mem::size_of::<DataType>(),
-            //     std::mem::size_of::<dict::Value>(),
-            //     std::mem::size_of::<crate::forward::Message>(),
-            //     std::mem::size_of::<bytes::Bytes>(),
-            //     std::mem::size_of::<Arc<[u8]>>(),
-            //     std::mem::size_of::<&[u8]>(),
-            //     std::mem::size_of::<Arc<str>>(),
-            //     std::mem::size_of::<&str>(),
-            //     std::mem::size_of::<crate::slot::data_type::Kvp>(),
-            // );
+            
             dict.insert(
                 self.key,
                 dict::Value {
