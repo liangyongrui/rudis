@@ -9,6 +9,7 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<bool> for Req<'a> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<bool> {
         if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::Kvp(ref kvp) = v.data {
@@ -20,5 +21,3 @@ impl<'a> Read<bool> for Req<'a> {
         Ok(false)
     }
 }
-
-// todo utest

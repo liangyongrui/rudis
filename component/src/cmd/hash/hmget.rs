@@ -1,7 +1,6 @@
 use std::{sync::Arc, vec};
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 /// https://redis.io/commands/hmget
@@ -12,7 +11,7 @@ pub struct Hmget {
 }
 
 impl Hmget {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         if let Some(all) = db.kvp_get_all(crate::slot::cmd::kvp::get_all::Req { key: &self.key })? {
             let res = self

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 
@@ -22,9 +21,9 @@ impl From<Hdel> for crate::slot::cmd::kvp::del::Req {
 }
 
 impl Hdel {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = db.kvp_del(self.into())?;
-        Ok(Frame::Integer((response.new_len - response.old_len) as _))
+        Ok(Frame::Integer((response.old_len - response.new_len) as _))
     }
 }

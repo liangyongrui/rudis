@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 
@@ -22,7 +21,7 @@ impl<'a> From<&'a Hget> for crate::slot::cmd::kvp::get::Req<'a> {
 }
 
 impl Hget {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         Ok(db.kvp_get((&self).into())?.into())
     }

@@ -1,7 +1,5 @@
 use std::{ops::Bound, sync::Arc};
 
-use tracing::instrument;
-
 use crate::{parse::ParseError, slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrangebyscore
@@ -57,7 +55,7 @@ impl Zrevrangebyscore {
         })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let limit = self
             .limit

@@ -9,6 +9,7 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<Option<HashTrieMapSync<String, DataType>>> for Req<'a> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(
         self,
         dict: &RwLock<Dict>,

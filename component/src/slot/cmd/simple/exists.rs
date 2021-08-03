@@ -8,6 +8,7 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<bool> for Req<'a> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<bool> {
         Ok(dict.read().d_exists(self.key))
     }

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{
     db::Db,
@@ -32,7 +31,7 @@ impl From<Psetex> for crate::slot::cmd::simple::set::Req {
 }
 
 impl Psetex {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         db.set(self.into())?;
         Ok(Frame::ok())

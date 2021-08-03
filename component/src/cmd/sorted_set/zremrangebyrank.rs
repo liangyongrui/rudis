@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{Db, Frame};
 
@@ -24,7 +23,7 @@ impl From<Zremrangebyrank> for crate::slot::cmd::sorted_set::remove_by_rank_rang
 }
 
 impl Zremrangebyrank {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.sorted_set_remove_by_rank_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))

@@ -9,6 +9,7 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<Option<HashTrieSetSync<String>>> for Req<'a> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Option<HashTrieSetSync<String>>> {
         if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::Set(ref set) = v.data {

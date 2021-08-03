@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 /// Get the value of key.
@@ -25,7 +24,7 @@ impl Get {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         // Get the value from the shared database state
 

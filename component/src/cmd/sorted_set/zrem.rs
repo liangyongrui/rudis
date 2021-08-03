@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{Db, Frame};
 
@@ -22,7 +21,7 @@ impl From<Zrem> for crate::slot::cmd::sorted_set::remove::Req {
 }
 
 impl Zrem {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let resp = db.sorted_set_remove(self.into())?;
         Ok(Frame::Integer((resp.old_len - resp.new_len) as _))

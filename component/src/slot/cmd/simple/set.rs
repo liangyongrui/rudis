@@ -26,6 +26,7 @@ impl From<Req> for WriteCmd {
 /// 返回 原始值
 /// 如果原始值的类型不为SimpleType, 则返回 null
 impl ExpiresWrite<DataType> for Req {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<DataType>> {
         let key = self.key.clone();
         if let Some(v) = dict.d_get(&self.key) {

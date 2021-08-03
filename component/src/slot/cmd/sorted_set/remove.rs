@@ -26,6 +26,7 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(old) = dict.d_get_mut(&self.key) {
             if let DataType::SortedSet(ref mut sorted_set) = old.data {

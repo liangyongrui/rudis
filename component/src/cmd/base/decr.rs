@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, slot, Frame};
 
@@ -21,7 +20,7 @@ impl From<Decr> for slot::cmd::simple::incr::Req {
 }
 
 impl Decr {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = db.incr(self.into())?;
         Ok(Frame::Integer(response))

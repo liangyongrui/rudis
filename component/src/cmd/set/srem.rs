@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{Db, Frame};
 
@@ -21,7 +20,7 @@ impl From<Srem> for crate::slot::cmd::set::remove::Req {
     }
 }
 impl Srem {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.set_remove(self.into())?;
         Ok(Frame::Integer((res.old_len - res.new_len) as _))

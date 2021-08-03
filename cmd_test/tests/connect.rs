@@ -42,13 +42,13 @@ async fn test_connect() {
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
     let hello = format!("hello{}", suffix);
     let world = format!("world{}", suffix);
-    write_cmd(&mut stream, &format!("GET {}", hello)).await;
+    write_cmd(&mut stream, vec!["GET", &hello]).await;
     read_assert_eq(&mut stream, b"$-1\r\n").await;
 
-    write_cmd(&mut stream, &format!("SET {} {}", hello, world)).await;
+    write_cmd(&mut stream, vec!["SET", &hello, &world]).await;
     read_assert_eq(&mut stream, b"+OK\r\n").await;
 
-    write_cmd(&mut stream, &format!("GET {}", hello)).await;
+    write_cmd(&mut stream, vec!["GET", &hello]).await;
     stream.shutdown().await.unwrap();
     read_assert_eq(&mut stream, format!("+{}\r\n", world).as_bytes()).await;
     let mut response = [0; 10];

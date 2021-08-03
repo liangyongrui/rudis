@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 
@@ -22,7 +21,7 @@ impl<'a> From<&'a Hexists> for crate::slot::cmd::kvp::exists::Req<'a> {
 }
 
 impl Hexists {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.kvp_exists((&self).into())?;
         Ok(Frame::Integer(if res { 1 } else { 0 }))

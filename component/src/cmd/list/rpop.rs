@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 
@@ -22,7 +21,7 @@ impl From<Rpop> for crate::slot::cmd::deque::pop::Req {
     }
 }
 impl Rpop {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.deque_pop(self.into())?;
         Ok(Frame::Array(res.into_iter().map(|t| t.into()).collect()))

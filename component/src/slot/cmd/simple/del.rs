@@ -19,6 +19,7 @@ impl From<Req> for WriteCmd {
 }
 /// 返回 原始值
 impl ExpiresWrite<Option<Value>> for Req {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<Option<Value>>> {
         if dict.d_exists(&self.key) {
             let res = dict.remove(&self.key);

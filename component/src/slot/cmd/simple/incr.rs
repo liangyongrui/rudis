@@ -21,6 +21,7 @@ impl From<Req> for WriteCmd {
 
 /// 返回 更新后的值
 impl Write<i64> for Req {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             let old: i64 = (&v.data).try_into()?;

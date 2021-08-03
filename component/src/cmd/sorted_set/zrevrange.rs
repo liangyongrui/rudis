@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tracing::instrument;
-
 use crate::{parse::ParseError, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrange
@@ -47,7 +45,7 @@ impl Zrevrange {
         })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let withscores = self.withscores;
         let response = db.sorted_set_range_by_rank((&self).into())?;

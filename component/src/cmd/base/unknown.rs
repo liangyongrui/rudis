@@ -1,5 +1,3 @@
-use tracing::instrument;
-
 use crate::Frame;
 
 /// Represents an "unknown" command. This is not a real `Redis` command.
@@ -25,7 +23,7 @@ impl Unknown {
     /// Responds to the client, indicating the command is not recognized.
     ///
     /// This usually means the command is not yet implemented by `rcc`.
-    #[instrument(skip(self))]
+    #[tracing::instrument(skip(self))]
     pub fn apply(self) -> crate::Result<Frame> {
         let response = Frame::Error(format!("ERR unknown command '{}'", self.command_name));
         Ok(response)

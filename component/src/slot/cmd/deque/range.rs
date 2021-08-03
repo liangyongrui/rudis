@@ -18,6 +18,7 @@ pub struct Req<'a> {
 }
 
 impl<'a> Read<Vec<DataType>> for Req<'a> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.read().d_get(self.key) {
             if let DataType::Deque(ref deque) = v.data {

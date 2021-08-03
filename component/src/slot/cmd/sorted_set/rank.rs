@@ -18,6 +18,7 @@ pub struct Req<'a> {
 }
 
 impl Read<Option<usize>> for Req<'_> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Option<usize>> {
         if let Some(value) = self.apply_in_lock(dict.read().borrow())? {
             let mut ans = 0;

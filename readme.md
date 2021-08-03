@@ -26,29 +26,29 @@ rust cloud cache
 - OS: macOS 11.4
 - CPU: 2.6 GHz 六核 Intel Core i7
 
-客户端和服务端在同一台机器, work thread 限制 4 线程 （redis 的最好状态）
+客户端和服务端在同一台机器, work thread 都 限制 4 线程 （redis 的最好状态）
 
-1600 个连接同时 set 请求 5000 次（非 pipeline）
+1000 个连接同时 set 请求 10000 次（非 pipeline）
 
 | server      | 耗时(s)       | 频率(Hz)      |
 | ----------- | ------------- | ------------- |
-| rcc         | 42.22387627   | 189466.261905 |
-| redis 6.2.5 | 125.251157111 | 63871.6654163 |
+| rcc         | 49.327564347  | 202726.409308 |
+| redis 6.2.5 | 227.766758412 | 43904.5630263 |
 
-rcc 差不多是 redis 的 3 倍
+rcc 差不多是 redis 的 4.6 倍
+
+[测试代码](cmd_test/bin/simple_bench.rs)
 
 ## To be optimized
 
 ### Performance
 
-1. [ ] 读取数据的时候减少一次内存 copy
 1. [ ] 判断是否可写
-1. [ ] arc<[u8]> 替换成 bytes (这个不确定对性能的影响是好是坏)
 1. [ ] io_uring
 1. [ ] 根据 value 的大小 和 读写规律 来使用 可持久化数据结构
    - [ ] 持久化 deque
    - [ ] 带 rank 的平衡树
-1. [ ] mvcc 直接去掉读锁
+1. [ ] 读取数据的时候减少一次内存 copy
 
 ### Code
 
@@ -59,8 +59,8 @@ rcc 差不多是 redis 的 3 倍
 
 ## bug
 
-1. [ ] snapshot 正在执行的时候 不允许创建新的 snapshot
 1. [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs)
+   - 好像是 tokio test 的问题
 1. [ ] 修复一下未处理的 Err 和 unwrap
 
 ## 内存占用优化

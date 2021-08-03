@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 
@@ -18,7 +17,7 @@ impl<'a> From<&'a Llen> for crate::slot::cmd::deque::len::Req<'a> {
 }
 
 impl Llen {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let i = db.deque_len((&self).into())?;
         Ok(Frame::Integer(i as _))

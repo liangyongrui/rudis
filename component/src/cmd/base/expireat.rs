@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 
@@ -26,7 +25,7 @@ impl Expireat {
     ///
     /// The response is written to `dst`. This is called by the server in order
     /// to execute a received command.
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.expire(self.into())?;
         let response = Frame::Integer(if res { 1 } else { 0 });

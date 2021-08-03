@@ -1,7 +1,6 @@
 use std::{ops::Bound, sync::Arc};
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{Db, Frame};
 
@@ -43,7 +42,7 @@ impl From<Zremrangebylex> for crate::slot::cmd::sorted_set::remove_by_lex_range:
 }
 
 impl Zremrangebylex {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.sorted_set_remove_by_lex_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))

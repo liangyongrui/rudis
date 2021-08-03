@@ -1,8 +1,6 @@
 use std::{ops::Bound, sync::Arc};
 
-use tracing::instrument;
-
-use crate::{parse::ParseError, utils::BoundExt, Db, Frame, Parse};
+use crate::{parse::ParseError, Db, Frame, Parse};
 
 /// https://redis.io/commands/zrevrangebylex
 #[derive(Debug)]
@@ -53,7 +51,7 @@ impl Zrevrangebylex {
         })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let limit = self
             .limit
@@ -63,7 +61,7 @@ impl Zrevrangebylex {
         let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
             key,
             rev: true,
-            range: (e.map(|f| f.into()), b.map(|f| f.into())),
+            range: (e, b),
             limit,
         };
         let response = db.sorted_set_range_by_lex(cmd)?;

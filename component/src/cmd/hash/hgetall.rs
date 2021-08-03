@@ -1,7 +1,6 @@
 use std::{sync::Arc, vec};
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{db::Db, Frame};
 /// https://redis.io/commands/hgetall
@@ -17,7 +16,7 @@ impl<'a> From<&'a Hgetall> for crate::slot::cmd::kvp::get_all::Req<'a> {
 }
 
 impl Hgetall {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         if let Some(v) = db.kvp_get_all((&self).into())? {
             Ok(Frame::Array(

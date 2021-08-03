@@ -17,6 +17,7 @@ pub struct Req<'a> {
 }
 
 impl Read<Vec<crate::slot::data_type::sorted_set::Node>> for Req<'_> {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(
         self,
         dict: &RwLock<Dict>,

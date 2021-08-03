@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{Db, Frame};
 
@@ -18,7 +17,7 @@ impl<'a> From<&'a Smembers> for crate::slot::cmd::set::get_all::Req<'a> {
 }
 
 impl Smembers {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         if let Some(res) = db.set_get_all((&self).into())? {
             Ok(Frame::Array(

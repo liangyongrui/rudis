@@ -33,6 +33,7 @@ impl From<Req> for WriteCmd {
     }
 }
 impl Write<Resp> for Req {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::Deque(ref mut deque) = v.data {

@@ -19,6 +19,7 @@ impl From<Req> for WriteCmd {
 }
 /// 返回 是否更新成功
 impl ExpiresWrite<bool> for Req {
+    #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<bool>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {

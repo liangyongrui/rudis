@@ -55,19 +55,15 @@ impl Expiration {
         }
     }
 
-    pub fn listen(self, db: Arc<Db>) -> flume::Sender<Message> {
+    pub fn listen(self, db: Arc<Db>) {
         let Expiration {
-            data,
-            notify,
-            tx,
-            rx,
+            data, notify, rx, ..
         } = self;
 
         let data_c = Arc::clone(&data);
         let notify_c = Arc::clone(&notify);
         tokio::spawn(Expiration::recv_task(data_c, notify_c, rx));
         tokio::spawn(Expiration::purge_expired_task(data, notify, db));
-        tx
     }
 
     async fn recv_task(
@@ -81,6 +77,7 @@ impl Expiration {
                     data.lock().retain(|e| e.slot != slot);
                 }
                 Message::Update(Update { slot, id, status }) => {
+                    debug!(slot, id, ?status, "update");
                     let mut lock = data.lock();
                     let need_notify = if status.new > 0 {
                         let res = lock
@@ -130,15 +127,21 @@ impl Expiration {
     ) {
         loop {
             let next = Expiration::purge_expired_keys(&data, db.borrow());
-            if next > 0 {
-                tokio::select! {
-                    _ = time::sleep(Duration::from_millis(next - now_timestamp_ms()) ) =>{}
-                    _ = notify.notified() => {}
-                }
-            } else {
+            debug!(next);
+            if next == 0 {
                 // There are no keys expiring in the future.
                 // Wait until the task is notified.
                 notify.notified().await;
+                debug!("notify 2");
+            }
+            let now = now_timestamp_ms();
+            if next > now {
+                tokio::select! {
+                    _ = time::sleep(Duration::from_millis(next - now)) =>{}
+                    _ = notify.notified() => {
+                        debug!("notify 1");
+                    }
+                }
             }
         }
     }
@@ -154,23 +157,25 @@ impl Expiration {
                     Some(e) => e.clone(),
                     None => return 0,
                 };
+                let expires_at = entry.expires_at;
+                if expires_at > now {
+                    return expires_at;
+                }
                 btree_lock.remove(&entry);
                 entry
             };
-
-            let expires_at = entry.expires_at;
-            if expires_at > now {
-                return expires_at;
-            }
 
             let slot = db.get_slot_by_id(&entry.slot);
             // 取出数据之后再析构，避免持有过长时间的slot锁
             let expired_data = {
                 let mut lock = slot.dict.write();
-                match lock.get(&entry.key) {
+                debug!("before: slot: {}, dict_len: {}", entry.slot, lock.len());
+                let res = match lock.get(&entry.key) {
                     Some(value) if value.id == entry.id => Some(lock.remove(&entry.key)),
                     _ => None,
-                }
+                };
+                debug!("after: slot: {}, dict_len: {}", entry.slot, lock.len());
+                res
             };
 
             if expired_data.is_some() {
@@ -179,5 +184,35 @@ impl Expiration {
                 debug!("purge covered: {:?}", entry);
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::time::Duration;
+
+    use tokio::time::sleep;
+
+    use crate::{
+        slot::cmd,
+        utils::{now_timestamp_ms, options::ExpiresAt},
+    };
+
+    #[tokio::test]
+    async fn test() {
+        let _ = tracing_subscriber::fmt::Subscriber::builder()
+            .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
+            .with_max_level(tracing::Level::DEBUG)
+            .try_init();
+
+        let db = crate::db::Db::new().await;
+        db.set(cmd::simple::set::Req {
+            key: (&b"1"[..]).into(),
+            value: "123".into(),
+            expires_at: ExpiresAt::Specific(now_timestamp_ms() + 5000),
+            nx_xx: crate::utils::options::NxXx::None,
+        })
+        .unwrap();
+        sleep(Duration::from_secs(10)).await;
     }
 }

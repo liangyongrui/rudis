@@ -1,7 +1,5 @@
 use std::{ops::Bound, sync::Arc};
 
-use tracing::instrument;
-
 use crate::{slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyscore
@@ -46,7 +44,7 @@ impl Zremrangebyscore {
         Ok(Self { key, range })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.sorted_set_remove_by_score_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))

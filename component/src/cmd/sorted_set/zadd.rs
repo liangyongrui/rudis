@@ -1,7 +1,5 @@
 use std::{convert::TryInto, sync::Arc};
 
-use tracing::instrument;
-
 use crate::{
     parse::ParseError,
     slot::data_type::{sorted_set::Node, DataType},
@@ -83,7 +81,7 @@ impl Zadd {
         })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let ch = self.ch;
         let res = db.sorted_set_add(self.into())?;

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{slot::data_type::DataType, Db, Frame};
 
@@ -24,7 +23,7 @@ impl From<Rpushx> for crate::slot::cmd::deque::push::Req {
 }
 
 impl Rpushx {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = db.deque_push(self.into())?;
         Ok(Frame::Integer(response.new_len as _))

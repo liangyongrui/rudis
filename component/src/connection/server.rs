@@ -4,7 +4,7 @@ use tokio::{
     net::{TcpListener, TcpStream},
     time::{self, Duration},
 };
-use tracing::{error, info, instrument};
+use tracing::{error, info};
 
 use crate::{cmd::Command, config::CONFIG, limit::Limit, Connection, Db, Frame};
 
@@ -219,7 +219,6 @@ impl Handler {
     ///
     /// When the shutdown signal is received, the connection is processed until
     /// it reaches a safe state, at which point it is terminated.
-    #[instrument(skip(self))]
     async fn run(mut self) -> crate::Result<()> {
         loop {
             let maybe_frame = self.connection.read_frame().await?;

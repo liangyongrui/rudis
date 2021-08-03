@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use rcc_macros::ParseFrames;
-use tracing::instrument;
 
 use crate::{Db, Frame};
 /// https://redis.io/commands/zrevrank
@@ -21,7 +20,7 @@ impl<'a> From<&'a Zrevrank> for crate::slot::cmd::sorted_set::rank::Req<'a> {
 }
 
 impl Zrevrank {
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let response = match db.sorted_set_rank((&self).into())? {
             None => Frame::Null,

@@ -1,7 +1,5 @@
 use std::{ops::Bound, sync::Arc};
 
-use tracing::instrument;
-
 use crate::{
     parse::ParseError,
     slot::data_type::Float,
@@ -95,7 +93,7 @@ impl Zrange {
         })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let limit = self
             .limit
@@ -126,7 +124,7 @@ impl Zrange {
                 let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
                     key,
                     rev,
-                    range: (b.map(|f| f.into()), e.map(|f| f.into())),
+                    range: (b, e),
                     limit,
                 };
                 db.sorted_set_range_by_lex(cmd)?

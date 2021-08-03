@@ -18,6 +18,11 @@ pub fn main() -> component::Result<()> {
     //     .with_max_level(Level::DEBUG)
     //     .try_init()?;
 
+    let _ = tracing_subscriber::fmt::Subscriber::builder()
+        .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
+        .with_max_level(tracing::Level::INFO)
+        .try_init();
+
     let cli = Cli::from_args();
     let port = cli.port.as_deref().unwrap_or(DEFAULT_PORT);
     tokio::runtime::Builder::new_multi_thread()

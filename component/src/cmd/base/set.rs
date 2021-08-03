@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use tracing::instrument;
-
 use crate::{
     cmd::{Parse, ParseError},
     db::Db,
@@ -132,7 +130,7 @@ impl Set {
         })
     }
 
-    #[instrument(skip(self, db))]
+    #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let get = self.get;
         let res = db.set(self.into())?;
