@@ -1,5 +1,7 @@
+pub mod master;
+
 use std::{
-    io::{BufReader, Write},
+    io::{BufReader, Read, Write},
     net::{TcpStream, ToSocketAddrs},
     sync::Arc,
     thread,
@@ -9,7 +11,7 @@ use std::{
 use tokio::sync::{broadcast, Notify};
 
 use crate::{
-    cmd::{SYNC_CMD, SYNC_CMD_PING, SYNC_SNAPSHOT},
+    cmd::{OK_FRAME, SYNC_CMD, SYNC_CMD_PING, SYNC_SNAPSHOT},
     db::{Db, Role},
     forward,
     shutdown::Shutdown,
@@ -55,6 +57,9 @@ fn process_cmd_forward<A: ToSocketAddrs>(
 
     // 读取转发来的消息
     let mut reader = BufReader::new(stream);
+    let mut buf = [0; OK_FRAME.len()];
+    let _ = reader.read_exact(&mut buf)?;
+    debug_assert_eq!(OK_FRAME, &buf);
     let mut shutdown = Shutdown::new(shutdown_sender.subscribe());
     tokio::task::spawn_blocking(move || {
         while !shutdown.check_shutdown() {

@@ -28,8 +28,6 @@ pub enum Frame {
     Bulk(Arc<[u8]>),
     Null,
     Array(Vec<Frame>),
-    /// 不需要写入
-    DoNothing,
 }
 
 impl Frame {
@@ -87,7 +85,6 @@ impl fmt::Display for Frame {
 
                 Ok(())
             }
-            Frame::DoNothing => "(do_nothing)".fmt(fmt),
         }
     }
 }
@@ -207,7 +204,6 @@ impl Frame {
                     v.write(res);
                 }
             }
-            Frame::DoNothing => (),
         }
     }
 }

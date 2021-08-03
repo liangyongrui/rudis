@@ -11,7 +11,7 @@ use tokio::sync::broadcast;
 use crate::{
     config::CONFIG,
     expire::{self, Expiration},
-    forward::{self, Forward, Message},
+    forward::{self, Message, FORWARD},
     hdp::HdpStatus,
     replica,
     slot::{
@@ -47,11 +47,10 @@ const SIZE: u16 = 1 << 14;
 impl Db {
     pub async fn new() -> Arc<Self> {
         let expiration = Expiration::new();
-        let hdp = HdpStatus::new().await;
-        let forward = Forward::new(hdp.as_ref().map(|t| t.tx.clone()));
+        let hdp = HdpStatus::new();
         let bg_task = BgTask {
             expire_sender: expiration.tx.clone(),
-            forward_sender: forward.tx.clone(),
+            forward_sender: FORWARD.tx.clone(),
         };
         let mut slots = HashMap::new();
         for i in 0..SIZE {
@@ -70,11 +69,12 @@ impl Db {
         }
 
         expiration.listen(Arc::clone(&db));
-        forward.listen();
         if let Some(hdp) = hdp {
+            FORWARD.hdp_sender.swap(Some(Arc::new(hdp.tx.clone())));
             let db = Arc::clone(&db);
             tokio::spawn(hdp.process(db));
         }
+        FORWARD.db.store(Some(db.clone()));
         db
     }
 

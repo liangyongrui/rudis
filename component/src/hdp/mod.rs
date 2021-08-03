@@ -12,19 +12,15 @@ use crate::{config::CONFIG, db::Db, forward::Message};
 mod aof;
 pub mod snapshot;
 
-pub enum HdpCmd {
-    ForwardWrite(Message),
-}
-
 pub struct HdpStatus {
-    pub tx: flume::Sender<HdpCmd>,
-    rx: flume::Receiver<HdpCmd>,
+    pub tx: flume::Sender<Message>,
+    rx: flume::Receiver<Message>,
     pub aof_status_map: HashMap<u16, AofStatus>,
     pub save_hdp_dir: PathBuf,
 }
 
 impl HdpStatus {
-    pub async fn new() -> Option<Self> {
+    pub fn new() -> Option<Self> {
         let save_hdp_dir = match CONFIG.hdp.save_hdp_dir {
             Some(ref s) => s.clone(),
             None => return None,
@@ -54,9 +50,7 @@ impl HdpStatus {
                             break;
                         }
                     };
-                    match cmd {
-                        HdpCmd::ForwardWrite(msg) => self.process_forward_write(msg, db.borrow()).await,
-                    }
+                    let _ = self.process_forward_write(cmd, db.borrow()).await;
                 }
             }
         }

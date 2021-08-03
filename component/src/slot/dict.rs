@@ -6,9 +6,8 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::now_timestamp_ms;
-
 use super::data_type::DataType;
+use crate::utils::now_timestamp_ms;
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
     pub write_id: u64,
@@ -89,5 +88,20 @@ impl Deref for Dict {
 impl DerefMut for Dict {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::{alloc::Layout, sync::Arc};
+
+    use super::Value;
+
+    #[test]
+    fn test() {
+        dbg!(Layout::new::<(Arc<[u8]>, Value)>());
+        dbg!(Layout::new::<Box<(Arc<[u8]>, Value)>>());
+        dbg!(Layout::new::<Arc<u8>>());
+        dbg!(Layout::new::<(*mut u8, u32, u32)>());
     }
 }

@@ -2,12 +2,11 @@ use std::{future::Future, sync::Arc};
 
 use tokio::{
     net::{TcpListener, TcpStream},
-    sync::Semaphore,
     time::{self, Duration},
 };
 use tracing::{error, info, instrument};
 
-use crate::{cmd::Command, config::CONFIG, Connection, Db, Frame};
+use crate::{cmd::Command, config::CONFIG, limit::Limit, Connection, Db, Frame};
 
 /// Server listener state. Created in the `run` call. It includes a `run` method
 /// which performs the TCP listening and initialization of per-connection state.
@@ -32,18 +31,18 @@ struct Listener {
     ///
     /// When handlers complete processing a connection, the permit is returned
     /// to the semaphore.
-    limit_connections: Arc<Semaphore>,
+    limit_connections: Limit,
 }
 
 /// Per-connection handler. Reads requests from `connection` and applies the
 /// commands to `db`.
-struct Handler {
+pub struct Handler {
     /// Shared database handle.
     ///
     /// When a command is received from `connection`, it is applied with `db`.
     /// The implementation of the command is in the `cmd` module. Each command
     /// will need to interact with `db` in order to complete the work.
-    db: Arc<Db>,
+    pub db: Arc<Db>,
 
     /// The TCP connection decorated with the redis protocol encoder / decoder
     /// implemented using a buffered `TcpStream`.
@@ -52,14 +51,14 @@ struct Handler {
     /// passed to `Connection::new`, which initializes the associated buffers.
     /// `Connection` allows the handler to operate at the "frame" level and keep
     /// the byte level protocol parsing details encapsulated in `Connection`.
-    connection: Connection,
+    pub connection: Connection,
 
     /// Max connection semaphore.
     ///
     /// When the handler is dropped, a permit is returned to this semaphore. If
     /// the listener is waiting for connections to close, it will be notified of
     /// the newly available permit and resume accepting connections.
-    limit_connections: Arc<Semaphore>,
+    _limit_connections: Limit,
 }
 
 /// Run the rcc server.
@@ -76,7 +75,7 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> crate::Result<
     let mut server = Listener {
         listener,
         db: Db::new().await,
-        limit_connections: Arc::new(Semaphore::new(CONFIG.max_connections)),
+        limit_connections: Limit::new(CONFIG.max_connections),
     };
 
     // Concurrently run the server and listen for the `shutdown` signal. The
@@ -139,20 +138,8 @@ impl Listener {
         info!("accepting inbound connections");
 
         loop {
-            // Wait for a permit to become available
-            //
-            // `acquire` returns a permit that is bound via a lifetime to the
-            // semaphore. When the permit value is dropped, it is automatically
-            // returned to the semaphore. This is convenient in many cases.
-            // However, in this case, the permit must be returned in a different
-            // task than it is acquired in (the handler task). To do this, we
-            // "forget" the permit, which drops the permit value **without**
-            // incrementing the semaphore's permits. Then, in the handler task
-            // we manually add a new permit when processing completes.
-            //
-            // `acquire()` returns `Err` when the semaphore has been closed. We
-            // don't ever close the sempahore, so `unwrap()` is safe.
-            self.limit_connections.acquire().await.unwrap().forget();
+            // Wait for available
+            self.limit_connections.acquire().await;
 
             // Accept a new socket. This will attempt to perform error handling.
             // The `accept` method internally attempts to recover errors, so an
@@ -160,7 +147,7 @@ impl Listener {
             let socket = self.accept().await?;
 
             // Create the necessary per-connection handler state.
-            let mut handler = Handler {
+            let handler = Handler {
                 // Get a handle to the shared database. Internally, this is an
                 // `Arc`, so a clone only increments the ref count.
                 db: Arc::clone(&self.db),
@@ -172,7 +159,7 @@ impl Listener {
                 // The connection state needs a handle to the max connections
                 // semaphore. When the handler is done processing the
                 // connection, a permit is added back to the semaphore.
-                limit_connections: self.limit_connections.clone(),
+                _limit_connections: self.limit_connections.clone(),
             };
 
             // Spawn a new task to process the connections. Tokio tasks are like
@@ -233,7 +220,7 @@ impl Handler {
     /// When the shutdown signal is received, the connection is processed until
     /// it reaches a safe state, at which point it is terminated.
     #[instrument(skip(self))]
-    async fn run(&mut self) -> crate::Result<()> {
+    async fn run(mut self) -> crate::Result<()> {
         loop {
             let maybe_frame = self.connection.read_frame().await?;
 
@@ -249,6 +236,19 @@ impl Handler {
             // unsupported command.
             let cmd = Command::from_frame(frame)?;
 
+            let res = match cmd {
+                Command::ReadCmd(o) => o.apply(&self.db),
+                Command::WriteCmd(o) => o.apply(&self.db),
+                Command::Unknown(o) => o.apply(),
+                Command::SyncCmd => {
+                    let _ = crate::replica::master::process_sync_cmd(self.connection.stream).await;
+                    return Ok(());
+                }
+                Command::SyncSnapshot => {
+                    let _ = crate::replica::master::process_snapshot(self).await;
+                    return Ok(());
+                }
+            };
             // Perform the work needed to apply the command. This may mutate the
             // database state as a result.
             //
@@ -256,28 +256,11 @@ impl Handler {
             // command to write response frames directly to the connection. In
             // the case of pub/sub, multiple frames may be send back to the
             // peer.
-            let res = match cmd.apply(&self.db) {
-                Ok(Frame::DoNothing) => continue,
+            let res = match res {
                 Ok(f) => f,
                 Err(e) => Frame::Error(e.to_string()),
             };
             self.connection.write_frame(&res).await?;
         }
-    }
-}
-
-impl Drop for Handler {
-    fn drop(&mut self) {
-        // Add a permit back to the semaphore.
-        //
-        // Doing so unblocks the listener if the max number of
-        // connections has been reached.
-        //
-        // This is done in a `Drop` implementation in order to guarantee that
-        // the permit is added even if the task handling the connection panics.
-        // If `add_permit` was called at the end of the `run` function and some
-        // bug causes a panic. The permit would never be returned to the
-        // semaphore.
-        self.limit_connections.add_permits(1);
     }
 }

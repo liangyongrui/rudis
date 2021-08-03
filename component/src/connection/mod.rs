@@ -7,13 +7,12 @@ use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
 };
-use tracing::error;
 
 use crate::{parse, Frame};
 
 #[derive(Debug)]
 pub struct Connection {
-    stream: TcpStream,
+    pub stream: TcpStream,
     read_buffer: BytesMut,
 }
 
@@ -57,10 +56,7 @@ impl Connection {
                 Ok(Some(frame))
             }
             Err(nom::Err::Incomplete(_)) => Ok(None),
-            Err(e) => {
-                error!(?e);
-                Err("parse failed".into())
-            }
+            Err(e) => Err(format!("parse failed, {:?}", e).into()),
         }
     }
 }

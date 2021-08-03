@@ -144,7 +144,7 @@ impl Expiration {
     }
 
     fn purge_expired_keys(data: &Mutex<BTreeSet<Entry>>, db: &Db) -> u64 {
-        let now =now_timestamp_ms();
+        let now = now_timestamp_ms();
         loop {
             // 减少持有锁的时间
             let entry = {

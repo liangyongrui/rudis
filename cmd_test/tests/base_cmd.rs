@@ -1,7 +1,5 @@
 //! 测试redis官网的demo
 
-use std::collections::HashMap;
-
 use cmd_test::{read_assert_eq, start_server, write_cmd};
 
 #[tokio::test]
@@ -33,12 +31,4 @@ async fn decr() {
     write_cmd(&mut stream, "DECR mykey").await;
     read_assert_eq(&mut stream, b"-number too large to fit in target type\r\n").await;
     dbg!("end2");
-}
-#[test]
-fn hash_map_test() {
-    let mut map = HashMap::new();
-    for i in 0..10000000i32 {
-        map.insert(i, i + 1);
-    }
-    dbg!(map.capacity(), map.len());
 }

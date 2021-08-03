@@ -26,8 +26,8 @@ mod parse;
 pub use connection::server;
 use parse::{Parse, ParseError};
 
+mod limit;
 mod shutdown;
-
 /// Default port that a redis server listens on.
 ///
 /// Used if no port is specified.

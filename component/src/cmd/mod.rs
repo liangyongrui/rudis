@@ -7,6 +7,7 @@ mod sorted_set;
 pub const SYNC_SNAPSHOT: &[u8] = b"*1\r\n$12\r\nsyncsnapshot\r\n";
 pub const SYNC_CMD: &[u8] = b"*1\r\n$7\r\nsynccmd\r\n";
 pub const SYNC_CMD_PING: &[u8] = b"*1\r\n$11\r\nsynccmdping\r\n";
+pub const OK_FRAME: &[u8] = b"+OK\r\n";
 
 use self::{
     base::{
@@ -42,6 +43,7 @@ pub enum Command {
     ReadCmd(ReadCmd),
     WriteCmd(WriteCmd),
     SyncCmd,
+    SyncSnapshot,
     Unknown(Unknown),
 }
 #[derive(Debug)]
@@ -198,6 +200,7 @@ impl Command {
             "expire" => Command::WriteCmd(WriteCmd::Expire(Expire::parse_frames(&mut parse)?)),
             "pexpire" => Command::WriteCmd(WriteCmd::Pexpire(Pexpire::parse_frames(&mut parse)?)),
             "synccmd" => Command::SyncCmd,
+            "syncsnapshot" => Command::SyncSnapshot,
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -216,19 +219,6 @@ impl Command {
 
         // The command has been successfully parsed
         Ok(command)
-    }
-
-    /// Apply the command to the specified `Db` instance.
-    ///
-    /// The response is written to `dst`. This is called by the server in order
-    /// to execute a received command.
-    pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        match self {
-            Command::ReadCmd(cmd) => cmd.apply(db),
-            Command::WriteCmd(cmd) => cmd.apply(db),
-            Command::Unknown(cmd) => cmd.apply(),
-            Command::SyncCmd => todo!(),
-        }
     }
 }
 

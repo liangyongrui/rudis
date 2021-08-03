@@ -41,8 +41,7 @@ rcc 差不多是 redis 的 3 倍
 
 ### Performance
 
-1. [ ] hashmap 内存扩容机制，导致内存有些浪费
-1. [ ] 读取数据的时候减少一次内存copy
+1. [ ] 读取数据的时候减少一次内存 copy
 1. [ ] 判断是否可写
 1. [ ] arc<[u8]> 替换成 bytes (这个不确定对性能的影响是好是坏)
 1. [ ] io_uring
@@ -64,8 +63,19 @@ rcc 差不多是 redis 的 3 倍
 1. [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs)
 1. [ ] 修复一下未处理的 Err 和 unwrap
 
+## 内存占用优化
+
+1. [ ] hashmap 内存扩容机制，导致内存有些浪费
+   - 修改一下 hashmap, 把 node box 一下，但是多一个指针的开销, 如果小 key 比较多大概能节约 30%的内存, 但是实际情况可能没有那么多的小 key
+   - 把过期时间从 dict 提出来，可能可以节约 10%（但也多出了一些 key 的开销）。实际使用中，大部分的 key 都是有过期时间的，不一定能减少内存使用，说不定还会增加
+1. [ ] 有一些数据指针过大
+   - 比如 arc<[u8]>, 头就 40 个 bytes 了。 自己造一个`struct {ptr: *mut u8, count: u32, len:u32}` 只要 16 bytes
+1. [ ] 自动过期
+   - 想办法去掉 key 的版本号
+
 ## todo
 
+1. 连接权限管理
 1. [x] aof
    - [x] 写
    - [ ] 读
@@ -83,12 +93,10 @@ rcc 差不多是 redis 的 3 倍
 1. [ ] 各种模块的测试
 1. [ ] 稳定的 hash 数
 1. [ ] 多主
+   - [crdt](https://josephg.com/blog/crdts-go-brrr/)
+   - [可能可以考虑用这个](https://github.com/josephg/diamond-types)
 1. [ ] 集群 proxy
    - 同 key 聚合 (可能要设计一个 set_queue)
-
-## 不一定要做
-
-1. [ ] <https://jzwdsb.github.io/2019/01/CRDT/>
 1. [ ] 分布式事务
 
 ## 支持的命令
