@@ -85,7 +85,7 @@ impl Parse {
             // types.
             Frame::Simple(s) => Ok(s.to_string()),
             Frame::Bulk(data) => str::from_utf8(&data[..])
-                .map(|s| s.to_string())
+                .map(std::string::ToString::to_string)
                 .map_err(|_| "protocol error; invalid string".into()),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }

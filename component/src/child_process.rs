@@ -19,7 +19,7 @@ pub enum ChildProcessInfo {
     SyncSnapshot,
 }
 
-async fn loop_status() {
+fn loop_status() {
     loop {
         sleep(Duration::from_secs(1));
         match waitpid(None, Some(WaitPidFlag::WNOHANG)) {

@@ -50,7 +50,7 @@ impl HdpStatus {
                             break;
                         }
                     };
-                    let _ = self.process_forward_write(cmd, db.borrow()).await;
+                    self.process_forward_write(cmd, db.borrow()).await;
                 }
             }
         }

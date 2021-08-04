@@ -21,12 +21,12 @@ impl<'a> Read<Vec<DataType>> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::Deque(ref deque) = v.data {
+            return if let DataType::Deque(ref deque) = v.data {
                 let (b, e) = deque.shape(self.start, self.stop);
-                return Ok(deque.range(b..e).cloned().collect());
+                Ok(deque.range(b..e).cloned().collect())
             } else {
-                return Err("error type".into());
-            }
+                Err("error type".into())
+            };
         }
         Ok(vec![])
     }

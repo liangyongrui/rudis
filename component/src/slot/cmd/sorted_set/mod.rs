@@ -24,15 +24,13 @@ pub(self) fn get_value(
     key: &[u8],
     dict: &dict::Dict,
 ) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
-    if let Some(v) = dict.d_get(key) {
+    dict.d_get(key).map_or(Ok(None), |v| {
         if let DataType::SortedSet(ref sorted_set) = v.data {
             Ok(Some(*sorted_set.value.clone()))
         } else {
             Err("error type".into())
         }
-    } else {
-        Ok(None)
-    }
+    })
 }
 
 pub(self) fn shape_limit(limit: Option<(usize, i64)>, len: usize) -> (usize, usize) {

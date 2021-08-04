@@ -42,7 +42,7 @@ impl From<Req> for WriteCmd {
 impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
-        let old = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
+        let old = dict.d_get_mut_or_insert_with(&self.key, || dict::Value {
             data: DataType::SortedSet(SortedSet::new()),
             expires_at: 0,
         });

@@ -82,8 +82,7 @@ impl Expiration {
                         let res = lock
                             .iter()
                             .next()
-                            .map(|ne| ne.expires_at > status.new)
-                            .unwrap_or(true);
+                            .map_or(true, |ne| ne.expires_at > status.new);
                         lock.insert(Entry {
                             expires_at: status.new,
                             slot,
@@ -209,10 +208,10 @@ mod test {
         db.set(cmd::simple::set::Req {
             key: (&b"1"[..]).into(),
             value: "123".into(),
-            expires_at: ExpiresAt::Specific(now_timestamp_ms() + 5000),
+            expires_at: ExpiresAt::Specific(now_timestamp_ms() + 1000),
             nx_xx: crate::utils::options::NxXx::None,
         })
         .unwrap();
-        sleep(Duration::from_secs(10)).await;
+        sleep(Duration::from_secs(2)).await;
     }
 }

@@ -15,11 +15,11 @@ impl<'a> Read<Option<HashTrieMapSync<String, DataType>>> for Req<'a> {
         dict: &RwLock<Dict>,
     ) -> crate::Result<Option<HashTrieMapSync<String, DataType>>> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::Kvp(ref kvp) = v.data {
-                return Ok(Some(*kvp.inner.clone()));
+            return if let DataType::Kvp(ref kvp) = v.data {
+                Ok(Some(*kvp.inner.clone()))
             } else {
-                return Err("error type".into());
-            }
+                Err("error type".into())
+            };
         }
         Ok(None)
     }

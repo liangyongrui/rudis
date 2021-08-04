@@ -11,11 +11,11 @@ impl<'a> Read<usize> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<usize> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::Deque(ref deque) = v.data {
-                return Ok(deque.len());
+            return if let DataType::Deque(ref deque) = v.data {
+                Ok(deque.len())
             } else {
-                return Err("error type".into());
-            }
+                Err("error type".into())
+            };
         }
         Ok(0)
     }

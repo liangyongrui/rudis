@@ -21,23 +21,24 @@ impl From<Req> for WriteCmd {
 impl ExpiresWrite<bool> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<bool>> {
-        if let Some(v) = dict.d_get_mut(&self.key) {
-            let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
-                key: self.key,
-                before: v.expires_at,
-                new: self.expires_at,
-            });
-            v.expires_at = self.expires_at;
-            Ok(ExpiresWriteResp {
-                payload: true,
-                expires_status,
-            })
-        } else {
+        dict.d_get_mut(&self.key).map_or(
             Ok(ExpiresWriteResp {
                 payload: false,
                 expires_status: ExpiresStatus::None,
-            })
-        }
+            }),
+            |v| {
+                let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
+                    key: self.key,
+                    before: v.expires_at,
+                    new: self.expires_at,
+                });
+                v.expires_at = self.expires_at;
+                Ok(ExpiresWriteResp {
+                    payload: true,
+                    expires_status,
+                })
+            },
+        )
     }
 }
 

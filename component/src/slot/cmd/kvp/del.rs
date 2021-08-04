@@ -31,18 +31,18 @@ impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
-            if let DataType::Kvp(ref mut kvp) = v.data {
+            return if let DataType::Kvp(ref mut kvp) = v.data {
                 let old_len = kvp.size();
                 for f in self.fields {
                     kvp.remove_mut(&f);
                 }
-                return Ok(Resp {
+                Ok(Resp {
                     old_len,
                     new_len: kvp.size(),
-                });
+                })
             } else {
-                return Err("error type".into());
-            }
+                Err("error type".into())
+            };
         }
         Ok(Resp {
             old_len: 0,

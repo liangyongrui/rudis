@@ -12,11 +12,11 @@ impl<'a> Read<bool> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<bool> {
         if let Some(v) = dict.read().d_get(self.key) {
-            if let DataType::Set(ref set) = v.data {
-                return Ok(set.contains(self.field));
+            return if let DataType::Set(ref set) = v.data {
+                Ok(set.contains(self.field))
             } else {
-                return Err("error type".into());
-            }
+                Err("error type".into())
+            };
         }
         Ok(false)
     }

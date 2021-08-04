@@ -25,7 +25,7 @@ impl Write<Vec<DataType>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
-            if let DataType::Deque(ref mut deque) = v.data {
+            return if let DataType::Deque(ref mut deque) = v.data {
                 let mut res = vec![];
                 let count = self.count.min(deque.len());
                 if self.left {
@@ -37,10 +37,10 @@ impl Write<Vec<DataType>> for Req {
                         res.push(deque.pop_back().unwrap())
                     }
                 }
-                return Ok(res);
+                Ok(res)
             } else {
-                return Err("error type".into());
-            }
+                Err("error type".into())
+            };
         }
         Ok(vec![])
     }

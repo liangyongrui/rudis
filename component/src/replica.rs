@@ -20,17 +20,17 @@ use crate::{
 /// 发起主从复制
 ///
 /// warn: 这个函数是阻塞的
-pub fn process<A: ToSocketAddrs + Clone>(addr: A, db: Arc<Db>) -> crate::Result<()> {
+pub fn process<A: ToSocketAddrs + Clone>(addr: A, db: &Arc<Db>) -> crate::Result<()> {
     let notify = Arc::new(Notify::new());
     let res = process_cmd_forward(addr.clone(), db.clone(), notify.clone())?;
-    process_snapshot(addr, db.clone())?;
+    process_snapshot(addr, db)?;
     notify.notify_one();
     *db.role.lock() = Role::Replica(res);
     Ok(())
 }
 
 /// 向主节点要快照
-fn process_snapshot<A: ToSocketAddrs + Clone>(addr: A, db: Arc<Db>) -> crate::Result<()> {
+fn process_snapshot<A: ToSocketAddrs + Clone>(addr: A, db: &Arc<Db>) -> crate::Result<()> {
     let mut stream = BufReader::new(TcpStream::connect(addr)?);
     stream.get_mut().write_all(SYNC_SNAPSHOT)?;
     loop {
@@ -58,7 +58,7 @@ fn process_cmd_forward<A: ToSocketAddrs>(
     // 读取转发来的消息
     let mut reader = BufReader::new(stream);
     let mut buf = [0; OK_FRAME.len()];
-    let _ = reader.read_exact(&mut buf)?;
+    reader.read_exact(&mut buf)?;
     debug_assert_eq!(OK_FRAME, &buf);
     let mut shutdown = Shutdown::new(shutdown_sender.subscribe());
     tokio::task::spawn_blocking(move || {

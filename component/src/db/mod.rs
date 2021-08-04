@@ -65,7 +65,7 @@ impl Db {
         });
         if let Some(addr) = CONFIG.master_addr {
             let db = db.clone();
-            tokio::task::spawn_blocking(move || replica::process(addr, db));
+            tokio::task::spawn_blocking(move || replica::process(addr, &db));
         }
 
         expiration.listen(Arc::clone(&db));
@@ -86,7 +86,7 @@ impl Db {
         // todo 更完善的分片策略
         let mut s = DefaultHasher::new();
         key.hash(&mut s);
-        let i = s.finish() % SIZE as u64;
+        let i = s.finish() % u64::from(SIZE);
         // todo cluster move
         self.slots.get(&(i as u16)).unwrap()
     }

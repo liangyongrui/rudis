@@ -1,4 +1,21 @@
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::doc_markdown)]
 #![allow(unstable_name_collisions)]
+#![allow(clippy::semicolon_if_nothing_returned)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::module_name_repetitions)] // 以后去掉
+#![allow(clippy::enum_glob_use)]
+#![allow(clippy::missing_errors_doc)] //
+#![allow(clippy::let_underscore_drop)] //
+#![allow(clippy::missing_panics_doc)] //
+#![allow(clippy::single_match_else)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::wildcard_imports)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::shadow_unrelated)]
 
 /// 子进程管理
 mod child_process;

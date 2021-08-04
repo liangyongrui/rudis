@@ -28,17 +28,47 @@ impl From<Req> for WriteCmd {
 impl ExpiresWrite<DataType> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<DataType>> {
+        if let (NxXx::None, ExpiresAt::Specific(expires_at)) = (self.nx_xx, self.expires_at) {
+            let expires_status = if expires_at > 0 {
+                dict.insert(
+                    self.key.clone(),
+                    dict::Value {
+                        data: self.value,
+                        expires_at,
+                    },
+                );
+                ExpiresStatus::Update(ExpiresStatusUpdate {
+                    key: self.key,
+                    before: 0,
+                    new: expires_at,
+                })
+            } else {
+                dict.insert(
+                    self.key,
+                    dict::Value {
+                        data: self.value,
+                        expires_at,
+                    },
+                );
+                ExpiresStatus::None
+            };
+            return Ok(ExpiresWriteResp {
+                payload: DataType::Null,
+                expires_status,
+            });
+        }
+
         let key = self.key.clone();
-        if let Some(v) = dict.d_get(&self.key) {
+        if let Some(old) = dict.d_get(&self.key) {
             if self.nx_xx.is_nx() {
                 return Ok(ExpiresWriteResp {
-                    payload: v.data.clone(),
+                    payload: old.data.clone(),
                     expires_status: ExpiresStatus::None,
                 });
             }
             let expires_at = match self.expires_at {
                 ExpiresAt::Specific(i) => i,
-                ExpiresAt::Last => v.expires_at,
+                ExpiresAt::Last => old.expires_at,
             };
             let old = dict
                 .insert(
@@ -67,7 +97,7 @@ impl ExpiresWrite<DataType> for Req {
             }
             let expires_at = match self.expires_at {
                 ExpiresAt::Specific(i) => i,
-                _ => 0,
+                ExpiresAt::Last => 0,
             };
 
             dict.insert(

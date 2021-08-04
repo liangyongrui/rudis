@@ -17,7 +17,7 @@ impl Hmget {
             let res = self
                 .fields
                 .iter()
-                .map(|f| all.get(f).map(|t| t.into()).unwrap_or(Frame::Null))
+                .map(|f| all.get(f).map_or(Frame::Null, |t| t.into()))
                 .collect();
             Ok(Frame::Array(res))
         } else {

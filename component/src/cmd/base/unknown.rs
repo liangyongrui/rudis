@@ -9,7 +9,7 @@ pub struct Unknown {
 impl Unknown {
     /// Create a new `Unknown` command which responds to unknown commands
     /// issued by clients
-    pub fn new(key: impl ToString) -> Unknown {
+    pub fn new(key: &impl ToString) -> Unknown {
         Unknown {
             command_name: key.to_string(),
         }
@@ -24,8 +24,7 @@ impl Unknown {
     ///
     /// This usually means the command is not yet implemented by `rcc`.
     #[tracing::instrument(skip(self))]
-    pub fn apply(self) -> crate::Result<Frame> {
-        let response = Frame::Error(format!("ERR unknown command '{}'", self.command_name));
-        Ok(response)
+    pub fn apply(self) -> Frame {
+        Frame::Error(format!("ERR unknown command '{}'", self.command_name))
     }
 }

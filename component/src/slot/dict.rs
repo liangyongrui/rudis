@@ -25,7 +25,7 @@ pub struct Value {
 impl Dict {
     #[inline]
     pub fn new() -> Self {
-        Default::default()
+        Self::default()
     }
 
     #[inline]
@@ -58,7 +58,7 @@ impl Dict {
     /// todo 这里可能可以优化一下
     pub fn d_get_mut_or_insert_with<F: FnOnce() -> Value>(
         &mut self,
-        key: Arc<[u8]>,
+        key: &Arc<[u8]>,
         f: F,
     ) -> &mut Value {
         match self.entry(key.clone()) {
@@ -72,7 +72,7 @@ impl Dict {
                 e.insert(f());
             }
         }
-        self.get_mut(&key).unwrap()
+        self.get_mut(key).unwrap()
     }
 }
 

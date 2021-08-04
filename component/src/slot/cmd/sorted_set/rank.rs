@@ -43,19 +43,17 @@ impl Read<Option<usize>> for Req<'_> {
 }
 impl Req<'_> {
     fn apply_in_lock(&self, dict: &Dict) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
-        if let Some(v) = dict.d_get(self.key) {
+        dict.d_get(self.key).map_or(Ok(None), |v| {
             if let DataType::SortedSet(ref sorted_set) = v.data {
-                if !sorted_set.hash.contains_key(self.member) {
-                    Ok(None)
-                } else {
+                if sorted_set.hash.contains_key(self.member) {
                     Ok(Some(*sorted_set.value.clone()))
+                } else {
+                    Ok(None)
                 }
             } else {
                 Err("error type".into())
             }
-        } else {
-            Ok(None)
-        }
+        })
     }
 }
 
