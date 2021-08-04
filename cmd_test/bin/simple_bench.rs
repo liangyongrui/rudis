@@ -14,16 +14,14 @@ fn main() {
             let mut streams = vec![];
             let mut v = vec![];
             for _ in 0i32..1000 {
+                // Establish a connection to the server
                 let stream = TcpStream::connect(addr).await.unwrap();
                 streams.push(stream);
             }
             dbg!("connect");
             for i in 0..1000 {
                 let stream = streams.pop().unwrap();
-                let h = tokio::spawn(async move {
-                    // Establish a connection to the server
-                    key_value_get_set(stream, i).await
-                });
+                let h = tokio::spawn(key_value_get_set(stream, i));
                 v.push(h);
             }
             dbg!("ready");
@@ -41,8 +39,8 @@ async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
             &mut stream,
             vec![
                 "set",
-                &format!("hello{}_{}", suffix, i),
-                "world",
+                &format!("{:029}_{:020}", suffix, i),
+                "01234567890123456789012345678901234567890123456789",
                 "EX",
                 "300",
             ],

@@ -29,7 +29,7 @@ mod test {
             ],
             nx_xx: NxXx::None,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -68,7 +68,7 @@ mod test {
             ],
             nx_xx: NxXx::Nx,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -136,7 +136,7 @@ mod test {
             key: b"hello"[..].into(),
             fields: vec!["k1".into(), "k10".into()],
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,

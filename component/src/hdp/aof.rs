@@ -4,7 +4,7 @@ use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
 };
-use tracing::error;
+use tracing::{debug, error};
 
 use crate::{config::CONFIG, forward::Message, hdp::snapshot};
 
@@ -19,7 +19,7 @@ pub struct AofStatus {
 
 impl AofStatus {
     pub fn new(save_hdp_dir: &Path, snapshot_next_id: u64, slot_id: u16) -> crate::Result<Self> {
-        let save_path = save_hdp_dir.join(format!("dump_{}_{}.aof", slot_id, snapshot_next_id));
+        let save_path = save_hdp_dir.join(format!("{}/dump_{}.aof", snapshot_next_id, slot_id));
         let display = &save_path.display();
         match std::fs::File::create(&save_path) {
             Err(why) => Err(format!("couldn't create {}: {}", display, why).into()),
@@ -43,12 +43,13 @@ impl AofStatus {
     /// 返回是否需要更新 snapshot
     pub async fn write(&mut self, message: &Message) -> bool {
         match self.next_id.cmp(&message.id) {
-            // 从buf中追回
-            std::cmp::Ordering::Less => todo!(),
+            std::cmp::Ordering::Less => unreachable!(),
             // 写入文件
             std::cmp::Ordering::Equal => {
-                if let Err(e) = message.stream_encode(&mut self.file).await {
-                    error!(?e);
+                let bc = bincode::serialize(message).unwrap();
+                match self.file.write_all(&bc).await {
+                    Ok(_) => debug!(?bc),
+                    Err(e) => error!(?e),
                 }
             }
             // 忽略不处理

@@ -244,7 +244,10 @@ impl Handler {
                     return Ok(());
                 }
                 Command::SyncSnapshot => {
-                    let _ = crate::replica::master::process_snapshot(self).await;
+                    let _ = tokio::task::spawn_blocking(|| {
+                        crate::replica::master::process_snapshot(self)
+                    })
+                    .await;
                     return Ok(());
                 }
             };

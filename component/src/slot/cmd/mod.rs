@@ -39,13 +39,13 @@ pub trait ExpiresWrite<T>
 where
     Self: Into<WriteCmd>,
 {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<T>>;
+    fn apply(self, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<T>>;
 }
 pub trait Write<T>
 where
     Self: Into<WriteCmd>,
 {
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<T>;
+    fn apply(self, dict: &mut Dict) -> crate::Result<T>;
 }
 
 pub trait Read<T> {

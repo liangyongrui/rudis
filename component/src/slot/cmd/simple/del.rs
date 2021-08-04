@@ -20,7 +20,7 @@ impl From<Req> for WriteCmd {
 /// 返回 原始值
 impl ExpiresWrite<Option<Value>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<Option<Value>>> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<Option<Value>>> {
         if dict.d_exists(&self.key) {
             let res = dict.remove(&self.key);
 
@@ -77,7 +77,7 @@ mod test {
         let res = del::Req {
             key: b"hello"[..].into(),
         }
-        .apply(2, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap()
         .payload;
         assert_eq!(res, None);
@@ -88,7 +88,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -103,7 +103,7 @@ mod test {
         let res = del::Req {
             key: b"hello"[..].into(),
         }
-        .apply(2, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap()
         .payload
         .unwrap()

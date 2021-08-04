@@ -83,7 +83,7 @@ impl HdpStatus {
                     .is_ok()
                 {
                     // 第一次 还没有snapshot 从这里创建 aofStatus
-                    match AofStatus::new(&self.save_hdp_dir, 0, msg.slot) {
+                    match AofStatus::new(&self.save_hdp_dir, 1, msg.slot) {
                         Ok(status) => {
                             if e.insert(status).write(&msg).await {
                                 snapshot::process(self, msg.slot, db)

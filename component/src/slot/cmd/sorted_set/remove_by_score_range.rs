@@ -26,7 +26,7 @@ impl From<Req> for WriteCmd {
 }
 impl Write<Vec<Node>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<Node>> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<Vec<Node>> {
         if let Some(old) = dict.d_get_mut(&self.key) {
             if let DataType::SortedSet(ref mut sorted_set) = old.data {
                 let mut res = vec![];

@@ -16,7 +16,6 @@ use crate::{db::Db, slot::cmd::ExpiresStatusUpdate, utils::now_timestamp_ms};
 pub struct Entry {
     pub expires_at: u64,
     pub slot: u16,
-    pub id: u64,
     pub key: Arc<[u8]>,
 }
 
@@ -31,7 +30,6 @@ pub enum Message {
 
 pub struct Update {
     pub status: ExpiresStatusUpdate,
-    pub id: u64,
     pub slot: u16,
 }
 
@@ -76,8 +74,9 @@ impl Expiration {
                 Message::Clear(slot) => {
                     data.lock().retain(|e| e.slot != slot);
                 }
-                Message::Update(Update { slot, id, status }) => {
-                    debug!(slot, id, ?status, "update");
+                Message::Update(Update { slot, status }) => {
+                    debug!(slot, ?status);
+                    debug_assert_ne!(status.new, status.before);
                     let mut lock = data.lock();
                     let need_notify = if status.new > 0 {
                         let res = lock
@@ -88,7 +87,6 @@ impl Expiration {
                         lock.insert(Entry {
                             expires_at: status.new,
                             slot,
-                            id,
                             key: status.key.clone(),
                         });
                         res
@@ -99,7 +97,6 @@ impl Expiration {
                         lock.remove(&Entry {
                             expires_at: status.before,
                             slot,
-                            id,
                             key: status.key,
                         });
                     }
@@ -171,7 +168,10 @@ impl Expiration {
                 let mut lock = slot.dict.write();
                 debug!("before: slot: {}, dict_len: {}", entry.slot, lock.len());
                 let res = match lock.get(&entry.key) {
-                    Some(value) if value.id == entry.id => Some(lock.remove(&entry.key)),
+                    // 如果过期时间更新过，可能会有时间不一样的情况
+                    Some(value) if value.expires_at == entry.expires_at => {
+                        Some(lock.remove(&entry.key))
+                    }
                     _ => None,
                 };
                 debug!("after: slot: {}, dict_len: {}", entry.slot, lock.len());

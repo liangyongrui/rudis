@@ -34,7 +34,7 @@ impl From<Req> for WriteCmd {
 }
 impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<Resp> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::Deque(ref mut deque) = v.data {
                 let old_len = deque.len();
@@ -79,7 +79,6 @@ impl Write<Resp> for Req {
             dict.insert(
                 self.key,
                 dict::Value {
-                    id,
                     data: DataType::Deque(deque),
                     expires_at: 0,
                 },
@@ -119,7 +118,7 @@ mod test {
             left: false,
             nx_xx: NxXx::Xx,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -141,7 +140,7 @@ mod test {
             left: false,
             nx_xx: NxXx::None,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -176,7 +175,7 @@ mod test {
             left: true,
             nx_xx: NxXx::Xx,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,

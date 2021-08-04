@@ -27,7 +27,7 @@ impl From<Req> for WriteCmd {
 /// 如果原始值的类型不为SimpleType, 则返回 null
 impl ExpiresWrite<DataType> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<DataType>> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<DataType>> {
         let key = self.key.clone();
         if let Some(v) = dict.d_get(&self.key) {
             if self.nx_xx.is_nx() {
@@ -44,7 +44,6 @@ impl ExpiresWrite<DataType> for Req {
                 .insert(
                     self.key,
                     dict::Value {
-                        id,
                         data: self.value,
                         expires_at,
                     },
@@ -74,7 +73,6 @@ impl ExpiresWrite<DataType> for Req {
             dict.insert(
                 self.key,
                 dict::Value {
-                    id,
                     data: self.value,
                     expires_at,
                 },
@@ -119,7 +117,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -150,7 +148,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Xx,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -168,7 +166,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Xx,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -195,7 +193,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Nx,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -209,7 +207,7 @@ mod test {
             expires_at: ExpiresAt::Specific(0),
             nx_xx: NxXx::Nx,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -236,7 +234,7 @@ mod test {
             expires_at: ExpiresAt::Last,
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {

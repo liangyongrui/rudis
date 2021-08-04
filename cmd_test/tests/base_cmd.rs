@@ -1,9 +1,6 @@
 //! 测试redis官网的demo
 
-use std::time::Duration;
-
 use cmd_test::{read_assert_eq, start_server, write_cmd};
-use tokio::time::sleep;
 
 #[tokio::test]
 async fn decr() {
@@ -41,7 +38,7 @@ async fn decr() {
 }
 
 #[tokio::test]
-async fn get() {
+async fn set() {
     let mut stream = start_server().await;
 
     write_cmd(&mut stream, vec!["SET", "mykey", "Hello"]).await;

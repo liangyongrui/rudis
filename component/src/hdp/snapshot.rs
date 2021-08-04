@@ -42,7 +42,7 @@ pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
         Ok(ForkResult::Child) => {
             let path = hdp
                 .save_hdp_dir
-                .join(format!("dump_{}_{}.hds", slot_id, base_id + 1));
+                .join(format!("{}/dump_{}.ss", base_id + 1, slot_id));
             let path_display = &path.display();
             match File::create(&path) {
                 Err(why) => error!("couldn't create {}: {}", path_display, why),

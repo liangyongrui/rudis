@@ -57,7 +57,6 @@ impl Slot {
             .map(|(k, v)| expire::Entry {
                 expires_at: v.expires_at,
                 slot: self.slot_id,
-                id: v.id,
                 key: k.clone(),
             })
             .collect();
@@ -74,7 +73,7 @@ impl Slot {
         let (res, id) = {
             let mut dict = self.dict.write();
             let id = dict.next_id();
-            (cc.apply(id, dict.borrow_mut()), id)
+            (cc.apply(dict.borrow_mut()), id)
         };
 
         // 转发执行完成的请求
@@ -93,7 +92,7 @@ impl Slot {
         let (res, id) = {
             let mut dict = self.dict.write();
             let id = dict.next_id();
-            (cc.apply(id, dict.borrow_mut()), id)
+            (cc.apply(dict.borrow_mut()), id)
         };
 
         let res = match res {
@@ -109,7 +108,6 @@ impl Slot {
                                 expire::Update {
                                     status: u,
                                     slot: self.slot_id,
-                                    id,
                                 },
                             ));
                         }

@@ -19,7 +19,7 @@ mod test {
             key: b"hello"[..].into(),
             members: vec!["k1".into(), "k2".into(), "k3".into()],
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -46,7 +46,7 @@ mod test {
             key: b"hello"[..].into(),
             members: vec!["k1".into(), "k4".into(), "k5".into()],
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -89,7 +89,7 @@ mod test {
             key: b"hello"[..].into(),
             members: vec!["k1".into(), "k10".into()],
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,

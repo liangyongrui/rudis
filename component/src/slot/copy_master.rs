@@ -13,7 +13,7 @@ impl Slot {
         let mut dict = self.dict.write();
         if id > dict.last_write_op_id() {
             dict.write_id = id;
-            let _ = cmd.apply(id, dict.borrow_mut());
+            let _ = cmd.apply(dict.borrow_mut());
         }
     }
 
@@ -24,7 +24,7 @@ impl Slot {
                 return;
             }
             dict.write_id = id;
-            cmd.apply(id, dict.borrow_mut())
+            cmd.apply(dict.borrow_mut())
         };
         if let Ok(ExpiresWriteResp { expires_status, .. }) = res {
             match expires_status {
@@ -35,7 +35,6 @@ impl Slot {
                             expire::Update {
                                 status: u,
                                 slot: self.slot_id,
-                                id,
                             },
                         ));
                     }

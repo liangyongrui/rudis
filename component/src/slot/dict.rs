@@ -16,7 +16,6 @@ pub struct Dict {
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Value {
-    pub id: u64,
     pub data: DataType,
     /// unix timestamp ms
     /// 0 表示不过期
@@ -93,15 +92,21 @@ impl DerefMut for Dict {
 
 #[cfg(test)]
 mod test {
-    use std::{alloc::Layout, sync::Arc};
+    use std::{
+        alloc::Layout,
+        sync::{atomic::AtomicU32, Arc},
+    };
 
     use super::Value;
 
     #[test]
     fn test() {
         dbg!(Layout::new::<(Arc<[u8]>, Value)>());
+        dbg!(Layout::new::<(Arc<[u8]>, Value)>());
         dbg!(Layout::new::<Box<(Arc<[u8]>, Value)>>());
         dbg!(Layout::new::<Arc<u8>>());
+        dbg!(Layout::new::<(*mut u8, AtomicU32, u32)>());
         dbg!(Layout::new::<(*mut u8, u32, u32)>());
+        dbg!(Layout::new::<(&[u8], u32)>());
     }
 }

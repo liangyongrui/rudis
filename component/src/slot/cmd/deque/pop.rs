@@ -23,7 +23,7 @@ impl From<Req> for WriteCmd {
 }
 impl Write<Vec<DataType>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, _id: u64, dict: &mut Dict) -> crate::Result<Vec<DataType>> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             if let DataType::Deque(ref mut deque) = v.data {
                 let mut res = vec![];
@@ -77,7 +77,7 @@ mod test {
             left: false,
             nx_xx: NxXx::None,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -92,7 +92,7 @@ mod test {
             count: 3,
             left: false,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(res, vec!["9".into(), "8".into(), "7".into(),]);
         let res = pop::Req {
@@ -100,7 +100,7 @@ mod test {
             count: 4,
             left: true,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(res, vec!["0".into(), "1".into(), "2".into(), "3".into()]);
     }

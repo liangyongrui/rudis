@@ -46,7 +46,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {

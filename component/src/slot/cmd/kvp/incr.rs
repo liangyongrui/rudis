@@ -23,10 +23,9 @@ impl From<Req> for WriteCmd {
 /// 返回 更新后的值
 impl Write<i64> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<i64> {
         let v = dict.d_get_mut_or_insert_with(self.key, || dict::Value {
             expires_at: 0,
-            id,
             data: DataType::Kvp(Kvp::new()),
         });
         match v.data {
@@ -65,7 +64,7 @@ mod test {
             entries: vec![("k1".into(), "1".into()), ("k2".into(), "2".into())],
             nx_xx: NxXx::None,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,
@@ -80,7 +79,7 @@ mod test {
             field: "k1".into(),
             value: 1,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(res, 2);
 
@@ -89,7 +88,7 @@ mod test {
             field: "k3".into(),
             value: 10,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(res, 10);
 

@@ -20,14 +20,13 @@ impl From<Req> for WriteCmd {
 /// 返回 是否更新成功
 impl ExpiresWrite<bool> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<bool>> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<ExpiresWriteResp<bool>> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
                 key: self.key,
                 before: v.expires_at,
                 new: self.expires_at,
             });
-            v.id = id;
             v.expires_at = self.expires_at;
             Ok(ExpiresWriteResp {
                 payload: true,
@@ -69,7 +68,7 @@ mod test {
             expires_at: ExpiresAt::Specific(0),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -88,7 +87,7 @@ mod test {
             key: b"hello"[..].into(),
             expires_at: date_time,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {

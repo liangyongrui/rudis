@@ -43,7 +43,7 @@ mod test {
             left: false,
             nx_xx: NxXx::None,
         }
-        .apply(1, dict.write().borrow_mut())
+        .apply(dict.write().borrow_mut())
         .unwrap();
         assert_eq!(
             res,

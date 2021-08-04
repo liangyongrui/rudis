@@ -57,7 +57,7 @@ pub async fn process_sync_cmd(mut stream: TcpStream) -> crate::Result<()> {
     Ok(())
 }
 
-pub async fn process_snapshot(handler: Handler) -> crate::Result<()> {
+pub fn process_snapshot(handler: Handler) -> crate::Result<()> {
     let mut stream = handler.connection.stream.into_std()?;
 
     // fork 子进程做snapshot，不需要持有锁

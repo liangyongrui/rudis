@@ -22,7 +22,7 @@ impl From<Req> for WriteCmd {
 /// 返回 更新后的值
 impl Write<i64> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, id: u64, dict: &mut Dict) -> crate::Result<i64> {
+    fn apply(self, dict: &mut Dict) -> crate::Result<i64> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             let old: i64 = (&v.data).try_into()?;
             let new = old + self.value;
@@ -33,7 +33,6 @@ impl Write<i64> for Req {
                 self.key,
                 dict::Value {
                     expires_at: 0,
-                    id,
                     data: self.value.into(),
                 },
             );
@@ -57,13 +56,13 @@ mod test {
             key: b"hello"[..].into(),
             value: 10,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(res, 10);
         let cmd = incr::Req {
             key: b"hello"[..].into(),
             value: -5,
         };
-        let res = cmd.apply(1, dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(res, 5);
     }
 }
