@@ -3,13 +3,17 @@ use std::{borrow::Borrow, fs::File, io::BufWriter, process::exit, sync::atomic::
 use nix::unistd::{fork, ForkResult};
 use tracing::{error, info};
 
-use super::{aof::AofStatus, HdpStatus};
-use crate::{child_process, db::Db, slot::dict::Dict};
+use crate::{
+    child_process,
+    db::Db,
+    hdp::{self, aof},
+    slot::dict::Dict,
+};
 
 pub static IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
 /// 执行snapshot, 替换新的AofStatus
-pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
+pub fn process(hdp: &mut hdp::Status, slot_id: u16, db: &Db) {
     let lock = match db.slots.get(&slot_id) {
         Some(s) => s,
         None => {
@@ -27,17 +31,14 @@ pub fn process(hdp: &mut HdpStatus, slot_id: u16, db: &Db) {
                 "Continuing execution in parent process, new child has pid: {}",
                 child
             );
-            match AofStatus::new(&hdp.save_hdp_dir, base_id + 1, slot_id) {
+            match aof::Status::new(&hdp.save_hdp_dir, base_id + 1, slot_id) {
                 Ok(aof) => {
                     hdp.aof_status_map.insert(slot_id, aof);
                 }
                 Err(e) => error!(?e),
             }
             drop(lock);
-            child_process::add(
-                child,
-                child_process::ChildProcessInfo::HdpSnapshot { base_id },
-            );
+            child_process::add(child, child_process::Info::HdpSnapshot { base_id });
         }
         Ok(ForkResult::Child) => {
             let path = hdp

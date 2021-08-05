@@ -8,13 +8,13 @@ use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use tracing::{error, info, warn};
 
-static STATUS: Lazy<Mutex<HashMap<Pid, ChildProcessInfo>>> = Lazy::new(|| {
+static STATUS: Lazy<Mutex<HashMap<Pid, Info>>> = Lazy::new(|| {
     tokio::task::spawn_blocking(loop_status);
     Mutex::new(HashMap::new())
 });
 
 #[derive(Debug)]
-pub enum ChildProcessInfo {
+pub enum Info {
     HdpSnapshot { base_id: u64 },
     SyncSnapshot,
 }
@@ -24,7 +24,7 @@ fn loop_status() {
         sleep(Duration::from_secs(1));
         match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
             Ok(nix::sys::wait::WaitStatus::Exited(pid, _)) => match STATUS.lock().remove(&pid) {
-                Some(ChildProcessInfo::HdpSnapshot { base_id }) => finsh_snapshot(pid, base_id),
+                Some(Info::HdpSnapshot { base_id }) => finsh_snapshot(pid, base_id),
                 Some(e) => info!("{:?} exited: {}", e, pid),
                 None => error!("unknown pid: {}", pid),
             },
@@ -35,7 +35,7 @@ fn loop_status() {
     }
 }
 
-pub fn add(pid: Pid, info: ChildProcessInfo) {
+pub fn add(pid: Pid, info: Info) {
     STATUS.lock().insert(pid, info);
 }
 

@@ -5,7 +5,6 @@
 #![allow(clippy::semicolon_if_nothing_returned)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::module_name_repetitions)] // 以后去掉
 #![allow(clippy::enum_glob_use)]
 #![allow(clippy::missing_errors_doc)] //
 #![allow(clippy::let_underscore_drop)] //

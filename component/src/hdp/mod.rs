@@ -6,20 +6,19 @@ use std::{borrow::Borrow, collections::HashMap, path::PathBuf, sync::Arc, time::
 use tokio::time;
 use tracing::{error, warn};
 
-use self::aof::AofStatus;
 use crate::{config::CONFIG, db::Db, forward::Message};
 
 mod aof;
 pub mod snapshot;
 
-pub struct HdpStatus {
+pub struct Status {
     pub tx: flume::Sender<Message>,
     rx: flume::Receiver<Message>,
-    pub aof_status_map: HashMap<u16, AofStatus>,
+    pub aof_status_map: HashMap<u16, aof::Status>,
     pub save_hdp_dir: PathBuf,
 }
 
-impl HdpStatus {
+impl Status {
     pub fn new() -> Option<Self> {
         let save_hdp_dir = match CONFIG.hdp.save_hdp_dir {
             Some(ref s) => s.clone(),
@@ -83,7 +82,7 @@ impl HdpStatus {
                     .is_ok()
                 {
                     // 第一次 还没有snapshot 从这里创建 aofStatus
-                    match AofStatus::new(&self.save_hdp_dir, 1, msg.slot) {
+                    match aof::Status::new(&self.save_hdp_dir, 1, msg.slot) {
                         Ok(status) => {
                             if e.insert(status).write(&msg).await {
                                 snapshot::process(self, msg.slot, db)

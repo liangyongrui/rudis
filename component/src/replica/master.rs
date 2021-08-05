@@ -63,7 +63,7 @@ pub fn process_snapshot(handler: Handler) -> crate::Result<()> {
     // fork 子进程做snapshot，不需要持有锁
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child }) => {
-            child_process::add(child, child_process::ChildProcessInfo::SyncSnapshot);
+            child_process::add(child, child_process::Info::SyncSnapshot);
             info!(
                 "Continuing execution in parent process, new child has pid: {}",
                 child

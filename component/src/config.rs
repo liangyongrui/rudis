@@ -30,8 +30,8 @@ pub struct Config {
     pub read_only: bool,
     #[serde(default)]
     pub master_addr: Option<SocketAddr>,
-    #[serde(default = "HdpConfig::default")]
-    pub hdp: HdpConfig,
+    #[serde(default = "Hdp::default")]
+    pub hdp: Hdp,
     /// 转发最多积压条数 (aof、主从同步)
     #[serde(default)]
     pub forward_max_backlog: u64,
@@ -43,7 +43,7 @@ const fn max_connections() -> usize {
 /// hdp 相关 配置
 #[serde_as]
 #[derive(Deserialize, Debug)]
-pub struct HdpConfig {
+pub struct Hdp {
     /// aof 条数达到指定值，触发snapshot，0为不触发
     #[serde(default)]
     pub aof_count: u64,
@@ -53,7 +53,7 @@ pub struct HdpConfig {
     pub load_hdp_dir: Option<PathBuf>,
 }
 
-impl Default for HdpConfig {
+impl Default for Hdp {
     fn default() -> Self {
         Self {
             aof_count: 0,
@@ -64,7 +64,7 @@ impl Default for HdpConfig {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct MasterConfig {
+pub struct Master {
     pub ip: String,
     pub port: u16,
 }

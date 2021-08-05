@@ -12,7 +12,7 @@ use crate::{
     config::CONFIG,
     expire::{self, Expiration},
     forward::{self, Message, FORWARD},
-    hdp::HdpStatus,
+    hdp::Status,
     replica,
     slot::{
         cmd,
@@ -47,7 +47,7 @@ const SIZE: u16 = 1 << 14;
 impl Db {
     pub async fn new() -> Arc<Self> {
         let expiration = Expiration::new();
-        let hdp = HdpStatus::new();
+        let hdp = Status::new();
         let bg_task = BgTask {
             expire_sender: expiration.tx.clone(),
             forward_sender: FORWARD.tx.clone(),

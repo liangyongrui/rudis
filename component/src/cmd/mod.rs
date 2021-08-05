@@ -40,14 +40,14 @@ use crate::{Db, Frame, Parse, ParseError};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
-    ReadCmd(ReadCmd),
-    WriteCmd(WriteCmd),
+    Read(Read),
+    Write(Write),
     SyncCmd,
     SyncSnapshot,
     Unknown(Unknown),
 }
 #[derive(Debug)]
-pub enum ReadCmd {
+pub enum Read {
     Zrangebylex(Zrangebylex),
     Zrangebyscore(Zrangebyscore),
     Zrank(Zrank),
@@ -70,7 +70,7 @@ pub enum ReadCmd {
 }
 
 #[derive(Debug, Clone)]
-pub enum WriteCmd {
+pub enum Write {
     Zrem(Zrem),
     Zremrangebyrank(Zremrangebyrank),
     Zremrangebylex(Zremrangebylex),
@@ -128,77 +128,67 @@ impl Command {
         // specific command.
         let command = match &command_name[..] {
             "zrangebylex" => {
-                Command::ReadCmd(ReadCmd::Zrangebylex(Zrangebylex::parse_frames(&mut parse)?))
+                Command::Read(Read::Zrangebylex(Zrangebylex::parse_frames(&mut parse)?))
             }
-            "zrangebyscore" => Command::ReadCmd(ReadCmd::Zrangebyscore(
-                Zrangebyscore::parse_frames(&mut parse)?,
-            )),
-            "zrank" => Command::ReadCmd(ReadCmd::Zrank(Zrank::parse_frames(&mut parse)?)),
-            "zrem" => Command::WriteCmd(WriteCmd::Zrem(Zrem::parse_frames(&mut parse)?)),
-            "zremrangebylex" => Command::WriteCmd(WriteCmd::Zremrangebylex(
+            "zrangebyscore" => Command::Read(Read::Zrangebyscore(Zrangebyscore::parse_frames(
+                &mut parse,
+            )?)),
+            "zrank" => Command::Read(Read::Zrank(Zrank::parse_frames(&mut parse)?)),
+            "zrem" => Command::Write(Write::Zrem(Zrem::parse_frames(&mut parse)?)),
+            "zremrangebylex" => Command::Write(Write::Zremrangebylex(
                 Zremrangebylex::parse_frames(&mut parse)?,
             )),
-            "zremrangebyrank" => Command::WriteCmd(WriteCmd::Zremrangebyrank(
+            "zremrangebyrank" => Command::Write(Write::Zremrangebyrank(
                 Zremrangebyrank::parse_frames(&mut parse)?,
             )),
-            "zremrangebyscore" => Command::WriteCmd(WriteCmd::Zremrangebyscore(
+            "zremrangebyscore" => Command::Write(Write::Zremrangebyscore(
                 Zremrangebyscore::parse_frames(&mut parse)?,
             )),
-            "zrevrange" => {
-                Command::ReadCmd(ReadCmd::Zrevrange(Zrevrange::parse_frames(&mut parse)?))
-            }
-            "zrevrangebylex" => Command::ReadCmd(ReadCmd::Zrevrangebylex(
-                Zrevrangebylex::parse_frames(&mut parse)?,
-            )),
-            "zrevrangebyscore" => Command::ReadCmd(ReadCmd::Zrevrangebyscore(
+            "zrevrange" => Command::Read(Read::Zrevrange(Zrevrange::parse_frames(&mut parse)?)),
+            "zrevrangebylex" => Command::Read(Read::Zrevrangebylex(Zrevrangebylex::parse_frames(
+                &mut parse,
+            )?)),
+            "zrevrangebyscore" => Command::Read(Read::Zrevrangebyscore(
                 Zrevrangebyscore::parse_frames(&mut parse)?,
             )),
-            "zrevrank" => Command::ReadCmd(ReadCmd::Zrevrank(Zrevrank::parse_frames(&mut parse)?)),
-            "zrange" => Command::ReadCmd(ReadCmd::Zrange(Zrange::parse_frames(&mut parse)?)),
-            "zadd" => Command::WriteCmd(WriteCmd::Zadd(Zadd::parse_frames(&mut parse)?)),
-            "sadd" => Command::WriteCmd(WriteCmd::Sadd(Sadd::parse_frames(&mut parse)?)),
-            "sismember" => {
-                Command::ReadCmd(ReadCmd::Sismember(Sismember::parse_frames(&mut parse)?))
-            }
-            "smismember" => {
-                Command::ReadCmd(ReadCmd::Smismember(Smismember::parse_frames(&mut parse)?))
-            }
-            "smembers" => Command::ReadCmd(ReadCmd::Smembers(Smembers::parse_frames(&mut parse)?)),
-            "srem" => Command::WriteCmd(WriteCmd::Srem(Srem::parse_frames(&mut parse)?)),
-            "hincrby" => Command::WriteCmd(WriteCmd::Hincrby(Hincrby::parse_frames(&mut parse)?)),
-            "hexist" => Command::ReadCmd(ReadCmd::Hexists(Hexists::parse_frames(&mut parse)?)),
-            "hdel" => Command::WriteCmd(WriteCmd::Hdel(Hdel::parse_frames(&mut parse)?)),
-            "hsetnx" => Command::WriteCmd(WriteCmd::Hsetnx(Hsetnx::parse_frames(&mut parse)?)),
-            "hget" => Command::ReadCmd(ReadCmd::Hget(Hget::parse_frames(&mut parse)?)),
-            "hmget" => Command::ReadCmd(ReadCmd::Hmget(Hmget::parse_frames(&mut parse)?)),
-            "hset" => Command::WriteCmd(WriteCmd::Hset(Hset::parse_frames(&mut parse)?)),
-            "hgetall" => Command::ReadCmd(ReadCmd::Hgetall(Hgetall::parse_frames(&mut parse)?)),
-            "llen" => Command::ReadCmd(ReadCmd::Llen(Llen::parse_frames(&mut parse)?)),
-            "rpop" => Command::WriteCmd(WriteCmd::Rpop(Rpop::parse_frames(&mut parse)?)),
-            "lpop" => Command::WriteCmd(WriteCmd::Lpop(Lpop::parse_frames(&mut parse)?)),
-            "lrange" => Command::ReadCmd(ReadCmd::Lrange(Lrange::parse_frames(&mut parse)?)),
-            "lpush" => Command::WriteCmd(WriteCmd::Lpush(Lpush::parse_frames(&mut parse)?)),
-            "rpush" => Command::WriteCmd(WriteCmd::Rpush(Rpush::parse_frames(&mut parse)?)),
-            "lpushx" => Command::WriteCmd(WriteCmd::Lpushx(Lpushx::parse_frames(&mut parse)?)),
-            "rpushx" => Command::WriteCmd(WriteCmd::Rpushx(Rpushx::parse_frames(&mut parse)?)),
-            "incrby" => Command::WriteCmd(WriteCmd::Incrby(Incrby::parse_frames(&mut parse)?)),
-            "incr" => Command::WriteCmd(WriteCmd::Incr(Incr::parse_frames(&mut parse)?)),
-            "decrby" => Command::WriteCmd(WriteCmd::Decrby(Decrby::parse_frames(&mut parse)?)),
-            "decr" => Command::WriteCmd(WriteCmd::Decr(Decr::parse_frames(&mut parse)?)),
-            "get" => Command::ReadCmd(ReadCmd::Get(Get::parse_frames(&mut parse)?)),
-            "set" => Command::WriteCmd(WriteCmd::Set(Set::parse_frames(&mut parse)?)),
-            "del" => Command::WriteCmd(WriteCmd::Del(Del::parse_frames(&mut parse)?)),
-            "exists" => Command::ReadCmd(ReadCmd::Exists(Exists::parse_frames(&mut parse)?)),
-            "psetex" => Command::WriteCmd(WriteCmd::Psetex(Psetex::parse_frames(&mut parse)?)),
-            "setex" => Command::WriteCmd(WriteCmd::Setex(Setex::parse_frames(&mut parse)?)),
-            "pexpireat" => {
-                Command::WriteCmd(WriteCmd::Pexpireat(Pexpireat::parse_frames(&mut parse)?))
-            }
-            "expireat" => {
-                Command::WriteCmd(WriteCmd::Expireat(Expireat::parse_frames(&mut parse)?))
-            }
-            "expire" => Command::WriteCmd(WriteCmd::Expire(Expire::parse_frames(&mut parse)?)),
-            "pexpire" => Command::WriteCmd(WriteCmd::Pexpire(Pexpire::parse_frames(&mut parse)?)),
+            "zrevrank" => Command::Read(Read::Zrevrank(Zrevrank::parse_frames(&mut parse)?)),
+            "zrange" => Command::Read(Read::Zrange(Zrange::parse_frames(&mut parse)?)),
+            "zadd" => Command::Write(Write::Zadd(Zadd::parse_frames(&mut parse)?)),
+            "sadd" => Command::Write(Write::Sadd(Sadd::parse_frames(&mut parse)?)),
+            "sismember" => Command::Read(Read::Sismember(Sismember::parse_frames(&mut parse)?)),
+            "smismember" => Command::Read(Read::Smismember(Smismember::parse_frames(&mut parse)?)),
+            "smembers" => Command::Read(Read::Smembers(Smembers::parse_frames(&mut parse)?)),
+            "srem" => Command::Write(Write::Srem(Srem::parse_frames(&mut parse)?)),
+            "hincrby" => Command::Write(Write::Hincrby(Hincrby::parse_frames(&mut parse)?)),
+            "hexist" => Command::Read(Read::Hexists(Hexists::parse_frames(&mut parse)?)),
+            "hdel" => Command::Write(Write::Hdel(Hdel::parse_frames(&mut parse)?)),
+            "hsetnx" => Command::Write(Write::Hsetnx(Hsetnx::parse_frames(&mut parse)?)),
+            "hget" => Command::Read(Read::Hget(Hget::parse_frames(&mut parse)?)),
+            "hmget" => Command::Read(Read::Hmget(Hmget::parse_frames(&mut parse)?)),
+            "hset" => Command::Write(Write::Hset(Hset::parse_frames(&mut parse)?)),
+            "hgetall" => Command::Read(Read::Hgetall(Hgetall::parse_frames(&mut parse)?)),
+            "llen" => Command::Read(Read::Llen(Llen::parse_frames(&mut parse)?)),
+            "rpop" => Command::Write(Write::Rpop(Rpop::parse_frames(&mut parse)?)),
+            "lpop" => Command::Write(Write::Lpop(Lpop::parse_frames(&mut parse)?)),
+            "lrange" => Command::Read(Read::Lrange(Lrange::parse_frames(&mut parse)?)),
+            "lpush" => Command::Write(Write::Lpush(Lpush::parse_frames(&mut parse)?)),
+            "rpush" => Command::Write(Write::Rpush(Rpush::parse_frames(&mut parse)?)),
+            "lpushx" => Command::Write(Write::Lpushx(Lpushx::parse_frames(&mut parse)?)),
+            "rpushx" => Command::Write(Write::Rpushx(Rpushx::parse_frames(&mut parse)?)),
+            "incrby" => Command::Write(Write::Incrby(Incrby::parse_frames(&mut parse)?)),
+            "incr" => Command::Write(Write::Incr(Incr::parse_frames(&mut parse)?)),
+            "decrby" => Command::Write(Write::Decrby(Decrby::parse_frames(&mut parse)?)),
+            "decr" => Command::Write(Write::Decr(Decr::parse_frames(&mut parse)?)),
+            "get" => Command::Read(Read::Get(Get::parse_frames(&mut parse)?)),
+            "set" => Command::Write(Write::Set(Set::parse_frames(&mut parse)?)),
+            "del" => Command::Write(Write::Del(Del::parse_frames(&mut parse)?)),
+            "exists" => Command::Read(Read::Exists(Exists::parse_frames(&mut parse)?)),
+            "psetex" => Command::Write(Write::Psetex(Psetex::parse_frames(&mut parse)?)),
+            "setex" => Command::Write(Write::Setex(Setex::parse_frames(&mut parse)?)),
+            "pexpireat" => Command::Write(Write::Pexpireat(Pexpireat::parse_frames(&mut parse)?)),
+            "expireat" => Command::Write(Write::Expireat(Expireat::parse_frames(&mut parse)?)),
+            "expire" => Command::Write(Write::Expire(Expire::parse_frames(&mut parse)?)),
+            "pexpire" => Command::Write(Write::Pexpire(Pexpire::parse_frames(&mut parse)?)),
             "synccmd" => Command::SyncCmd,
             "syncsnapshot" => Command::SyncSnapshot,
             _ => {
@@ -222,9 +212,9 @@ impl Command {
     }
 }
 
-impl WriteCmd {
+impl Write {
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        use WriteCmd::*;
+        use Write::*;
         match self {
             Set(cmd) => cmd.apply(db),
             Psetex(cmd) => cmd.apply(db),
@@ -259,9 +249,9 @@ impl WriteCmd {
     }
 }
 
-impl ReadCmd {
+impl Read {
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        use ReadCmd::*;
+        use Read::*;
 
         match self {
             Get(cmd) => cmd.apply(db),

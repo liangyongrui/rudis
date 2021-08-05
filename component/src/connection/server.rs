@@ -236,8 +236,8 @@ impl Handler {
             let cmd = Command::from_frame(frame)?;
 
             let res = match cmd {
-                Command::ReadCmd(o) => o.apply(&self.db),
-                Command::WriteCmd(o) => o.apply(&self.db),
+                Command::Read(o) => o.apply(&self.db),
+                Command::Write(o) => o.apply(&self.db),
                 Command::Unknown(o) => Ok(o.apply()),
                 Command::SyncCmd => {
                     let _ = crate::replica::master::process_sync_cmd(self.connection.stream).await;

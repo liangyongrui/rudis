@@ -17,7 +17,7 @@ pub struct Parse {
     /// Array frame iterator.
     parts: vec::IntoIter<Frame>,
 }
-
+#[allow(clippy::module_name_repetitions)]
 /// Error encountered while parsing a frame.
 ///
 /// Only `EndOfStream` errors are handled at runtime. All other errors result in

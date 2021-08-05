@@ -52,6 +52,7 @@ pub trait Read<T> {
     fn apply(self, dict: &RwLock<Dict>) -> crate::Result<T>;
 }
 
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum WriteCmd {
     Del(simple::del::Req),

@@ -9,7 +9,7 @@ use tracing::{debug, error};
 use crate::{config::CONFIG, forward::Message, hdp::snapshot};
 
 /// 每个 slot 都有一个aof_status
-pub struct AofStatus {
+pub struct Status {
     pub slot_id: u16,
     pub snapshot_next_id: u64,
     pub file: BufWriter<File>,
@@ -17,7 +17,7 @@ pub struct AofStatus {
     pub count: u64,
 }
 
-impl AofStatus {
+impl Status {
     pub fn new(save_hdp_dir: &Path, snapshot_next_id: u64, slot_id: u16) -> crate::Result<Self> {
         let save_path = save_hdp_dir.join(format!("{}/dump_{}.aof", snapshot_next_id, slot_id));
         let display = &save_path.display();
