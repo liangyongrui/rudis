@@ -30,6 +30,7 @@ arc-swap = "1"
 tokio-serde = { version = "0.8", features = ['bincode'] }
 tokio-util = { version = "0.6", features = ["codec"] }
 futures = "0.3"
+ahash = "0.7"
 
 [dev-dependencies]
 # Enable test-utilities in dev mode only. This is mostly for tests.

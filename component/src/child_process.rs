@@ -8,9 +8,9 @@ use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 use tracing::{error, info, warn};
 
-static STATUS: Lazy<Mutex<HashMap<Pid, Info>>> = Lazy::new(|| {
+static STATUS: Lazy<Mutex<HashMap<Pid, Info, ahash::RandomState>>> = Lazy::new(|| {
     tokio::task::spawn_blocking(loop_status);
-    Mutex::new(HashMap::new())
+    Mutex::new(HashMap::with_hasher(ahash::RandomState::default()))
 });
 
 #[derive(Debug)]

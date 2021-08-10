@@ -11,7 +11,7 @@ use crate::utils::now_timestamp_ms;
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
     pub write_id: u64,
-    pub inner: HashMap<Arc<[u8]>, Value>,
+    pub inner: HashMap<Arc<[u8]>, Value, ahash::RandomState>,
 }
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -77,7 +77,7 @@ impl Dict {
 }
 
 impl Deref for Dict {
-    type Target = HashMap<Arc<[u8]>, Value>;
+    type Target = HashMap<Arc<[u8]>, Value, ahash::RandomState>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

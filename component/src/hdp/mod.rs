@@ -14,7 +14,7 @@ pub mod snapshot;
 pub struct Status {
     pub tx: flume::Sender<Message>,
     rx: flume::Receiver<Message>,
-    pub aof_status_map: HashMap<u16, aof::Status>,
+    pub aof_status_map: HashMap<u16, aof::Status, ahash::RandomState>,
     pub save_hdp_dir: PathBuf,
 }
 
@@ -28,7 +28,7 @@ impl Status {
         Some(Self {
             tx,
             rx,
-            aof_status_map: HashMap::new(),
+            aof_status_map: HashMap::with_hasher(ahash::RandomState::default()),
             save_hdp_dir,
         })
     }

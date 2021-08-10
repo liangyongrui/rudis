@@ -36,7 +36,7 @@ pub enum Role {
 }
 
 pub struct Db {
-    pub slots: HashMap<u16, Slot>,
+    pub slots: HashMap<u16, Slot, ahash::RandomState>,
     pub read_only: AtomicBool,
     // 为了优雅退出，这里的角色只是存了一下连接状态
     pub role: Mutex<Role>,
@@ -52,7 +52,7 @@ impl Db {
             expire_sender: expiration.tx.clone(),
             forward_sender: FORWARD.tx.clone(),
         };
-        let mut slots = HashMap::new();
+        let mut slots = HashMap::with_hasher(ahash::RandomState::default());
         for i in 0..SIZE {
             slots
                 .entry(i)
