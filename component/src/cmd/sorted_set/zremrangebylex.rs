@@ -4,7 +4,7 @@ use rcc_macros::ParseFrames;
 
 use crate::{Db, Frame};
 
-/// https://redis.io/commands/zremrangebyrank
+/// https://redis.io/commands/zremrangebylex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
     pub key: Arc<[u8]>,

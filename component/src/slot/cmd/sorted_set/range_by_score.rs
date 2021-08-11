@@ -1,11 +1,13 @@
-use std::{
-    borrow::Borrow,
-    ops::{Bound, RangeBounds},
-};
+use std::ops::{Bound, RangeBounds};
 
 use parking_lot::RwLock;
+use tracing::debug;
 
-use crate::slot::{cmd::Read, data_type::Float, dict::Dict};
+use crate::slot::{
+    cmd::Read,
+    data_type::{DataType, Float},
+    dict::Dict,
+};
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
@@ -25,25 +27,31 @@ impl Read<Vec<crate::slot::data_type::sorted_set::Node>> for Req<'_> {
         self,
         dict: &RwLock<Dict>,
     ) -> crate::Result<Vec<crate::slot::data_type::sorted_set::Node>> {
-        if let Some(value) = super::get_value(self.key, dict.read().borrow())? {
-            let bigger_range = super::bigger_range(self.range);
-            let (offset, count) = super::shape_limit(self.limit, value.size());
-            let iter = value.range(bigger_range);
-            let res = if self.rev {
-                iter.rev()
-                    .filter(|t| self.range.contains(&t.score))
-                    .skip(offset)
-                    .take(count)
-                    .cloned()
-                    .collect()
+        if let Some(value) = dict.read().d_get(self.key) {
+            if let DataType::SortedSet(ref ss) = value.data {
+                let value = ss.value.as_ref();
+                let bigger_range = super::bigger_range(self.range);
+                debug!(?bigger_range);
+                let (offset, count) = super::shape_limit(self.limit, value.len());
+                let iter = value.range(bigger_range);
+                let res = if self.rev {
+                    iter.rev()
+                        .filter(|t| self.range.contains(&t.score))
+                        .skip(offset)
+                        .take(count)
+                        .cloned()
+                        .collect()
+                } else {
+                    iter.filter(|t| self.range.contains(&t.score))
+                        .skip(offset)
+                        .take(count)
+                        .cloned()
+                        .collect()
+                };
+                Ok(res)
             } else {
-                iter.filter(|t| self.range.contains(&t.score))
-                    .skip(offset)
-                    .take(count)
-                    .cloned()
-                    .collect()
-            };
-            Ok(res)
+                Err("error type".into())
+            }
         } else {
             Ok(vec![])
         }

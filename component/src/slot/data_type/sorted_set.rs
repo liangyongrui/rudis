@@ -1,14 +1,13 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
-use rpds::RedBlackTreeSetSync;
 use serde::{Deserialize, Serialize};
 
 use super::Float;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 pub struct Node {
-    pub key: String,
     pub score: Float,
+    pub key: String,
 }
 
 impl Node {
@@ -23,7 +22,7 @@ impl Node {
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct SortedSet {
     pub hash: Box<HashMap<String, Node, ahash::RandomState>>,
-    pub value: Box<RedBlackTreeSetSync<Node>>,
+    pub value: Box<BTreeSet<Node>>,
 }
 
 impl SortedSet {

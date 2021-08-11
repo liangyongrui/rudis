@@ -1,12 +1,7 @@
 use std::ops::Bound;
 
-use rpds::RedBlackTreeSetSync;
-
 use crate::{
-    slot::{
-        data_type::{sorted_set::Node, DataType, Float},
-        dict,
-    },
+    slot::data_type::{sorted_set::Node, Float},
     utils::BoundExt,
 };
 
@@ -19,19 +14,6 @@ pub mod remove;
 pub mod remove_by_lex_range;
 pub mod remove_by_rank_range;
 pub mod remove_by_score_range;
-
-pub(self) fn get_value(
-    key: &[u8],
-    dict: &dict::Dict,
-) -> crate::Result<Option<RedBlackTreeSetSync<Node>>> {
-    dict.d_get(key).map_or(Ok(None), |v| {
-        if let DataType::SortedSet(ref sorted_set) = v.data {
-            Ok(Some(*sorted_set.value.clone()))
-        } else {
-            Err("error type".into())
-        }
-    })
-}
 
 pub(self) fn shape_limit(limit: Option<(usize, i64)>, len: usize) -> (usize, usize) {
     match limit {
@@ -67,7 +49,7 @@ pub(self) fn bigger_range(range: (Bound<Float>, Bound<Float>)) -> (Bound<Node>, 
             key: "".to_owned(),
         }),
         range.1.map(|f| Node {
-            score: Float(f.0 + f64::EPSILON),
+            score: Float(f.0 + 0.1),
             key: "".to_owned(),
         }),
     )

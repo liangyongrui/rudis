@@ -1,5 +1,7 @@
 use std::{convert::TryInto, sync::Arc};
 
+use tracing::debug;
+
 use crate::{
     parse::ParseError,
     slot::data_type::{sorted_set::Node, DataType},
@@ -58,17 +60,17 @@ impl Zadd {
                 t => break t,
             }
         };
+        debug!(?score);
         let member = parse.next_string()?;
         let mut nodes = vec![Node::new(member, (&score).try_into()?)];
         loop {
-            nodes.push(Node::new(
-                parse.next_string()?,
-                match parse.next_data() {
-                    Ok(s) => (&s).try_into()?,
-                    Err(ParseError::EndOfStream) => break,
-                    Err(err) => return Err(err.into()),
-                },
-            ));
+            let score = match parse.next_data() {
+                Ok(s) => (&s).try_into()?,
+                Err(ParseError::EndOfStream) => break,
+                Err(err) => return Err(err.into()),
+            };
+            let member = parse.next_string()?;
+            nodes.push(Node::new(member, score));
         }
 
         Ok(Self {

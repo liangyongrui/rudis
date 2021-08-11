@@ -1,9 +1,13 @@
-use std::{borrow::Borrow, ops::Bound};
+use std::ops::Bound;
 
 use parking_lot::RwLock;
 
 use crate::{
-    slot::{cmd::Read, data_type::sorted_set::Node, dict::Dict},
+    slot::{
+        cmd::Read,
+        data_type::{sorted_set::Node, DataType},
+        dict::Dict,
+    },
     utils::BoundExt,
 };
 
@@ -25,23 +29,28 @@ impl Read<Vec<crate::slot::data_type::sorted_set::Node>> for Req<'_> {
         self,
         dict: &RwLock<Dict>,
     ) -> crate::Result<Vec<crate::slot::data_type::sorted_set::Node>> {
-        if let Some(value) = super::get_value(self.key, dict.read().borrow())? {
-            let score = match value.first() {
-                Some(n) => n.score,
-                None => return Ok(vec![]),
-            };
-            let range = (
-                self.range.0.map(|key| Node { key, score }),
-                self.range.1.map(|key| Node { key, score }),
-            );
-            let (offset, count) = super::shape_limit(self.limit, value.size());
-            let iter = value.range(range);
-            let res = if self.rev {
-                iter.rev().skip(offset).take(count).cloned().collect()
+        if let Some(value) = dict.read().d_get(self.key) {
+            if let DataType::SortedSet(ref ss) = value.data {
+                let value = ss.value.as_ref();
+                let score = match value.iter().next() {
+                    Some(n) => n.score,
+                    None => return Ok(vec![]),
+                };
+                let range = (
+                    self.range.0.map(|key| Node { score, key }),
+                    self.range.1.map(|key| Node { score, key }),
+                );
+                let (offset, count) = super::shape_limit(self.limit, value.len());
+                let iter = value.range(range);
+                let res = if self.rev {
+                    iter.rev().skip(offset).take(count).cloned().collect()
+                } else {
+                    iter.skip(offset).take(count).cloned().collect()
+                };
+                Ok(res)
             } else {
-                iter.skip(offset).take(count).cloned().collect()
-            };
-            Ok(res)
+                Err("error type".into())
+            }
         } else {
             Ok(vec![])
         }

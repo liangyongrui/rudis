@@ -1,5 +1,7 @@
 //! 测试用的一些基础函数
 
+use std::time::Duration;
+
 use component::{server, Frame};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -23,7 +25,10 @@ pub async fn write_cmd(stream: &mut TcpStream, cmd: Vec<&str>) {
 
 pub async fn read_assert_eq(stream: &mut TcpStream, right: &[u8]) {
     let mut response = vec![0; right.len()];
-    stream.read_exact(&mut response).await.unwrap();
+    tokio::time::timeout(Duration::from_millis(10), stream.read_exact(&mut response))
+        .await
+        .unwrap()
+        .unwrap();
     debug!(
         "read_assert_eq left: {:?}, right: {:?}",
         std::str::from_utf8(&response),

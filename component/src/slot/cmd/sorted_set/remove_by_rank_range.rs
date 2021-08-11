@@ -36,7 +36,7 @@ impl Write<Vec<Node>> for Req {
                         if i >= stop {
                             break;
                         }
-                        sorted_set.value.remove_mut(n);
+                        sorted_set.value.remove(n);
                         if let Some(n) = sorted_set.hash.remove(&n.key) {
                             res.push(n)
                         }
@@ -49,7 +49,7 @@ impl Write<Vec<Node>> for Req {
                         if i >= stop {
                             break;
                         }
-                        sorted_set.value.remove_mut(n);
+                        sorted_set.value.remove(n);
                         if let Some(n) = sorted_set.hash.remove(&n.key) {
                             res.push(n)
                         }

@@ -33,7 +33,7 @@ impl Write<Resp> for Req {
                 let old_len = sorted_set.hash.len();
                 for ref m in self.members {
                     if let Some(ref on) = sorted_set.hash.remove(m) {
-                        sorted_set.value.remove_mut(on);
+                        sorted_set.value.remove(on);
                     }
                 }
                 Ok(Resp {

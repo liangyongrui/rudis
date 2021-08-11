@@ -31,14 +31,14 @@ impl Zrevrangebyscore {
             }
         }
         let range_item = {
-            let min = if min == "-inf" {
+            let min = if min == "+inf" {
                 Bound::Unbounded
             } else if let Some(s) = min.strip_prefix('(') {
                 Bound::Excluded(s.parse::<f64>()?)
             } else {
                 Bound::Included(min.parse::<f64>()?)
             };
-            let max = if max == "+inf" {
+            let max = if max == "-inf" {
                 Bound::Unbounded
             } else if let Some(s) = max.strip_prefix('(') {
                 Bound::Excluded(s.parse::<f64>()?)

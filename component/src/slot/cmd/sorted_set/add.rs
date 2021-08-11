@@ -69,12 +69,12 @@ impl Write<Resp> for Req {
                 if can_update {
                     update_len += 1;
                     if let Some(on) = sorted_set.hash.insert(node.key.clone(), node.clone()) {
-                        sorted_set.value.remove_mut(&on);
+                        sorted_set.value.remove(&on);
                         if self.incr {
                             node.score.0 += on.score.0
                         }
                     }
-                    sorted_set.value.insert_mut(node);
+                    sorted_set.value.insert(node);
                 }
             }
             Ok(Resp {

@@ -29,27 +29,27 @@ impl Write<Vec<Node>> for Req {
     fn apply(self, dict: &mut Dict) -> crate::Result<Vec<Node>> {
         if let Some(old) = dict.d_get_mut(&self.key) {
             if let DataType::SortedSet(ref mut sorted_set) = old.data {
-                let score = match sorted_set.value.first() {
+                let score = match sorted_set.value.iter().next() {
                     Some(n) => n.score,
                     None => return Ok(vec![]),
                 };
                 let range = (
-                    self.range.0.map(|key| Node { key, score }),
-                    self.range.1.map(|key| Node { key, score }),
+                    self.range.0.map(|key| Node { score, key }),
+                    self.range.1.map(|key| Node { score, key }),
                 );
                 let mut res = vec![];
                 let value_clone = sorted_set.value.clone();
                 let iter = value_clone.range(range);
                 if self.rev {
                     for n in iter.rev() {
-                        sorted_set.value.remove_mut(n);
+                        sorted_set.value.remove(n);
                         if let Some(n) = sorted_set.hash.remove(&n.key) {
                             res.push(n)
                         }
                     }
                 } else {
                     for n in iter {
-                        sorted_set.value.remove_mut(n);
+                        sorted_set.value.remove(n);
                         if let Some(n) = sorted_set.hash.remove(&n.key) {
                             res.push(n)
                         }

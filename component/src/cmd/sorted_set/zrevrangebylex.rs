@@ -28,14 +28,14 @@ impl Zrevrangebylex {
             }
         }
         let range_item = {
-            let min = if min == "-" {
+            let min = if min == "+" {
                 Bound::Unbounded
             } else if let Some(s) = min.strip_prefix('(') {
                 Bound::Excluded(s.to_owned())
             } else {
                 Bound::Included(min[1..].to_owned())
             };
-            let max = if max == "+" {
+            let max = if max == "-" {
                 Bound::Unbounded
             } else if let Some(s) = max.strip_prefix('(') {
                 Bound::Excluded(s.to_owned())
