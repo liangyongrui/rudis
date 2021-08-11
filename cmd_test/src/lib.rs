@@ -24,7 +24,11 @@ pub async fn write_cmd(stream: &mut TcpStream, cmd: Vec<&str>) {
 pub async fn read_assert_eq(stream: &mut TcpStream, right: &[u8]) {
     let mut response = vec![0; right.len()];
     stream.read_exact(&mut response).await.unwrap();
-    debug!("{:?}", std::str::from_utf8(&response));
+    debug!(
+        "read_assert_eq left: {:?}, right: {:?}",
+        std::str::from_utf8(&response),
+        std::str::from_utf8(right)
+    );
     assert_eq!(&response, right);
 }
 

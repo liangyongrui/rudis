@@ -201,6 +201,9 @@ impl Slot {
     pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> crate::Result<DataType> {
         cmd.apply(&self.dict)
     }
+    pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> crate::Result<cmd::simple::ttl::Resp> {
+        cmd.apply(&self.dict)
+    }
     pub fn exists(&self, cmd: cmd::simple::exists::Req<'_>) -> crate::Result<bool> {
         cmd.apply(&self.dict)
     }

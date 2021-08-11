@@ -1,9 +1,10 @@
 use std::{
-    collections::{hash_map::DefaultHasher, HashMap},
+    collections::HashMap,
     hash::{Hash, Hasher},
     sync::{atomic::AtomicBool, Arc},
 };
 
+use ahash::AHasher;
 use parking_lot::Mutex;
 use rpds::{HashTrieMapSync, HashTrieSetSync};
 use tokio::sync::broadcast;
@@ -52,7 +53,7 @@ impl Db {
             expire_sender: expiration.tx.clone(),
             forward_sender: FORWARD.tx.clone(),
         };
-        let mut slots = HashMap::with_hasher(ahash::RandomState::default());
+        let mut slots = HashMap::default();
         for i in 0..SIZE {
             slots
                 .entry(i)
@@ -84,10 +85,9 @@ impl Db {
 
     fn get_slot(&self, key: &[u8]) -> &Slot {
         // todo 更完善的分片策略
-        let mut s = DefaultHasher::new();
+        let mut s = AHasher::new_with_keys(0, 0);
         key.hash(&mut s);
         let i = s.finish() % u64::from(SIZE);
-        // todo cluster move
         self.slots.get(&(i as u16)).unwrap()
     }
 
@@ -100,6 +100,9 @@ impl Db {
 impl Db {
     pub fn get(&self, cmd: cmd::simple::get::Req) -> crate::Result<DataType> {
         self.get_slot(cmd.key).get(cmd)
+    }
+    pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> crate::Result<cmd::simple::ttl::Resp> {
+        self.get_slot(cmd.key).ttl(cmd)
     }
     pub fn set(&self, cmd: cmd::simple::set::Req) -> crate::Result<DataType> {
         self.get_slot(&cmd.key).set(cmd)

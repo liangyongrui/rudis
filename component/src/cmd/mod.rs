@@ -13,7 +13,7 @@ use self::{
     base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
         get::Get, incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat,
-        psetex::Psetex, set::Set, setex::Setex, unknown::Unknown,
+        psetex::Psetex, pttl::Pttl, set::Set, setex::Setex, ttl::Ttl, unknown::Unknown,
     },
     hash::{
         hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,
@@ -66,6 +66,8 @@ pub enum Read {
     Llen(Llen),
     Lrange(Lrange),
     Get(Get),
+    Ttl(Ttl),
+    Pttl(Pttl),
     Exists(Exists),
 }
 
@@ -127,6 +129,8 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "ttl" => Command::Read(Read::Ttl(Ttl::parse_frames(&mut parse)?)),
+            "pttl" => Command::Read(Read::Pttl(Pttl::parse_frames(&mut parse)?)),
             "zrangebylex" => {
                 Command::Read(Read::Zrangebylex(Zrangebylex::parse_frames(&mut parse)?))
             }
@@ -273,6 +277,8 @@ impl Read {
             Zrange(cmd) => cmd.apply(db),
             Lrange(cmd) => cmd.apply(db),
             Exists(cmd) => cmd.apply(db),
+            Ttl(cmd) => cmd.apply(db),
+            Pttl(cmd) => cmd.apply(db),
         }
     }
 }

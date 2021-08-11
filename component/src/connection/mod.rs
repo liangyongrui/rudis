@@ -26,6 +26,7 @@ impl Connection {
     }
 
     /// Write a single `Frame` value to the underlying stream.
+    #[tracing::instrument(skip(self), level = "debug")]
     pub async fn write_frame(&mut self, frame: &Frame) -> io::Result<()> {
         let bytes: Vec<u8> = frame.into();
         self.stream.write_all(&bytes).await

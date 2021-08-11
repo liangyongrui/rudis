@@ -10,6 +10,8 @@ pub mod incrby;
 pub mod pexpire;
 pub mod pexpireat;
 pub mod psetex;
+pub mod pttl;
 pub mod set;
 pub mod setex;
+pub mod ttl;
 pub mod unknown;

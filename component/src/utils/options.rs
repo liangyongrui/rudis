@@ -47,6 +47,14 @@ pub enum GtLt {
     None,
 }
 
+impl GtLt {
+    #[inline]
+    #[must_use]
+    pub const fn is_none(self) -> bool {
+        matches!(self, GtLt::None)
+    }
+}
+
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum ExpiresAt {
     // 指定时间, 0 不会过期

@@ -1,33 +1,76 @@
-use std::sync::Arc;
-
-use rcc_macros::ParseFrames;
-
-use crate::{db::Db, Frame};
+use crate::{
+    db::Db,
+    slot::cmd::simple::expire::Req,
+    utils::options::{GtLt, NxXx},
+    Frame,
+    ParseError::EndOfStream,
+};
 
 /// https://redis.io/commands/expireat
-#[derive(Debug, Clone, ParseFrames)]
+///
+/// 这个命令不知道是不是官方文档错了，文档上写的 \[NX|XX|GT|LT],
+/// 我实现的是 \[NX|XX] 和 \[GT|LT] 每组可以指定0或1个
+#[derive(Debug, Clone)]
 pub struct Expireat {
-    pub key: Arc<[u8]>,
-    pub s_timestamp: u64,
-}
-
-impl From<Expireat> for crate::slot::cmd::simple::expire::Req {
-    fn from(old: Expireat) -> Self {
-        Self {
-            key: old.key,
-            expires_at: old.s_timestamp * 1000,
-        }
-    }
+    pub req: Req,
 }
 
 impl Expireat {
-    /// Apply the `Set` command to the specified `Db` instance.
-    ///
-    /// The response is written to `dst`. This is called by the server in order
-    /// to execute a received command.
+    pub fn parse_frames(parse: &mut crate::parse::Parse) -> crate::Result<Expireat> {
+        let key = parse.next_key()?;
+        let expires_at = parse.next_int()?;
+        let mut nx_xx = NxXx::None;
+        let mut gt_lt = GtLt::None;
+        loop {
+            // Attempt to parse another string.
+            match parse.next_string() {
+                Ok(s) => match &s.to_uppercase()[..] {
+                    "NX" => {
+                        if !nx_xx.is_none() {
+                            return Err("`NX` or `XX` already set".into());
+                        }
+                        nx_xx = NxXx::Nx
+                    }
+                    "XX" => {
+                        if !nx_xx.is_none() {
+                            return Err("`NX` or `XX` already set".into());
+                        }
+                        nx_xx = NxXx::Xx
+                    }
+                    "GT" => {
+                        if !gt_lt.is_none() {
+                            return Err("`GT` or `LT` already set".into());
+                        }
+                        gt_lt = GtLt::Gt
+                    }
+                    "LT" => {
+                        if !gt_lt.is_none() {
+                            return Err("`GT` or `LT` already set".into());
+                        }
+                        gt_lt = GtLt::Lt
+                    }
+                    not_support => return Err(format!("not support cmd: {}", not_support).into()),
+                },
+                Err(EndOfStream) => {
+                    break;
+                }
+                Err(err) => return Err(err.into()),
+            }
+        }
+
+        Ok(Self {
+            req: Req {
+                key,
+                expires_at: expires_at as u64 * 1000,
+                nx_xx,
+                gt_lt,
+            },
+        })
+    }
+
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.expire(self.into())?;
+        let res = db.expire(self.req)?;
         let response = Frame::Integer(if res { 1 } else { 0 });
         Ok(response)
     }

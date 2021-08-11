@@ -14,6 +14,7 @@
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::cast_precision_loss)]
 #![allow(clippy::too_many_lines)]
+#![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::shadow_unrelated)]
 
 /// 子进程管理

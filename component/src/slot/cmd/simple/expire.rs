@@ -2,15 +2,20 @@ use std::sync::Arc;
 
 use serde::{Deserialize, Serialize};
 
-use crate::slot::{
-    cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
-    dict::Dict,
+use crate::{
+    slot::{
+        cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+        dict::Dict,
+    },
+    utils::options::{GtLt, NxXx},
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
     pub expires_at: u64,
+    pub nx_xx: NxXx,
+    pub gt_lt: GtLt,
 }
 impl From<Req> for WriteCmd {
     fn from(req: Req) -> Self {
@@ -27,16 +32,39 @@ impl ExpiresWrite<bool> for Req {
                 expires_status: ExpiresStatus::None,
             }),
             |v| {
-                let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
-                    key: self.key,
-                    before: v.expires_at,
-                    new: self.expires_at,
-                });
-                v.expires_at = self.expires_at;
-                Ok(ExpiresWriteResp {
-                    payload: true,
-                    expires_status,
-                })
+                let update = match (self.nx_xx, self.gt_lt) {
+                    (NxXx::None, GtLt::None) => true,
+                    (NxXx::Nx, GtLt::None) if v.expires_at == 0 => true,
+                    (NxXx::Xx | NxXx::None, GtLt::Gt)
+                        if v.expires_at != 0 && v.expires_at < self.expires_at =>
+                    {
+                        true
+                    }
+                    (NxXx::Xx | NxXx::None, GtLt::Lt)
+                        if v.expires_at == 0 || v.expires_at > self.expires_at =>
+                    {
+                        true
+                    }
+                    (NxXx::Xx, GtLt::None) if v.expires_at > 0 => true,
+                    _ => false,
+                };
+                if update {
+                    let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
+                        key: self.key,
+                        before: v.expires_at,
+                        new: self.expires_at,
+                    });
+                    v.expires_at = self.expires_at;
+                    Ok(ExpiresWriteResp {
+                        payload: true,
+                        expires_status,
+                    })
+                } else {
+                    Ok(ExpiresWriteResp {
+                        payload: false,
+                        expires_status: ExpiresStatus::None,
+                    })
+                }
             },
         )
     }
@@ -56,7 +84,7 @@ mod test {
             dict::Dict,
             ExpiresWrite, Read,
         },
-        utils::options::{ExpiresAt, NxXx},
+        utils::options::{ExpiresAt, GtLt, NxXx},
     };
 
     #[test]
@@ -87,6 +115,8 @@ mod test {
         let cmd = expire::Req {
             key: b"hello"[..].into(),
             expires_at: date_time,
+            nx_xx: NxXx::None,
+            gt_lt: GtLt::None,
         };
         let res = cmd.apply(dict.write().borrow_mut()).unwrap();
         assert_eq!(
