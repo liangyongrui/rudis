@@ -15,7 +15,7 @@ impl<'a> From<&'a Sismember> for crate::slot::cmd::set::exists::Req<'a> {
     fn from(old: &'a Sismember) -> Self {
         Self {
             key: &old.key,
-            field: &old.value,
+            fields: vec![&old.value],
         }
     }
 }
@@ -24,6 +24,6 @@ impl Sismember {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
         let res = db.set_exists((&self).into())?;
-        Ok(Frame::Integer(if res { 1 } else { 0 }))
+        Ok(Frame::Integer(if res[0] { 1 } else { 0 }))
     }
 }

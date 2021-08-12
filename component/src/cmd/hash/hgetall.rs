@@ -18,14 +18,11 @@ impl<'a> From<&'a Hgetall> for crate::slot::cmd::kvp::get_all::Req<'a> {
 impl Hgetall {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        if let Some(v) = db.kvp_get_all((&self).into())? {
-            Ok(Frame::Array(
-                v.into_iter()
-                    .flat_map(|(k, v)| vec![Frame::Simple((&k[..]).into()), v.into()].into_iter())
-                    .collect(),
-            ))
-        } else {
-            Ok(Frame::Array(vec![]))
-        }
+        let v = db.kvp_get_all((&self).into())?;
+        Ok(Frame::Array(
+            v.into_iter()
+                .flat_map(|(k, v)| vec![Frame::Simple((&k[..]).into()), v.into()].into_iter())
+                .collect(),
+        ))
     }
 }

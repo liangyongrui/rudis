@@ -13,15 +13,15 @@ pub struct Hmget {
 impl Hmget {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        if let Some(all) = db.kvp_get_all(crate::slot::cmd::kvp::get_all::Req { key: &self.key })? {
-            let res = self
+        let v = db.kvp_get(crate::slot::cmd::kvp::get::Req {
+            key: &self.key,
+            fields: self
                 .fields
                 .iter()
-                .map(|f| all.get(f).map_or(Frame::Null, |t| t.into()))
-                .collect();
-            Ok(Frame::Array(res))
-        } else {
-            Ok(Frame::Array(vec![Frame::Null; self.fields.len()]))
-        }
+                .map(std::string::String::as_str)
+                .collect(),
+        })?;
+        let res = v.into_iter().map(|i| i.into()).collect();
+        Ok(Frame::Array(res))
     }
 }

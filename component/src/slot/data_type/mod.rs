@@ -21,10 +21,10 @@ pub enum DataType {
     Bytes(Arc<[u8]>),
     Integer(i64),
     Float(Float),
-    Kvp(Kvp),
+    Kvp(Box<Kvp>),
     Deque(Deque),
-    Set(Set),
-    SortedSet(SortedSet),
+    Set(Box<Set>),
+    SortedSet(Box<SortedSet>),
 }
 
 impl From<&str> for DataType {

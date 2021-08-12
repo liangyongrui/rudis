@@ -30,17 +30,17 @@ impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(&self.key, || dict::Value {
-            data: DataType::Set(Set::new()),
+            data: DataType::Set(Box::new(Set::new())),
             expires_at: 0,
         });
         if let DataType::Set(ref mut set) = old.data {
-            let old_len = set.size();
+            let old_len = set.len();
             for m in self.members {
-                set.insert_mut(m);
+                set.insert(m);
             }
             Ok(Resp {
                 old_len,
-                new_len: set.size(),
+                new_len: set.len(),
             })
         } else {
             Err("error type".into())

@@ -25,7 +25,7 @@ impl Read<Option<usize>> for Req<'_> {
                             }
                         }
                     } else {
-                        for n in sorted_set.value.iter() {
+                        for n in &sorted_set.value {
                             ans += 1;
                             if n.key == self.member {
                                 return Ok(Some(ans - 1));

@@ -25,7 +25,7 @@ pub async fn write_cmd(stream: &mut TcpStream, cmd: Vec<&str>) {
 
 pub async fn read_assert_eq(stream: &mut TcpStream, right: &[u8]) {
     let mut response = vec![0; right.len()];
-    tokio::time::timeout(Duration::from_millis(10), stream.read_exact(&mut response))
+    tokio::time::timeout(Duration::from_secs(1), stream.read_exact(&mut response))
         .await
         .unwrap()
         .unwrap();

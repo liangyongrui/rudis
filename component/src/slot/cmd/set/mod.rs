@@ -32,11 +32,10 @@ mod test {
             key: b"hello"[..].into(),
         }
         .apply(&dict)
-        .unwrap()
         .unwrap();
         assert_eq!(
             {
-                let mut v = res.into_iter().cloned().collect::<Vec<_>>();
+                let mut v = res.into_iter().collect::<Vec<_>>();
                 v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
                 v
             },
@@ -60,11 +59,10 @@ mod test {
             key: b"hello"[..].into(),
         }
         .apply(&dict)
-        .unwrap()
         .unwrap();
         assert_eq!(
             {
-                let mut v = res.into_iter().cloned().collect::<Vec<_>>();
+                let mut v = res.into_iter().collect::<Vec<_>>();
                 v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
                 v
             },
@@ -79,11 +77,11 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: "k1",
+            fields: vec!["k1"],
         }
         .apply(&dict)
         .unwrap();
-        assert!(res);
+        assert!(res[0]);
 
         let res = remove::Req {
             key: b"hello"[..].into(),
@@ -101,10 +99,10 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: "k1",
+            fields: vec!["k1"],
         }
         .apply(&dict)
         .unwrap();
-        assert!(!res);
+        assert!(!res[0]);
     }
 }

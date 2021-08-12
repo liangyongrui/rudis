@@ -26,7 +26,7 @@ impl Write<i64> for Req {
     fn apply(self, dict: &mut Dict) -> crate::Result<i64> {
         let v = dict.d_get_mut_or_insert_with(&self.key, || dict::Value {
             expires_at: 0,
-            data: DataType::Kvp(Kvp::new()),
+            data: DataType::Kvp(Box::new(Kvp::new())),
         });
         match v.data {
             crate::slot::data_type::DataType::Kvp(ref mut kvp) => {
@@ -36,7 +36,7 @@ impl Write<i64> for Req {
                     *s = DataType::Integer(new);
                     Ok(new)
                 } else {
-                    kvp.insert_mut(self.field, DataType::Integer(self.value));
+                    kvp.insert(self.field, DataType::Integer(self.value));
                     Ok(self.value)
                 }
             }
@@ -47,7 +47,7 @@ impl Write<i64> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::{borrow::BorrowMut, convert::TryInto};
+    use std::borrow::BorrowMut;
 
     use parking_lot::RwLock;
 
@@ -96,13 +96,12 @@ mod test {
             key: b"hello"[..].into(),
         }
         .apply(&dict)
-        .unwrap()
         .unwrap();
         assert_eq!(
             {
                 let mut v = res
                     .into_iter()
-                    .map(|kv| (kv.0.try_into().unwrap(), kv.1.clone()))
+                    .map(|kv| (kv.0, kv.1))
                     .collect::<Vec<(String, _)>>();
                 v.sort_unstable_by_key(|t| t.0.clone());
                 v

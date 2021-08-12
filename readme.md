@@ -63,6 +63,7 @@ rcc 差不多是 redis 的 5 倍
    - (开源后再做) slot, 查看监控、统计信息、同步代理等
 1. [ ] 错误信息
    - [ ] wrong number of arguments (given 3, expected 2)
+   - [ ] error type
 1. [ ] 各个 task 的优雅退出
 1. [ ] 通过详尽的测试
    - [ ] 代码覆盖率超过 90%
@@ -96,25 +97,26 @@ rcc 差不多是 redis 的 5 倍
    - 远程代理
 1. 热 key 请求并发聚合
 1. 根据 value 的大小动态调整数据结构
-1. 更高效的并发模型
+   - rpds
+2. 更高效的并发模型
    - 比如持久化数据结构
-1. io_uring
-1. 集群事务
-1. 从节点直接持久化保存, 减少从节点的内存成本
-1. 混合存储
-1. 主从多对一
-1. 更可靠的主从复制
+3. io_uring
+4. 集群事务
+5. 从节点直接持久化保存, 减少从节点的内存成本
+6. 混合存储
+7. 主从多对一
+8. 更可靠的主从复制
    1. 强一致性主从复制
       - 可能会增加单次耗时
       - 如果并发量比较大的话，吞吐量应该影响不大
-1. 多主(多写)
+9.  多主(多写)
    - [crdt](https://josephg.com/blog/crdts-go-brrr/)
    - [可能可以考虑用这个](https://github.com/josephg/diamond-types)
-1. key 优化
+11. key 优化
    - 比如 arc<[u8]>, 可以精简一个 weak reference, 每个 key 节约一个 byte
    - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte
-1. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
-1. 热 slot 自动迁移
+12. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
+13. 热 slot 自动迁移
 
 ## Supported redis commands
 

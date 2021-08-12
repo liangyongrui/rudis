@@ -31,13 +31,13 @@ impl Write<Resp> for Req {
     fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(old) = dict.d_get_mut(&self.key) {
             if let DataType::Set(ref mut set) = old.data {
-                let old_len = set.size();
+                let old_len = set.len();
                 for ref m in self.members {
-                    set.remove_mut(m);
+                    set.remove(m);
                 }
                 Ok(Resp {
                     old_len,
-                    new_len: set.size(),
+                    new_len: set.len(),
                 })
             } else {
                 Err("error type".into())

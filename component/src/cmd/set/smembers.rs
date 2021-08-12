@@ -19,12 +19,9 @@ impl<'a> From<&'a Smembers> for crate::slot::cmd::set::get_all::Req<'a> {
 impl Smembers {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        if let Some(res) = db.set_get_all((&self).into())? {
-            Ok(Frame::Array(
-                res.iter().map(|t| Frame::Simple((&t[..]).into())).collect(),
-            ))
-        } else {
-            Ok(Frame::Array(vec![]))
-        }
+        let res = db.set_get_all((&self).into())?;
+        Ok(Frame::Array(
+            res.iter().map(|t| Frame::Simple((&t[..]).into())).collect(),
+        ))
     }
 }

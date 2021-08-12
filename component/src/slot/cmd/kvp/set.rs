@@ -36,35 +36,33 @@ impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
         let old = dict.d_get_mut_or_insert_with(&self.key, || dict::Value {
-            data: DataType::Kvp(Kvp::new()),
+            data: DataType::Kvp(Box::new(Kvp::new())),
             expires_at: 0,
         });
         if let DataType::Kvp(ref mut kvp) = old.data {
-            let old_len = kvp.size();
+            let old_len = kvp.len();
             match self.nx_xx {
                 NxXx::Nx => {
                     for (k, v) in self.entries {
-                        if !kvp.contains_key(&k) {
-                            kvp.insert_mut(k, v)
-                        }
+                        kvp.entry(k).or_insert(v);
                     }
                 }
                 NxXx::Xx => {
                     for (k, v) in self.entries {
-                        if kvp.contains_key(&k) {
-                            kvp.insert_mut(k, v)
+                        if let Some(old_v) = kvp.get_mut(&k) {
+                            *old_v = v;
                         }
                     }
                 }
                 NxXx::None => {
                     for (k, v) in self.entries {
-                        kvp.insert_mut(k, v)
+                        kvp.insert(k, v);
                     }
                 }
             }
             Ok(Resp {
                 old_len,
-                new_len: kvp.size(),
+                new_len: kvp.len(),
             })
         } else {
             Err("error type".into())

@@ -1,12 +1,11 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     hash::{Hash, Hasher},
     sync::{atomic::AtomicBool, Arc},
 };
 
 use ahash::AHasher;
 use parking_lot::Mutex;
-use rpds::{HashTrieMapSync, HashTrieSetSync};
 use tokio::sync::broadcast;
 
 use crate::{
@@ -131,13 +130,13 @@ impl Db {
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req) -> crate::Result<bool> {
         self.get_slot(cmd.key).kvp_exists(cmd)
     }
-    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<DataType> {
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<Vec<DataType>> {
         self.get_slot(cmd.key).kvp_get(cmd)
     }
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieMapSync<String, DataType>>> {
+    ) -> crate::Result<HashMap<String, DataType, ahash::RandomState>> {
         self.get_slot(cmd.key).kvp_get_all(cmd)
     }
     pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> crate::Result<Vec<DataType>> {
@@ -161,10 +160,10 @@ impl Db {
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieSetSync<String>>> {
+    ) -> crate::Result<HashSet<String, ahash::RandomState>> {
         self.get_slot(cmd.key).set_get_all(cmd)
     }
-    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
+    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<Vec<bool>> {
         self.get_slot(cmd.key).set_exists(cmd)
     }
     pub fn sorted_set_range_by_lex(

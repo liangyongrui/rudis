@@ -21,8 +21,8 @@ impl Node {
 /// key value pairs
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct SortedSet {
-    pub hash: Box<HashMap<String, Node, ahash::RandomState>>,
-    pub value: Box<BTreeSet<Node>>,
+    pub hash: HashMap<String, Node, ahash::RandomState>,
+    pub value: BTreeSet<Node>,
 }
 
 impl SortedSet {

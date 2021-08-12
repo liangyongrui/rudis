@@ -5,10 +5,12 @@
 
 pub mod copy_master;
 
-use std::borrow::BorrowMut;
+use std::{
+    borrow::BorrowMut,
+    collections::{HashMap, HashSet},
+};
 
 use parking_lot::RwLock;
-use rpds::{HashTrieMapSync, HashTrieSetSync};
 
 use self::{
     cmd::{ExpiresWrite, ExpiresWriteResp},
@@ -210,13 +212,13 @@ impl Slot {
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> crate::Result<bool> {
         cmd.apply(&self.dict)
     }
-    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<DataType> {
+    pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> crate::Result<Vec<DataType>> {
         cmd.apply(&self.dict)
     }
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieMapSync<String, DataType>>> {
+    ) -> crate::Result<HashMap<String, DataType, ahash::RandomState>> {
         cmd.apply(&self.dict)
     }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> crate::Result<usize> {
@@ -225,13 +227,13 @@ impl Slot {
     pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> crate::Result<Vec<DataType>> {
         cmd.apply(&self.dict)
     }
-    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<bool> {
+    pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> crate::Result<Vec<bool>> {
         cmd.apply(&self.dict)
     }
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
-    ) -> crate::Result<Option<HashTrieSetSync<String>>> {
+    ) -> crate::Result<HashSet<String, ahash::RandomState>> {
         cmd.apply(&self.dict)
     }
     pub fn sorted_set_range_by_lex(

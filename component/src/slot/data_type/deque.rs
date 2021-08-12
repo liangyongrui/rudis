@@ -7,16 +7,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::slot::data_type::DataType;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct Deque {
-    inner: Box<VecDeque<DataType>>,
+    inner: VecDeque<DataType>,
 }
 
 impl Deque {
     pub fn new() -> Self {
-        Deque {
-            inner: Box::new(VecDeque::new()),
-        }
+        Self::default()
     }
 
     pub fn shape(&self, mut start: i64, mut stop: i64) -> (usize, usize) {
@@ -40,11 +38,6 @@ impl Deque {
     }
 }
 
-impl Default for Deque {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 impl Deref for Deque {
     type Target = VecDeque<DataType>;
 

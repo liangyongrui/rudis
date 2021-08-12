@@ -5,21 +5,23 @@ use crate::slot::{cmd::Read, data_type::DataType, dict::Dict};
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    pub field: &'a str,
+    pub fields: Vec<&'a str>,
 }
 
-impl<'a> Read<DataType> for Req<'a> {
+impl<'a> Read<Vec<DataType>> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<DataType> {
+    fn apply(self, dict: &RwLock<Dict>) -> crate::Result<Vec<DataType>> {
         if let Some(v) = dict.read().d_get(self.key) {
             return if let DataType::Kvp(ref kvp) = v.data {
-                Ok(kvp.get(self.field).cloned().unwrap_or(DataType::Null))
+                Ok(self
+                    .fields
+                    .into_iter()
+                    .map(|field| kvp.get(field).cloned().unwrap_or(DataType::Null))
+                    .collect())
             } else {
                 Err("error type".into())
             };
         }
-        Ok(DataType::Null)
+        Ok(vec![DataType::Null; self.fields.len()])
     }
 }
-
-// utest see set

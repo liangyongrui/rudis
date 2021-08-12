@@ -32,13 +32,13 @@ impl Write<Resp> for Req {
     fn apply(self, dict: &mut Dict) -> crate::Result<Resp> {
         if let Some(v) = dict.d_get_mut(&self.key) {
             return if let DataType::Kvp(ref mut kvp) = v.data {
-                let old_len = kvp.size();
+                let old_len = kvp.len();
                 for f in self.fields {
-                    kvp.remove_mut(&f);
+                    kvp.remove(&f);
                 }
                 Ok(Resp {
                     old_len,
-                    new_len: kvp.size(),
+                    new_len: kvp.len(),
                 })
             } else {
                 Err("error type".into())

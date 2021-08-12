@@ -1,30 +1,25 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    collections::HashMap,
+    ops::{Deref, DerefMut},
+};
 
-use rpds::HashTrieMapSync;
 use serde::{Deserialize, Serialize};
 
 use crate::slot::data_type::DataType;
 /// key value pairs
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct Kvp {
-    pub inner: Box<HashTrieMapSync<String, DataType>>,
+    pub inner: HashMap<String, DataType, ahash::RandomState>,
 }
 
 impl Kvp {
     pub fn new() -> Self {
-        Self {
-            inner: Box::new(HashTrieMapSync::new_sync()),
-        }
+        Self::default()
     }
 }
 
-impl Default for Kvp {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 impl Deref for Kvp {
-    type Target = HashTrieMapSync<String, DataType>;
+    type Target = HashMap<String, DataType, ahash::RandomState>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

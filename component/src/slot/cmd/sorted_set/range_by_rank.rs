@@ -23,7 +23,7 @@ impl Read<Vec<crate::slot::data_type::sorted_set::Node>> for Req<'_> {
     ) -> crate::Result<Vec<crate::slot::data_type::sorted_set::Node>> {
         if let Some(value) = dict.read().d_get(self.key) {
             if let DataType::SortedSet(ref ss) = value.data {
-                let value = ss.value.as_ref();
+                let value = &ss.value;
                 let (offset, count) = super::shape_limit(self.limit, value.len());
                 let (start, stop) = super::shape_rank(self.start, self.stop, value.len());
                 let range = start..stop;

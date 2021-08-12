@@ -55,13 +55,13 @@ All the implemented commands are compatible with redis 7.0 version.
 | ---- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | zset | zadd             | yes     | Same as redis                                                                                                                         |
 | zset | zrange           | yes     | by_rank: O(N+M), other: O(log(N)+M) <br> with N being the number of elements in the sorted set and M the number of elements returned. |
-| zset | zrevrank         | yes     | by_rank: O(N+M), other: O(log(N)+M) <br> with N being the number of elements in the sorted set and M the number of elements returned. |
-| zset | zrank            | yes     |                                                                                                                                       |
-| zset | zrem             | yes     |                                                                                                                                       |
-| zset | zrevrange        | yes     |                                                                                                                                       |
-| zset | zrangebyscore    | yes     |                                                                                                                                       |
-| zset | zrevrangebyscore | yes     |                                                                                                                                       |
-| zset | zrangebylex      | yes     |                                                                                                                                       |
-| zset | zrevrangebylex   | yes     |                                                                                                                                       |
-| zset | zremrangebyrank  | yes     |                                                                                                                                       |
-| zset | zremrangebyscore | yes     |                                                                                                                                       |
+| zset | zrevrank         | yes     | O(N) N is rank                                                                                                                        |
+| zset | zrank            | yes     | O(N) N is rank                                                                                                                        |
+| zset | zrem             | yes     | Same as redis                                                                                                                         |
+| zset | zrevrange        | yes     | by_rank: O(N+M), other: O(log(N)+M) <br> with N being the number of elements in the sorted set and M the number of elements returned. |
+| zset | zrangebyscore    | yes     | Same as redis                                                                                                                         |
+| zset | zrevrangebyscore | yes     | Same as redis                                                                                                                         |
+| zset | zrangebylex      | yes     | Same as redis                                                                                                                         |
+| zset | zrevrangebylex   | yes     | Same as redis                                                                                                                         |
+| zset | zremrangebyrank  | yes     | O(N+M) <br> with N being the number of elements in the sorted set and M the number of elements returned.                              |
+| zset | zremrangebyscore | yes     | Same as redis                                                                                                                         |

@@ -42,13 +42,12 @@ mod test {
             key: b"hello"[..].into(),
         }
         .apply(&dict)
-        .unwrap()
         .unwrap();
         assert_eq!(
             {
                 let mut v = res
                     .into_iter()
-                    .map(|kv| (kv.0.clone(), kv.1.clone()))
+                    .map(|kv| (kv.0.clone(), kv.1))
                     .collect::<Vec<_>>();
                 v.sort_unstable_by_key::<String, _>(|t| (&t.0).try_into().unwrap());
                 v
@@ -82,13 +81,12 @@ mod test {
             key: b"hello"[..].into(),
         }
         .apply(&dict)
-        .unwrap()
         .unwrap();
         assert_eq!(
             {
                 let mut v = res
                     .into_iter()
-                    .map(|kv| (kv.0.clone(), kv.1.clone()))
+                    .map(|kv| (kv.0.clone(), kv.1))
                     .collect::<Vec<_>>();
                 v.sort_unstable_by_key::<String, _>(|t| (&t.0).try_into().unwrap());
                 v
@@ -104,25 +102,25 @@ mod test {
 
         let res = get::Req {
             key: b"hello"[..].into(),
-            field: "k1",
+            fields: vec!["k1"],
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, "v1".into());
+        assert_eq!(res, vec!["v1".into()]);
         let res = get::Req {
             key: b"hello"[..].into(),
-            field: "k6",
+            fields: vec!["k6"],
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, DataType::Null);
+        assert_eq!(res, vec![DataType::Null]);
         let res = get::Req {
             key: b"hello2"[..].into(),
-            field: "k1",
+            fields: vec!["k1"],
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, DataType::Null);
+        assert_eq!(res, vec![DataType::Null]);
 
         let res = exists::Req {
             key: b"hello"[..].into(),

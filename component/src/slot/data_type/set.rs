@@ -1,28 +1,23 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    collections::HashSet,
+    ops::{Deref, DerefMut},
+};
 
-use rpds::HashTrieSetSync;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct Set {
-    pub inner: Box<HashTrieSetSync<String>>,
+    pub inner: HashSet<String, ahash::RandomState>,
 }
 
 impl Set {
     pub fn new() -> Self {
-        Self {
-            inner: Box::new(HashTrieSetSync::new_sync()),
-        }
+        Self::default()
     }
 }
 
-impl Default for Set {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 impl Deref for Set {
-    type Target = HashTrieSetSync<String>;
+    type Target = HashSet<String, ahash::RandomState>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

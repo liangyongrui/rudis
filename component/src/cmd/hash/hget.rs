@@ -15,7 +15,7 @@ impl<'a> From<&'a Hget> for crate::slot::cmd::kvp::get::Req<'a> {
     fn from(old: &'a Hget) -> Self {
         Self {
             key: &old.key,
-            field: &old.field,
+            fields: vec![&old.field],
         }
     }
 }
@@ -23,6 +23,6 @@ impl<'a> From<&'a Hget> for crate::slot::cmd::kvp::get::Req<'a> {
 impl Hget {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        Ok(db.kvp_get((&self).into())?.into())
+        Ok((&db.kvp_get((&self).into())?[0]).into())
     }
 }
