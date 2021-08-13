@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use common::options::NxXx;
 use rcc_macros::ParseFrames;
 
 use crate::{db::Db, utils::other_type::SimpleTypePair, Frame};
@@ -10,12 +11,12 @@ pub struct Hset {
     pub pairs: Vec<SimpleTypePair>,
 }
 
-impl From<Hset> for crate::slot::cmd::kvp::set::Req {
+impl From<Hset> for dict::cmd::kvp::set::Req {
     fn from(old: Hset) -> Self {
         Self {
             key: old.key,
             entries: old.pairs.into_iter().map(|t| (t.key, t.value)).collect(),
-            nx_xx: crate::utils::options::NxXx::None,
+            nx_xx: NxXx::None,
         }
     }
 }

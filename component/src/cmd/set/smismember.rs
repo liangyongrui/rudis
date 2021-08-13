@@ -10,7 +10,7 @@ pub struct Smismember {
     pub values: Vec<String>,
 }
 
-impl<'a> From<&'a Smismember> for crate::slot::cmd::set::exists::Req<'a> {
+impl<'a> From<&'a Smismember> for dict::cmd::set::exists::Req<'a> {
     fn from(old: &'a Smismember) -> Self {
         Self {
             key: &old.key,

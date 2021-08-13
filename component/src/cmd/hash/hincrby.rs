@@ -11,7 +11,7 @@ pub struct Hincrby {
     pub value: i64,
 }
 
-impl From<Hincrby> for crate::slot::cmd::kvp::incr::Req {
+impl From<Hincrby> for dict::cmd::kvp::incr::Req {
     fn from(old: Hincrby) -> Self {
         Self {
             key: old.key,

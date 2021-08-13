@@ -6,6 +6,7 @@
 
 use std::{fmt, sync::Arc, vec};
 
+use common::{u8_to_i64, u8_to_string};
 use nom::{
     branch::alt,
     bytes::streaming::{tag, take_while, take_while1, take_while_m_n},
@@ -13,10 +14,7 @@ use nom::{
     sequence::delimited,
 };
 
-use crate::{
-    slot::data_type::DataType,
-    utils::{u8_to_i64, u8_to_string},
-};
+use dict::data_type::DataType;
 
 /// A frame in the Redis protocol.
 ///

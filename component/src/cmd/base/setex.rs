@@ -1,16 +1,14 @@
 use std::sync::Arc;
 
+use dict::data_type::DataType;
 use rcc_macros::ParseFrames;
 
-use crate::{
-    db::Db,
-    slot::data_type::DataType,
-    utils::{
-        now_timestamp_ms,
-        options::{ExpiresAt, NxXx},
-    },
-    Frame,
+use crate::{db::Db, Frame};
+use common::{
+    now_timestamp_ms,
+    options::{ExpiresAt, NxXx},
 };
+
 /// https://redis.io/commands/setex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Setex {
@@ -19,7 +17,7 @@ pub struct Setex {
     pub value: DataType,
 }
 
-impl From<Setex> for crate::slot::cmd::simple::set::Req {
+impl From<Setex> for dict::cmd::simple::set::Req {
     fn from(old: Setex) -> Self {
         Self {
             key: old.key,

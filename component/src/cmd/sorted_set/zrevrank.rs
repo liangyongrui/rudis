@@ -9,7 +9,7 @@ pub struct Zrevrank {
     pub key: Arc<[u8]>,
     pub member: String,
 }
-impl<'a> From<&'a Zrevrank> for crate::slot::cmd::sorted_set::rank::Req<'a> {
+impl<'a> From<&'a Zrevrank> for dict::cmd::sorted_set::rank::Req<'a> {
     fn from(old: &'a Zrevrank) -> Self {
         Self {
             key: &old.key,

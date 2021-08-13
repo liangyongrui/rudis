@@ -11,7 +11,7 @@ pub struct Lpop {
     pub count: Option<i64>,
 }
 
-impl From<Lpop> for crate::slot::cmd::deque::pop::Req {
+impl From<Lpop> for dict::cmd::deque::pop::Req {
     fn from(old: Lpop) -> Self {
         Self {
             key: old.key,

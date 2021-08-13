@@ -5,6 +5,11 @@ use std::{
 };
 
 use ahash::AHasher;
+use dict::{
+    cmd,
+    data_type::{self, DataType},
+    Dict,
+};
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
 
@@ -14,12 +19,7 @@ use crate::{
     forward::{self, Message, FORWARD},
     hdp::Status,
     replica,
-    slot::{
-        cmd,
-        data_type::{self, DataType},
-        dict::{self, Dict},
-        Slot,
-    },
+    slot::Slot,
 };
 
 #[derive(Clone)]

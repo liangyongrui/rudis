@@ -11,7 +11,7 @@ pub struct Decrby {
     pub value: i64,
 }
 
-impl From<Decrby> for crate::slot::cmd::simple::incr::Req {
+impl From<Decrby> for dict::cmd::simple::incr::Req {
     fn from(old: Decrby) -> Self {
         Self {
             key: old.key,

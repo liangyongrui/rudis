@@ -58,7 +58,7 @@ impl Zrevrangebylex {
             .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
         let key = &self.key;
         let (b, e) = self.range_item;
-        let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
+        let cmd = dict::cmd::sorted_set::range_by_lex::Req {
             key,
             rev: true,
             range: (e, b),

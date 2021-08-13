@@ -14,13 +14,13 @@ pub struct Ttl {
 impl Ttl {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let res = db.ttl(crate::slot::cmd::simple::ttl::Req { key: &self.key })?;
+        let res = db.ttl(dict::cmd::simple::ttl::Req { key: &self.key })?;
         debug!(?res);
         let response = Frame::Integer(match res {
-            crate::slot::cmd::simple::ttl::Resp::None => -1,
-            crate::slot::cmd::simple::ttl::Resp::NotExist => -2,
+            dict::cmd::simple::ttl::Resp::None => -1,
+            dict::cmd::simple::ttl::Resp::NotExist => -2,
             // round
-            crate::slot::cmd::simple::ttl::Resp::Ttl(i) => ((i + 500) / 1000) as i64,
+            dict::cmd::simple::ttl::Resp::Ttl(i) => ((i + 500) / 1000) as i64,
         });
         Ok(response)
     }

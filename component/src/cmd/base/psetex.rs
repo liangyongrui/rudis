@@ -1,16 +1,15 @@
 use std::sync::Arc;
 
+use dict::data_type::DataType;
 use rcc_macros::ParseFrames;
 
-use crate::{
-    db::Db,
-    slot::data_type::DataType,
-    utils::{
-        now_timestamp_ms,
-        options::{ExpiresAt, NxXx},
-    },
-    Frame,
+use crate::{db::Db, Frame};
+
+use common::{
+    now_timestamp_ms,
+    options::{ExpiresAt, NxXx},
 };
+
 /// https://redis.io/commands/psetex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Psetex {
@@ -19,7 +18,7 @@ pub struct Psetex {
     pub value: DataType,
 }
 
-impl From<Psetex> for crate::slot::cmd::simple::set::Req {
+impl From<Psetex> for dict::cmd::simple::set::Req {
     fn from(old: Psetex) -> Self {
         Self {
             key: old.key,

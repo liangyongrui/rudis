@@ -13,7 +13,7 @@ pub struct Hmget {
 impl Hmget {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> crate::Result<Frame> {
-        let v = db.kvp_get(crate::slot::cmd::kvp::get::Req {
+        let v = db.kvp_get(dict::cmd::kvp::get::Req {
             key: &self.key,
             fields: self
                 .fields

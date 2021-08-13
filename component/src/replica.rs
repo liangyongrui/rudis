@@ -8,6 +8,7 @@ use std::{
     time::Duration,
 };
 
+use dict::Dict;
 use tokio::sync::{broadcast, Notify};
 
 use crate::{
@@ -15,8 +16,8 @@ use crate::{
     db::{Db, Role},
     forward,
     shutdown::Shutdown,
-    slot::dict::Dict,
 };
+
 /// 发起主从复制
 ///
 /// warn: 这个函数是阻塞的

@@ -11,7 +11,7 @@ pub struct Hget {
     pub field: String,
 }
 
-impl<'a> From<&'a Hget> for crate::slot::cmd::kvp::get::Req<'a> {
+impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {
     fn from(old: &'a Hget) -> Self {
         Self {
             key: &old.key,

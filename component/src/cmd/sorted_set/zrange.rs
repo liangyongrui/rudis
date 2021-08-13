@@ -1,11 +1,8 @@
 use std::{ops::Bound, sync::Arc};
 
-use crate::{
-    parse::ParseError,
-    slot::data_type::Float,
-    utils::{other_type::ZrangeItem, BoundExt},
-    Db, Frame, Parse,
-};
+use crate::{parse::ParseError, utils::other_type::ZrangeItem, Db, Frame, Parse};
+
+use common::{float::Float, BoundExt};
 
 enum By {
     Score,
@@ -102,7 +99,7 @@ impl Zrange {
         let rev = self.rev;
         let response = match self.range_item {
             ZrangeItem::Rank((start, stop)) => {
-                let cmd = crate::slot::cmd::sorted_set::range_by_rank::Req {
+                let cmd = dict::cmd::sorted_set::range_by_rank::Req {
                     key,
                     start,
                     stop,
@@ -112,7 +109,7 @@ impl Zrange {
                 db.sorted_set_range_by_rank(cmd)?
             }
             ZrangeItem::Socre((b, e)) => {
-                let cmd = crate::slot::cmd::sorted_set::range_by_score::Req {
+                let cmd = dict::cmd::sorted_set::range_by_score::Req {
                     key,
                     rev,
                     range: (b.map(Float), e.map(Float)),
@@ -121,7 +118,7 @@ impl Zrange {
                 db.sorted_set_range_by_score(cmd)?
             }
             ZrangeItem::Lex((b, e)) => {
-                let cmd = crate::slot::cmd::sorted_set::range_by_lex::Req {
+                let cmd = dict::cmd::sorted_set::range_by_lex::Req {
                     key,
                     rev,
                     range: (b, e),

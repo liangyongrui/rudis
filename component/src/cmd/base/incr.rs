@@ -10,7 +10,7 @@ pub struct Incr {
     pub key: Arc<[u8]>,
 }
 
-impl From<Incr> for crate::slot::cmd::simple::incr::Req {
+impl From<Incr> for dict::cmd::simple::incr::Req {
     fn from(old: Incr) -> Self {
         Self {
             key: old.key,

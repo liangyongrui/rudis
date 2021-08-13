@@ -11,7 +11,7 @@ pub struct Sismember {
     pub value: String,
 }
 
-impl<'a> From<&'a Sismember> for crate::slot::cmd::set::exists::Req<'a> {
+impl<'a> From<&'a Sismember> for dict::cmd::set::exists::Req<'a> {
     fn from(old: &'a Sismember) -> Self {
         Self {
             key: &old.key,

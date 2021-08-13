@@ -11,7 +11,7 @@ pub struct Hdel {
     pub fields: Vec<String>,
 }
 
-impl From<Hdel> for crate::slot::cmd::kvp::del::Req {
+impl From<Hdel> for dict::cmd::kvp::del::Req {
     fn from(old: Hdel) -> Self {
         Self {
             key: old.key,

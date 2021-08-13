@@ -1,5 +1,6 @@
 use std::{borrow::Borrow, process::exit, sync::Arc};
 
+use dict::{Dict, cmd::WriteCmd};
 use futures::prelude::*;
 use nix::unistd::{fork, ForkResult};
 use tokio::{
@@ -15,7 +16,6 @@ use crate::{
     cmd::{OK_FRAME, SYNC_CMD_PING},
     forward::{Message, FORWARD},
     server::Handler,
-    slot::{cmd::WriteCmd, dict::Dict},
 };
 
 pub async fn process_sync_cmd(mut stream: TcpStream) -> crate::Result<()> {

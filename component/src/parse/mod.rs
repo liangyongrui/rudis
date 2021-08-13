@@ -2,9 +2,10 @@ pub mod frame;
 
 use std::{fmt, str, sync::Arc, vec};
 
+use dict::data_type::DataType;
 pub use frame::parse;
 
-use crate::{slot::data_type::DataType, Frame};
+use crate::Frame;
 
 /// Utility for parsing a command
 ///

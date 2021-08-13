@@ -1,10 +1,6 @@
-use crate::{
-    db::Db,
-    slot::cmd::simple::expire::Req,
-    utils::options::{GtLt, NxXx},
-    Frame,
-    ParseError::EndOfStream,
-};
+use crate::{db::Db, Frame, ParseError::EndOfStream};
+use common::options::{GtLt, NxXx};
+use dict::cmd::simple::expire::Req;
 
 /// https://redis.io/commands/expireat
 ///

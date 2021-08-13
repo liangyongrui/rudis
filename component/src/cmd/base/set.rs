@@ -3,13 +3,13 @@ use std::sync::Arc;
 use crate::{
     cmd::{Parse, ParseError},
     db::Db,
-    slot::data_type::DataType,
-    utils::{
-        now_timestamp_ms,
-        options::{ExpiresAt, NxXx},
-    },
     Frame,
 };
+use common::{
+    now_timestamp_ms,
+    options::{ExpiresAt, NxXx},
+};
+use dict::data_type::DataType;
 
 /// Set `key` to hold the string `value`.
 ///
@@ -30,7 +30,7 @@ pub struct Set {
     pub get: bool,
 }
 
-impl From<Set> for crate::slot::cmd::simple::set::Req {
+impl From<Set> for dict::cmd::simple::set::Req {
     fn from(old: Set) -> Self {
         Self {
             key: old.key,

@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
+use common::options::NxXx;
+use dict::data_type::DataType;
 use rcc_macros::ParseFrames;
 
-use crate::{db::Db, slot::data_type::DataType, Frame};
+use crate::{db::Db, Frame};
 
 /// https://redis.io/commands/hsetnx
 #[derive(Debug, ParseFrames, Clone)]
@@ -12,12 +14,12 @@ pub struct Hsetnx {
     pub value: DataType,
 }
 
-impl From<Hsetnx> for crate::slot::cmd::kvp::set::Req {
+impl From<Hsetnx> for dict::cmd::kvp::set::Req {
     fn from(old: Hsetnx) -> Self {
         Self {
             key: old.key,
             entries: vec![(old.field, old.value)],
-            nx_xx: crate::utils::options::NxXx::Nx,
+            nx_xx: NxXx::Nx,
         }
     }
 }

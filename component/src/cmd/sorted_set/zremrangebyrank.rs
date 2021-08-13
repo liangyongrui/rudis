@@ -11,7 +11,7 @@ pub struct Zremrangebyrank {
     pub range: (i64, i64),
 }
 
-impl From<Zremrangebyrank> for crate::slot::cmd::sorted_set::remove_by_rank_range::Req {
+impl From<Zremrangebyrank> for dict::cmd::sorted_set::remove_by_rank_range::Req {
     fn from(old: Zremrangebyrank) -> Self {
         Self {
             key: old.key,

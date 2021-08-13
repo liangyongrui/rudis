@@ -4,11 +4,13 @@
 
 use std::{borrow::Borrow, collections::BTreeSet, sync::Arc, time::Duration};
 
+use common::now_timestamp_ms;
+use dict::cmd::ExpiresStatusUpdate;
 use parking_lot::Mutex;
 use tokio::{sync::Notify, time};
 use tracing::debug;
 
-use crate::{db::Db, slot::cmd::ExpiresStatusUpdate, utils::now_timestamp_ms};
+use crate::db::Db;
 
 /// When derived on structs, it will produce a lexicographic ordering
 /// based on the top-to-bottom declaration order of the struct’s members.
@@ -190,12 +192,12 @@ impl Expiration {
 mod test {
     use std::time::Duration;
 
-    use tokio::time::sleep;
-
-    use crate::{
-        slot::cmd,
-        utils::{now_timestamp_ms, options::ExpiresAt},
+    use common::{
+        now_timestamp_ms,
+        options::{ExpiresAt, NxXx},
     };
+    use dict::cmd;
+    use tokio::time::sleep;
 
     #[tokio::test]
     async fn test() {
@@ -209,7 +211,7 @@ mod test {
             key: (&b"1"[..]).into(),
             value: "123".into(),
             expires_at: ExpiresAt::Specific(now_timestamp_ms() + 1000),
-            nx_xx: crate::utils::options::NxXx::None,
+            nx_xx: NxXx::None,
         })
         .unwrap();
         sleep(Duration::from_secs(2)).await;

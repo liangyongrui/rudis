@@ -10,7 +10,7 @@ pub struct Zrank {
     pub member: String,
 }
 
-impl<'a> From<&'a Zrank> for crate::slot::cmd::sorted_set::rank::Req<'a> {
+impl<'a> From<&'a Zrank> for dict::cmd::sorted_set::rank::Req<'a> {
     fn from(old: &'a Zrank) -> Self {
         Self {
             key: &old.key,

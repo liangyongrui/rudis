@@ -12,7 +12,7 @@ pub struct Lrange {
     pub stop: i64,
 }
 
-impl<'a> From<&'a Lrange> for crate::slot::cmd::deque::range::Req<'a> {
+impl<'a> From<&'a Lrange> for dict::cmd::deque::range::Req<'a> {
     fn from(old: &'a Lrange) -> Self {
         Self {
             key: &old.key,

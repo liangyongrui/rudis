@@ -11,7 +11,7 @@ pub struct Srem {
     pub values: Vec<String>,
 }
 
-impl From<Srem> for crate::slot::cmd::set::remove::Req {
+impl From<Srem> for dict::cmd::set::remove::Req {
     fn from(old: Srem) -> Self {
         Self {
             key: old.key,

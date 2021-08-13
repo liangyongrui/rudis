@@ -10,7 +10,7 @@ pub struct Smembers {
     pub key: Arc<[u8]>,
 }
 
-impl<'a> From<&'a Smembers> for crate::slot::cmd::set::get_all::Req<'a> {
+impl<'a> From<&'a Smembers> for dict::cmd::set::get_all::Req<'a> {
     fn from(old: &'a Smembers) -> Self {
         Self { key: &old.key }
     }

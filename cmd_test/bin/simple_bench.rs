@@ -5,7 +5,7 @@ use tokio::net::TcpStream;
 
 fn main() {
     tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(4)
+        .worker_threads(6)
         .enable_all()
         .build()
         .unwrap()
@@ -34,7 +34,7 @@ fn main() {
 }
 
 async fn key_value_get_set(mut stream: TcpStream, suffix: usize) {
-    for i in 0..10000 {
+    for i in 0..20000 {
         write_cmd(
             &mut stream,
             vec![

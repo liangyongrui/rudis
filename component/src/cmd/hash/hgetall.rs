@@ -9,7 +9,7 @@ pub struct Hgetall {
     pub key: Arc<[u8]>,
 }
 
-impl<'a> From<&'a Hgetall> for crate::slot::cmd::kvp::get_all::Req<'a> {
+impl<'a> From<&'a Hgetall> for dict::cmd::kvp::get_all::Req<'a> {
     fn from(old: &'a Hgetall) -> Self {
         Self { key: &old.key }
     }

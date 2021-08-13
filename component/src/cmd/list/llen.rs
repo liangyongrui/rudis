@@ -10,7 +10,7 @@ pub struct Llen {
     pub key: Arc<[u8]>,
 }
 
-impl<'a> From<&'a Llen> for crate::slot::cmd::deque::len::Req<'a> {
+impl<'a> From<&'a Llen> for dict::cmd::deque::len::Req<'a> {
     fn from(old: &'a Llen) -> Self {
         Self { key: &old.key }
     }

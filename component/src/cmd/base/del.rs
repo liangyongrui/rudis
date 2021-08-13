@@ -16,7 +16,7 @@ impl Del {
         for cmd in self
             .keys
             .into_iter()
-            .map(|key| crate::slot::cmd::simple::del::Req { key })
+            .map(|key| dict::cmd::simple::del::Req { key })
         {
             if db.del(cmd)?.is_some() {
                 res += 1;

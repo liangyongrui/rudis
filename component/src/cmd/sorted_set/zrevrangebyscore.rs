@@ -1,6 +1,7 @@
 use std::{ops::Bound, sync::Arc};
 
-use crate::{parse::ParseError, slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
+use crate::{parse::ParseError, Db, Frame, Parse};
+use common::{float::Float, BoundExt};
 
 /// https://redis.io/commands/zrevrangebyscore
 #[derive(Debug)]
@@ -62,7 +63,7 @@ impl Zrevrangebyscore {
             .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
         let key = &self.key;
         let (b, e) = self.range_item;
-        let cmd = crate::slot::cmd::sorted_set::range_by_score::Req {
+        let cmd = dict::cmd::sorted_set::range_by_score::Req {
             key,
             rev: true,
             range: (e.map(Float), b.map(Float)),

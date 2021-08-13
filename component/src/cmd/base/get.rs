@@ -14,7 +14,7 @@ pub struct Get {
     /// Name of the key to get
     pub key: Arc<[u8]>,
 }
-impl<'a> From<&'a Get> for crate::slot::cmd::simple::get::Req<'a> {
+impl<'a> From<&'a Get> for dict::cmd::simple::get::Req<'a> {
     fn from(old: &'a Get) -> Self {
         Self { key: &old.key }
     }
@@ -29,13 +29,13 @@ impl Get {
         // Get the value from the shared database state
 
         let response = match db.get((&self).into())? {
-            crate::slot::data_type::DataType::Null => Frame::Null,
-            crate::slot::data_type::DataType::String(s) => Frame::Simple(s),
-            crate::slot::data_type::DataType::Bytes(b) => {
+            dict::data_type::DataType::Null => Frame::Null,
+            dict::data_type::DataType::String(s) => Frame::Simple(s),
+            dict::data_type::DataType::Bytes(b) => {
                 Frame::Simple(std::str::from_utf8(&b[..])?.into())
             }
-            crate::slot::data_type::DataType::Integer(i) => Frame::Simple(i.to_string().into()),
-            crate::slot::data_type::DataType::Float(i) => Frame::Simple(i.0.to_string().into()),
+            dict::data_type::DataType::Integer(i) => Frame::Simple(i.to_string().into()),
+            dict::data_type::DataType::Float(i) => Frame::Simple(i.0.to_string().into()),
             _ => return Err("error type".into()),
         };
         // Write the response back to the client

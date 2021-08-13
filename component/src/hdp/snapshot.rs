@@ -1,5 +1,6 @@
 use std::{borrow::Borrow, fs::File, io::BufWriter, process::exit, sync::atomic::AtomicBool};
 
+use dict::Dict;
 use nix::unistd::{fork, ForkResult};
 use tracing::{error, info};
 
@@ -7,7 +8,6 @@ use crate::{
     child_process,
     db::Db,
     hdp::{self, aof},
-    slot::dict::Dict,
 };
 
 pub static IN_PROGRESS: AtomicBool = AtomicBool::new(false);

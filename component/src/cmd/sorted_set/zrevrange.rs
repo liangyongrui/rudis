@@ -10,7 +10,7 @@ pub struct Zrevrange {
     pub withscores: bool,
 }
 
-impl<'a> From<&'a Zrevrange> for crate::slot::cmd::sorted_set::range_by_rank::Req<'a> {
+impl<'a> From<&'a Zrevrange> for dict::cmd::sorted_set::range_by_rank::Req<'a> {
     fn from(old: &'a Zrevrange) -> Self {
         Self {
             key: &old.key,

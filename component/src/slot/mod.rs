@@ -12,20 +12,15 @@ use std::{
 
 use parking_lot::RwLock;
 
-use self::{
+use crate::{db::BgTask, expire, forward};
+use dict::{
+    cmd,
     cmd::{ExpiresWrite, ExpiresWriteResp},
+    cmd::{Read, Write},
+    data_type,
     data_type::DataType,
-    dict::{Dict, Value},
+    Dict, Value,
 };
-use crate::{
-    db::BgTask,
-    expire, forward,
-    slot::cmd::{Read, Write},
-};
-
-pub mod cmd;
-pub mod data_type;
-pub mod dict;
 
 pub struct Slot {
     slot_id: u16,

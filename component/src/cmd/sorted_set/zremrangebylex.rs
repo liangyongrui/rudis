@@ -12,7 +12,7 @@ pub struct Zremrangebylex {
     pub max: String,
 }
 
-impl From<Zremrangebylex> for crate::slot::cmd::sorted_set::remove_by_lex_range::Req {
+impl From<Zremrangebylex> for dict::cmd::sorted_set::remove_by_lex_range::Req {
     fn from(old: Zremrangebylex) -> Self {
         let min = old.min;
         let max = old.max;

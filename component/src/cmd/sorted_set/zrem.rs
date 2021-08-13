@@ -11,7 +11,7 @@ pub struct Zrem {
     pub members: Vec<String>,
 }
 
-impl From<Zrem> for crate::slot::cmd::sorted_set::remove::Req {
+impl From<Zrem> for dict::cmd::sorted_set::remove::Req {
     fn from(old: Zrem) -> Self {
         Self {
             key: old.key,

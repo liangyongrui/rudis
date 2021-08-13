@@ -1,8 +1,10 @@
 use std::sync::Arc;
 
+use common::options::NxXx;
+use dict::data_type::DataType;
 use rcc_macros::ParseFrames;
 
-use crate::{slot::data_type::DataType, Db, Frame};
+use crate::{Db, Frame};
 
 /// https://redis.io/commands/rpushx
 #[derive(Debug, Clone, ParseFrames)]
@@ -11,13 +13,13 @@ pub struct Rpushx {
     pub values: Vec<DataType>,
 }
 
-impl From<Rpushx> for crate::slot::cmd::deque::push::Req {
+impl From<Rpushx> for dict::cmd::deque::push::Req {
     fn from(old: Rpushx) -> Self {
         Self {
             key: old.key,
             left: false,
             elements: old.values,
-            nx_xx: crate::utils::options::NxXx::Xx,
+            nx_xx: NxXx::Xx,
         }
     }
 }

@@ -1,6 +1,7 @@
 use std::{ops::Bound, sync::Arc};
 
-use crate::{slot::data_type::Float, utils::BoundExt, Db, Frame, Parse};
+use crate::{Db, Frame, Parse};
+use common::{float::Float, BoundExt};
 
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
@@ -9,7 +10,7 @@ pub struct Zremrangebyscore {
     pub range: (Bound<f64>, Bound<f64>),
 }
 
-impl From<Zremrangebyscore> for crate::slot::cmd::sorted_set::remove_by_score_range::Req {
+impl From<Zremrangebyscore> for dict::cmd::sorted_set::remove_by_score_range::Req {
     fn from(old: Zremrangebyscore) -> Self {
         Self {
             key: old.key,

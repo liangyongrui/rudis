@@ -11,7 +11,7 @@ pub struct Sadd {
     pub values: Vec<String>,
 }
 
-impl From<Sadd> for crate::slot::cmd::set::add::Req {
+impl From<Sadd> for dict::cmd::set::add::Req {
     fn from(old: Sadd) -> Self {
         Self {
             key: old.key,

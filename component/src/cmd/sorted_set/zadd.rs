@@ -1,13 +1,11 @@
 use std::{convert::TryInto, sync::Arc};
 
+use common::options::{GtLt, NxXx};
 use tracing::debug;
 
-use crate::{
-    parse::ParseError,
-    slot::data_type::{sorted_set::Node, DataType},
-    utils::options::{GtLt, NxXx},
-    Db, Frame, Parse,
-};
+use crate::{parse::ParseError, Db, Frame, Parse};
+use dict::data_type::{sorted_set::Node, DataType};
+
 
 /// https://redis.io/commands/zadd
 #[derive(Debug, Clone)]
@@ -20,7 +18,7 @@ pub struct Zadd {
     pub nodes: Vec<Node>,
 }
 
-impl From<Zadd> for crate::slot::cmd::sorted_set::add::Req {
+impl From<Zadd> for dict::cmd::sorted_set::add::Req {
     fn from(old: Zadd) -> Self {
         Self {
             key: old.key,

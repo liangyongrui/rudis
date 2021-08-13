@@ -17,7 +17,7 @@ impl Exists {
         for cmd in self
             .keys
             .iter()
-            .map(|key| crate::slot::cmd::simple::exists::Req { key })
+            .map(|key| dict::cmd::simple::exists::Req { key })
         {
             if db.exists(cmd)? {
                 res += 1;

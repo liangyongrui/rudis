@@ -22,21 +22,24 @@ rust cloud cache
 
 ## 初步性能测试
 
-在 mbp2019
+在 Mac mini (2018)
 
-- OS: macOS 11.4
-- CPU: 2.6 GHz 六核 Intel Core i7
+- OS: macOS 11.5.1 (20G80)
+- CPU: 3.2 GHz 六核 Intel Core i7
 
-客户端和服务端在同一台机器, work thread 都 限制 4 线程 （redis 的最好状态）
+客户端和服务端在同一台机器
 
-1000 个连接同时 set 请求 10000 次（非 pipeline）
+- redis io-threads 4 线程（redis 的最好状态）
+- rcc worker_threads 4 线程
 
-| server      | 耗时(s) 三次平均值 | 频率(Hz)      | 内存占用(GB) |
-| ----------- | ------------------ | ------------- | ------------ |
-| rcc         | 50.3837099175      | 198476.849291 | 3.91         |
-| redis 6.2.5 | 252.750146012      | 39564.764483  | 3.14         |
+1000 个连接同时 set 请求 20000 次（非 pipeline）
 
-rcc 差不多是 redis 的 5 倍
+| server      | 耗时(s) 三次平均值 | 频率(Hz)        |
+| ----------- | ------------------ | --------------- |
+| rcc         | 95.559099695       | 209294.56288135 |
+| redis 6.2.5 | 231.862762724      | 86257.921561157 |
+
+rcc 差不多是 redis 的 2.4 倍
 
 [测试代码](cmd_test/bin/simple_bench.rs)
 
@@ -55,6 +58,7 @@ rcc 差不多是 redis 的 5 倍
 1. [ ] 启动配置
 1. [ ] 修复 bug
    - [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs), 好像是 tokio test 的问题
+1. [ ] fsync
 1. [ ] 更加模块化
 1. [ ] 可靠的主从复制
 1. [ ] 持久化恢复
@@ -98,25 +102,25 @@ rcc 差不多是 redis 的 5 倍
 1. 热 key 请求并发聚合
 1. 根据 value 的大小动态调整数据结构
    - rpds
-2. 更高效的并发模型
+1. 更高效的并发模型
    - 比如持久化数据结构
-3. io_uring
-4. 集群事务
-5. 从节点直接持久化保存, 减少从节点的内存成本
-6. 混合存储
-7. 主从多对一
-8. 更可靠的主从复制
+1. io_uring
+1. 集群事务
+1. 从节点直接持久化保存, 减少从节点的内存成本
+1. 混合存储
+1. 主从多对一
+1. 更可靠的主从复制
    1. 强一致性主从复制
       - 可能会增加单次耗时
       - 如果并发量比较大的话，吞吐量应该影响不大
-9.  多主(多写)
+1. 多主(多写)
    - [crdt](https://josephg.com/blog/crdts-go-brrr/)
    - [可能可以考虑用这个](https://github.com/josephg/diamond-types)
-11. key 优化
+1. key 优化
    - 比如 arc<[u8]>, 可以精简一个 weak reference, 每个 key 节约一个 byte
-   - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte
-12. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
-13. 热 slot 自动迁移
+   - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte, 如果是用 0 在结尾，还能再省点
+1. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
+1. 热 slot 自动迁移
 
 ## Supported redis commands
 

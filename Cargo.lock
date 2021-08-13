@@ -91,9 +91,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "1.2.1"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
+checksum = "2da1976d75adbe5fbc88130ecd119529cf1cc6a93ae1546d8696ee66f0d21af1"
 
 [[package]]
 name = "bumpalo"
@@ -171,6 +171,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "atoi",
+ "bytes",
+ "serde",
+]
+
+[[package]]
 name = "component"
 version = "0.1.0"
 dependencies = [
@@ -180,6 +189,8 @@ dependencies = [
  "bincode",
  "bytes",
  "chrono",
+ "common",
+ "dict",
  "fixed_queue",
  "flume",
  "futures",
@@ -254,6 +265,34 @@ dependencies = [
  "darling_core",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "dict"
+version = "0.1.0"
+dependencies = [
+ "ahash",
+ "arc-swap",
+ "bincode",
+ "chrono",
+ "common",
+ "flume",
+ "futures",
+ "nix",
+ "nom",
+ "once_cell",
+ "parking_lot",
+ "serde",
+ "serde_with",
+ "structopt",
+ "tokio",
+ "tokio-serde",
+ "tokio-stream",
+ "tokio-util",
+ "toml",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -1137,9 +1176,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.9.0"
+version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b7b349f11a7047e6d1276853e612d152f5e8a352c61917887cc2169e2366b4c"
+checksum = "01cf844b23c6131f624accf65ce0e4e9956a8bb329400ea5bcc26ae3a5c20b0b"
 dependencies = [
  "autocfg",
  "bytes",

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 
-use crate::slot::cmd::WriteCmd;
+use dict::cmd::WriteCmd;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {

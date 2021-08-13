@@ -11,7 +11,7 @@ pub struct Hexists {
     pub field: String,
 }
 
-impl<'a> From<&'a Hexists> for crate::slot::cmd::kvp::exists::Req<'a> {
+impl<'a> From<&'a Hexists> for dict::cmd::kvp::exists::Req<'a> {
     fn from(old: &'a Hexists) -> Self {
         Self {
             key: &old.key,
