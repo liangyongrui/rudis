@@ -59,11 +59,8 @@ rcc 差不多是 redis 的 2.4 倍
    - [ ] 代码覆盖率超过 90%
    - [ ] Redis TCL test
 1. [ ] 启动配置
-1. [ ] 修复 bug
-   - [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs), 好像是 tokio test 的问题
 1. [ ] fsync
 1. [ ] 更加模块化
-1. [ ] dict 内部再分成多个 hashmap
 1. [ ] 可靠的主从复制
 1. [ ] 持久化恢复
 1. [ ] 独立的管理服务
@@ -77,6 +74,9 @@ rcc 差不多是 redis 的 2.4 倍
    - [ ] benchmark
    - Rust 性能手册
 1. [ ] 起个好名字
+   - rudis
+   - redis_iox
+   - redox (喜欢这个，但是被别的项目用了。。)
 1. [ ] 英文 readme
 
 ## todo
