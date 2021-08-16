@@ -145,7 +145,7 @@ async fn get() {
     read_assert_eq(&mut stream, b"+OK\r\n").await;
 
     write_cmd(&mut stream, vec!["GET", "mykey"]).await;
-    read_assert_eq(&mut stream, b"+Hello\r\n").await;
+    read_assert_eq(&mut stream, b"$5\r\nHello\r\n").await;
 }
 
 #[tokio::test]
@@ -232,7 +232,7 @@ async fn psetex() {
     // read_assert_eq(&mut stream, b":90\r\n").await;
 
     write_cmd(&mut stream, vec!["GET", "mykey"]).await;
-    read_assert_eq(&mut stream, b"+Hello\r\n").await;
+    read_assert_eq(&mut stream, b"$5\r\nHello\r\n").await;
 
     sleep(Duration::from_millis(100)).await;
     write_cmd(&mut stream, vec!["GET", "mykey"]).await;
@@ -247,7 +247,7 @@ async fn set() {
     read_assert_eq(&mut stream, b"+OK\r\n").await;
 
     write_cmd(&mut stream, vec!["GET", "mykey"]).await;
-    read_assert_eq(&mut stream, b"+Hello\r\n").await;
+    read_assert_eq(&mut stream, b"$5\r\nHello\r\n").await;
 
     write_cmd(
         &mut stream,
@@ -268,5 +268,5 @@ async fn setex() {
     read_assert_eq(&mut stream, b":90\r\n").await;
 
     write_cmd(&mut stream, vec!["GET", "mykey"]).await;
-    read_assert_eq(&mut stream, b"+Hello\r\n").await;
+    read_assert_eq(&mut stream, b"$5\r\nHello\r\n").await;
 }

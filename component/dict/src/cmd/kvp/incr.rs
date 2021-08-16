@@ -49,10 +49,13 @@ impl Write<i64> for Req {
 mod test {
     use std::borrow::BorrowMut;
 
+    use common::options::NxXx;
     use parking_lot::RwLock;
 
-    use crate::{cmd::kvp::*, cmd::Read, cmd::Write, Dict};
-    use common::options::NxXx;
+    use crate::{
+        cmd::{kvp::*, Read, Write},
+        Dict,
+    };
 
     #[test]
     fn test1() {

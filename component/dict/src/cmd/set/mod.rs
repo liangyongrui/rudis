@@ -10,7 +10,10 @@ mod test {
     use parking_lot::RwLock;
 
     use super::*;
-    use crate::{cmd::Read, cmd::Write, Dict};
+    use crate::{
+        cmd::{Read, Write},
+        Dict,
+    };
 
     #[test]
     fn test1() {

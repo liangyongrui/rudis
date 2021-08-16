@@ -1,7 +1,7 @@
 //! 测试redis官网的demo
 
+use ::server::Frame;
 use cmd_test::{read_assert_eq, start_server, write_cmd};
-use component::Frame;
 
 #[tokio::test]
 async fn zadd() {

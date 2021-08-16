@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use common::options::{GtLt, NxXx};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -7,7 +8,6 @@ use crate::{
     data_type::{self, DataType, SortedSet},
     Dict, Value,
 };
-use common::options::{GtLt, NxXx};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {

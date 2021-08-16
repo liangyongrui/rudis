@@ -22,7 +22,7 @@ tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-futures = { version = "0.2" }
 tracing-subscriber = "0.2"
-component = { path = "../component" }
+server = { path = "../component/server" }
 opentelemetry-jaeger = "0.14"
 tracing-opentelemetry = "0.14"
 opentelemetry = { version = "0.15", default-features = false, features = [

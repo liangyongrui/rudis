@@ -1,10 +1,20 @@
 [workspace]
-members = ["rcc_macros", "management", "cmd_test", "component", "fixed_queue", "component/dict", "component/common"]
+members = [
+    "rcc_macros",
+    "cmd_test",
+    "fixed_queue",
+    "component/db",
+    "component/dict",
+    "component/common",
+    "component/pd",
+    "component/server",
+]
 
 [package]
 authors = ["LiangYongrui <leungyongrui@gmail.com>"]
 description = """
 rust cloud cache
+
 fork from https://github.com/tokio-rs/mini-redis
 """
 edition = "2018"
@@ -19,12 +29,13 @@ panic = "abort"
 
 [[bin]]
 name = "server"
-path = "./server/main.rs"
+path = "./bin/server.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-component = {path = "./component"}
+server = { path = "./component/server" }
 structopt = "0.3"
-tokio = {version = "1", features = ["full"]}
+tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.2"
+common = { path = "component/common" }

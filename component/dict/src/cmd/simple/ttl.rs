@@ -1,7 +1,7 @@
+use common::now_timestamp_ms;
 use parking_lot::RwLock;
 
 use crate::{cmd::Read, Dict};
-use common::now_timestamp_ms;
 
 #[derive(Debug, Clone)]
 pub struct Req<'a> {

@@ -91,9 +91,9 @@ dependencies = [
 
 [[package]]
 name = "bitflags"
-version = "1.3.1"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2da1976d75adbe5fbc88130ecd119529cf1cc6a93ae1546d8696ee66f0d21af1"
+checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
 name = "bumpalo"
@@ -134,8 +134,6 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
- "serde",
- "time",
  "winapi",
 ]
 
@@ -160,9 +158,9 @@ version = "0.1.0"
 dependencies = [
  "bincode",
  "bytes",
- "component",
  "opentelemetry",
  "opentelemetry-jaeger",
+ "server",
  "tokio",
  "tracing",
  "tracing-futures",
@@ -175,40 +173,12 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "atoi",
- "bytes",
- "serde",
-]
-
-[[package]]
-name = "component"
-version = "0.1.0"
-dependencies = [
- "ahash",
- "arc-swap",
- "atoi",
- "bincode",
- "bytes",
- "chrono",
- "common",
- "dict",
- "fixed_queue",
- "flume",
- "futures",
- "nix",
- "nom",
  "once_cell",
- "parking_lot",
- "rcc_macros",
  "serde",
  "serde_with",
- "structopt",
  "tokio",
- "tokio-serde",
- "tokio-stream",
- "tokio-util",
  "toml",
  "tracing",
- "tracing-futures",
  "tracing-subscriber",
 ]
 
@@ -268,31 +238,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "dict"
+name = "db"
 version = "0.1.0"
 dependencies = [
  "ahash",
  "arc-swap",
  "bincode",
- "chrono",
  "common",
+ "dict",
  "flume",
  "futures",
  "nix",
- "nom",
  "once_cell",
  "parking_lot",
  "serde",
- "serde_with",
- "structopt",
  "tokio",
  "tokio-serde",
- "tokio-stream",
  "tokio-util",
- "toml",
  "tracing",
- "tracing-futures",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "dict"
+version = "0.1.0"
+dependencies = [
+ "ahash",
+ "common",
+ "flume",
+ "parking_lot",
+ "serde",
+ "tracing",
 ]
 
 [[package]]
@@ -548,10 +524,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "management"
-version = "0.1.0"
-
-[[package]]
 name = "matchers"
 version = "0.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -608,9 +580,9 @@ dependencies = [
 
 [[package]]
 name = "nix"
-version = "0.22.0"
+version = "0.22.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf1e25ee6b412c2a1e3fcb6a4499a5c1bfe7f43e014bdce9a6b6666e5aa2d187"
+checksum = "e7555d6c7164cc913be1ce7f95cbecdabda61eb2ccd89008524af306fb7f5031"
 dependencies = [
  "bitflags",
  "cc",
@@ -748,6 +720,10 @@ dependencies = [
  "smallvec",
  "winapi",
 ]
+
+[[package]]
+name = "pd"
+version = "0.1.0"
 
 [[package]]
 name = "percent-encoding"
@@ -891,7 +867,8 @@ dependencies = [
 name = "rcc"
 version = "0.1.0"
 dependencies = [
- "component",
+ "common",
+ "server",
  "structopt",
  "tokio",
  "tracing",
@@ -1010,6 +987,21 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "server"
+version = "0.1.0"
+dependencies = [
+ "atoi",
+ "bytes",
+ "common",
+ "db",
+ "dict",
+ "nom",
+ "rcc_macros",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -1165,16 +1157,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "time"
-version = "0.1.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
 name = "tokio"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1218,17 +1200,6 @@ dependencies = [
  "futures-sink",
  "pin-project",
  "serde",
-]
-
-[[package]]
-name = "tokio-stream"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b2f3f698253f03119ac0102beaa64f67a67e08074d03a22d18784104543727f"
-dependencies = [
- "futures-core",
- "pin-project-lite",
- "tokio",
 ]
 
 [[package]]

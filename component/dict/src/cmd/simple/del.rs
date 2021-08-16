@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
-    {Dict, Value},
+    Dict, Value,
 };
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -56,6 +56,10 @@ impl ExpiresWrite<Option<Value>> for Req {
 mod test {
     use std::borrow::BorrowMut;
 
+    use common::{
+        now_timestamp_ms,
+        options::{ExpiresAt, NxXx},
+    };
     use parking_lot::RwLock;
 
     use super::*;
@@ -64,11 +68,7 @@ mod test {
         data_type::DataType,
         Dict,
     };
-    use common::{
-        now_timestamp_ms,
-        options::{ExpiresAt, NxXx},
-    };
-   
+
     #[test]
     fn test1() {
         let dict = RwLock::new(Dict::new());

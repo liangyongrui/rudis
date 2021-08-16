@@ -5,7 +5,7 @@ use tokio::net::TcpStream;
 
 fn main() {
     tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(6)
+        .worker_threads(4)
         .enable_all()
         .build()
         .unwrap()

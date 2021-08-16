@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use component::{server, Frame};
+use ::server::{server, Frame};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},

@@ -18,18 +18,18 @@ impl<'a> Read<bool> for Req<'a> {
 mod test {
     use std::borrow::BorrowMut;
 
-    use parking_lot::RwLock;
-
-    use crate::{
-        cmd::ExpiresWrite,
-        cmd::Read,
-        cmd::{simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWriteResp},
-        data_type::DataType,
-        Dict,
-    };
     use common::{
         now_timestamp_ms,
         options::{ExpiresAt, NxXx},
+    };
+    use parking_lot::RwLock;
+
+    use crate::{
+        cmd::{
+            simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
+        },
+        data_type::DataType,
+        Dict,
     };
 
     #[test]

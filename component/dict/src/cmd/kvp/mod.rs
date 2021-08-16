@@ -9,11 +9,15 @@ pub mod set;
 mod test {
     use std::{borrow::BorrowMut, convert::TryInto};
 
+    use common::options::NxXx;
     use parking_lot::RwLock;
 
     use super::*;
-    use crate::{cmd::Read, cmd::Write, data_type::DataType, Dict};
-    use common::options::NxXx;
+    use crate::{
+        cmd::{Read, Write},
+        data_type::DataType,
+        Dict,
+    };
 
     #[test]
     fn test1() {

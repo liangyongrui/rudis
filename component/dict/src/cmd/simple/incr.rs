@@ -47,7 +47,10 @@ mod test {
 
     use parking_lot::RwLock;
 
-    use crate::{cmd::simple::*, cmd::Write, Dict};
+    use crate::{
+        cmd::{simple::*, Write},
+        Dict,
+    };
 
     #[test]
     fn test1() {

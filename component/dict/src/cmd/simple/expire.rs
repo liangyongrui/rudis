@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use common::options::{GtLt, NxXx};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
     Dict,
 };
-use common::options::{GtLt, NxXx};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
@@ -70,21 +70,20 @@ impl ExpiresWrite<bool> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::{borrow::BorrowMut, thread::sleep};
+    use std::{borrow::BorrowMut, thread::sleep, time::Duration};
 
-    use chrono::Duration;
-    use parking_lot::RwLock;
-
-    use crate::{
-        cmd::ExpiresWrite,
-        cmd::Read,
-        cmd::{simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWriteResp},
-        data_type::DataType,
-        Dict,
-    };
     use common::{
         now_timestamp_ms,
         options::{ExpiresAt, GtLt, NxXx},
+    };
+    use parking_lot::RwLock;
+
+    use crate::{
+        cmd::{
+            simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
+        },
+        data_type::DataType,
+        Dict,
     };
 
     #[test]
@@ -137,7 +136,7 @@ mod test {
         .unwrap();
         assert!(res);
 
-        sleep(Duration::seconds(1).to_std().unwrap());
+        sleep(Duration::from_secs(1));
         let res = exists::Req {
             key: b"hello"[..].into(),
         }

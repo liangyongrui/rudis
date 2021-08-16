@@ -8,7 +8,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub mod float;
 pub mod options;
 // pub mod other_type;
+pub mod config;
 pub mod pointer;
+pub mod shutdown;
 
 use std::{
     ops::Bound,
@@ -51,3 +53,8 @@ pub fn u8_to_i64(data: &[u8]) -> i64 {
 pub trait ParseSerdeType<'de, T: Deserialize<'de> + Serialize> {
     fn parse_serde_type(&self) -> T;
 }
+
+pub const SYNC_SNAPSHOT: &[u8] = b"*1\r\n$12\r\nsyncsnapshot\r\n";
+pub const SYNC_CMD: &[u8] = b"*1\r\n$7\r\nsynccmd\r\n";
+pub const SYNC_CMD_PING: &[u8] = b"*1\r\n$11\r\nsynccmdping\r\n";
+pub const OK_FRAME: &[u8] = b"+OK\r\n";

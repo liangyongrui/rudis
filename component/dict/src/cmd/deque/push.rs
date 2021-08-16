@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use common::options::NxXx;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -7,7 +8,6 @@ use crate::{
     data_type::{DataType, Deque},
     Dict, Value,
 };
-use common::options::NxXx;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
@@ -93,10 +93,13 @@ impl Write<Resp> for Req {
 mod test {
     use std::borrow::BorrowMut;
 
+    use common::options::NxXx;
     use parking_lot::RwLock;
 
-    use crate::{cmd::deque::*, cmd::Read, cmd::Write, Dict};
-    use common::options::NxXx;
+    use crate::{
+        cmd::{deque::*, Read, Write},
+        Dict,
+    };
 
     #[test]
     fn test1() {

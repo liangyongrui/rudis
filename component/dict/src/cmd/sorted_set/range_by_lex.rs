@@ -1,7 +1,7 @@
 use std::ops::Bound;
 
-use parking_lot::RwLock;
 use common::BoundExt;
+use parking_lot::RwLock;
 
 use crate::{
     cmd::Read,

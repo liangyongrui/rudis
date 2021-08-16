@@ -50,10 +50,13 @@ impl Write<Vec<DataType>> for Req {
 mod test {
     use std::borrow::BorrowMut;
 
+    use common::options::NxXx;
     use parking_lot::RwLock;
 
-    use crate::{cmd::deque::*, cmd::Write, Dict};
-    use common::options::NxXx;
+    use crate::{
+        cmd::{deque::*, Write},
+        Dict,
+    };
 
     #[test]
     fn test1() {

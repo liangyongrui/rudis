@@ -2,8 +2,8 @@
 
 use std::net::SocketAddr;
 
+use ::server::server;
 use cmd_test::{read_assert_eq, write_cmd};
-use component::server;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},

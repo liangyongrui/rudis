@@ -60,6 +60,7 @@ rcc 差不多是 redis 的 2.4 倍
    - [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs), 好像是 tokio test 的问题
 1. [ ] fsync
 1. [ ] 更加模块化
+1. [ ] dict 内部再分成多个 hashmap
 1. [ ] 可靠的主从复制
 1. [ ] 持久化恢复
 1. [ ] 独立的管理服务

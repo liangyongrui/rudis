@@ -25,10 +25,13 @@ impl<'a> Read<usize> for Req<'a> {
 mod test {
     use std::borrow::BorrowMut;
 
+    use common::options::NxXx;
     use parking_lot::RwLock;
 
-    use crate::{cmd::deque::*, cmd::Read, cmd::Write, Dict};
-    use common::options::NxXx;
+    use crate::{
+        cmd::{deque::*, Read, Write},
+        Dict,
+    };
 
     #[test]
     fn test1() {

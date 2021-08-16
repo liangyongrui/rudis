@@ -8,10 +8,10 @@ mod kvp;
 mod set;
 pub mod sorted_set;
 
+pub use common::float::Float;
 use serde::{Deserialize, Serialize};
 
 pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
-pub use common::float::Float;
 
 /// slot value 的类型
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]

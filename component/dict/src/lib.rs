@@ -26,10 +26,9 @@ use std::{
     sync::Arc,
 };
 
-use serde::{Deserialize, Serialize};
-
-use data_type::DataType;
 use common::now_timestamp_ms;
+use data_type::DataType;
+use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
     pub write_id: u64,
