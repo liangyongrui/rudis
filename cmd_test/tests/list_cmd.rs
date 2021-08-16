@@ -161,7 +161,6 @@ async fn lrange() {
     next_frame_eq(&mut connection, Frame::Array(vec![])).await;
 }
 
-
 #[tokio::test]
 async fn rpop() {
     let mut connection = start_server().await;
