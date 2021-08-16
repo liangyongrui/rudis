@@ -1,8 +1,16 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
-use cmd_test::{read_assert_eq, write_cmd};
-use tokio::net::TcpStream;
+use cmd_test::write_cmd;
+use tokio::{io::AsyncReadExt, net::TcpStream};
 
+pub async fn read_assert_eq(stream: &mut TcpStream, right: &[u8]) {
+    let mut response = vec![0; right.len()];
+    tokio::time::timeout(Duration::from_secs(1), stream.read_exact(&mut response))
+        .await
+        .unwrap()
+        .unwrap();
+    assert_eq!(&response, right);
+}
 fn main() {
     tokio::runtime::Builder::new_multi_thread()
         .worker_threads(4)

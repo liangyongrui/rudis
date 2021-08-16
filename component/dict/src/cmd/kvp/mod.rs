@@ -7,7 +7,7 @@ pub mod set;
 
 #[cfg(test)]
 mod test {
-    use std::{borrow::BorrowMut, convert::TryInto};
+    use std::borrow::BorrowMut;
 
     use common::options::NxXx;
     use parking_lot::RwLock;
@@ -25,9 +25,9 @@ mod test {
         let res = set::Req {
             key: b"hello"[..].into(),
             entries: vec![
-                ("k1".into(), "v1".into()),
-                ("k2".into(), "v2".into()),
-                ("k3".into(), "v3".into()),
+                (b"k1"[..].into(), b"v1"[..].into()),
+                (b"k2"[..].into(), b"v2"[..].into()),
+                (b"k3"[..].into(), b"v3"[..].into()),
             ],
             nx_xx: NxXx::None,
         }
@@ -51,21 +51,21 @@ mod test {
                     .into_iter()
                     .map(|kv| (kv.0.clone(), kv.1))
                     .collect::<Vec<_>>();
-                v.sort_unstable_by_key::<String, _>(|t| (&t.0).try_into().unwrap());
+                v.sort_unstable_by_key(|t| t.0.clone());
                 v
             },
             vec![
-                ("k1".into(), "v1".into()),
-                ("k2".into(), "v2".into()),
-                ("k3".into(), "v3".into()),
+                (b"k1"[..].into(), b"v1"[..].into()),
+                (b"k2"[..].into(), b"v2"[..].into()),
+                (b"k3"[..].into(), b"v3"[..].into()),
             ]
         );
         let res = set::Req {
             key: b"hello"[..].into(),
             entries: vec![
-                ("k1".into(), "v1".into()),
-                ("k4".into(), "v4".into()),
-                ("k5".into(), "v5".into()),
+                (b"k1"[..].into(), b"v1"[..].into()),
+                (b"k4"[..].into(), b"v4"[..].into()),
+                (b"k5"[..].into(), b"v5"[..].into()),
             ],
             nx_xx: NxXx::Nx,
         }
@@ -90,35 +90,35 @@ mod test {
                     .into_iter()
                     .map(|kv| (kv.0.clone(), kv.1))
                     .collect::<Vec<_>>();
-                v.sort_unstable_by_key::<String, _>(|t| (&t.0).try_into().unwrap());
+                v.sort_unstable_by_key(|t| t.0.clone());
                 v
             },
             vec![
-                ("k1".into(), "v1".into()),
-                ("k2".into(), "v2".into()),
-                ("k3".into(), "v3".into()),
-                ("k4".into(), "v4".into()),
-                ("k5".into(), "v5".into()),
+                (b"k1"[..].into(), b"v1"[..].into()),
+                (b"k2"[..].into(), b"v2"[..].into()),
+                (b"k3"[..].into(), b"v3"[..].into()),
+                (b"k4"[..].into(), b"v4"[..].into()),
+                (b"k5"[..].into(), b"v5"[..].into()),
             ]
         );
 
         let res = get::Req {
             key: b"hello"[..].into(),
-            fields: vec!["k1"],
+            fields: vec![b"k1"[..].into()],
         }
         .apply(&dict)
         .unwrap();
-        assert_eq!(res, vec!["v1".into()]);
+        assert_eq!(res, vec![b"v1"[..].into()]);
         let res = get::Req {
             key: b"hello"[..].into(),
-            fields: vec!["k6"],
+            fields: vec![b"k6"[..].into()],
         }
         .apply(&dict)
         .unwrap();
         assert_eq!(res, vec![DataType::Null]);
         let res = get::Req {
             key: b"hello2"[..].into(),
-            fields: vec!["k1"],
+            fields: vec![b"k1"[..].into()],
         }
         .apply(&dict)
         .unwrap();
@@ -126,7 +126,7 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: "k1",
+            field: b"k1"[..].into(),
         }
         .apply(&dict)
         .unwrap();
@@ -134,7 +134,7 @@ mod test {
 
         let res = del::Req {
             key: b"hello"[..].into(),
-            fields: vec!["k1".into(), "k10".into()],
+            fields: vec![b"k1"[..].into(), b"k10"[..].into()],
         }
         .apply(dict.write().borrow_mut())
         .unwrap();
@@ -148,7 +148,7 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            field: "k1",
+            field: b"k1"[..].into(),
         }
         .apply(&dict)
         .unwrap();

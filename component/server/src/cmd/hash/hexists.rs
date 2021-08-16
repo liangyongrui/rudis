@@ -9,7 +9,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames)]
 pub struct Hexists {
     pub key: Arc<[u8]>,
-    pub field: String,
+    pub field: Arc<[u8]>,
 }
 
 impl<'a> From<&'a Hexists> for dict::cmd::kvp::exists::Req<'a> {

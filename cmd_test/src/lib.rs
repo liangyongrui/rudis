@@ -1,10 +1,10 @@
 //! 测试用的一些基础函数
 
-use std::time::Duration;
+use core::panic;
 
-use ::server::{server, Frame};
+use ::server::{server, Connection, Frame};
 use tokio::{
-    io::{AsyncReadExt, AsyncWriteExt},
+    io::AsyncWriteExt,
     net::{TcpListener, TcpStream},
 };
 use tracing::debug;
@@ -23,21 +23,33 @@ pub async fn write_cmd(stream: &mut TcpStream, cmd: Vec<&str>) {
     stream.flush().await.unwrap();
 }
 
-pub async fn read_assert_eq(stream: &mut TcpStream, right: &[u8]) {
-    let mut response = vec![0; right.len()];
-    tokio::time::timeout(Duration::from_secs(1), stream.read_exact(&mut response))
-        .await
-        .unwrap()
-        .unwrap();
-    debug!(
-        "read_assert_eq left: {:?}, right: {:?}",
-        std::str::from_utf8(&response),
-        std::str::from_utf8(right)
-    );
-    assert_eq!(&response, right);
+pub async fn next_frame_eq(connection: &mut Connection, right: Frame) {
+    let left = connection.read_frame().await.unwrap().unwrap();
+    assert_eq!(left, right);
 }
 
-pub async fn start_server() -> TcpStream {
+pub async fn next_array_frame_sorted_eq(connection: &mut Connection, mut right: Vec<Frame>) {
+    let left = connection.read_frame().await.unwrap().unwrap();
+    if let Frame::Array(mut left) = left {
+        left.sort();
+        right.sort();
+        assert_eq!(left, right);
+    } else {
+        panic!("{:?}", left);
+    }
+}
+
+pub async fn next_frame_in(connection: &mut Connection, rights: Vec<Frame>) {
+    let left = connection.read_frame().await.unwrap().unwrap();
+    for right in rights {
+        if left == right {
+            return;
+        }
+    }
+    panic!("{:?}", left);
+}
+
+pub async fn start_server() -> Connection {
     let _ = tracing_subscriber::fmt::Subscriber::builder()
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .with_max_level(tracing::Level::DEBUG)
@@ -46,5 +58,5 @@ pub async fn start_server() -> TcpStream {
     let addr = listener.local_addr().unwrap();
     debug!(?addr);
     tokio::spawn(async move { server::run(listener, tokio::signal::ctrl_c()).await });
-    TcpStream::connect(addr).await.unwrap()
+    Connection::new(TcpStream::connect(addr).await.unwrap())
 }

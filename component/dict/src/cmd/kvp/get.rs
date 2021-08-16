@@ -5,7 +5,7 @@ use crate::{cmd::Read, data_type::DataType, Dict};
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    pub fields: Vec<&'a str>,
+    pub fields: Vec<&'a [u8]>,
 }
 
 impl<'a> Read<Vec<DataType>> for Req<'a> {

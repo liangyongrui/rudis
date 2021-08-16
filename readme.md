@@ -55,6 +55,9 @@ rcc 差不多是 redis 的 2.4 倍
 
 ### todo list
 
+1. [ ] 通过详尽的测试
+   - [ ] 代码覆盖率超过 90%
+   - [ ] Redis TCL test
 1. [ ] 启动配置
 1. [ ] 修复 bug
    - [ ] 多个建立连接同时请求报错 (cmd_test/tests/connect.rs), 好像是 tokio test 的问题
@@ -70,10 +73,9 @@ rcc 差不多是 redis 的 2.4 倍
    - [ ] wrong number of arguments (given 3, expected 2)
    - [ ] error type
 1. [ ] 各个 task 的优雅退出
-1. [ ] 通过详尽的测试
-   - [ ] 代码覆盖率超过 90%
+1. [ ] 性能测试
    - [ ] benchmark
-   - [ ] Redis TCL test
+   - Rust 性能手册
 1. [ ] 起个好名字
 1. [ ] 英文 readme
 

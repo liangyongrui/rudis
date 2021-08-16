@@ -8,6 +8,7 @@ pub mod copy_master;
 use std::{
     borrow::BorrowMut,
     collections::{HashMap, HashSet},
+    sync::Arc,
 };
 
 use dict::{
@@ -212,7 +213,7 @@ impl Slot {
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> common::Result<HashMap<String, DataType, ahash::RandomState>> {
+    ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
         cmd.apply(&self.dict)
     }
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> common::Result<usize> {

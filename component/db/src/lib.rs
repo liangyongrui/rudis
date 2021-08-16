@@ -142,7 +142,7 @@ impl Db {
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> common::Result<HashMap<String, DataType, ahash::RandomState>> {
+    ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
         self.get_slot(cmd.key).kvp_get_all(cmd)
     }
     pub fn deque_range(&self, cmd: cmd::deque::range::Req) -> common::Result<Vec<DataType>> {

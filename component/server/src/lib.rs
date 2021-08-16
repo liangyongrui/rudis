@@ -19,7 +19,7 @@
 
 /// redis 命令
 mod cmd;
-mod utils;
+// mod utils;
 
 mod connection;
 pub use connection::Connection;

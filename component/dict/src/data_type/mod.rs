@@ -27,6 +27,11 @@ pub enum DataType {
     SortedSet(Box<SortedSet>),
 }
 
+impl From<&[u8]> for DataType {
+    fn from(s: &[u8]) -> Self {
+        DataType::Bytes(s.into())
+    }
+}
 impl From<&str> for DataType {
     fn from(s: &str) -> Self {
         DataType::String(s.into())

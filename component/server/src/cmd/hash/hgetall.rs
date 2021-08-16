@@ -23,7 +23,7 @@ impl Hgetall {
         let v = db.kvp_get_all((&self).into())?;
         Ok(Frame::Array(
             v.into_iter()
-                .flat_map(|(k, v)| vec![Frame::Simple((&k[..]).into()), v.into()].into_iter())
+                .flat_map(|(k, v)| vec![Frame::Bulk(k), v.into()].into_iter())
                 .collect(),
         ))
     }

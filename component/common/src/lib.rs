@@ -5,10 +5,10 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 /// This is defined as a convenience.
 pub type Result<T> = std::result::Result<T, Error>;
 
+pub mod config;
 pub mod float;
 pub mod options;
-// pub mod other_type;
-pub mod config;
+pub mod other_type;
 pub mod pointer;
 pub mod shutdown;
 

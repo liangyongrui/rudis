@@ -9,7 +9,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hdel {
     pub key: Arc<[u8]>,
-    pub fields: Vec<String>,
+    pub fields: Vec<Arc<[u8]>>,
 }
 
 impl From<Hdel> for dict::cmd::kvp::del::Req {

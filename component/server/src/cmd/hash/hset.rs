@@ -2,28 +2,46 @@ use std::sync::Arc;
 
 use common::options::NxXx;
 use db::Db;
-use rcc_macros::ParseFrames;
+use dict::data_type::DataType;
 
-use crate::{utils::other_type::SimpleTypePair, Frame};
+use crate::{
+    parse::{Parse, ParseError},
+    Frame,
+};
 
 /// https://redis.io/commands/hset
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, Clone)]
 pub struct Hset {
     pub key: Arc<[u8]>,
-    pub pairs: Vec<SimpleTypePair>,
+    pub entries: Vec<(Arc<[u8]>, DataType)>,
 }
 
 impl From<Hset> for dict::cmd::kvp::set::Req {
     fn from(old: Hset) -> Self {
         Self {
             key: old.key,
-            entries: old.pairs.into_iter().map(|t| (t.key, t.value)).collect(),
+            entries: old.entries,
             nx_xx: NxXx::None,
         }
     }
 }
 
 impl Hset {
+    pub fn parse_frames(parse: &mut Parse) -> common::Result<Hset> {
+        // Read the key to set. This is a required field
+        let key = parse.next_key()?;
+
+        let mut entries = vec![(parse.next_bulk()?, parse.next_data()?)];
+        loop {
+            match parse.next_bulk() {
+                Ok(s) => entries.push((s, parse.next_data()?)),
+                Err(ParseError::EndOfStream) => break,
+                Err(err) => return Err(err.into()),
+            };
+        }
+        Ok(Self { key, entries })
+    }
+
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.kvp_set(self.into())?;

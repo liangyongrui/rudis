@@ -1,6 +1,7 @@
 use std::{sync::Arc, vec};
 
 use db::Db;
+use nom::AsBytes;
 use rcc_macros::ParseFrames;
 
 use crate::Frame;
@@ -9,7 +10,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames)]
 pub struct Hmget {
     pub key: Arc<[u8]>,
-    pub fields: Vec<String>,
+    pub fields: Vec<Arc<[u8]>>,
 }
 
 impl Hmget {
@@ -17,11 +18,7 @@ impl Hmget {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let v = db.kvp_get(dict::cmd::kvp::get::Req {
             key: &self.key,
-            fields: self
-                .fields
-                .iter()
-                .map(std::string::String::as_str)
-                .collect(),
+            fields: self.fields.iter().map(|t| t.as_bytes()).collect(),
         })?;
         let res = v.into_iter().map(|i| i.into()).collect();
         Ok(Frame::Array(res))

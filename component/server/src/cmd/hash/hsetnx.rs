@@ -11,7 +11,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: Arc<[u8]>,
-    pub field: String,
+    pub field: Arc<[u8]>,
     pub value: DataType,
 }
 

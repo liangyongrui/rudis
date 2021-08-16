@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     ops::{Deref, DerefMut},
+    sync::Arc,
 };
 
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,7 @@ use crate::data_type::DataType;
 /// key value pairs
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct Kvp {
-    pub inner: HashMap<String, DataType, ahash::RandomState>,
+    pub inner: HashMap<Arc<[u8]>, DataType, ahash::RandomState>,
 }
 
 impl Kvp {
@@ -19,7 +20,7 @@ impl Kvp {
 }
 
 impl Deref for Kvp {
-    type Target = HashMap<String, DataType, ahash::RandomState>;
+    type Target = HashMap<Arc<[u8]>, DataType, ahash::RandomState>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

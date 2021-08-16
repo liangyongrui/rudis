@@ -11,7 +11,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub field: String,
+    pub field: Arc<[u8]>,
     pub value: i64,
 }
 impl From<Req> for WriteCmd {
@@ -62,7 +62,10 @@ mod test {
         let dict = RwLock::new(Dict::new());
         let res = set::Req {
             key: b"hello"[..].into(),
-            entries: vec![("k1".into(), "1".into()), ("k2".into(), "2".into())],
+            entries: vec![
+                (b"k1"[..].into(), b"1"[..].into()),
+                (b"k2"[..].into(), b"2"[..].into()),
+            ],
             nx_xx: NxXx::None,
         }
         .apply(dict.write().borrow_mut())
@@ -77,7 +80,7 @@ mod test {
 
         let res = incr::Req {
             key: b"hello"[..].into(),
-            field: "k1".into(),
+            field: b"k1"[..].into(),
             value: 1,
         }
         .apply(dict.write().borrow_mut())
@@ -86,7 +89,7 @@ mod test {
 
         let res = incr::Req {
             key: b"hello"[..].into(),
-            field: "k3".into(),
+            field: b"k3"[..].into(),
             value: 10,
         }
         .apply(dict.write().borrow_mut())
@@ -100,17 +103,14 @@ mod test {
         .unwrap();
         assert_eq!(
             {
-                let mut v = res
-                    .into_iter()
-                    .map(|kv| (kv.0, kv.1))
-                    .collect::<Vec<(String, _)>>();
+                let mut v = res.into_iter().map(|kv| (kv.0, kv.1)).collect::<Vec<_>>();
                 v.sort_unstable_by_key(|t| t.0.clone());
                 v
             },
             vec![
-                ("k1".to_owned(), 2.into()),
-                ("k2".to_owned(), "2".into()),
-                ("k3".to_owned(), 10.into())
+                (b"k1"[..].into(), 2.into()),
+                (b"k2"[..].into(), b"2"[..].into()),
+                (b"k3"[..].into(), 10.into())
             ]
         );
     }

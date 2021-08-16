@@ -8,7 +8,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
     pub key: Arc<[u8]>,
-    pub field: String,
+    pub field: Arc<[u8]>,
     pub value: i64,
 }
 

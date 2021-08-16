@@ -1,9 +1,9 @@
 use std::{ops::Bound, sync::Arc};
 
-use common::{float::Float, BoundExt};
+use common::{float::Float, other_type::ZrangeItem, BoundExt};
 use db::Db;
 
-use crate::{parse::ParseError, utils::other_type::ZrangeItem, Frame, Parse};
+use crate::{parse::ParseError, Frame, Parse};
 
 enum By {
     Score,

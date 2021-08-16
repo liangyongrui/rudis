@@ -17,7 +17,7 @@ use nom::{
 
 /// A frame in the Redis protocol.
 ///
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Frame {
     Simple(Arc<str>),
     Error(String),

@@ -161,7 +161,7 @@ impl Command {
             "smembers" => Command::Read(Read::Smembers(Smembers::parse_frames(&mut parse)?)),
             "srem" => Command::Write(Write::Srem(Srem::parse_frames(&mut parse)?)),
             "hincrby" => Command::Write(Write::Hincrby(Hincrby::parse_frames(&mut parse)?)),
-            "hexist" => Command::Read(Read::Hexists(Hexists::parse_frames(&mut parse)?)),
+            "hexists" => Command::Read(Read::Hexists(Hexists::parse_frames(&mut parse)?)),
             "hdel" => Command::Write(Write::Hdel(Hdel::parse_frames(&mut parse)?)),
             "hsetnx" => Command::Write(Write::Hsetnx(Hsetnx::parse_frames(&mut parse)?)),
             "hget" => Command::Read(Read::Hget(Hget::parse_frames(&mut parse)?)),

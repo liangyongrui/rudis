@@ -9,7 +9,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
     pub key: Arc<[u8]>,
-    pub field: String,
+    pub field: Arc<[u8]>,
 }
 
 impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {

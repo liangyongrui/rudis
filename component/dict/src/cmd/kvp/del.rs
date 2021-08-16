@@ -11,7 +11,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Arc<[u8]>,
-    pub fields: Vec<String>,
+    pub fields: Vec<Arc<[u8]>>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
