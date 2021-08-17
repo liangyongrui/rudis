@@ -55,23 +55,24 @@ rcc 差不多是 redis 的 2.4 倍
 
 ### todo list
 
-1. [ ] 可靠的主从复制
-1. [ ] 通过详尽的测试
-   - [ ] 代码覆盖率超过 90%
-   - [ ] Redis TCL test
-1. [ ] 启动配置
+1. [ ] 主从
+   - [ ] 可靠的主从复制
+   - [ ] pd, 用来协调主从
 1. [ ] fsync
+   - [ ] tokio-uring
 1. [ ] 持久化恢复
-1. [ ] 独立的管理服务
-   - [ ] 用来协调主从
-   - (开源后再做) slot, 查看监控、统计信息、同步代理等
 1. [ ] 错误信息
    - [ ] wrong number of arguments (given 3, expected 2)
    - [ ] error type
 1. [ ] 各个 task 的优雅退出
+1. [ ] 通过详尽的测试
+   - [ ] 代码覆盖率超过 90%
+   - [ ] Redis TCL test
+1. [ ] 启动配置
 1. [ ] 性能测试
    - [ ] benchmark
    - Rust 性能手册
+1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis
    - redis_iox
@@ -80,6 +81,9 @@ rcc 差不多是 redis 的 2.4 倍
 
 ## todo
 
+1. [ ] pd
+   - slot, 查看监控、统计信息、同步代理等
+   - 进程自动拉起
 1. [ ] 异步 drop (del 或者 被 set 覆盖, 都是异步 drop)
 1. [ ] crc16
 1. [ ] 连接权限管理
@@ -107,6 +111,7 @@ rcc 差不多是 redis 的 2.4 倍
 1. 更高效的并发模型
    - 比如持久化数据结构
 1. io_uring
+   - https://zhuanlan.zhihu.com/p/380726590
 1. 集群事务
 1. 从节点直接持久化保存, 减少从节点的内存成本
 1. 混合存储

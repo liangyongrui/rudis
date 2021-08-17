@@ -9,7 +9,7 @@ All the implemented commands are compatible with redis 7.0 version.
 | base | get       | yes     | Same as redis   |
 | base | psetex    | yes     | Same as redis   |
 | base | setex     | yes     | Same as redis   |
-| base | exists    | yes     | Same as redis.  |
+| base | exists    | yes     | Same as redis   |
 | base | pexpireat | yes     | Same as redis   |
 | base | expireat  | yes     | Same as redis   |
 | base | expire    | yes     | Same as redis   |
@@ -21,16 +21,16 @@ All the implemented commands are compatible with redis 7.0 version.
 | base | ttl       | yes     | Same as redis   |
 | base | pttl      | yes     | Same as redis   |
 
-| type | Command | Support | Time Complexity        |
-| ---- | ------- | ------- | ---------------------- |
-| list | lpush   | yes     | Same as redis          |
-| list | rpush   | yes     | Same as redis          |
-| list | rpushx  | yes     | Same as redis          |
-| list | lpushx  | yes     | Same as redis          |
-| list | lrange  | yes     | O(STOP-START)          |
-| list | lpop    | yes     | Same as redis returned |
-| list | rpop    | yes     | Same as redis          |
-| list | llen    | yes     | Same as redis          |
+| type | Command | Support | Time Complexity |
+| ---- | ------- | ------- | --------------- |
+| list | lpush   | yes     | Same as redis   |
+| list | rpush   | yes     | Same as redis   |
+| list | rpushx  | yes     | Same as redis   |
+| list | lpushx  | yes     | Same as redis   |
+| list | lrange  | yes     | O(STOP-START)   |
+| list | lpop    | yes     | Same as redis   |
+| list | rpop    | yes     | Same as redis   |
+| list | llen    | yes     | Same as redis   |
 
 | type | Command | Support | Time Complexity |
 | ---- | ------- | ------- | --------------- |
@@ -51,17 +51,17 @@ All the implemented commands are compatible with redis 7.0 version.
 | set  | srem       | yes     | Same as redis   |
 | set  | smembers   | yes     | Same as redis   |
 
-| type | Command          | Support | Time Complexity                                                                                                                       |
-| ---- | ---------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| zset | zadd             | yes     | Same as redis                                                                                                                         |
-| zset | zrange           | yes     | by_rank: O(N+M), other: O(log(N)+M) <br> with N being the number of elements in the sorted set and M the number of elements returned. |
-| zset | zrevrank         | yes     | O(N) N is rank                                                                                                                        |
-| zset | zrank            | yes     | O(N) N is rank                                                                                                                        |
-| zset | zrem             | yes     | Same as redis                                                                                                                         |
-| zset | zrevrange        | yes     | by_rank: O(N+M), other: O(log(N)+M) <br> with N being the number of elements in the sorted set and M the number of elements returned. |
-| zset | zrangebyscore    | yes     | Same as redis                                                                                                                         |
-| zset | zrevrangebyscore | yes     | Same as redis                                                                                                                         |
-| zset | zrangebylex      | yes     | Same as redis                                                                                                                         |
-| zset | zrevrangebylex   | yes     | Same as redis                                                                                                                         |
-| zset | zremrangebyrank  | yes     | O(N+M) <br> with N being the number of elements in the sorted set and M the number of elements returned.                              |
-| zset | zremrangebyscore | yes     | Same as redis                                                                                                                         |
+| type | Command          | Support | Time Complexity                                                                                                                  |
+| ---- | ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| zset | zadd             | yes     | Same as redis                                                                                                                    |
+| zset | zrange           | yes     | by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned. |
+| zset | zrevrank         | yes     | O(N) N is rank                                                                                                                   |
+| zset | zrank            | yes     | O(N) N is rank                                                                                                                   |
+| zset | zrem             | yes     | Same as redis                                                                                                                    |
+| zset | zrevrange        | yes     | by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned. |
+| zset | zrangebyscore    | yes     | Same as redis                                                                                                                    |
+| zset | zrevrangebyscore | yes     | Same as redis                                                                                                                    |
+| zset | zrangebylex      | yes     | Same as redis                                                                                                                    |
+| zset | zrevrangebylex   | yes     | Same as redis                                                                                                                    |
+| zset | zremrangebyrank  | yes     | O(N+M) with N being the number of elements in the sorted set and M the number of elements returned.                              |
+| zset | zremrangebyscore | yes     | Same as redis                                                                                                                    |
