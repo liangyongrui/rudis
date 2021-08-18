@@ -216,6 +216,7 @@ impl Command {
 }
 
 impl Write {
+    #[inline]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         use Write::*;
         match self {
@@ -253,6 +254,7 @@ impl Write {
 }
 
 impl Read {
+    #[inline]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         use Read::*;
 

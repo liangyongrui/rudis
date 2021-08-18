@@ -22,9 +22,7 @@ rust cloud cache
 
 ## Benchmarks
 
-In the case of the same `4` threads, the performance is about `3` times that of `redis 6.2.5`.
-
-[detail report](./docs/benchmark.md)
+[see detail](./docs/benchmark.md)
 
 ## 开源前
 

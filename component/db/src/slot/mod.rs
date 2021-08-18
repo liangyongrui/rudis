@@ -128,63 +128,80 @@ impl Slot {
 
 /// 写命令
 impl Slot {
+    #[inline]
     pub fn set(&self, cmd: cmd::simple::set::Req) -> common::Result<DataType> {
         self.call_expires_write(cmd)
     }
+
+    #[inline]
     pub fn del(&self, cmd: cmd::simple::del::Req) -> common::Result<Option<Value>> {
         self.call_expires_write(cmd)
     }
+    #[inline]
     pub fn expire(&self, cmd: cmd::simple::expire::Req) -> common::Result<bool> {
         self.call_expires_write(cmd)
     }
+    #[inline]
     pub fn incr(&self, cmd: cmd::simple::incr::Req) -> common::Result<i64> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> common::Result<cmd::kvp::set::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> common::Result<cmd::kvp::del::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> common::Result<i64> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn deque_push(&self, cmd: cmd::deque::push::Req) -> common::Result<cmd::deque::push::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> common::Result<Vec<DataType>> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn set_add(&self, cmd: cmd::set::add::Req) -> common::Result<cmd::set::add::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn set_remove(&self, cmd: cmd::set::remove::Req) -> common::Result<cmd::set::remove::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn sorted_set_add(
         &self,
         cmd: cmd::sorted_set::add::Req,
     ) -> common::Result<cmd::sorted_set::add::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn sorted_set_remove(
         &self,
         cmd: cmd::sorted_set::remove::Req,
     ) -> common::Result<cmd::sorted_set::remove::Resp> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn sorted_set_remove_by_lex_range(
         &self,
         cmd: cmd::sorted_set::remove_by_lex_range::Req,
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn sorted_set_remove_by_rank_range(
         &self,
         cmd: cmd::sorted_set::remove_by_rank_range::Req,
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_write(cmd)
     }
+    #[inline]
     pub fn sorted_set_remove_by_score_range(
         &self,
         cmd: cmd::sorted_set::remove_by_score_range::Req,
@@ -195,60 +212,74 @@ impl Slot {
 
 /// 读命令
 impl Slot {
+    #[inline]
     pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> common::Result<DataType> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> common::Result<cmd::simple::ttl::Resp> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn exists(&self, cmd: cmd::simple::exists::Req<'_>) -> common::Result<bool> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> common::Result<bool> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> common::Result<Vec<DataType>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
     ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> common::Result<usize> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> common::Result<Vec<DataType>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> common::Result<Vec<bool>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
     ) -> common::Result<HashSet<String, ahash::RandomState>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn sorted_set_range_by_lex(
         &self,
         cmd: cmd::sorted_set::range_by_lex::Req<'_>,
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn sorted_set_range_by_rank(
         &self,
         cmd: cmd::sorted_set::range_by_rank::Req<'_>,
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn sorted_set_range_by_score(
         &self,
         cmd: cmd::sorted_set::range_by_score::Req<'_>,
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         cmd.apply(&self.dict)
     }
+    #[inline]
     pub fn sorted_set_rank(
         &self,
         cmd: cmd::sorted_set::rank::Req<'_>,

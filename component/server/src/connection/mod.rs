@@ -26,6 +26,7 @@ impl Connection {
     }
 
     /// Write a single `Frame` value to the underlying stream.
+    #[inline]
     #[tracing::instrument(skip(self), level = "debug")]
     pub async fn write_frame(&mut self, frame: &Frame) -> io::Result<()> {
         let bytes: Vec<u8> = frame.into();
@@ -48,6 +49,7 @@ impl Connection {
         }
     }
 
+    #[inline]
     fn parse_frame(&mut self) -> common::Result<Option<Frame>> {
         let old_len = self.read_buffer.len();
         match parse::parse(self.read_buffer.as_ref()) {
