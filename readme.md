@@ -52,10 +52,10 @@ In the case of the same `4` threads, the performance is about `3` times that of 
    - [ ] 代码覆盖率超过 90%
    - [ ] Redis TCL test
 1. [ ] 启动配置
-1. [ ] 性能测试
+1. [ ] 性能优化
+   - [ ] https://poly000.github.io/perf-book-zh/inlining_zh.html
+   - [ ] https://poly000.github.io/perf-book-zh/hashing_zh.html
    - [ ] redis-benchmark
-   - [ ] benchmark
-   - Rust 性能手册
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis
@@ -87,6 +87,7 @@ In the case of the same `4` threads, the performance is about `3` times that of 
 
 ## 待探索方向
 
+1. [使用其他内存分配器](https://poly000.github.io/perf-book-zh/heap-allocations_zh.html#%E4%BD%BF%E7%94%A8%E5%85%B6%E4%BB%96%E5%88%86%E9%85%8D%E5%99%A8)
 1. 代理
    - 客户端代理
    - 远程代理
@@ -110,6 +111,7 @@ In the case of the same `4` threads, the performance is about `3` times that of 
    - [crdt](https://josephg.com/blog/crdts-go-brrr/)
    - [可能可以考虑用这个](https://github.com/josephg/diamond-types)
 1. key 优化
+   - https://github.com/BurntSushi/bstr
    - 比如 arc<[u8]>, 可以精简一个 weak reference, 每个 key 节约一个 byte
    - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte, 如果是用 0 在结尾，还能再省点
 1. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)

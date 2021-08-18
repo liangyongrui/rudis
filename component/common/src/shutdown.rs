@@ -20,6 +20,7 @@ pub struct Shutdown {
 
 impl Shutdown {
     /// Create a new `Shutdown` backed by the given `broadcast::Receiver`.
+    #[inline]
     pub fn new(notify: broadcast::Receiver<()>) -> Shutdown {
         Shutdown {
             shutdown: false,
@@ -28,11 +29,13 @@ impl Shutdown {
     }
 
     /// Returns `true` if the shutdown signal has been received.
+    #[inline]
     pub fn is_shutdown(&self) -> bool {
         self.shutdown
     }
 
     /// Returns `true` if the shutdown signal has been received.
+    #[inline]
     pub fn check_shutdown(&mut self) -> bool {
         match self.notify.try_recv() {
             Err(TryRecvError::Empty) => false,
@@ -44,6 +47,7 @@ impl Shutdown {
     }
 
     /// Receive the shutdown notice, waiting if necessary.
+    #[inline]
     pub async fn recv(&mut self) {
         // If the shutdown signal has already been received, then return
         // immediately.

@@ -9,7 +9,6 @@ pub mod config;
 pub mod float;
 pub mod options;
 pub mod other_type;
-pub mod pointer;
 pub mod shutdown;
 
 use std::{
@@ -24,6 +23,7 @@ pub trait BoundExt<T> {
 }
 
 impl<T> BoundExt<T> for Bound<T> {
+    #[inline]
     fn map<O, F: FnOnce(T) -> O>(self, f: F) -> Bound<O> {
         match self {
             Bound::Included(t) => Bound::Included(f(t)),
@@ -33,6 +33,7 @@ impl<T> BoundExt<T> for Bound<T> {
     }
 }
 
+#[inline]
 pub fn now_timestamp_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -40,12 +41,14 @@ pub fn now_timestamp_ms() -> u64 {
         .as_millis() as u64
 }
 
+#[inline]
 pub fn u8_to_string(data: &[u8]) -> Arc<str> {
     std::str::from_utf8(data)
         .map(|s| s.into())
         .expect("protocol error; invalid string")
 }
 
+#[inline]
 pub fn u8_to_i64(data: &[u8]) -> i64 {
     atoi::atoi::<i64>(data).expect("protocol error; invalid number")
 }

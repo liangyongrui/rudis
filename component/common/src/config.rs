@@ -54,6 +54,7 @@ pub struct Hdp {
 }
 
 impl Default for Hdp {
+    #[inline]
     fn default() -> Self {
         Self {
             aof_count: 0,

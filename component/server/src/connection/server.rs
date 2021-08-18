@@ -266,9 +266,7 @@ impl Handler {
             // peer.
             let res = match res {
                 Ok(f) => f,
-                Err(e) => {
-                    Frame::Error(e.to_string())
-                },
+                Err(e) => Frame::Error(e.to_string()),
             };
             self.connection.write_frame(&res).await?;
         }
