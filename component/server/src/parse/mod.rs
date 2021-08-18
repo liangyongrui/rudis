@@ -40,6 +40,7 @@ impl Parse {
     pub fn new(frame: Frame) -> Result<Parse, ParseError> {
         let array = match frame {
             Frame::Array(array) => array,
+            Frame::Ping => vec![Frame::Ping],
             frame => return Err(format!("protocol error; expected array, got {:?}", frame).into()),
         };
 
@@ -88,6 +89,7 @@ impl Parse {
             Frame::Bulk(data) => str::from_utf8(&data[..])
                 .map(std::string::ToString::to_string)
                 .map_err(|_| "protocol error; invalid string".into()),
+            Frame::Ping => Ok("PING".to_owned()),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }

@@ -37,6 +37,7 @@ use crate::{Frame, Parse, ParseError};
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
 pub enum Command {
+    Ping,
     Read(Read),
     Write(Write),
     SyncCmd,
@@ -126,6 +127,7 @@ impl Command {
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
+            "ping" => Command::Ping,
             "ttl" => Command::Read(Read::Ttl(Ttl::parse_frames(&mut parse)?)),
             "pttl" => Command::Read(Read::Pttl(Pttl::parse_frames(&mut parse)?)),
             "zrangebylex" => {
@@ -199,7 +201,7 @@ impl Command {
                 // `return` is called here to skip the `finish()` call below. As
                 // the command is not recognized, there is most likely
                 // unconsumed fields remaining in the `Parse` instance.
-                return Ok(Command::Unknown(Unknown::new(&command_name)));
+                return Ok(Command::Unknown(Unknown::new(&command_name, &mut parse)));
             }
         };
 

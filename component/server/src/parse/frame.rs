@@ -17,8 +17,10 @@ use nom::{
 
 /// A frame in the Redis protocol.
 ///
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Frame {
+    Ping,
+    Pong,
     Simple(Arc<str>),
     Error(String),
     Integer(i64),
@@ -82,10 +84,16 @@ impl fmt::Display for Frame {
 
                 Ok(())
             }
+            Frame::Ping => write!(fmt, "PING"),
+            Frame::Pong => write!(fmt, "PONG"),
         }
     }
 }
-
+impl fmt::Debug for Frame {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        std::fmt::Display::fmt(&self, f)
+    }
+}
 fn parse_simple(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, resp) = delimited(
         tag(b"+"),
@@ -157,6 +165,10 @@ fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     }
 }
 
+fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame> {
+    let (i, _) = tag(b"PING\r\n")(i)?;
+    Ok((i, Frame::Ping))
+}
 pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     alt((
         parse_simple,
@@ -164,6 +176,7 @@ pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         parse_int,
         parse_bulk,
         parse_array,
+        parse_ping,
     ))(i)
 }
 
@@ -201,6 +214,8 @@ impl Frame {
                     v.write(res);
                 }
             }
+            Frame::Ping => res.extend_from_slice(b"+PING\r\n"),
+            Frame::Pong => res.extend_from_slice(b"+PONG\r\n"),
         }
     }
 }
@@ -254,17 +269,5 @@ mod test {
         assert_eq!(&set[..], b);
         let (_, f) = parse(s.as_bytes()).unwrap();
         assert_eq!(raw, f);
-    }
-
-    #[test]
-    fn test3() {
-        fn f(x: i32) -> i32 {
-            x + 1
-        }
-        let a = 1;
-        for _ in 0..10 {
-            let a = f(a);
-            dbg!(a);
-        }
     }
 }

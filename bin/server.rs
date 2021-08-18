@@ -13,11 +13,6 @@ use tokio::{net::TcpListener, signal};
 pub fn main() -> common::Result<()> {
     // enable logging
     // see https://docs.rs/tracing for more info
-    // tracing_subscriber::fmt::try_init()?;
-    // tracing_subscriber::fmt::Subscriber::builder()
-    //     .with_max_level(Level::DEBUG)
-    //     .try_init()?;
-
     let _ = tracing_subscriber::fmt::Subscriber::builder()
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .with_max_level(tracing::Level::INFO)

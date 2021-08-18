@@ -19,3 +19,8 @@
 ## 主要流程
 
 @import "replication.puml"
+
+## 问题
+
+1. pd 挂了，怎么连接上新的 master
+1. 心跳用不用持久化处理

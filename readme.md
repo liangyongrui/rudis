@@ -20,28 +20,11 @@ rust cloud cache
 1. tracing
 1. 更小的集群通信开销
 
-## 初步性能测试
+## benchmark
 
-在 Mac mini (2018)
+同为 4 线程情况下，性能大约是 redis 6.2.5 的三倍
 
-- OS: macOS 11.5.1 (20G80)
-- CPU: 3.2 GHz 六核 Intel Core i7
-
-客户端和服务端在同一台机器
-
-- redis io-threads 4 线程（redis 的最好状态）
-- rcc worker_threads 4 线程
-
-1000 个连接同时 set 请求 20000 次（非 pipeline）
-
-| server      | 耗时(s) 三次平均值 | 频率(Hz)        |
-| ----------- | ------------------ | --------------- |
-| rcc         | 95.559099695       | 209294.56288135 |
-| redis 6.2.5 | 231.862762724      | 86257.921561157 |
-
-rcc 差不多是 redis 的 2.4 倍
-
-[测试代码](cmd_test/bin/simple_bench.rs)
+[具体报告](./docs/benchmark.md)
 
 ## 开源前
 
@@ -70,6 +53,7 @@ rcc 差不多是 redis 的 2.4 倍
    - [ ] Redis TCL test
 1. [ ] 启动配置
 1. [ ] 性能测试
+   - [ ] redis-benchmark
    - [ ] benchmark
    - Rust 性能手册
 1. [ ] roadmap
@@ -78,12 +62,13 @@ rcc 差不多是 redis 的 2.4 倍
    - redis_iox
    - redox (喜欢这个，但是被别的项目用了。。)
 1. [ ] 英文 readme
+1. [ ] icon
 
 ## todo
 
 1. [ ] pd
    - slot, 查看监控、统计信息、同步代理等
-   - 进程自动拉起
+   - 提供分布式锁的能力
 1. [ ] 异步 drop (del 或者 被 set 覆盖, 都是异步 drop)
 1. [ ] crc16
 1. [ ] 连接权限管理
@@ -105,13 +90,14 @@ rcc 差不多是 redis 的 2.4 倍
 1. 代理
    - 客户端代理
    - 远程代理
+   - 代理决定读操作路由主从
 1. 热 key 请求并发聚合
 1. 根据 value 的大小动态调整数据结构
    - rpds
 1. 更高效的并发模型
    - 比如持久化数据结构
 1. io_uring
-   - https://zhuanlan.zhihu.com/p/380726590
+   - <https://zhuanlan.zhihu.com/p/380726590>
 1. 集群事务
 1. 从节点直接持久化保存, 减少从节点的内存成本
 1. 混合存储

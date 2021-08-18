@@ -255,6 +255,7 @@ impl Handler {
                     .await;
                     return Ok(());
                 }
+                Command::Ping => Ok(Frame::Pong),
             };
             // Perform the work needed to apply the command. This may mutate the
             // database state as a result.
@@ -265,7 +266,9 @@ impl Handler {
             // peer.
             let res = match res {
                 Ok(f) => f,
-                Err(e) => Frame::Error(e.to_string()),
+                Err(e) => {
+                    Frame::Error(e.to_string())
+                },
             };
             self.connection.write_frame(&res).await?;
         }
