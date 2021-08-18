@@ -20,11 +20,11 @@ rust cloud cache
 1. tracing
 1. 更小的集群通信开销
 
-## benchmark
+## Benchmarks
 
-同为 4 线程情况下，性能大约是 redis 6.2.5 的三倍
+In the case of the same `4` threads, the performance is about `3` times that of `redis 6.2.5`.
 
-[具体报告](./docs/benchmark.md)
+[detail report](./docs/benchmark.md)
 
 ## 开源前
 
