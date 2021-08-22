@@ -64,8 +64,8 @@ impl Status {
                 .compare_exchange(
                     false,
                     true,
-                    std::sync::atomic::Ordering::SeqCst,
-                    std::sync::atomic::Ordering::SeqCst,
+                    std::sync::atomic::Ordering::Acquire,
+                    std::sync::atomic::Ordering::Relaxed,
                 )
                 .is_ok()
     }

@@ -46,14 +46,12 @@ rust cloud cache
    - [ ] wrong number of arguments (given 3, expected 2)
    - [ ] error type
 1. [ ] 各个 task 的优雅退出
-1. [ ] 通过详尽的测试
-   - [ ] 代码覆盖率超过 90%
-   - [ ] Redis TCL test
+1. [ ] 代码覆盖率超过 90%
 1. [ ] 启动配置
 1. [ ] 性能优化
-   - [ ] https://poly000.github.io/perf-book-zh/inlining_zh.html
+   - [x] https://poly000.github.io/perf-book-zh/inlining_zh.html
    - [ ] https://poly000.github.io/perf-book-zh/hashing_zh.html
-   - [ ] redis-benchmark
+   - [x] redis-benchmark
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis
@@ -64,6 +62,8 @@ rust cloud cache
 
 ## todo
 
+1. [ ] memtier_benchmark -n 10000 -c 200 -t 4 -R --hide-histogram
+1. [ ] Redis TCL test
 1. [ ] pd
    - slot, 查看监控、统计信息、同步代理等
    - 提供分布式锁的能力
@@ -113,6 +113,7 @@ rust cloud cache
    - 比如 arc<[u8]>, 可以精简一个 weak reference, 每个 key 节约一个 byte
    - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte, 如果是用 0 在结尾，还能再省点
 1. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
+1. bit 类型 + [slab](https://docs.rs/slab/)
 1. 热 slot 自动迁移
 
 ## Supported redis commands

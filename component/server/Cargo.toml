@@ -10,7 +10,7 @@ bytes = "1"
 common = { path = "../common" }
 dict = { path = "../dict" }
 db = { path = "../db" }
-nom = "7.0.0-alpha2"
+nom = "7"
 rcc_macros = { path = "../../rcc_macros" }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"

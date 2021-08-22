@@ -44,7 +44,7 @@ fn finsh_snapshot(pid: Pid, base_id: u64) {
     let _ = crate::hdp::snapshot::IN_PROGRESS.compare_exchange(
         true,
         false,
-        std::sync::atomic::Ordering::SeqCst,
-        std::sync::atomic::Ordering::SeqCst,
+        std::sync::atomic::Ordering::Acquire,
+        std::sync::atomic::Ordering::Relaxed,
     );
 }
