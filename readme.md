@@ -6,19 +6,17 @@ rust cloud cache
 
 ## 特点
 
-1. 兼容所有的 redis client
+1. [ ] 兼容所有的 redis client
    - 不需要 redis cluster 专用客户端
-1. 并发性
-   - 读写公平锁
-   - 单次请求只持有一次锁，并且时间粒度尽量小
-   - slot 之间并发，空间粒度也尽量小
-   - 大 key COW
-1. 过期异步删除
-   - 大 key 也是 O(1)的删除
-1. ha
-1. 自动化运维
-1. tracing
-1. 更小的集群通信开销
+1. [x] 并发性
+   - [x] 读写公平锁
+   - [x] 单次请求只持有一次锁，并且时间粒度尽量小
+   - [] slot 之间并发，空间粒度也尽量小
+   - [ ] 大 key COW
+1. [x] 过期异步删除
+   - [x] 大 key 也是 O(1)的删除
+1. [x] ha
+1. [x] 自动化运维
 
 ## Benchmarks
 
@@ -36,6 +34,7 @@ rust cloud cache
 
 ### todo list
 
+1. [ ] 单点 pd，后期改为 raft
 1. [ ] 主从
    - [ ] 可靠的主从复制
    - [ ] pd, 用来协调主从
@@ -46,12 +45,9 @@ rust cloud cache
    - [ ] wrong number of arguments (given 3, expected 2)
    - [ ] error type
 1. [ ] 各个 task 的优雅退出
-1. [ ] 代码覆盖率超过 90%
 1. [ ] 启动配置
-1. [ ] 性能优化
-   - [x] https://poly000.github.io/perf-book-zh/inlining_zh.html
-   - [ ] https://poly000.github.io/perf-book-zh/hashing_zh.html
-   - [x] redis-benchmark
+1. [ ] u64 key map
+1. [ ] make file
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis
@@ -62,6 +58,17 @@ rust cloud cache
 
 ## todo
 
+1. [ ] HashTag
+1. [ ] 持久化
+   - aof + rdb 可能不是那么好
+   - 在有主从复制的情况下，可能也没那么必要？
+   - 尝试 diskstore
+   - 修改不存在的值可能会多一次硬盘查询
+     - 保存 key 加速?
+     - 布隆过滤器加速?
+1. [ ] pd
+   - [raft](https://github.com/ritelabs/riteraft)
+1. [ ] 代码覆盖率超过 90%
 1. [ ] memtier_benchmark -n 10000 -c 200 -t 4 -R --hide-histogram
 1. [ ] Redis TCL test
 1. [ ] pd
@@ -82,39 +89,11 @@ rust cloud cache
 1. [ ] 各种模块的测试
 1. [ ] 分布式事务
 1. [ ] db 和 slot 的模板代码 换成宏
+1. [ ] 各种运行时监控
+1. [ ] Keyspace Notification
 
 ## 待探索方向
 
-1. [使用其他内存分配器](https://poly000.github.io/perf-book-zh/heap-allocations_zh.html#%E4%BD%BF%E7%94%A8%E5%85%B6%E4%BB%96%E5%88%86%E9%85%8D%E5%99%A8)
-1. 代理
-   - 客户端代理
-   - 远程代理
-   - 代理决定读操作路由主从
-1. 热 key 请求并发聚合
-1. 根据 value 的大小动态调整数据结构
-   - rpds
-1. 更高效的并发模型
-   - 比如持久化数据结构
-1. io_uring
-   - <https://zhuanlan.zhihu.com/p/380726590>
-1. 集群事务
-1. 从节点直接持久化保存, 减少从节点的内存成本
-1. 混合存储
-1. 主从多对一
-1. 更可靠的主从复制
-   1. 强一致性主从复制
-      - 可能会增加单次耗时
-      - 如果并发量比较大的话，吞吐量应该影响不大
-1. 多主(多写)
-   - [crdt](https://josephg.com/blog/crdts-go-brrr/)
-   - [可能可以考虑用这个](https://github.com/josephg/diamond-types)
-1. key 优化
-   - https://github.com/BurntSushi/bstr
-   - 比如 arc<[u8]>, 可以精简一个 weak reference, 每个 key 节约一个 byte
-   - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte, 如果是用 0 在结尾，还能再省点
-1. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
-1. bit 类型 + [slab](https://docs.rs/slab/)
-1. 热 slot 自动迁移
 
 ## Supported redis commands
 

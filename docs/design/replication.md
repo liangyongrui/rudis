@@ -15,6 +15,16 @@
    - 断开连接和切换 master 部分重同步
 1. 避免主节点没有持久化，原地拉起的时候丢数据
    - 空数据状态（没有 node_id）不能成为 master
+1. 统一抽象持久化
+   - 一个 group 中有 n 种角色
+     - leader 主节点，只能有一个
+     - follower 从节点，有多个，主节点向它发送数据
+     - [ ] listener 单纯监听的服务，可以有多个，主节点向它发送数据, 例如
+       - 持久化服务：本地存储、网络存储、同步到 kafka 等
+       - 服务监听到 xx 事件，做 xxxx 事情
+       - 监控服务
+   - [ ] follower 可以在 leader 不工作的时候 变成 leader，但是 listener 不能
+   - [ ] listener 可以选择是否需要 snapshot 数据
 
 ## 主要流程
 

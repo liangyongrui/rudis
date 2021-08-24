@@ -3,11 +3,7 @@ members = [
     "rcc_macros",
     "cmd_test",
     "fixed_queue",
-    "component/db",
-    "component/dict",
-    "component/common",
-    "component/pd",
-    "component/server",
+    "component/*",
 ]
 
 [package]
@@ -25,7 +21,6 @@ version = "0.1.0"
 codegen-units = 1
 lto = "fat"
 opt-level = 3
-panic = "abort"
 
 [[bin]]
 name = "server"
