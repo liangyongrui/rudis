@@ -19,7 +19,7 @@ impl<'a> Read<Vec<bool>> for Req<'a> {
                     .map(|field| set.contains(field))
                     .collect())
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             };
         }
         Ok(vec![false; self.fields.len()])

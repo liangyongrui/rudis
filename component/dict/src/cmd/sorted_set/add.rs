@@ -81,7 +81,7 @@ impl Write<Resp> for Req {
                 new_len: sorted_set.hash.len(),
             })
         } else {
-            Err("error type".into())
+            Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
         }
     }
 }

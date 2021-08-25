@@ -56,7 +56,11 @@ impl TryFrom<&DataType> for i64 {
             DataType::String(s) => s.parse()?,
             DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
             DataType::Integer(i) => *i,
-            _ => return Err("type error".into()),
+            _ => {
+                return Err(
+                    "WRONGTYPE Operation against a key holding the wrong kind of value".into(),
+                )
+            }
         };
         Ok(res)
     }
@@ -71,7 +75,11 @@ impl TryFrom<&DataType> for String {
             DataType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
             DataType::Integer(i) => format!("{}", i),
             DataType::Float(f) => format!("{}", f.0),
-            _ => return Err("type error".into()),
+            _ => {
+                return Err(
+                    "WRONGTYPE Operation against a key holding the wrong kind of value".into(),
+                )
+            }
         };
         Ok(res)
     }
@@ -86,7 +94,11 @@ impl TryFrom<&DataType> for f64 {
             DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
             DataType::Integer(i) => *i as _,
             DataType::Float(f) => f.0,
-            _ => return Err("type error".into()),
+            _ => {
+                return Err(
+                    "WRONGTYPE Operation against a key holding the wrong kind of value".into(),
+                )
+            }
         };
         Ok(res)
     }

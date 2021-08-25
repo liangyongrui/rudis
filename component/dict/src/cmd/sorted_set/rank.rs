@@ -35,7 +35,7 @@ impl Read<Option<usize>> for Req<'_> {
                 }
                 Ok(None)
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             }
         })
     }

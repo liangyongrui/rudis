@@ -3,7 +3,7 @@ use std::sync::Arc;
 use common::options::NxXx;
 use db::Db;
 use dict::data_type::DataType;
-use rcc_macros::ParseFrames;
+use macros::ParseFrames;
 
 use crate::Frame;
 

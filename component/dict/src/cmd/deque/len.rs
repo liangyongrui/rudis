@@ -14,7 +14,7 @@ impl<'a> Read<usize> for Req<'a> {
             return if let DataType::Deque(ref deque) = v.data {
                 Ok(deque.len())
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             };
         }
         Ok(0)

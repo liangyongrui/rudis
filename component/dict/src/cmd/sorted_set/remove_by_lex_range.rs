@@ -55,7 +55,7 @@ impl Write<Vec<Node>> for Req {
                 }
                 Ok(res)
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             }
         } else {
             Ok(vec![])

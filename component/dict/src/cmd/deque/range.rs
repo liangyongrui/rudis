@@ -25,7 +25,7 @@ impl<'a> Read<Vec<DataType>> for Req<'a> {
                 let (b, e) = deque.shape(self.start, self.stop);
                 Ok(deque.range(b..e).cloned().collect())
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             };
         }
         Ok(vec![])

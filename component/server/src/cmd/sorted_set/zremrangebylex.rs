@@ -1,7 +1,7 @@
 use std::{ops::Bound, sync::Arc};
 
 use db::Db;
-use rcc_macros::ParseFrames;
+use macros::ParseFrames;
 
 use crate::Frame;
 

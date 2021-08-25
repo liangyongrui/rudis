@@ -40,7 +40,7 @@ impl Write<i64> for Req {
                     Ok(self.value)
                 }
             }
-            _ => Err("error type".into()),
+            _ => Err("WRONGTYPE Operation against a key holding the wrong kind of value".into()),
         }
     }
 }

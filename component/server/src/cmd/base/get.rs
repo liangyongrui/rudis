@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use db::Db;
-use rcc_macros::ParseFrames;
+use macros::ParseFrames;
 
 use crate::Frame;
 
@@ -36,7 +36,11 @@ impl Get {
             dict::data_type::DataType::Bytes(b) => Frame::Bulk(b),
             dict::data_type::DataType::Integer(i) => Frame::Simple(i.to_string().into()),
             dict::data_type::DataType::Float(i) => Frame::Simple(i.0.to_string().into()),
-            _ => return Err("error type".into()),
+            _ => {
+                return Err(
+                    "WRONGTYPE Operation against a key holding the wrong kind of value".into(),
+                )
+            }
         };
 
         Ok(response)

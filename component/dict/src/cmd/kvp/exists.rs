@@ -15,7 +15,7 @@ impl<'a> Read<bool> for Req<'a> {
             return if let DataType::Kvp(ref kvp) = v.data {
                 Ok(kvp.get(self.field).is_some())
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             };
         }
         Ok(false)

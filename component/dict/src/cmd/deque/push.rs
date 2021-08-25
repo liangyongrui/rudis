@@ -54,7 +54,7 @@ impl Write<Resp> for Req {
                 let new_len = deque.len();
                 Ok(Resp { old_len, new_len })
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             }
         } else {
             if self.nx_xx.is_xx() {

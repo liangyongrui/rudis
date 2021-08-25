@@ -4,7 +4,14 @@
 
 pd 模块的命令处理逻辑是单线程，消费一个 mpsc
 
+提供分布式锁的能力
+
 数据量不大，减少复杂度
+
+使用 raft
+
+- <https://github.com/ritelabs/riteraft>
+- <https://github.com/async-raft/async-raft>
 
 ## 管理主从
 

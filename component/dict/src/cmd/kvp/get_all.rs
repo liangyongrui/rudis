@@ -19,7 +19,7 @@ impl<'a> Read<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> for Req<'a> {
             return if let DataType::Kvp(ref kvp) = v.data {
                 Ok(kvp.inner.clone())
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             };
         }
         Ok(HashMap::default())

@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "rcc_macros",
     "cmd_test",
     "fixed_queue",
     "component/*",

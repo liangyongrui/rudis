@@ -19,7 +19,7 @@ impl<'a> Read<Vec<DataType>> for Req<'a> {
                     .map(|field| kvp.get(field).cloned().unwrap_or(DataType::Null))
                     .collect())
             } else {
-                Err("error type".into())
+                Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())
             };
         }
         Ok(vec![DataType::Null; self.fields.len()])
