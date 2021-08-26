@@ -10,6 +10,9 @@ use tokio::time::sleep;
 async fn decr() {
     let mut connection = start_server().await;
 
+    write_cmd(&mut connection.stream, vec!["GET", "decr_{tes}t"]).await;
+    next_frame_eq(&mut connection, Frame::Null).await;
+
     write_cmd(&mut connection.stream, vec!["GET", "decr_test"]).await;
     next_frame_eq(&mut connection, Frame::Null).await;
 

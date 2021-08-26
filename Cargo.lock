@@ -85,13 +85,14 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 
 [[package]]
 name = "axum"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8057b0a4ea316fc0ad3bd48706f2b89076e45a70b9f7b3a4e740e5ec52078ea2"
+checksum = "b1a46bef3ba1977d5b66ad6e55cab4ec5019fc805fd1fc4295c31c17c77b1e89"
 dependencies = [
  "async-trait",
  "bitflags",
  "bytes",
+ "dyn-clone",
  "futures-util",
  "http",
  "http-body",
@@ -316,6 +317,12 @@ dependencies = [
  "serde",
  "tracing",
 ]
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ee2626afccd7561a06cf1367e2950c4718ea04565e20fb5029b6c7d8ad09abcf"
 
 [[package]]
 name = "educe"
@@ -861,6 +868,7 @@ dependencies = [
  "flume",
  "once_cell",
  "parking_lot",
+ "tokio",
 ]
 
 [[package]]

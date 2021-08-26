@@ -16,7 +16,6 @@ use dict::{
 };
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
-use tracing::debug;
 
 use crate::{
     expire::Expiration,
@@ -44,11 +43,10 @@ pub struct Db {
     pub role: Mutex<Role>,
 }
 
-const SIZE: usize = 1 << 14;
-
 // https://redis.io/topics/cluster-spec
+const SIZE: usize = 16384;
+const SIZE_MOD: u16 = 16383;
 const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
-const SIZE_MOD: u16 = (1 << 14) - 1;
 
 impl Db {
     pub async fn new() -> Arc<Self> {
@@ -86,7 +84,6 @@ impl Db {
         if let Some(begin) = key.iter().position(|t| *t == b'{') {
             if let Some(end) = key[begin..].iter().position(|t| *t == b'}') {
                 key = &key[begin + 1..begin + end];
-                debug!("hash tag: {:?}", key);
             }
         }
         let i = CRC_HASH.checksum(key) & SIZE_MOD;

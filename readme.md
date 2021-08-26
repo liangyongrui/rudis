@@ -4,6 +4,13 @@ rust cloud cache
 
 (希望有人能起个更好听的名字)
 
+## 特点
+
+1. rust 编写，更少的错误
+1. 更好的性能
+1. 更好的集群模式
+1. [ ] 任意 key O(1) 删除
+
 ## todo list
 
 1. [ ] 单点 pd
@@ -17,6 +24,7 @@ rust cloud cache
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis
+   - redis_rs
    - redis_iox
    - redox (喜欢这个，但是被别的项目用了。。)
 1. [ ] 英文 readme

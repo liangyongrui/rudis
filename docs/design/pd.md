@@ -43,8 +43,9 @@ raft 保障高可用，可能使用的库
 - [ ] 提供分布式锁的能力?
 - [ ] 管理多个集群？
 
-## node 注册到 pd 的流程
+## server 注册到 pd 的流程
 
+1. server -> server: 初始化，保证 socket 可用
 1. node -> pd: node 注册，携带的信息
    - group_id: 想要加入的组
    - role: 想要成为的角色

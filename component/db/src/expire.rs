@@ -150,7 +150,7 @@ impl Expiration {
             // 减少持有锁的时间
             let entry = {
                 let mut btree_lock = data.lock();
-                //  等 #![feature(map_first_last)] stable 可以替换
+                // fixme: 等 #![feature(map_first_last)] stable 可以替换
                 let entry = match btree_lock.iter().next() {
                     Some(e) => e.clone(),
                     None => return 0,

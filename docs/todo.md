@@ -2,6 +2,7 @@
 
 1. [ ] make file
    - [ ] 启动配置
+   - [ ] <https://github.com/mehcode/config-rs>
 1. [ ] 兼容 redis cluster
 1. [ ] 持久化
 1. [ ] 完善 pd
@@ -21,11 +22,15 @@
 1. [ ] 各种运行时监控
 1. [ ] Keyspace Notification
 1. [ ] [acl](https://redis.io/topics/acl)
+1. [ ] hashTag SIMD 加速
 
 ## 一些需要探索的方向
 
 (可能有用的优化, tradeoff 的优化, 没想清楚的优化)
 
+1. 各种模块化
+   - DataType
+   - cmd
 1. 单 slot 操作聚合
    - 避免频繁加锁, 增加吞吐
    - key 操作聚合
