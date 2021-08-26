@@ -16,6 +16,7 @@ use dict::{
 };
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
+use tracing::debug;
 
 use crate::{
     expire::Expiration,
@@ -81,7 +82,13 @@ impl Db {
     }
 
     #[inline]
-    fn get_slot(&self, key: &[u8]) -> &Slot {
+    fn get_slot(&self, mut key: &[u8]) -> &Slot {
+        if let Some(begin) = key.iter().position(|t| *t == b'{') {
+            if let Some(end) = key[begin..].iter().position(|t| *t == b'}') {
+                key = &key[begin + 1..begin + end];
+                debug!("hash tag: {:?}", key);
+            }
+        }
         let i = CRC_HASH.checksum(key) & SIZE_MOD;
         &self.slots[i as usize]
     }
@@ -277,5 +284,21 @@ impl Db {
         //     }
         //     cmd::WriteCmd::None => (),
         // }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test() {
+        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let s = &v[2..10];
+        let a = s.iter().position(|t| *t == 5).unwrap();
+        assert_eq!(a, 3);
+        let s2 = &s[a..];
+        assert_eq!(s2, &[5, 6, 7, 8, 9]);
+        let b = s2.iter().position(|t| *t == 7).unwrap();
+        assert_eq!(b, 2);
+        assert_eq!(&s[a..a + b + 1], &[5, 6, 7]);
     }
 }

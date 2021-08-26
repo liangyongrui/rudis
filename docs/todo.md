@@ -3,7 +3,6 @@
 1. [ ] make file
    - [ ] 启动配置
 1. [ ] 兼容 redis cluster
-   1. [ ] HashTag
 1. [ ] 持久化
 1. [ ] 完善 pd
 1. [ ] test
@@ -46,8 +45,9 @@
    - [crdt](https://josephg.com/blog/crdts-go-brrr/)
    - [可能可以考虑用这个](https://github.com/josephg/diamond-types)
 1. key 优化
-   - https://github.com/BurntSushi/bstr
+   - <https://github.com/BurntSushi/bstr>
    - 比如 arc<[u8]>, 可以精简一个 weak reference, 每个 key 节约一个 byte
+   - <https://doc.rust-lang.org/nomicon/arc.html>
    - 小 key 可能不用 引用计数，直接 copy 就好, 每个 key 节约三个 byte, 如果是用 0 在结尾，还能再省点
 1. [hashmap 优化](https://youtu.be/ncHmEUmJZf4?t=2861)
 1. bit 类型 + [slab](https://docs.rs/slab/)
