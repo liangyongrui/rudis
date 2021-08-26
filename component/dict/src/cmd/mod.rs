@@ -9,7 +9,6 @@ pub mod sorted_set;
 
 use std::sync::Arc;
 
-use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 
 use crate::Dict;
@@ -49,7 +48,7 @@ where
 }
 
 pub trait Read<T> {
-    fn apply(self, dict: &RwLock<Dict>) -> common::Result<T>;
+    fn apply(self, dict: &Dict) -> common::Result<T>;
 }
 
 #[allow(clippy::module_name_repetitions)]

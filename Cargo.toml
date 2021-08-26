@@ -14,7 +14,7 @@ fork from https://github.com/tokio-rs/mini-redis
 """
 edition = "2018"
 name = "rcc"
-version = "0.1.0"
+version = "0.0.0"
 
 [profile.release]
 codegen-units = 1

@@ -54,13 +54,10 @@ impl ExpiresWrite<Option<Value>> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
-
     use common::{
         now_timestamp_ms,
         options::{ExpiresAt, NxXx},
     };
-    use parking_lot::RwLock;
 
     use super::*;
     use crate::{
@@ -71,11 +68,11 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = del::Req {
             key: b"hello"[..].into(),
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap()
         .payload;
         assert_eq!(res, None);
@@ -86,7 +83,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -101,7 +98,7 @@ mod test {
         let res = del::Req {
             key: b"hello"[..].into(),
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap()
         .payload
         .unwrap()

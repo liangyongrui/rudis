@@ -45,11 +45,6 @@ pub struct Value {
 
 impl Dict {
     #[inline]
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    #[inline]
     pub fn next_id(&mut self) -> u64 {
         self.write_id += 1;
         self.write_id

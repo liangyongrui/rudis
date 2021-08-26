@@ -10,7 +10,7 @@ use crate::expire;
 
 impl Slot {
     pub fn call_update<T, C: Write<T> + Clone>(&self, id: u64, cmd: C) {
-        let mut dict = self.dict.write();
+        let mut dict = self.share_status.write();
         if id > dict.last_write_op_id() {
             dict.write_id = id;
             let _ = cmd.apply(dict.borrow_mut());
@@ -19,7 +19,7 @@ impl Slot {
 
     pub fn call_expires_update<T, C: ExpiresWrite<T> + Clone>(&self, id: u64, cmd: C) {
         let res = {
-            let mut dict = self.dict.write();
+            let mut dict = self.share_status.write();
             if id <= dict.last_write_op_id() {
                 return;
             }

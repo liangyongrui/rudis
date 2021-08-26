@@ -1,18 +1,14 @@
-mod child_process;
 mod expire;
 mod forward;
-mod hdp;
-pub mod replica;
 mod slot;
 
 use std::{
     collections::{HashMap, HashSet},
-    hash::{Hash, Hasher},
     sync::{atomic::AtomicBool, Arc},
 };
 
-use ahash::AHasher;
 use common::config::CONFIG;
+use crc::Crc;
 use dict::{
     cmd,
     data_type::{self, DataType},
@@ -24,7 +20,6 @@ use tokio::sync::broadcast;
 use crate::{
     expire::Expiration,
     forward::{Message, FORWARD},
-    hdp::Status,
     slot::Slot,
 };
 
@@ -42,65 +37,58 @@ pub enum Role {
 }
 
 pub struct Db {
-    pub slots: HashMap<u16, Slot, ahash::RandomState>,
+    pub slots: Vec<Slot>,
     pub read_only: AtomicBool,
     // 为了优雅退出，这里的角色只是存了一下连接状态
     pub role: Mutex<Role>,
 }
 
-const SIZE: u16 = 1 << 14;
+const SIZE: usize = 1 << 14;
+
+// https://redis.io/topics/cluster-spec
+const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
+const SIZE_MOD: u16 = (1 << 14) - 1;
 
 impl Db {
     pub async fn new() -> Arc<Self> {
         let expiration = Expiration::new();
-        let hdp = Status::new();
         let bg_task = BgTask {
             expire_sender: expiration.tx.clone(),
             forward_sender: FORWARD.tx.clone(),
         };
-        let mut slots = HashMap::default();
+        let mut slots = Vec::with_capacity(SIZE);
         for i in 0..SIZE {
-            slots
-                .entry(i)
-                .or_insert_with(|| Slot::new(i, bg_task.clone()));
+            slots.push(Slot::new(i, bg_task.clone()));
         }
         let db = Arc::new(Self {
             slots,
             read_only: AtomicBool::new(CONFIG.read_only),
             role: Mutex::new(Role::Master),
         });
-        if let Some(addr) = CONFIG.master_addr {
-            let db = db.clone();
-            tokio::task::spawn_blocking(move || replica::process(addr, &db));
-        }
+        // if let Some(addr) = CONFIG.master_addr {
+        //     let db = db.clone();
+        //     tokio::task::spawn_blocking(move || replica::process(addr, &db));
+        // }
 
         expiration.listen(Arc::clone(&db));
-        if let Some(hdp) = hdp {
-            FORWARD.hdp_sender.swap(Some(Arc::new(hdp.tx.clone())));
-            let db = Arc::clone(&db);
-            tokio::spawn(hdp.process(db));
-        }
         FORWARD.db.store(Some(db.clone()));
         db
     }
 
     #[inline]
-    pub fn get_slot_by_id(&self, slot_id: &u16) -> &Slot {
-        self.slots.get(slot_id).unwrap()
+    pub fn get_slot_by_id(&self, slot_id: usize) -> &Slot {
+        &self.slots[slot_id]
     }
 
     #[inline]
     fn get_slot(&self, key: &[u8]) -> &Slot {
-        // todo 更完善的分片策略
-        let mut s = AHasher::new_with_keys(0, 0);
-        key.hash(&mut s);
-        let i = s.finish() % u64::from(SIZE);
-        self.slots.get(&(i as u16)).unwrap()
+        let i = CRC_HASH.checksum(key) & SIZE_MOD;
+        &self.slots[i as usize]
     }
 
     #[inline]
-    pub fn replace_dict(&self, slot_id: u16, dict: Dict) {
-        self.slots.get(&slot_id).unwrap().replace_dict(dict);
+    pub fn replace_dict(&self, slot_id: usize, dict: Dict) {
+        // self.slots.get(&slot_id).unwrap().replace_dict(dict);
     }
 }
 
@@ -264,30 +252,30 @@ impl Db {
 
 impl Db {
     pub fn process_forward(&self, Message { id, slot, cmd }: Message) {
-        match cmd {
-            cmd::WriteCmd::Del(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
-            cmd::WriteCmd::Expire(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
-            cmd::WriteCmd::Incr(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::Set(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
-            cmd::WriteCmd::KvpDel(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::KvpIncr(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::KvpSet(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::DequePop(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::DequePush(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::SetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::SetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::SortedSetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::SortedSetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
-            cmd::WriteCmd::SortedSetRemoveByRankRange(req) => {
-                self.get_slot_by_id(&slot).call_update(id, req)
-            }
-            cmd::WriteCmd::SortedSetRemoveByScoreRange(req) => {
-                self.get_slot_by_id(&slot).call_update(id, req)
-            }
-            cmd::WriteCmd::SortedSetRemoveByLexRange(req) => {
-                self.get_slot_by_id(&slot).call_update(id, req)
-            }
-            cmd::WriteCmd::None => (),
-        }
+        // match cmd {
+        //     cmd::WriteCmd::Del(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
+        //     cmd::WriteCmd::Expire(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
+        //     cmd::WriteCmd::Incr(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::Set(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
+        //     cmd::WriteCmd::KvpDel(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::KvpIncr(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::KvpSet(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::DequePop(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::DequePush(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::SetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::SetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::SortedSetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::SortedSetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
+        //     cmd::WriteCmd::SortedSetRemoveByRankRange(req) => {
+        //         self.get_slot_by_id(&slot).call_update(id, req)
+        //     }
+        //     cmd::WriteCmd::SortedSetRemoveByScoreRange(req) => {
+        //         self.get_slot_by_id(&slot).call_update(id, req)
+        //     }
+        //     cmd::WriteCmd::SortedSetRemoveByLexRange(req) => {
+        //         self.get_slot_by_id(&slot).call_update(id, req)
+        //     }
+        //     cmd::WriteCmd::None => (),
+        // }
     }
 }

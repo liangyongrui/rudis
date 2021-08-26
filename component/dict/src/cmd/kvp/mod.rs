@@ -7,10 +7,8 @@ pub mod set;
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
 
     use common::options::NxXx;
-    use parking_lot::RwLock;
 
     use super::*;
     use crate::{
@@ -21,7 +19,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = set::Req {
             key: b"hello"[..].into(),
             entries: vec![
@@ -31,7 +29,7 @@ mod test {
             ],
             nx_xx: NxXx::None,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -69,7 +67,7 @@ mod test {
             ],
             nx_xx: NxXx::Nx,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -136,7 +134,7 @@ mod test {
             key: b"hello"[..].into(),
             fields: vec![b"k1"[..].into(), b"k10"[..].into()],
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,

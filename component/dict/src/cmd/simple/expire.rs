@@ -70,13 +70,12 @@ impl ExpiresWrite<bool> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::{borrow::BorrowMut, thread::sleep, time::Duration};
+    use std::{thread::sleep, time::Duration};
 
     use common::{
         now_timestamp_ms,
         options::{ExpiresAt, GtLt, NxXx},
     };
-    use parking_lot::RwLock;
 
     use crate::{
         cmd::{
@@ -88,7 +87,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let date_time = now_timestamp_ms() + 1000;
         let cmd = set::Req {
             key: b"hello"[..].into(),
@@ -96,7 +95,7 @@ mod test {
             expires_at: ExpiresAt::Specific(0),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -117,7 +116,7 @@ mod test {
             nx_xx: NxXx::None,
             gt_lt: GtLt::None,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {

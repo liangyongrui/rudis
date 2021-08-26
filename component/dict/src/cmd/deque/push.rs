@@ -91,10 +91,7 @@ impl Write<Resp> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
-
     use common::options::NxXx;
-    use parking_lot::RwLock;
 
     use crate::{
         cmd::{deque::*, Read, Write},
@@ -103,7 +100,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = push::Req {
             key: b"hello"[..].into(),
             elements: vec![
@@ -117,7 +114,7 @@ mod test {
             left: false,
             nx_xx: NxXx::Xx,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -139,7 +136,7 @@ mod test {
             left: false,
             nx_xx: NxXx::None,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -174,7 +171,7 @@ mod test {
             left: true,
             nx_xx: NxXx::Xx,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,

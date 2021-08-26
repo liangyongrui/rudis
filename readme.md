@@ -13,6 +13,7 @@ rust cloud cache
    - [ ] 可靠的主从复制
    - [ ] pd, 用来协调主从
 1. [ ] 各个 task 的优雅退出
+1. [ ] 规范每个模块的命名
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis

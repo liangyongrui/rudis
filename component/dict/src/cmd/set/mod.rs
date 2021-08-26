@@ -5,9 +5,7 @@ pub mod remove;
 
 #[cfg(test)]
 mod test {
-    use std::{borrow::BorrowMut, convert::TryInto};
-
-    use parking_lot::RwLock;
+    use std::convert::TryInto;
 
     use super::*;
     use crate::{
@@ -17,12 +15,12 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = add::Req {
             key: b"hello"[..].into(),
             members: vec!["k1".into(), "k2".into(), "k3".into()],
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -48,7 +46,7 @@ mod test {
             key: b"hello"[..].into(),
             members: vec!["k1".into(), "k4".into(), "k5".into()],
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -90,7 +88,7 @@ mod test {
             key: b"hello"[..].into(),
             members: vec!["k1".into(), "k10".into()],
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,

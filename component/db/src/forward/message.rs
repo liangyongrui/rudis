@@ -5,7 +5,7 @@ use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
     pub id: u64,
-    pub slot: u16,
+    pub slot: usize,
     pub cmd: WriteCmd,
 }
 

@@ -125,10 +125,9 @@ impl ExpiresWrite<DataType> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::{borrow::BorrowMut, thread::sleep};
+    use std::thread::sleep;
 
     use common::now_timestamp_ms;
-    use parking_lot::RwLock;
 
     use super::*;
     use crate::{
@@ -138,7 +137,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let date_time = now_timestamp_ms() + 1000;
         let cmd = Req {
             key: b"hello"[..].into(),
@@ -146,7 +145,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -177,7 +176,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Xx,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -195,7 +194,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Xx,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -222,7 +221,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::Nx,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -236,7 +235,7 @@ mod test {
             expires_at: ExpiresAt::Specific(0),
             nx_xx: NxXx::Nx,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {
@@ -263,7 +262,7 @@ mod test {
             expires_at: ExpiresAt::Last,
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {

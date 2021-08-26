@@ -1,5 +1,3 @@
-use parking_lot::RwLock;
-
 use crate::{cmd::Read, Dict};
 
 #[derive(Debug, Clone)]
@@ -9,20 +7,17 @@ pub struct Req<'a> {
 
 impl<'a> Read<bool> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &RwLock<Dict>) -> common::Result<bool> {
-        Ok(dict.read().d_exists(self.key))
+    fn apply(self, dict: &Dict) -> common::Result<bool> {
+        Ok(dict.d_exists(self.key))
     }
 }
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
-
     use common::{
         now_timestamp_ms,
         options::{ExpiresAt, NxXx},
     };
-    use parking_lot::RwLock;
 
     use crate::{
         cmd::{
@@ -34,7 +29,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = exists::Req {
             key: b"hello"[..].into(),
         }
@@ -48,7 +43,7 @@ mod test {
             expires_at: ExpiresAt::Specific(date_time),
             nx_xx: NxXx::None,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
             ExpiresWriteResp {

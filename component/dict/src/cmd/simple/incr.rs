@@ -43,10 +43,6 @@ impl Write<i64> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
-
-    use parking_lot::RwLock;
-
     use crate::{
         cmd::{simple::*, Write},
         Dict,
@@ -54,18 +50,18 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let cmd = incr::Req {
             key: b"hello"[..].into(),
             value: 10,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(res, 10);
         let cmd = incr::Req {
             key: b"hello"[..].into(),
             value: -5,
         };
-        let res = cmd.apply(dict.write().borrow_mut()).unwrap();
+        let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(res, 5);
     }
 }

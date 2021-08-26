@@ -1,5 +1,3 @@
-use parking_lot::RwLock;
-
 use crate::{cmd::Read, data_type::DataType, Dict};
 
 #[derive(Debug, Clone)]
@@ -9,8 +7,8 @@ pub struct Req<'a> {
 
 impl<'a> Read<usize> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &RwLock<Dict>) -> common::Result<usize> {
-        if let Some(v) = dict.read().d_get(self.key) {
+    fn apply(self, dict: &Dict) -> common::Result<usize> {
+        if let Some(v) = dict.d_get(self.key) {
             return if let DataType::Deque(ref deque) = v.data {
                 Ok(deque.len())
             } else {
@@ -23,10 +21,8 @@ impl<'a> Read<usize> for Req<'a> {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
 
     use common::options::NxXx;
-    use parking_lot::RwLock;
 
     use crate::{
         cmd::{deque::*, Read, Write},
@@ -35,7 +31,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = len::Req { key: &b"hello"[..] }.apply(&dict).unwrap();
         assert_eq!(res, 0);
         let res = push::Req {
@@ -44,7 +40,7 @@ mod test {
             left: false,
             nx_xx: NxXx::None,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,

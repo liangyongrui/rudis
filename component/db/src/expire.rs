@@ -17,14 +17,14 @@ use crate::Db;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Entry {
     pub expires_at: u64,
-    pub slot: u16,
+    pub slot: usize,
     pub key: Arc<[u8]>,
 }
 
 pub enum Message {
     /// 清空指定slot
     /// 用于移动slot，替换dict
-    Clear(u16),
+    Clear(usize),
     Update(Update),
     /// 批量插入
     BatchAdd(Vec<Entry>),
@@ -32,7 +32,7 @@ pub enum Message {
 
 pub struct Update {
     pub status: ExpiresStatusUpdate,
-    pub slot: u16,
+    pub slot: usize,
 }
 
 #[derive(Debug)]
@@ -163,19 +163,23 @@ impl Expiration {
                 entry
             };
 
-            let slot = db.get_slot_by_id(&entry.slot);
+            let slot = db.get_slot_by_id(entry.slot);
             // 取出数据之后再析构，避免持有过长时间的slot锁
             let expired_data = {
-                let mut lock = slot.dict.write();
-                debug!("before: slot: {}, dict_len: {}", entry.slot, lock.len());
-                let res = match lock.get(&entry.key) {
+                let mut lock = slot.share_status.write();
+                let dict = match &mut *lock {
+                    Some(s) => &mut s.dict,
+                    None => continue,
+                };
+                debug!("before: slot: {}, dict_len: {}", entry.slot, dict.len());
+                let res = match dict.get(&entry.key) {
                     // 如果过期时间更新过，可能会有时间不一样的情况
                     Some(value) if value.expires_at == entry.expires_at => {
-                        Some(lock.remove(&entry.key))
+                        Some(dict.remove(&entry.key))
                     }
                     _ => None,
                 };
-                debug!("after: slot: {}, dict_len: {}", entry.slot, lock.len());
+                debug!("after: slot: {}, dict_len: {}", entry.slot, dict.len());
                 res
             };
 

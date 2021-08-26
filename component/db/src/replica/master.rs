@@ -70,7 +70,7 @@ pub fn process_snapshot(mut stream: std::net::TcpStream, db: Arc<Db>) -> common:
         Ok(ForkResult::Child) => {
             for (id, slot) in &db.slots {
                 let _ = bincode::serialize_into(&mut stream, &Some(id));
-                let read = slot.dict.read();
+                let read = slot.share_status.read();
                 let dict: &Dict = read.borrow();
                 let _ = bincode::serialize_into(&mut stream, dict);
             }

@@ -1,5 +1,4 @@
 use common::now_timestamp_ms;
-use parking_lot::RwLock;
 
 use crate::{cmd::Read, Dict};
 
@@ -21,10 +20,9 @@ pub enum Resp {
 impl<'a> Read<Resp> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
 
-    fn apply(self, dict: &RwLock<Dict>) -> common::Result<Resp> {
+    fn apply(self, dict: &Dict) -> common::Result<Resp> {
         let now = now_timestamp_ms();
         let res = dict
-            .read()
             .get(self.key)
             .map(|v| v.expires_at)
             .filter(|&expires_at| expires_at == 0 || expires_at > now)

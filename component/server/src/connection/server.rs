@@ -241,20 +241,21 @@ impl Handler {
                 Command::Read(o) => o.apply(&self.db),
                 Command::Write(o) => o.apply(&self.db),
                 Command::Unknown(o) => Ok(o.apply()),
-                Command::SyncCmd => {
-                    let _ = db::replica::master::process_sync_cmd(self.connection.stream).await;
+                // todo
+                Command::SyncCmd | Command::SyncSnapshot => {
+                    // let _ = db::replica::master::process_sync_cmd(self.connection.stream).await;
                     return Ok(());
                 }
-                Command::SyncSnapshot => {
-                    let _ = tokio::task::spawn_blocking(|| {
-                        db::replica::master::process_snapshot(
-                            self.connection.stream.into_std()?,
-                            self.db,
-                        )
-                    })
-                    .await;
-                    return Ok(());
-                }
+                // Command::SyncSnapshot => {
+                // let _ = tokio::task::spawn_blocking(|| {
+                //     db::replica::master::process_snapshot(
+                //         self.connection.stream.into_std()?,
+                //         self.db,
+                //     )
+                // })
+                // .await;
+                //     return Ok(());
+                // }
                 Command::Ping => Ok(Frame::Pong),
             };
             // Perform the work needed to apply the command. This may mutate the

@@ -3,7 +3,6 @@
 1. [ ] make file
    - [ ] 启动配置
 1. [ ] 兼容 redis cluster
-   1. [ ] crc16
    1. [ ] HashTag
 1. [ ] 持久化
 1. [ ] 完善 pd
@@ -54,3 +53,4 @@
 1. bit 类型 + [slab](https://docs.rs/slab/)
 1. 热 slot 自动迁移
 1. 直接用 rocketdb 存储
+1. 不同的命令用不同的一致性策略，比如 xxx 命令用强一致性主从

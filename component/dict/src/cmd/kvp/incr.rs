@@ -47,10 +47,7 @@ impl Write<i64> for Req {
 
 #[cfg(test)]
 mod test {
-    use std::borrow::BorrowMut;
-
     use common::options::NxXx;
-    use parking_lot::RwLock;
 
     use crate::{
         cmd::{kvp::*, Read, Write},
@@ -59,7 +56,7 @@ mod test {
 
     #[test]
     fn test1() {
-        let dict = RwLock::new(Dict::new());
+        let mut dict = Dict::default();
         let res = set::Req {
             key: b"hello"[..].into(),
             entries: vec![
@@ -68,7 +65,7 @@ mod test {
             ],
             nx_xx: NxXx::None,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -83,7 +80,7 @@ mod test {
             field: b"k1"[..].into(),
             value: 1,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, 2);
 
@@ -92,7 +89,7 @@ mod test {
             field: b"k3"[..].into(),
             value: 10,
         }
-        .apply(dict.write().borrow_mut())
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, 10);
 
