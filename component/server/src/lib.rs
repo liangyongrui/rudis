@@ -7,8 +7,6 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::enum_glob_use)]
 #![allow(clippy::missing_errors_doc)] //
-#![allow(clippy::let_underscore_drop)] //
-#![allow(clippy::missing_panics_doc)] //
 #![allow(clippy::single_match_else)]
 #![allow(clippy::must_use_candidate)]
 #![allow(clippy::wildcard_imports)]
@@ -97,6 +95,10 @@ pub struct Handler {
 ///
 /// `tokio::signal::ctrl_c()` can be used as the `shutdown` argument. This will
 /// listen for a SIGINT signal.
+///
+/// # Panics
+///
+/// No panics.
 pub async fn run(listener: TcpListener, shutdown: impl Future) -> common::Result<()> {
     // Initialize the listener state
     let mut server = Listener {
@@ -105,25 +107,6 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> common::Result
         limit_connections: Limit::new(CONFIG.max_connections),
     };
 
-    // Concurrently run the server and listen for the `shutdown` signal. The
-    // server task runs until an error is encountered, so under normal
-    // circumstances, this `select!` statement runs until the `shutdown` signal
-    // is received.
-    //
-    // `select!` statements are written in the form of:
-    //
-    // ```
-    // <result of async op> = <async op> => <step to perform with result>
-    // ```
-    //
-    // All `<async op>` statements are executed concurrently. Once the **first**
-    // op completes, its associated `<step to perform with result>` is
-    // performed.
-    //
-    // The `select! macro is a foundational building block for writing
-    // asynchronous Rust. See the API docs for more details:
-    //
-    // https://docs.rs/tokio/*/tokio/macro.select.html
     tokio::select! {
         res = server.run() => {
             // If an error is received here, accepting connections from the TCP

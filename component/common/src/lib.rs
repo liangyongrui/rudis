@@ -9,6 +9,7 @@ pub mod config;
 pub mod float;
 pub mod options;
 pub mod other_type;
+pub mod pd_message;
 pub mod shutdown;
 
 use std::{
