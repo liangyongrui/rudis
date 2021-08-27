@@ -51,7 +51,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                     }
                     if *ident == "DataType" {
                         return quote! {
-                            let #field_name = parse.next_data()?;
+                            let #field_name = crate::frame_parse::next_data_type(parse)?;
                         };
                     }
                     if *ident == "i64" || *ident == "u64" {
@@ -81,7 +81,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                             loop {
                                                 match parse.next_string() {
                                                     Ok(key) => #field_name.push(key),
-                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(connection::parse::ParseError::EndOfStream) => break,
                                                     Err(err) => return Err(err.into()),
                                                 }
                                             }
@@ -93,7 +93,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                             loop {
                                                 match parse.next_key() {
                                                     Ok(key) => #field_name.push(key),
-                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(connection::parse::ParseError::EndOfStream) => break,
                                                     Err(err) => return Err(err.into()),
                                                 }
                                             }
@@ -101,11 +101,11 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                     }
                                     if *ident == "DataType" {
                                         return quote! {
-                                            let mut #field_name = vec![parse.next_data()?];
+                                            let mut #field_name = vec![crate::frame_parse::next_data_type(parse)?];
                                             loop {
-                                                match parse.next_data() {
+                                                match crate::frame_parse::next_data_type(parse) {
                                                     Ok(key) => #field_name.push(key),
-                                                    Err(crate::parse::ParseError::EndOfStream) => break,
+                                                    Err(connection::parse::ParseError::EndOfStream) => break,
                                                     Err(err) => return Err(err.into()),
                                                 }
                                             }
@@ -135,7 +135,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                                         return quote! {
                                             let mut #field_name = match parse.next_int() {
                                                     Ok(key) => Some(key),
-                                                    Err(crate::parse::ParseError::EndOfStream) => None,
+                                                    Err(connection::parse::ParseError::EndOfStream) => None,
                                                     Err(err) => return Err(err.into()),
                                                 };
                                         };
@@ -161,7 +161,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
 
     let res = quote! {
         impl #struct_name {
-            pub fn parse_frames(parse: &mut crate::parse::Parse) -> common::Result<Self> {
+            pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Self> {
                 #(#read_token)*
                 Ok(Self {
                     #self_token

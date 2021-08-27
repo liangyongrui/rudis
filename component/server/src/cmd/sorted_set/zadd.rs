@@ -1,11 +1,12 @@
 use std::{convert::TryInto, sync::Arc};
 
 use common::options::{GtLt, NxXx};
+use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 use dict::data_type::{sorted_set::Node, DataType};
 use tracing::debug;
 
-use crate::{parse::ParseError, Frame, Parse};
+use crate::frame_parse::next_data_type;
 
 /// https://redis.io/commands/zadd
 #[derive(Debug, Clone)]
@@ -38,7 +39,7 @@ impl Zadd {
         let mut ch = false;
         let mut incr = false;
         let score = loop {
-            match parse.next_data()? {
+            match next_data_type(parse)? {
                 DataType::Bytes(avu) => {
                     let s = match std::str::from_utf8(&avu) {
                         Ok(s) => s,
@@ -62,7 +63,7 @@ impl Zadd {
         let member = parse.next_string()?;
         let mut nodes = vec![Node::new(member, (&score).try_into()?)];
         loop {
-            let score = match parse.next_data() {
+            let score = match next_data_type(parse) {
                 Ok(s) => (&s).try_into()?,
                 Err(ParseError::EndOfStream) => break,
                 Err(err) => return Err(err.into()),

@@ -1,9 +1,8 @@
 use std::{ops::Bound, sync::Arc};
 
 use common::{float::Float, BoundExt};
+use connection::parse::{frame::Frame, Parse};
 use db::Db;
-
-use crate::{Frame, Parse};
 
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]

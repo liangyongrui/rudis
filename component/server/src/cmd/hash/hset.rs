@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
 use common::options::NxXx;
+use connection::parse::{Parse, ParseError};
 use db::Db;
 use dict::data_type::DataType;
 
-use crate::{
-    parse::{Parse, ParseError},
-    Frame,
-};
+use crate::{frame_parse::next_data_type, Frame};
 
 /// https://redis.io/commands/hset
 #[derive(Debug, Clone)]
@@ -31,10 +29,10 @@ impl Hset {
         // Read the key to set. This is a required field
         let key = parse.next_key()?;
 
-        let mut entries = vec![(parse.next_bulk()?, parse.next_data()?)];
+        let mut entries = vec![(parse.next_bulk()?, next_data_type(parse)?)];
         loop {
             match parse.next_bulk() {
-                Ok(s) => entries.push((s, parse.next_data()?)),
+                Ok(s) => entries.push((s, next_data_type(parse)?)),
                 Err(ParseError::EndOfStream) => break,
                 Err(err) => return Err(err.into()),
             };

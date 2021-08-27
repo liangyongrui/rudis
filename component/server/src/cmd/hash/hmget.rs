@@ -1,10 +1,9 @@
-use std::{sync::Arc, vec};
+use std::{borrow::Borrow, sync::Arc, vec};
 
 use db::Db;
 use macros::ParseFrames;
-use nom::AsBytes;
 
-use crate::Frame;
+use crate::{frame_parse::data_type_to_frame, Frame};
 
 /// https://redis.io/commands/hmget
 #[derive(Debug, ParseFrames)]
@@ -18,9 +17,9 @@ impl Hmget {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let v = db.kvp_get(dict::cmd::kvp::get::Req {
             key: &self.key,
-            fields: self.fields.iter().map(|t| t.as_bytes()).collect(),
+            fields: self.fields.iter().map(|t| t.borrow()).collect(),
         })?;
-        let res = v.into_iter().map(|i| i.into()).collect();
+        let res = v.into_iter().map(data_type_to_frame).collect();
         Ok(Frame::Array(res))
     }
 }

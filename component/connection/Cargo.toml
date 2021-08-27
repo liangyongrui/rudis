@@ -1,14 +1,13 @@
 [package]
-name = "server"
+name = "connection"
 version = "0.0.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-common = { path = "../common" }
-dict = { path = "../dict" }
-db = { path = "../db" }
-macros = { path = "../macros" }
 tokio = { version = "1", features = ["full"] }
+bytes = "1"
 tracing = "0.1"
-connection = { path = "../connection" }
+common = { path = "../common" }
+nom = "7"
+atoi = "0.4"

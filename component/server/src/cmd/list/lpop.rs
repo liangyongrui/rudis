@@ -3,7 +3,7 @@ use std::sync::Arc;
 use db::Db;
 use macros::ParseFrames;
 
-use crate::Frame;
+use crate::{frame_parse::data_type_to_frame, Frame};
 
 /// https://redis.io/commands/lpop
 #[derive(Debug, Clone, ParseFrames)]
@@ -26,6 +26,8 @@ impl Lpop {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.deque_pop(self.into())?;
-        Ok(Frame::Array(res.into_iter().map(|t| t.into()).collect()))
+        Ok(Frame::Array(
+            res.into_iter().map(data_type_to_frame).collect(),
+        ))
     }
 }

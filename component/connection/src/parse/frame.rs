@@ -7,7 +7,6 @@
 use std::{fmt, sync::Arc, vec};
 
 use common::{u8_to_i64, u8_to_string};
-use dict::data_type::DataType;
 use nom::{
     branch::alt,
     bytes::streaming::{tag, take_while, take_while1, take_while_m_n},
@@ -33,34 +32,6 @@ impl Frame {
     #[inline]
     pub fn ok() -> Self {
         Frame::Simple("OK".into())
-    }
-}
-
-impl From<DataType> for Frame {
-    #[inline]
-    fn from(st: DataType) -> Self {
-        match st {
-            DataType::String(s) => Frame::Simple(s),
-            DataType::Bytes(b) => Frame::Bulk(b),
-            DataType::Integer(i) => Frame::Integer(i),
-            DataType::Float(f) => Frame::Simple(format!("{}", f.0).into()),
-            DataType::Null => Frame::Null,
-            _ => Frame::Error("type not support".into()),
-        }
-    }
-}
-
-impl From<&DataType> for Frame {
-    #[inline]
-    fn from(st: &DataType) -> Self {
-        match st {
-            DataType::String(s) => Frame::Simple(s.clone()),
-            DataType::Bytes(b) => Frame::Bulk(b.clone()),
-            DataType::Integer(i) => Frame::Integer(*i),
-            DataType::Float(f) => Frame::Simple(format!("{}", f.0).into()),
-            DataType::Null => Frame::Null,
-            _ => Frame::Error("type not support".into()),
-        }
     }
 }
 

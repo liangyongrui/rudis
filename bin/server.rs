@@ -6,9 +6,10 @@
 //!
 //! The `clap` crate is used for parsing arguments.
 
-use ::server::{server, DEFAULT_PORT};
 use structopt::StructOpt;
 use tokio::{net::TcpListener, signal};
+
+pub const DEFAULT_PORT: &str = "6379";
 
 pub fn main() -> common::Result<()> {
     // enable logging

@@ -1,4 +1,4 @@
-use crate::{parse::Parse, Frame};
+use connection::parse::{frame::Frame, Parse};
 
 /// Represents an "unknown" command. This is not a real `Redis` command.
 #[derive(Debug)]
@@ -12,7 +12,7 @@ impl Unknown {
     /// issued by clients
     pub fn new(key: &impl ToString, parse: &mut Parse) -> Unknown {
         let mut params = vec![];
-        while let Ok(t) = parse.next() {
+        while let Ok(t) = parse.next_frame() {
             params.push(t);
         }
         Unknown {

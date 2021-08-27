@@ -1,14 +1,13 @@
-pub mod server;
+pub mod parse;
 
 use std::io;
 
 use bytes::{Buf, BytesMut};
+use parse::frame::Frame;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::TcpStream,
 };
-
-use crate::{parse, Frame};
 
 #[derive(Debug)]
 pub struct Connection {

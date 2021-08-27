@@ -1,8 +1,7 @@
 use std::{ops::Bound, sync::Arc};
 
+use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
-
-use crate::{parse::ParseError, Frame, Parse};
 
 /// https://redis.io/commands/zrangebylex
 #[derive(Debug)]

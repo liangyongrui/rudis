@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
+use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
-
-use crate::{parse::ParseError, Frame, Parse};
 
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]

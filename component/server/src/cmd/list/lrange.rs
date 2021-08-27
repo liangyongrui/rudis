@@ -3,7 +3,7 @@ use std::sync::Arc;
 use db::Db;
 use macros::ParseFrames;
 
-use crate::Frame;
+use crate::{frame_parse::data_type_to_frame, Frame};
 
 /// https://redis.io/commands/lrange
 #[derive(Debug, ParseFrames)]
@@ -27,7 +27,7 @@ impl Lrange {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let response = db.deque_range((&self).into())?;
         Ok(Frame::Array(
-            response.into_iter().map(|t| t.into()).collect(),
+            response.into_iter().map(data_type_to_frame).collect(),
         ))
     }
 }

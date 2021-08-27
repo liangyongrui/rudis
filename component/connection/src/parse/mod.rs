@@ -2,7 +2,6 @@ pub mod frame;
 
 use std::{fmt, str, sync::Arc, vec};
 
-use dict::data_type::DataType;
 pub use frame::parse;
 
 use crate::Frame;
@@ -51,7 +50,7 @@ impl Parse {
 
     /// Return the next entry. Array frames are arrays of frames, so the next
     /// entry is a frame.
-    pub fn next(&mut self) -> Result<Frame, ParseError> {
+    pub fn next_frame(&mut self) -> Result<Frame, ParseError> {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
@@ -61,25 +60,17 @@ impl Parse {
     }
 
     pub fn next_bulk(&mut self) -> Result<Arc<[u8]>, ParseError> {
-        match self.next()? {
+        match self.next_frame()? {
             Frame::Bulk(b) => Ok(b),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
 
-    pub fn next_data(&mut self) -> Result<DataType, ParseError> {
-        match self.next()? {
-            Frame::Integer(i) => Ok(DataType::Integer(i)),
-            Frame::Bulk(b) => Ok(DataType::Bytes(b)),
-            Frame::Simple(s) => Ok(DataType::String(s)),
-            frame => Err(format!("protocol error;  got {:?}", frame).into()),
-        }
-    }
     /// Return the next entry as a string.
     ///
     /// If the next entry cannot be represented as a String, then an error is returned.
     pub fn next_string(&mut self) -> Result<String, ParseError> {
-        match self.next()? {
+        match self.next_frame()? {
             // Both `Simple` and `Bulk` representation may be strings. Strings
             // are parsed to UTF-8.
             //
@@ -106,7 +97,7 @@ impl Parse {
 
         const INVALID: &str = "protocol error; invalid number";
 
-        match self.next()? {
+        match self.next_frame()? {
             // An integer frame type is already stored as an integer.
             Frame::Integer(v) => Ok(v),
             // Simple and bulk frames must be parsed as integers. If the parsing

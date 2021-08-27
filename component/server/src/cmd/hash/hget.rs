@@ -3,7 +3,7 @@ use std::sync::Arc;
 use db::Db;
 use macros::ParseFrames;
 
-use crate::Frame;
+use crate::{frame_parse, Frame};
 
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
@@ -24,6 +24,8 @@ impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {
 impl Hget {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        Ok((&db.kvp_get((&self).into())?[0]).into())
+        Ok(frame_parse::ref_data_type_to_frame(
+            &db.kvp_get((&self).into())?[0],
+        ))
     }
 }

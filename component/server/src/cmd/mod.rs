@@ -4,6 +4,7 @@ mod list;
 mod set;
 mod sorted_set;
 
+use connection::parse::{frame::Frame, Parse};
 use db::Db;
 
 use self::{
@@ -30,7 +31,6 @@ use self::{
         zrevrangebyscore::Zrevrangebyscore, zrevrank::Zrevrank,
     },
 };
-use crate::{Frame, Parse, ParseError};
 
 /// Enumeration of supported Redis commands.
 ///

@@ -4,13 +4,11 @@ use common::{
     now_timestamp_ms,
     options::{ExpiresAt, NxXx},
 };
+use connection::parse::{frame::Frame, Parse};
 use db::Db;
 use dict::data_type::DataType;
 
-use crate::{
-    cmd::{Parse, ParseError},
-    Frame,
-};
+use crate::frame_parse::data_type_to_frame;
 
 /// Set `key` to hold the string `value`.
 ///
@@ -48,13 +46,11 @@ impl From<Set> for dict::cmd::simple::set::Req {
 
 impl Set {
     pub fn parse_frames(parse: &mut Parse) -> common::Result<Set> {
-        use ParseError::EndOfStream;
-
         // Read the key to set. This is a required field
         let key = parse.next_key()?;
 
         // Read the value to set. This is a required field.
-        let value = parse.next_data()?;
+        let value = crate::frame_parse::next_data_type(parse)?;
 
         // The expiration is optional. If nothing else follows, then it is
         // `None`.
@@ -114,7 +110,7 @@ impl Set {
                     }
                     not_support => return Err(format!("not support cmd: {}", not_support).into()),
                 },
-                Err(EndOfStream) => {
+                Err(connection::parse::ParseError::EndOfStream) => {
                     break;
                 }
                 Err(err) => return Err(err.into()),
@@ -135,7 +131,11 @@ impl Set {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let get = self.get;
         let res = db.set(self.into())?;
-        let response = if get { res.into() } else { Frame::ok() };
+        let response = if get {
+            data_type_to_frame(res)
+        } else {
+            Frame::ok()
+        };
         Ok(response)
     }
 }

@@ -1,8 +1,9 @@
 use common::options::{GtLt, NxXx};
+use connection::parse::ParseError;
 use db::Db;
 use dict::cmd::simple::expire::Req;
 
-use crate::{Frame, ParseError::EndOfStream};
+use crate::Frame;
 
 /// https://redis.io/commands/pexpireat
 ///
@@ -14,7 +15,7 @@ pub struct Pexpireat {
 }
 
 impl Pexpireat {
-    pub fn parse_frames(parse: &mut crate::parse::Parse) -> common::Result<Pexpireat> {
+    pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Pexpireat> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;
@@ -49,7 +50,7 @@ impl Pexpireat {
                     }
                     not_support => return Err(format!("not support cmd: {}", not_support).into()),
                 },
-                Err(EndOfStream) => {
+                Err(ParseError::EndOfStream) => {
                     break;
                 }
                 Err(err) => return Err(err.into()),

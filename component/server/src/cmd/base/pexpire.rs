@@ -5,7 +5,7 @@ use common::{
 use db::Db;
 use dict::cmd::simple::expire::Req;
 
-use crate::{Frame, ParseError::EndOfStream};
+use crate::Frame;
 
 /// https://redis.io/commands/pexpire
 ///
@@ -17,7 +17,7 @@ pub struct Pexpire {
 }
 
 impl Pexpire {
-    pub fn parse_frames(parse: &mut crate::parse::Parse) -> common::Result<Pexpire> {
+    pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Pexpire> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;
@@ -52,7 +52,7 @@ impl Pexpire {
                     }
                     not_support => return Err(format!("not support cmd: {}", not_support).into()),
                 },
-                Err(EndOfStream) => {
+                Err(connection::parse::ParseError::EndOfStream) => {
                     break;
                 }
                 Err(err) => return Err(err.into()),

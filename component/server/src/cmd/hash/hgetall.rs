@@ -3,7 +3,7 @@ use std::{sync::Arc, vec};
 use db::Db;
 use macros::ParseFrames;
 
-use crate::Frame;
+use crate::{frame_parse::data_type_to_frame, Frame};
 
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
@@ -23,7 +23,7 @@ impl Hgetall {
         let v = db.kvp_get_all((&self).into())?;
         Ok(Frame::Array(
             v.into_iter()
-                .flat_map(|(k, v)| vec![Frame::Bulk(k), v.into()].into_iter())
+                .flat_map(|(k, v)| vec![Frame::Bulk(k), data_type_to_frame(v)].into_iter())
                 .collect(),
         ))
     }

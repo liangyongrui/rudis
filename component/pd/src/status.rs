@@ -26,17 +26,13 @@ pub async fn server_survival_check() {
         for g in &mut STATUS.lock().groups {
             for s in &g.servers {
                 if now > s.latest_heartbeat && now - s.latest_heartbeat > ts {
-                    // dead
+                    // todo dead
                     continue;
                 }
             }
         }
         interval.tick().await;
     }
-}
-
-fn handle_dead_server(servers: &mut Vec<Server>) {
-    // servers.iter()
 }
 
 impl Status {
@@ -112,8 +108,11 @@ async fn init_heartbeat(addr: impl ToSocketAddrs, group_id: usize, server_id: us
                 if let Some(g) = STATUS.lock().groups.iter_mut().find(|g| g.id == group_id) {
                     if let Some(s) = g.servers.iter_mut().find(|s| s.id == server_id) {
                         s.latest_heartbeat = now_timestamp_ms();
+                        continue;
                     }
                 }
+                // server列表没有他，但是有他的心跳了。突然复活
+                break;
             }
             _ = interval.tick() => {
                 w.write_all(PING_FRAME).await.unwrap()
