@@ -106,7 +106,6 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> common::Result
         db: Db::new().await,
         limit_connections: Limit::new(CONFIG.max_connections),
     };
-
     tokio::select! {
         res = server.run() => {
             // If an error is received here, accepting connections from the TCP
@@ -146,7 +145,7 @@ impl Listener {
     /// strategy, which is what we do here.
     async fn run(&mut self) -> common::Result<()> {
         info!("accepting inbound connections");
-
+        let db = self.db.clone();
         loop {
             // Wait for available
             self.limit_connections.acquire().await;

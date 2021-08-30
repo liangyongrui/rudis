@@ -32,8 +32,8 @@ raft 保障高可用，可能使用的库
 
 ## 能力
 
-- [ ] server 节点通过 pd 注册启动
-- [ ] 协调主从
+- [x] server 节点通过 pd 注册启动
+- [x] 协调主从
 - [ ] 协调 slot
 - [ ] 管理 group 级别的配置
 - [ ] 通知 proxy 主从、slot 的变更
@@ -42,32 +42,3 @@ raft 保障高可用，可能使用的库
 - [ ] 负载均衡 slot，动态迁移高频 slot
 - [ ] 提供分布式锁的能力?
 - [ ] 管理多个集群？
-
-## server 注册到 pd 的流程
-
-1. server -> server: 初始化，保证 socket 可用
-1. node -> pd: node 注册，携带的信息
-   - group_id: 想要加入的组
-   - role: 想要成为的角色
-     - 目前只有一种 Candidate
-   - node_id: 如果有的话 (连接意外断开重连的时候有)
-   - socket listener 地址
-1. pd -> node: pd 返回注册结果
-   - success 是否成功，失败可能的原因
-     - node_id 不存在
-     - group_id 不存在
-
-## 心跳流程
-
-1. pd -> server: pd 来轮询 server, 除非连接断开，否则一直下发状态，心跳带的信息
-   - server 角色
-   - 当前 leader 信息
-1. node -> pd: pong
-1. pd -> pd: 一秒一次，三秒没有 pong，视为节点挂掉
-
-## 当前实现的能力
-
-1. [ ] 一个单点的 pd
-1. [ ] 创建 group
-1. [ ] 节点的心跳，动态切换主从
-1. [ ] server 没收到 pd 的心跳，自动重连

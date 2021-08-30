@@ -25,13 +25,19 @@ pub enum ServerRole {
     Follower,
 }
 
+impl Default for ServerRole {
+    fn default() -> Self {
+        ServerRole::Leader
+    }
+}
+
 /// server 状态
 ///
 /// 用于
 /// - server 上报
 /// - pd 回复初始化
 /// - pd 发现server上报的和实际不一致回复
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Default)]
 pub struct ServerStatus {
     pub server_id: usize,
     pub group_id: usize,

@@ -22,6 +22,7 @@ rust cloud cache
 1. [ ] 各个 task 的优雅退出
 1. [ ] 规范每个模块的命名
 1. [ ] thiserror
+1. [ ] 检查代码中的 todo 和 各种可能的 panic
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis

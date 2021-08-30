@@ -1,5 +1,6 @@
 mod expire;
 mod forward;
+mod pd_handle;
 mod slot;
 
 use std::{
@@ -61,9 +62,12 @@ impl Db {
         }
         let db = Arc::new(Self {
             slots,
-            read_only: AtomicBool::new(CONFIG.read_only),
+            read_only: AtomicBool::new(false),
             role: Mutex::new(Role::Master),
         });
+        if let Some(pd) = CONFIG.from_pd {
+            pd_handle::run(db.clone(), pd).await.unwrap();
+        }
         // if let Some(addr) = CONFIG.master_addr {
         //     let db = db.clone();
         //     tokio::task::spawn_blocking(move || replica::process(addr, &db));
