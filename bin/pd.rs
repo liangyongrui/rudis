@@ -1,7 +1,7 @@
 use structopt::StructOpt;
-use tokio::{net::TcpListener, signal};
+use tokio::net::TcpListener;
 
-pub const DEFAULT_PORT: &str = "6379";
+pub const DEFAULT_PORT: &str = "6380";
 
 pub fn main() -> common::Result<()> {
     // enable logging
@@ -14,20 +14,18 @@ pub fn main() -> common::Result<()> {
     let cli = Cli::from_args();
     let port = cli.port.as_deref().unwrap_or(DEFAULT_PORT);
     tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(4)
+        .worker_threads(1)
         .enable_all()
         .build()
         .unwrap()
         .block_on(async {
-            // Bind a TCP listener
             let listener = TcpListener::bind(&format!("127.0.0.1:{}", port)).await?;
-
-            server::run(listener, signal::ctrl_c()).await
+            pd::run(listener).await
         })
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "rcc-server", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "A Redis server")]
+#[structopt(name = "rcc-pd", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "A Redis server placement driver")]
 struct Cli {
     #[structopt(name = "port", long = "--port")]
     port: Option<String>,

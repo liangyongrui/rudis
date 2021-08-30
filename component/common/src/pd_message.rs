@@ -6,19 +6,16 @@ use serde::{Deserialize, Serialize};
 pub mod cmd {
 
     /// server init <ServerInit>
-    pub const SEVER_INIT: &str = "PD_SEVER_INIT";
+    pub const SEVER_INIT: &str = "pd_sever_init";
 
     /// server heartbeat <ServerStatus>
-    pub const SEVER_HEARTBEAT: &str = "PD_SEVER_HEARTBEAT";
+    pub const SEVER_HEARTBEAT: &str = "pd_sever_heartbeat";
 
-    /// lastet server status in pd <ServerStatus>
-    pub const LASTEST_SERVER_STATUS: &str = "PD_LASTEST_SERVER_STATUS";
-
-    /// server init fail <msg str>
-    pub const SEVER_INIT_FAIL: &str = "PD_SEVER_INIT_FAIL";
+    /// latest server status in pd <ServerStatus>
+    pub const LATEST_SERVER_STATUS: &str = "pd_latest_server_status";
 
     /// create new group
-    pub const NEW_GROUP: &str = "PD_NEW_GROUP";
+    pub const CRATE_GROUP: &str = "pd_crate_group";
 }
 
 /// server role

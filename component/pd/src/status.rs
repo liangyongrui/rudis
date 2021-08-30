@@ -12,7 +12,7 @@ static STATUS: Lazy<RwLock<Status>> = Lazy::new(|| RwLock::new(Status::default()
 #[derive(Default)]
 struct Status {
     // 最后一个分配的group_id
-    lastet_group_id: usize,
+    latest_group_id: usize,
     groups: Vec<Group>,
 }
 
@@ -23,7 +23,7 @@ struct Group {
     /// group id
     id: usize,
     /// 最后一个分配的server_id
-    lastet_server_id: usize,
+    latest_server_id: usize,
     /// group 下的server列表，节点不会很多，操作的时候直接遍历就很快
     servers: Vec<Server>,
     /// leader id SocketAddr
@@ -44,15 +44,15 @@ struct Server {
 
 pub fn create_group() {
     let status = &mut *STATUS.write();
-    status.lastet_group_id += 1;
-    status.groups.push(Group::new(status.lastet_group_id))
+    status.latest_group_id += 1;
+    status.groups.push(Group::new(status.latest_group_id))
 }
 
 /// 初始化服务器
 pub fn server_init(data: ServerInit) -> common::Result<ServerStatus> {
     let status = &mut *STATUS.write();
     if let Some(g) = status.groups.iter_mut().find(|t| t.id == data.group_id) {
-        g.lastet_server_id += 1;
+        g.latest_server_id += 1;
         let is_follower = g.servers.iter().any(|t| t.role == ServerRole::Leader);
         let role = if is_follower {
             ServerRole::Follower
@@ -61,7 +61,7 @@ pub fn server_init(data: ServerInit) -> common::Result<ServerStatus> {
         };
         let now = now_timestamp_ms();
         let server = Server {
-            id: g.lastet_server_id,
+            id: g.latest_server_id,
             latest_heartbeat: now,
             role,
             socket_addr: data.socket_addr,
@@ -84,7 +84,7 @@ pub fn server_init(data: ServerInit) -> common::Result<ServerStatus> {
 }
 impl Status {
     /// 获取节点的最新状态
-    pub fn server_status(&self, group_id: usize, server_id: usize) -> Option<ServerStatus> {
+    pub fn _server_status(&self, group_id: usize, server_id: usize) -> Option<ServerStatus> {
         if let Some(g) = self.groups.iter().find(|t| t.id == group_id) {
             if let Some(s) = g.servers.iter().find(|t| t.id == server_id) {
                 return Some(ServerStatus {
@@ -131,8 +131,9 @@ pub async fn server_survival_check() {
     let mut interval = tokio::time::interval(Duration::from_secs(1));
     let ts = 3_000;
     loop {
+        interval.tick().await;
         let now = now_timestamp_ms();
-        let status = &mut *STATUS.write();
+        let mut status = STATUS.write();
 
         for g in &mut status.groups {
             let mut update_leader = true;
@@ -161,7 +162,6 @@ pub async fn server_survival_check() {
                 }
             }
         }
-        interval.tick().await;
     }
 }
 
@@ -169,7 +169,7 @@ impl Group {
     fn new(id: usize) -> Self {
         Self {
             id,
-            lastet_server_id: 0,
+            latest_server_id: 0,
             servers: vec![],
             leader: None,
         }

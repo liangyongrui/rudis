@@ -12,3 +12,4 @@ common = { path = "../common" }
 tokio = { version = "1", features = ["full"] }
 connection = { path = "../connection" }
 tracing = "0.1"
+bincode = "1"

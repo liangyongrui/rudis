@@ -21,6 +21,7 @@ rust cloud cache
    - [ ] pd, 用来协调主从
 1. [ ] 各个 task 的优雅退出
 1. [ ] 规范每个模块的命名
+1. [ ] thiserror
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis
@@ -38,3 +39,5 @@ rust cloud cache
 ## Supported redis commands
 
 [Supported redis commands](./docs/supported_redis_cmds.md)
+
+fork from <https://github.com/tokio-rs/mini-redis>

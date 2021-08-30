@@ -1,16 +1,10 @@
 [workspace]
-members = [
-    "cmd_test",
-    "fixed_queue",
-    "component/*",
-]
+members = ["cmd_test", "component/*"]
 
 [package]
 authors = ["LiangYongrui <leungyongrui@gmail.com>"]
 description = """
 rust cloud cache
-
-fork from https://github.com/tokio-rs/mini-redis
 """
 edition = "2018"
 name = "rcc"
@@ -25,6 +19,10 @@ opt-level = 3
 name = "server"
 path = "./bin/server.rs"
 
+[[bin]]
+name = "pd"
+path = "./bin/pd.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 server = { path = "./component/server" }
@@ -33,3 +31,4 @@ tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.2"
 common = { path = "component/common" }
+pd = { path = "component/pd" }
