@@ -3,7 +3,7 @@
 //! 实现内部的命令 不需要兼容redis
 //! slot 层的操作，加锁的时间粒度降为最小
 
-// pub mod copy_master;
+mod replica_update;
 
 use std::{
     collections::{HashMap, HashSet},
@@ -34,7 +34,6 @@ pub struct ShareStatus {
 }
 impl Slot {
     pub fn new(slot_id: usize, bg_task: BgTask) -> Self {
-        // todo load from disk
         Self {
             slot_id,
             share_status: RwLock::new(Some(Box::new(ShareStatus::default()))),
@@ -42,31 +41,31 @@ impl Slot {
         }
     }
 
-    // /// 更新整个 dict
-    // ///
-    // /// dict 中的过期数据最好提前清理一下,
-    // /// 如果快照复制过来的, 过期数据并不多
-    // pub fn replace_dict(&self, dict: Dict) {
-    //     let _ = self
-    //         .bg_task
-    //         .expire_sender
-    //         .send(expire::Message::Clear(self.slot_id));
-    //     let expires_add = dict
-    //         .inner
-    //         .iter()
-    //         .filter(|(_, v)| v.expires_at > 0)
-    //         .map(|(k, v)| expire::Entry {
-    //             expires_at: v.expires_at,
-    //             slot: self.slot_id,
-    //             key: k.clone(),
-    //         })
-    //         .collect();
-    //     *self.share_status.write() = dict;
-    //     let _ = self
-    //         .bg_task
-    //         .expire_sender
-    //         .send(expire::Message::BatchAdd(expires_add));
-    // }
+    /// 更新整个 dict
+    ///
+    /// dict 中的过期数据最好提前清理一下,
+    /// 如果快照复制过来的, 过期数据并不多
+    pub fn replace_dict(&self, dict: Dict) {
+        let _ = self
+            .bg_task
+            .expire_sender
+            .send(expire::Message::Clear(self.slot_id));
+        let expires_add = dict
+            .inner
+            .iter()
+            .filter(|(_, v)| v.expires_at > 0)
+            .map(|(k, v)| expire::Entry {
+                expires_at: v.expires_at,
+                slot: self.slot_id,
+                key: k.clone(),
+            })
+            .collect();
+        *self.share_status.write() = Some(Box::new(ShareStatus { dict }));
+        let _ = self
+            .bg_task
+            .expire_sender
+            .send(expire::Message::BatchAdd(expires_add));
+    }
 
     #[inline]
     fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> common::Result<T> {

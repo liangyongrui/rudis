@@ -43,7 +43,14 @@ pub struct ServerStatus {
     pub group_id: usize,
     pub role: ServerRole,
     /// leader server id, leader forward addr
-    pub current_leader: Option<(usize, SocketAddr)>,
+    pub current_leader: Option<LeaderInfo>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, Clone, Copy)]
+pub struct LeaderInfo {
+    pub server_id: usize,
+    pub server_addr: SocketAddr,
+    pub forward_addr: SocketAddr,
 }
 
 /// server 初始化请求

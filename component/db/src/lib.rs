@@ -43,7 +43,7 @@ pub struct Db {
 }
 
 // https://redis.io/topics/cluster-spec
-const SIZE: usize = 16384;
+pub const SLOT_SIZE: usize = 16384;
 const SIZE_MOD: u16 = 16383;
 const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
 
@@ -56,8 +56,8 @@ impl Db {
             expire_sender: expiration.tx.clone(),
             forward_sender: forward.tx.clone(),
         };
-        let mut slots = Vec::with_capacity(SIZE);
-        for i in 0..SIZE {
+        let mut slots = Vec::with_capacity(SLOT_SIZE);
+        for i in 0..SLOT_SIZE {
             slots.push(Slot::new(i, bg_task.clone()));
         }
         let db = Arc::new(Self {
@@ -92,7 +92,7 @@ impl Db {
 
     #[inline]
     pub fn replace_dict(&self, slot_id: usize, dict: Dict) {
-        // self.slots.get(&slot_id).unwrap().replace_dict(dict);
+        self.slots[slot_id].replace_dict(dict);
     }
 }
 

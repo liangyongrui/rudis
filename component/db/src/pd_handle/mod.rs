@@ -1,10 +1,12 @@
+mod replica;
+
 use std::{sync::Arc, time::Duration};
 
 use common::{
     config::{Pd, CONFIG},
     pd_message::{
         cmd::{SEVER_HEARTBEAT, SEVER_INIT},
-        ServerInit, ServerStatus,
+        ServerInit, ServerRole, ServerStatus,
     },
 };
 use connection::{parse::frame::Frame, Connection};
@@ -79,6 +81,19 @@ impl PdHandle {
     }
 
     fn update_status(&self, status: ServerStatus) -> common::Result<()> {
-        todo!()
+        match (self.latest_status.role, status.role) {
+            (_, ServerRole::Follower)
+                if self.latest_status.current_leader != status.current_leader =>
+            {
+                // update leader
+            }
+            (ServerRole::Follower, ServerRole::Leader) => {
+                // 自己变成leader
+            }
+            _ => {
+                // do nothing
+            }
+        }
+        Ok(())
     }
 }

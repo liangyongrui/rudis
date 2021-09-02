@@ -2,7 +2,7 @@ use std::{net::SocketAddr, time::Duration};
 
 use common::{
     now_timestamp_ms,
-    pd_message::{ServerInit, ServerRole, ServerStatus},
+    pd_message::{LeaderInfo, ServerInit, ServerRole, ServerStatus},
 };
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
@@ -26,8 +26,8 @@ struct Group {
     latest_server_id: usize,
     /// group 下的server列表，节点不会很多，操作的时候直接遍历就很快
     servers: Vec<Server>,
-    /// leader id SocketAddr
-    leader: Option<(usize, SocketAddr)>,
+
+    leader: Option<LeaderInfo>,
 }
 
 struct Server {
@@ -71,7 +71,11 @@ pub fn server_init(data: ServerInit) -> common::Result<ServerStatus> {
             join_time: now,
         };
         if let ServerRole::Leader = role {
-            g.leader = Some((server.id, server.forward_addr));
+            g.leader = Some(LeaderInfo {
+                server_id: server.id,
+                server_addr: server.server_addr,
+                forward_addr: server.forward_addr,
+            });
         }
         let res = ServerStatus {
             server_id: server.id,
@@ -161,7 +165,11 @@ pub async fn server_survival_check() {
                 }
                 if let Some(leader) = leader {
                     leader.role = ServerRole::Leader;
-                    g.leader = Some((leader.id, leader.forward_addr));
+                    g.leader = Some(LeaderInfo {
+                        server_id: leader.id,
+                        server_addr: leader.server_addr,
+                        forward_addr: leader.forward_addr,
+                    });
                 }
             }
         }
