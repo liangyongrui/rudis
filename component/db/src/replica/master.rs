@@ -57,8 +57,14 @@ pub async fn process_sync_cmd(mut stream: TcpStream) -> common::Result<()> {
     Ok(())
 }
 
+/// todo 
+/// After fork, the child process will inherit the resources 
+/// of the parent process, e.g. fd(socket or flock) etc.
+/// should close the resources not used by the child process, so that if the
+/// parent restarts it can bind/lock despite the child possibly still running. 
 pub fn process_snapshot(mut stream: std::net::TcpStream, db: Arc<Db>) -> common::Result<()> {
     // fork 子进程做snapshot，不需要持有锁
+    // todo slot 需要先拿到读锁再fork 避免死锁
     match unsafe { fork() } {
         Ok(ForkResult::Parent { child }) => {
             child_process::add(child, child_process::Info::SyncSnapshot);

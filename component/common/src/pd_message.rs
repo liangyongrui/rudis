@@ -42,6 +42,7 @@ pub struct ServerStatus {
     pub server_id: usize,
     pub group_id: usize,
     pub role: ServerRole,
+    /// leader server id, leader forward addr
     pub current_leader: Option<(usize, SocketAddr)>,
 }
 
@@ -49,5 +50,6 @@ pub struct ServerStatus {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ServerInit {
     pub group_id: usize,
-    pub socket_addr: SocketAddr,
+    pub server_addr: SocketAddr,
+    pub forward_addr: SocketAddr,
 }

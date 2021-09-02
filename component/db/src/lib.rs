@@ -1,3 +1,4 @@
+pub mod child_process;
 mod expire;
 mod forward;
 mod pd_handle;
@@ -15,14 +16,11 @@ use dict::{
     data_type::{self, DataType},
     Dict,
 };
+use forward::Forward;
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
 
-use crate::{
-    expire::Expiration,
-    forward::{Message, FORWARD},
-    slot::Slot,
-};
+use crate::{expire::Expiration, forward::Message, slot::Slot};
 
 #[derive(Clone)]
 pub struct BgTask {
@@ -52,9 +50,11 @@ const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
 impl Db {
     pub async fn new() -> Arc<Self> {
         let expiration = Expiration::new();
+        let forward = Forward::new();
+
         let bg_task = BgTask {
             expire_sender: expiration.tx.clone(),
-            forward_sender: FORWARD.tx.clone(),
+            forward_sender: forward.tx.clone(),
         };
         let mut slots = Vec::with_capacity(SIZE);
         for i in 0..SIZE {
@@ -68,13 +68,9 @@ impl Db {
         if let Some(pd) = CONFIG.from_pd {
             pd_handle::run(db.clone(), pd).await.unwrap();
         }
-        // if let Some(addr) = CONFIG.master_addr {
-        //     let db = db.clone();
-        //     tokio::task::spawn_blocking(move || replica::process(addr, &db));
-        // }
 
         expiration.listen(Arc::clone(&db));
-        FORWARD.db.store(Some(db.clone()));
+        forward.listen();
         db
     }
 

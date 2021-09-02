@@ -25,7 +25,7 @@ rust cloud cache
 1. [ ] 检查代码中的 todo 和 各种可能的 panic
 1. [ ] roadmap
 1. [ ] 起个好名字
-   - rudis
+   - rudis(**ru**sty **di**ctionary **s**erver)
    - redis_rs
    - redis_iox
    - redox (喜欢这个，但是被别的项目用了。。)

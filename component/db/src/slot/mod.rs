@@ -22,7 +22,7 @@ use parking_lot::RwLock;
 use crate::{expire, forward, BgTask};
 
 pub struct Slot {
-    slot_id: usize,
+    pub slot_id: usize,
     // None时，表示 slot not support
     pub share_status: RwLock<Option<Box<ShareStatus>>>,
     bg_task: BgTask,
@@ -160,42 +160,52 @@ impl Slot {
     pub fn del(&self, cmd: cmd::simple::del::Req) -> common::Result<Option<Value>> {
         self.call_expires_write(cmd)
     }
+
     #[inline]
     pub fn expire(&self, cmd: cmd::simple::expire::Req) -> common::Result<bool> {
         self.call_expires_write(cmd)
     }
+
     #[inline]
     pub fn incr(&self, cmd: cmd::simple::incr::Req) -> common::Result<i64> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> common::Result<cmd::kvp::set::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> common::Result<cmd::kvp::del::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> common::Result<i64> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn deque_push(&self, cmd: cmd::deque::push::Req) -> common::Result<cmd::deque::push::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn deque_pop(&self, cmd: cmd::deque::pop::Req) -> common::Result<Vec<DataType>> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn set_add(&self, cmd: cmd::set::add::Req) -> common::Result<cmd::set::add::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn set_remove(&self, cmd: cmd::set::remove::Req) -> common::Result<cmd::set::remove::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn sorted_set_add(
         &self,
@@ -203,6 +213,7 @@ impl Slot {
     ) -> common::Result<cmd::sorted_set::add::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn sorted_set_remove(
         &self,
@@ -210,6 +221,7 @@ impl Slot {
     ) -> common::Result<cmd::sorted_set::remove::Resp> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn sorted_set_remove_by_lex_range(
         &self,
@@ -217,6 +229,7 @@ impl Slot {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn sorted_set_remove_by_rank_range(
         &self,
@@ -224,6 +237,7 @@ impl Slot {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_write(cmd)
     }
+
     #[inline]
     pub fn sorted_set_remove_by_score_range(
         &self,
@@ -239,22 +253,27 @@ impl Slot {
     pub fn get(&self, cmd: cmd::simple::get::Req<'_>) -> common::Result<DataType> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> common::Result<cmd::simple::ttl::Resp> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn exists(&self, cmd: cmd::simple::exists::Req<'_>) -> common::Result<bool> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req<'_>) -> common::Result<bool> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn kvp_get(&self, cmd: cmd::kvp::get::Req<'_>) -> common::Result<Vec<DataType>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn kvp_get_all(
         &self,
@@ -262,18 +281,22 @@ impl Slot {
     ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn deque_len(&self, cmd: cmd::deque::len::Req<'_>) -> common::Result<usize> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn deque_range(&self, cmd: cmd::deque::range::Req<'_>) -> common::Result<Vec<DataType>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn set_exists(&self, cmd: cmd::set::exists::Req<'_>) -> common::Result<Vec<bool>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn set_get_all(
         &self,
@@ -281,6 +304,7 @@ impl Slot {
     ) -> common::Result<HashSet<String, ahash::RandomState>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn sorted_set_range_by_lex(
         &self,
@@ -288,6 +312,7 @@ impl Slot {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn sorted_set_range_by_rank(
         &self,
@@ -295,6 +320,7 @@ impl Slot {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn sorted_set_range_by_score(
         &self,
@@ -302,6 +328,7 @@ impl Slot {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_read(cmd)
     }
+
     #[inline]
     pub fn sorted_set_rank(
         &self,

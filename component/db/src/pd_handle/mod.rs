@@ -37,7 +37,8 @@ impl PdHandle {
                 Frame::Bulk(
                     bincode::serialize(&ServerInit {
                         group_id: self.pd.group_id,
-                        socket_addr: CONFIG.server_addr,
+                        server_addr: CONFIG.server_addr,
+                        forward_addr: CONFIG.forward_addr,
                     })?
                     .into(),
                 ),

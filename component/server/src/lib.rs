@@ -11,7 +11,6 @@
 #![allow(clippy::must_use_candidate)]
 #![allow(clippy::wildcard_imports)]
 #![allow(clippy::cast_precision_loss)]
-#![allow(clippy::too_many_lines)]
 #![allow(clippy::cast_possible_wrap)]
 #![allow(clippy::shadow_unrelated)]
 
@@ -145,7 +144,6 @@ impl Listener {
     /// strategy, which is what we do here.
     async fn run(&mut self) -> common::Result<()> {
         info!("accepting inbound connections");
-        let db = self.db.clone();
         loop {
             // Wait for available
             self.limit_connections.acquire().await;
@@ -247,23 +245,12 @@ impl Handler {
             let res = match cmd {
                 Command::Read(o) => o.apply(&self.db),
                 Command::Write(o) => o.apply(&self.db),
-                Command::Unknown(o) => Ok(o.apply()),
-                // todo
-                Command::SyncCmd | Command::SyncSnapshot => {
-                    // let _ = db::replica::master::process_sync_cmd(self.connection.stream).await;
+                Command::Ping => Ok(Frame::Pong),
+                Command::SyncSnapshot(o) => {
+                    o.apply(self);
                     return Ok(());
                 }
-                // Command::SyncSnapshot => {
-                // let _ = tokio::task::spawn_blocking(|| {
-                //     db::replica::master::process_snapshot(
-                //         self.connection.stream.into_std()?,
-                //         self.db,
-                //     )
-                // })
-                // .await;
-                //     return Ok(());
-                // }
-                Command::Ping => Ok(Frame::Pong),
+                Command::Unknown(o) => Ok(o.apply()),
             };
             // Perform the work needed to apply the command. This may mutate the
             // database state as a result.

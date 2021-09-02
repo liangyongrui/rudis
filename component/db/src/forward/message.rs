@@ -11,15 +11,19 @@ pub struct Message {
 
 impl Default for Message {
     fn default() -> Self {
+        Self::none()
+    }
+}
+
+impl Message {
+    pub const fn none() -> Self {
         Self {
             id: 0,
             slot: 0,
             cmd: WriteCmd::None,
         }
     }
-}
 
-impl Message {
     /// stream 编码
     pub async fn stream_encode<W: AsyncWrite + Unpin>(
         &self,

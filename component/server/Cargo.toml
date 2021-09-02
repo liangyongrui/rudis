@@ -12,3 +12,5 @@ macros = { path = "../macros" }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 connection = { path = "../connection" }
+nix = "0.22"
+bincode = "1"

@@ -36,8 +36,10 @@ struct Server {
     latest_heartbeat: u64,
     /// 角色
     role: ServerRole,
-    /// serverNode 的请求接收地址
-    socket_addr: SocketAddr,
+    /// server 请求接收地址
+    server_addr: SocketAddr,
+    /// 转发服务的地址，用于主从复制
+    forward_addr: SocketAddr,
     /// 加入时间
     join_time: u64,
 }
@@ -64,11 +66,12 @@ pub fn server_init(data: ServerInit) -> common::Result<ServerStatus> {
             id: g.latest_server_id,
             latest_heartbeat: now,
             role,
-            socket_addr: data.socket_addr,
+            server_addr: data.server_addr,
+            forward_addr: data.forward_addr,
             join_time: now,
         };
         if let ServerRole::Leader = role {
-            g.leader = Some((server.id, server.socket_addr));
+            g.leader = Some((server.id, server.forward_addr));
         }
         let res = ServerStatus {
             server_id: server.id,
@@ -158,7 +161,7 @@ pub async fn server_survival_check() {
                 }
                 if let Some(leader) = leader {
                     leader.role = ServerRole::Leader;
-                    g.leader = Some((leader.id, leader.socket_addr));
+                    g.leader = Some((leader.id, leader.forward_addr));
                 }
             }
         }

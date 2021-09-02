@@ -19,6 +19,8 @@ pub static CONFIG: Lazy<Config> = Lazy::new(|| match get_config() {
 pub struct Config {
     /// 当前服务启动地址
     pub server_addr: SocketAddr,
+    /// 转发服务的地址
+    pub forward_addr: SocketAddr,
 
     /// Maximum number of concurrent connections the redis server will accept.
     ///
@@ -56,7 +58,8 @@ fn get_config() -> crate::Result<Config> {
         .merge(config_file)?
         .merge(config::Environment::with_prefix("RCC"))?
         .set_default("max_connections", 3000)?
-        .set_default("server_addr", "0.0.0.0:6379")?;
+        .set_default("server_addr", "0.0.0.0:6379")?
+        .set_default("forward_addr", "0.0.0.0:6380")?;
 
     settings.try_into().map_err(|t| t.into())
 }
