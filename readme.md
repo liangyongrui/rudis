@@ -13,13 +13,16 @@ rust cloud cache
 
 ## todo list
 
+1. [ ] loop 向上抛的异常
 1. [ ] 各个 task 的优雅退出
 1. [ ] 规范每个模块的命名
 1. [ ] thiserror
-1. [ ] 检查代码中的 todo 和 各种可能的 panic
+1. [ ] 检查代码中各种可能的 panic
 1. [ ] 再次检查主从复制的逻辑
+1. [ ] 去掉中文注释, 尽可能的增加英文注释
 1. [ ] roadmap
 1. [ ] 起个好名字
+   - rcc (**r**usty **c**loud **c**ache)
    - rudis(**ru**sty **di**ctionary **s**erver)
    - redis_rs
    - redis_iox

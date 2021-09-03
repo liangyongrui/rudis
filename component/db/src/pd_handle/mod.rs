@@ -56,7 +56,7 @@ impl PdHandle {
     async fn read_bytes(&mut self) -> common::Result<Arc<[u8]>> {
         let frame = match self.connection.read_frame().await? {
             Some(f) => f,
-            None => todo!(),
+            None => return Err("EOF".into()),
         };
         match frame {
             Frame::Bulk(b) => Ok(b),

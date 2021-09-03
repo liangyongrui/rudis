@@ -24,7 +24,7 @@ impl From<Req> for WriteCmd {
 impl Write<i64> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<i64> {
-        let v = dict.d_get_mut_or_insert_with(&self.key, || Value {
+        let v = dict.d_get_mut_or_insert_with(self.key, || Value {
             expires_at: 0,
             data: DataType::Kvp(Box::new(Kvp::new())),
         });

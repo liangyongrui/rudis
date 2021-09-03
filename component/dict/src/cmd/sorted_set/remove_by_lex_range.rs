@@ -62,5 +62,3 @@ impl Write<Vec<Node>> for Req {
         }
     }
 }
-
-// todo utest

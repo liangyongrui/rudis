@@ -71,24 +71,21 @@ impl Dict {
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
-    /// todo 这里可能可以优化一下
     pub fn d_get_mut_or_insert_with<F: FnOnce() -> Value>(
         &mut self,
-        key: &Arc<[u8]>,
+        key: Arc<[u8]>,
         f: F,
     ) -> &mut Value {
-        match self.entry(key.clone()) {
+        match self.entry(key) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
                 let expires_at = o.get().expires_at;
                 if expires_at > 0 && expires_at <= now_timestamp_ms() {
-                    o.insert(f());
+                    *o.get_mut() = f();
                 }
+                o.into_mut()
             }
-            std::collections::hash_map::Entry::Vacant(e) => {
-                e.insert(f());
-            }
+            std::collections::hash_map::Entry::Vacant(e) => e.insert(f()),
         }
-        self.get_mut(key).unwrap()
     }
 }
 

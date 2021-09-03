@@ -29,7 +29,7 @@ impl From<Req> for WriteCmd {
 impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<Resp> {
-        let old = dict.d_get_mut_or_insert_with(&self.key, || Value {
+        let old = dict.d_get_mut_or_insert_with(self.key, || Value {
             data: DataType::Set(Box::new(Set::new())),
             expires_at: 0,
         });
