@@ -1,5 +1,8 @@
 # TODO
 
+## 一定要做的 TODO
+
+1. [ ] 补齐大部分 cmd
 1. [ ] make file
    - [ ] 启动配置
    - [ ] <https://github.com/mehcode/config-rs>
@@ -10,7 +13,6 @@
    1. [ ] 代码覆盖率超过 90%
    1. [ ] memtier_benchmark -n 10000 -c 200 -t 4 -R --hide-histogram
    1. [ ] Redis TCL test
-1. [ ] 异步 drop (del 或者 被 set 覆盖, 都是异步 drop)
 1. [ ] 连接权限管理
 1. [ ] 内存不够时候的淘汰机制
 1. [ ] 自定义插件
@@ -28,6 +30,11 @@
 
 (可能有用的优化, tradeoff 的优化, 没想清楚的优化)
 
+1. 直接写硬盘
+   - 单 slot 对应多 shard
+1. slot 内部还有一层 hash
+1. db cmd 和 dict cmd 合在一个文件中
+   - 便于扩展管理
 1. 各种模块化
    - DataType
    - cmd

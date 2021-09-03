@@ -35,7 +35,8 @@ pub enum ParseError {
 impl Parse {
     /// Create a new `Parse` to parse the contents of `frame`.
     ///
-    /// Returns `Err` if `frame` is not an array frame.
+    /// # Errors
+    /// if `frame` is not an array frame (or Ping).
     pub fn new(frame: Frame) -> Result<Parse, ParseError> {
         let array = match frame {
             Frame::Array(array) => array,
@@ -50,15 +51,28 @@ impl Parse {
 
     /// Return the next entry. Array frames are arrays of frames, so the next
     /// entry is a frame.
+    ///
+    /// # Errors
+    /// EndOfStream
     pub fn next_frame(&mut self) -> Result<Frame, ParseError> {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
+    /// next key
+    ///
+    /// # Errors
+    /// 1. EndOfStream
+    /// 1. not bytes
     #[inline]
     pub fn next_key(&mut self) -> Result<Arc<[u8]>, ParseError> {
         self.next_bulk()
     }
 
+    /// next bulk
+    ///
+    /// # Errors
+    /// 1. EndOfStream
+    /// 1. not bytes
     pub fn next_bulk(&mut self) -> Result<Arc<[u8]>, ParseError> {
         match self.next_frame()? {
             Frame::Bulk(b) => Ok(b),
@@ -68,7 +82,8 @@ impl Parse {
 
     /// Return the next entry as a string.
     ///
-    /// If the next entry cannot be represented as a String, then an error is returned.
+    /// # Errors
+    /// the next entry cannot be represented as a String
     pub fn next_string(&mut self) -> Result<String, ParseError> {
         match self.next_frame()? {
             // Both `Simple` and `Bulk` representation may be strings. Strings

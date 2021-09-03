@@ -5,7 +5,6 @@
 #![allow(unstable_name_collisions)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
 #![allow(clippy::let_underscore_drop)]
 
@@ -43,6 +42,13 @@ impl Connection {
         self.stream.write_all(&bytes).await
     }
 
+    /// Read a frame from connection.
+    /// Returning `None` means that the connection has ended and there are no unprocessed bytes.
+    ///
+    /// # Errors
+    /// 1. parse failed
+    /// 1. connect end
+    /// 1. other io error
     pub async fn read_frame(&mut self) -> common::Result<Option<Frame>> {
         loop {
             if let Some(frame) = self.parse_frame()? {
@@ -59,6 +65,10 @@ impl Connection {
         }
     }
 
+    /// Read a frame from the buffer.
+    ///
+    /// # Errors
+    /// parse failed
     #[inline]
     fn parse_frame(&mut self) -> common::Result<Option<Frame>> {
         let old_len = self.read_buffer.len();

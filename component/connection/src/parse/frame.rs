@@ -154,6 +154,10 @@ fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     Ok((i, Frame::Ping))
 }
 
+/// parse bytes to frame
+///
+/// # Errors
+/// parse failed
 #[inline]
 pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     alt((
