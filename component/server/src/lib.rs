@@ -1,18 +1,13 @@
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
+#![allow(clippy::shadow_unrelated)]
 #![allow(clippy::doc_markdown)]
 #![allow(unstable_name_collisions)]
-#![allow(clippy::semicolon_if_nothing_returned)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::enum_glob_use)]
-#![allow(clippy::missing_errors_doc)] //
-#![allow(clippy::single_match_else)]
+#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
-#![allow(clippy::wildcard_imports)]
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::shadow_unrelated)]
+#![allow(clippy::let_underscore_drop)]
 
 /// redis 命令
 mod cmd;
@@ -244,7 +239,7 @@ impl Handler {
 
             let res = match cmd {
                 Command::Read(o) => o.apply(&self.db),
-                Command::Write(o) => o.apply(&self.db),
+                Command::Write(o) => o.apply(&mut self.connection, &self.db).await,
                 Command::Ping => Ok(Frame::Pong),
                 Command::SyncSnapshot(o) => {
                     o.apply(self);

@@ -30,25 +30,25 @@ impl Expire {
                         if !nx_xx.is_none() {
                             return Err("`NX` or `XX` already set".into());
                         }
-                        nx_xx = NxXx::Nx
+                        nx_xx = NxXx::Nx;
                     }
                     "XX" => {
                         if !nx_xx.is_none() {
                             return Err("`NX` or `XX` already set".into());
                         }
-                        nx_xx = NxXx::Xx
+                        nx_xx = NxXx::Xx;
                     }
                     "GT" => {
                         if !gt_lt.is_none() {
                             return Err("`GT` or `LT` already set".into());
                         }
-                        gt_lt = GtLt::Gt
+                        gt_lt = GtLt::Gt;
                     }
                     "LT" => {
                         if !gt_lt.is_none() {
                             return Err("`GT` or `LT` already set".into());
                         }
-                        gt_lt = GtLt::Lt
+                        gt_lt = GtLt::Lt;
                     }
                     not_support => return Err(format!("not support cmd: {}", not_support).into()),
                 },

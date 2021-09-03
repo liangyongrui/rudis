@@ -8,7 +8,7 @@ pub struct Req<'a> {
 impl<'a> Read<DataType> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &Dict) -> common::Result<DataType> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.get(self.key) {
             return Ok(v.data.clone());
         }
         Ok(DataType::Null)

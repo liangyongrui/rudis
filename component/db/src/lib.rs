@@ -1,21 +1,13 @@
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
+#![allow(clippy::shadow_unrelated)]
 #![allow(clippy::doc_markdown)]
 #![allow(unstable_name_collisions)]
-#![allow(clippy::semicolon_if_nothing_returned)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::enum_glob_use)]
-#![allow(clippy::missing_errors_doc)] //
-#![allow(clippy::let_underscore_drop)] //
-#![allow(clippy::missing_panics_doc)] //
-#![allow(clippy::single_match_else)]
+#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
-#![allow(clippy::wildcard_imports)]
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::too_many_lines)]
-#![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::shadow_unrelated)]
+#![allow(clippy::let_underscore_drop)]
 
 pub mod child_process;
 mod expire;
@@ -25,6 +17,7 @@ mod slot;
 
 use std::{
     collections::{HashMap, HashSet},
+    process::exit,
     sync::{atomic::AtomicBool, Arc},
 };
 
@@ -38,6 +31,7 @@ use dict::{
 use forward::Forward;
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
+use tracing::error;
 
 use crate::{expire::Expiration, slot::Slot};
 
@@ -85,7 +79,10 @@ impl Db {
         });
 
         if let Some(pd) = CONFIG.from_pd {
-            pd_handle::run(db.clone(), pd).await.unwrap();
+            if let Err(e) = pd_handle::run(db.clone(), pd).await {
+                error!("{:?}", e);
+                exit(-1)
+            };
         }
 
         expiration.listen(Arc::clone(&db));

@@ -23,7 +23,7 @@ impl<'a> Read<Resp> for Req<'a> {
     fn apply(self, dict: &Dict) -> common::Result<Resp> {
         let now = now_timestamp_ms();
         let res = dict
-            .get(self.key)
+            .raw_get(self.key)
             .map(|v| v.expires_at)
             .filter(|&expires_at| expires_at == 0 || expires_at > now)
             .map_or(Resp::NotExist, |expires_at| {

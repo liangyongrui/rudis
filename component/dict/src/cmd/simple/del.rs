@@ -21,7 +21,7 @@ impl From<Req> for WriteCmd {
 impl ExpiresWrite<Option<Value>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<Option<Value>>> {
-        if dict.d_exists(&self.key) {
+        if dict.exists(&self.key) {
             let res = dict.remove(&self.key);
 
             let expires_status = res
@@ -61,7 +61,10 @@ mod test {
 
     use super::*;
     use crate::{
-        cmd::{simple::*, ExpiresStatusUpdate},
+        cmd::{
+            simple::{del, set},
+            ExpiresStatusUpdate,
+        },
         data_type::DataType,
         Dict,
     };

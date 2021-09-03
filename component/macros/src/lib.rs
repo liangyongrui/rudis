@@ -1,3 +1,15 @@
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::shadow_unrelated)]
+#![allow(clippy::doc_markdown)]
+#![allow(unstable_name_collisions)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::let_underscore_drop)]
+#![allow(clippy::too_many_lines)]
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, DeriveInput};
@@ -7,13 +19,11 @@ mod utils;
 #[proc_macro_derive(ParseFrames)]
 pub fn derive(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
-    do_derive(ast)
-        .unwrap_or_else(syn::Error::into_compile_error)
-        .into()
+    do_derive(&ast).into()
 }
-fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
+fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let struct_name = &ast.ident;
-    let read_token = utils::derive_get_struct_fields(&ast)
+    let read_token = utils::derive_get_struct_fields(ast)
         .unwrap()
         .iter()
         .map(|field| {
@@ -150,7 +160,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
         })
         .collect::<Vec<_>>();
 
-    let self_token = utils::derive_get_struct_fields(&ast)
+    let self_token = utils::derive_get_struct_fields(ast)
         .unwrap()
         .iter()
         .map(|field| {
@@ -159,7 +169,7 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
         })
         .collect::<proc_macro2::TokenStream>();
 
-    let res = quote! {
+    quote! {
         impl #struct_name {
             pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Self> {
                 #(#read_token)*
@@ -168,6 +178,5 @@ fn do_derive(ast: DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                 })
             }
         }
-    };
-    Ok(res)
+    }
 }

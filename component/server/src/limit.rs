@@ -24,7 +24,7 @@ impl Limit {
         //
         // `acquire()` returns `Err` when the semaphore has been closed. We
         // don't ever close the sempahore, so `unwrap()` is safe.
-        self.0.acquire().await.unwrap().forget()
+        self.0.acquire().await.unwrap().forget();
     }
 }
 

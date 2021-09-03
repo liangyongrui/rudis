@@ -1,7 +1,9 @@
 use std::sync::Arc;
 
+use connection::Connection;
 use db::Db;
 use macros::ParseFrames;
+use tracing::error;
 
 use crate::Frame;
 /// https://redis.io/commands/del
@@ -11,19 +13,25 @@ pub struct Del {
 }
 
 impl Del {
-    #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    #[tracing::instrument(skip(self, connection, db), level = "debug")]
+    pub async fn apply(self, connection: &mut Connection, db: &Db) -> common::Result<Frame> {
         let mut res = 0;
+        let mut delay = Vec::with_capacity(self.keys.len());
         for cmd in self
             .keys
             .into_iter()
             .map(|key| dict::cmd::simple::del::Req { key })
         {
-            if db.del(cmd)?.is_some() {
+            let r = db.del(cmd)?;
+            if r.is_some() {
                 res += 1;
             }
+            delay.push(r);
         }
         let response = Frame::Integer(res);
-        Ok(response)
+        if let Err(e) = connection.write_frame(&response).await {
+            error!("{:?}", e);
+        }
+        Ok(Frame::NoRes)
     }
 }

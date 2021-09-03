@@ -23,7 +23,7 @@ pub struct Req<'a> {
 impl Read<Vec<data_type::sorted_set::Node>> for Req<'_> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &Dict) -> common::Result<Vec<data_type::sorted_set::Node>> {
-        if let Some(value) = dict.d_get(self.key) {
+        if let Some(value) = dict.get(self.key) {
             if let DataType::SortedSet(ref ss) = value.data {
                 let value = &ss.value;
                 let bigger_range = super::bigger_range(self.range);

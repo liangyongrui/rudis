@@ -324,6 +324,7 @@ dependencies = [
  "flume",
  "parking_lot",
  "serde 1.0.130",
+ "tokio",
  "tracing",
 ]
 

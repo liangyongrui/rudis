@@ -24,7 +24,7 @@ impl From<Req> for WriteCmd {
 impl ExpiresWrite<bool> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<bool>> {
-        dict.d_get_mut(&self.key).map_or(
+        dict.get_mut(&self.key).map_or(
             Ok(ExpiresWriteResp {
                 payload: false,
                 expires_status: ExpiresStatus::None,
@@ -79,7 +79,8 @@ mod test {
 
     use crate::{
         cmd::{
-            simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
+            simple::{exists, expire, set},
+            ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
         },
         data_type::DataType,
         Dict,

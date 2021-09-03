@@ -8,7 +8,7 @@ pub struct Req<'a> {
 impl<'a> Read<usize> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &Dict) -> common::Result<usize> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.get(self.key) {
             return if let DataType::Deque(ref deque) = v.data {
                 Ok(deque.len())
             } else {
@@ -25,7 +25,10 @@ mod test {
     use common::options::NxXx;
 
     use crate::{
-        cmd::{deque::*, Read, Write},
+        cmd::{
+            deque::{len, push},
+            Read, Write,
+        },
         Dict,
     };
 

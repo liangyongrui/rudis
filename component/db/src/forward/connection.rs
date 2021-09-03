@@ -26,7 +26,7 @@ impl ForwardConnections {
                 tokio::spawn(async move {
                     let (tx, rx) = flume::unbounded();
                     fc.0.lock().push(tx);
-                    new_connect_task(stream, rx).await.unwrap()
+                    new_connect_task(stream, rx).await.unwrap();
                 });
             }
         });

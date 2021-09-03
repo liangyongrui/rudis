@@ -219,5 +219,6 @@ mod test {
         })
         .unwrap();
         sleep(Duration::from_secs(2)).await;
+        {}
     }
 }

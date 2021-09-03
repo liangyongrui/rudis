@@ -33,7 +33,7 @@ impl From<Req> for WriteCmd {
 impl Write<Resp> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<Resp> {
-        if let Some(v) = dict.d_get_mut(&self.key) {
+        if let Some(v) = dict.get_mut(&self.key) {
             if let DataType::Deque(ref mut deque) = v.data {
                 let old_len = deque.len();
                 if self.nx_xx.is_nx() {
@@ -94,7 +94,10 @@ mod test {
     use common::options::NxXx;
 
     use crate::{
-        cmd::{deque::*, Read, Write},
+        cmd::{
+            deque::{push, range},
+            Read, Write,
+        },
         Dict,
     };
 

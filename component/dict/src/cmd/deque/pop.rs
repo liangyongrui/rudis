@@ -24,17 +24,17 @@ impl From<Req> for WriteCmd {
 impl Write<Vec<DataType>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<Vec<DataType>> {
-        if let Some(v) = dict.d_get_mut(&self.key) {
+        if let Some(v) = dict.get_mut(&self.key) {
             return if let DataType::Deque(ref mut deque) = v.data {
                 let mut res = vec![];
                 let count = self.count.min(deque.len());
                 if self.left {
                     for _ in 0..count {
-                        res.push(deque.pop_front().unwrap())
+                        res.push(deque.pop_front().unwrap());
                     }
                 } else {
                     for _ in 0..count {
-                        res.push(deque.pop_back().unwrap())
+                        res.push(deque.pop_back().unwrap());
                     }
                 }
                 Ok(res)
@@ -51,7 +51,10 @@ mod test {
     use common::options::NxXx;
 
     use crate::{
-        cmd::{deque::*, Write},
+        cmd::{
+            deque::{pop, push},
+            Write,
+        },
         Dict,
     };
 

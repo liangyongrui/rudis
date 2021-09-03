@@ -92,6 +92,7 @@ impl TryFrom<&DataType> for f64 {
         let res = match value {
             DataType::String(s) => s.to_string().parse()?,
             DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
+            #[allow(clippy::cast_precision_loss)]
             DataType::Integer(i) => *i as _,
             DataType::Float(f) => f.0,
             _ => {

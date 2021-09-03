@@ -16,6 +16,7 @@ pub struct Get {
     /// Name of the key to get
     pub key: Arc<[u8]>,
 }
+
 impl<'a> From<&'a Get> for dict::cmd::simple::get::Req<'a> {
     fn from(old: &'a Get) -> Self {
         Self { key: &old.key }

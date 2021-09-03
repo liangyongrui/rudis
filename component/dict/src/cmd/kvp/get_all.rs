@@ -13,7 +13,7 @@ impl<'a> Read<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> for Req<'a> {
         self,
         dict: &Dict,
     ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.get(self.key) {
             return if let DataType::Kvp(ref kvp) = v.data {
                 Ok(kvp.inner.clone())
             } else {

@@ -1,3 +1,14 @@
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::shadow_unrelated)]
+#![allow(clippy::doc_markdown)]
+#![allow(unstable_name_collisions)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::missing_errors_doc)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::let_underscore_drop)]
+
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 /// A specialized `Result` type for rcc operations.
@@ -34,6 +45,11 @@ impl<T> BoundExt<T> for Bound<T> {
     }
 }
 
+/// get now millisecond timestamp
+///
+/// # Panics
+///
+/// No panic.
 #[inline]
 pub fn now_timestamp_ms() -> u64 {
     SystemTime::now()

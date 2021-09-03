@@ -29,10 +29,10 @@ impl Deque {
             return (0, 0);
         }
         if start < 0 {
-            start = 0
+            start = 0;
         }
         if stop >= len {
-            stop = len - 1
+            stop = len - 1;
         }
         (start as usize, stop as usize + 1)
     }

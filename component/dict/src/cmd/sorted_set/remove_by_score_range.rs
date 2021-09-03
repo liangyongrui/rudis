@@ -27,7 +27,7 @@ impl From<Req> for WriteCmd {
 impl Write<Vec<Node>> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<Vec<Node>> {
-        if let Some(old) = dict.d_get_mut(&self.key) {
+        if let Some(old) = dict.get_mut(&self.key) {
             if let DataType::SortedSet(ref mut sorted_set) = old.data {
                 let mut res = vec![];
                 let bigger_range = super::bigger_range(self.range);
@@ -38,7 +38,7 @@ impl Write<Vec<Node>> for Req {
                         if self.range.contains(&n.score) {
                             sorted_set.value.remove(n);
                             if let Some(n) = sorted_set.hash.remove(&n.key) {
-                                res.push(n)
+                                res.push(n);
                             }
                         }
                     }
@@ -47,7 +47,7 @@ impl Write<Vec<Node>> for Req {
                         if self.range.contains(&n.score) {
                             sorted_set.value.remove(n);
                             if let Some(n) = sorted_set.hash.remove(&n.key) {
-                                res.push(n)
+                                res.push(n);
                             }
                         }
                     }

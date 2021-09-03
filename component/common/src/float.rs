@@ -33,6 +33,6 @@ impl Ord for Float {
 impl hash::Hash for Float {
     #[inline]
     fn hash<H: hash::Hasher>(&self, state: &mut H) {
-        self.0.to_be_bytes().hash(state)
+        self.0.to_be_bytes().hash(state);
     }
 }

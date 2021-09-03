@@ -77,7 +77,7 @@ impl PdHandle {
             let status: Option<ServerStatus> = bincode::deserialize(&self.read_bytes().await?)?;
             if let Some(status) = status {
                 if let Err(e) = self.update_status(status) {
-                    error!("{:?}", e)
+                    error!("{:?}", e);
                 }
             }
         }

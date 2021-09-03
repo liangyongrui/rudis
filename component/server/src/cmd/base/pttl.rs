@@ -18,6 +18,7 @@ impl Pttl {
         let response = Frame::Integer(match res {
             dict::cmd::simple::ttl::Resp::None => -1,
             dict::cmd::simple::ttl::Resp::NotExist => -2,
+            #[allow(clippy::cast_possible_wrap)]
             dict::cmd::simple::ttl::Resp::Ttl(i) => i as i64,
         });
         Ok(response)

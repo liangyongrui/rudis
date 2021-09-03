@@ -26,6 +26,8 @@ pub enum Frame {
     Bulk(Arc<[u8]>),
     Null,
     Array(Vec<Frame>),
+    /// not transfer
+    NoRes,
 }
 
 impl Frame {
@@ -60,6 +62,7 @@ impl fmt::Display for Frame {
             }
             Frame::Ping => write!(fmt, "PING"),
             Frame::Pong => write!(fmt, "PONG"),
+            Frame::NoRes => write!(fmt, "NoRes"),
         }
     }
 }
@@ -139,7 +142,7 @@ fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         for _ in 0..len {
             let (ni, f) = parse(i)?;
             res.push(f);
-            i = ni
+            i = ni;
         }
         Ok((i, Frame::Array(res)))
     }
@@ -199,12 +202,16 @@ impl Frame {
             }
             Frame::Ping => res.extend_from_slice(b"+PING\r\n"),
             Frame::Pong => res.extend_from_slice(b"+PONG\r\n"),
+            Frame::NoRes => {}
         }
     }
 }
 
 impl From<&Frame> for Vec<u8> {
     fn from(frame: &Frame) -> Self {
+        if let Frame::NoRes = frame {
+            return vec![];
+        }
         let mut res = Vec::with_capacity(128);
         frame.write(&mut res);
         res

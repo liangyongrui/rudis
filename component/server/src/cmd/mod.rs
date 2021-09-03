@@ -5,7 +5,10 @@ mod set;
 mod sorted_set;
 mod syncsnapshot;
 
-use connection::parse::{frame::Frame, Parse};
+use connection::{
+    parse::{frame::Frame, Parse},
+    Connection,
+};
 use db::Db;
 
 use self::{
@@ -217,13 +220,17 @@ impl Command {
 
 impl Write {
     #[inline]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        use Write::*;
+    pub async fn apply(self, connection: &mut Connection, db: &Db) -> common::Result<Frame> {
+        use Write::{
+            Decr, Decrby, Del, Expire, Expireat, Hdel, Hincrby, Hset, Hsetnx, Incr, Incrby, Lpop,
+            Lpush, Lpushx, Pexpire, Pexpireat, Psetex, Rpop, Rpush, Rpushx, Sadd, Set, Setex, Srem,
+            Zadd, Zrem, Zremrangebylex, Zremrangebyrank, Zremrangebyscore,
+        };
         match self {
-            Set(cmd) => cmd.apply(db),
+            Set(cmd) => cmd.apply(connection, db).await,
             Psetex(cmd) => cmd.apply(db),
             Setex(cmd) => cmd.apply(db),
-            Del(cmd) => cmd.apply(db),
+            Del(cmd) => cmd.apply(connection, db).await,
             Pexpireat(cmd) => cmd.apply(db),
             Expireat(cmd) => cmd.apply(db),
             Expire(cmd) => cmd.apply(db),
@@ -256,7 +263,11 @@ impl Write {
 impl Read {
     #[inline]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        use Read::*;
+        use Read::{
+            Exists, Get, Hexists, Hget, Hgetall, Hmget, Llen, Lrange, Pttl, Sismember, Smembers,
+            Smismember, Ttl, Zrange, Zrangebylex, Zrangebyscore, Zrank, Zrevrange, Zrevrangebylex,
+            Zrevrangebyscore, Zrevrank,
+        };
 
         match self {
             Get(cmd) => cmd.apply(db),

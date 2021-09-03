@@ -9,7 +9,7 @@ pub struct Req<'a> {
 impl<'a> Read<Vec<bool>> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &Dict) -> common::Result<Vec<bool>> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.get(self.key) {
             return if let DataType::Set(ref set) = v.data {
                 Ok(self
                     .fields

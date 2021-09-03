@@ -1,30 +1,17 @@
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
+#![allow(clippy::shadow_unrelated)]
 #![allow(clippy::doc_markdown)]
 #![allow(unstable_name_collisions)]
-#![allow(clippy::semicolon_if_nothing_returned)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::enum_glob_use)]
-#![allow(clippy::missing_errors_doc)] //
-#![allow(clippy::let_underscore_drop)] //
-#![allow(clippy::missing_panics_doc)] //
-#![allow(clippy::single_match_else)]
+#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
-#![allow(clippy::wildcard_imports)]
-#![allow(clippy::cast_precision_loss)]
-#![allow(clippy::too_many_lines)]
-#![allow(clippy::cast_possible_wrap)]
-#![allow(clippy::shadow_unrelated)]
 
 pub mod cmd;
 pub mod data_type;
 
-use std::{
-    collections::HashMap,
-    ops::{Deref, DerefMut},
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 
 use common::now_timestamp_ms;
 use data_type::DataType;
@@ -55,28 +42,31 @@ impl Dict {
     }
 
     #[inline]
-    pub fn d_exists(&self, key: &[u8]) -> bool {
-        self.d_get(key).is_some()
+    pub fn exists(&self, key: &[u8]) -> bool {
+        self.get(key).is_some()
     }
 
     #[inline]
-    pub fn d_get(&self, key: &[u8]) -> Option<&Value> {
-        self.get(key)
+    pub fn get(&self, key: &[u8]) -> Option<&Value> {
+        self.inner
+            .get(key)
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
     #[inline]
-    pub fn d_get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
-        self.get_mut(key)
+    pub fn get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
+        self.inner
+            .get_mut(key)
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
-    pub fn d_get_mut_or_insert_with<F: FnOnce() -> Value>(
+    #[inline]
+    pub fn get_mut_or_insert_with<F: FnOnce() -> Value>(
         &mut self,
         key: Arc<[u8]>,
         f: F,
     ) -> &mut Value {
-        match self.entry(key) {
+        match self.inner.entry(key) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
                 let expires_at = o.get().expires_at;
                 if expires_at > 0 && expires_at <= now_timestamp_ms() {
@@ -87,18 +77,29 @@ impl Dict {
             std::collections::hash_map::Entry::Vacant(e) => e.insert(f()),
         }
     }
-}
 
-impl Deref for Dict {
-    type Target = HashMap<Arc<[u8]>, Value, ahash::RandomState>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.inner
+    #[inline]
+    pub fn remove(&mut self, key: &[u8]) -> Option<Value> {
+        self.inner.remove(key)
     }
-}
 
-impl DerefMut for Dict {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
+    #[inline]
+    pub fn insert(&mut self, k: Arc<[u8]>, v: Value) -> Option<Value> {
+        self.inner.insert(k, v)
+    }
+
+    #[inline]
+    pub fn raw_get(&self, k: &[u8]) -> Option<&Value> {
+        self.inner.get(k)
+    }
+
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 }

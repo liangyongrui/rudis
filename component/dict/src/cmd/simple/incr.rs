@@ -23,7 +23,7 @@ impl From<Req> for WriteCmd {
 impl Write<i64> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<i64> {
-        if let Some(v) = dict.d_get_mut(&self.key) {
+        if let Some(v) = dict.get_mut(&self.key) {
             let old: i64 = (&v.data).try_into()?;
             let new = old + self.value;
             v.data = DataType::Integer(new);
@@ -44,7 +44,7 @@ impl Write<i64> for Req {
 #[cfg(test)]
 mod test {
     use crate::{
-        cmd::{simple::*, Write},
+        cmd::{simple::incr, Write},
         Dict,
     };
 

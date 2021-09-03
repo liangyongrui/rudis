@@ -8,7 +8,7 @@ pub struct Req<'a> {
 impl<'a> Read<bool> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &Dict) -> common::Result<bool> {
-        Ok(dict.d_exists(self.key))
+        Ok(dict.exists(self.key))
     }
 }
 
@@ -21,7 +21,8 @@ mod test {
 
     use crate::{
         cmd::{
-            simple::*, ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
+            simple::{exists, set},
+            ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
         },
         data_type::DataType,
         Dict,

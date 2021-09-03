@@ -57,7 +57,7 @@ impl ExpiresWrite<DataType> for Req {
         }
 
         let key = self.key.clone();
-        if let Some(old) = dict.d_get(&self.key) {
+        if let Some(old) = dict.get(&self.key) {
             if self.nx_xx.is_nx() {
                 return Ok(ExpiresWriteResp {
                     payload: old.data.clone(),
@@ -124,6 +124,7 @@ impl ExpiresWrite<DataType> for Req {
 }
 
 #[cfg(test)]
+#[allow(clippy::too_many_lines)]
 mod test {
     use std::thread::sleep;
 

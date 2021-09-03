@@ -4,9 +4,13 @@ use common::{
     now_timestamp_ms,
     options::{ExpiresAt, NxXx},
 };
-use connection::parse::{frame::Frame, Parse};
+use connection::{
+    parse::{frame::Frame, Parse},
+    Connection,
+};
 use db::Db;
 use dict::data_type::DataType;
+use tracing::error;
 
 use crate::frame_parse::data_type_to_frame;
 
@@ -66,13 +70,13 @@ impl Set {
                         if !nx_xx.is_none() {
                             return Err("`NX` or `XX` already set".into());
                         }
-                        nx_xx = NxXx::Nx
+                        nx_xx = NxXx::Nx;
                     }
                     "XX" => {
                         if !nx_xx.is_none() {
                             return Err("`NX` or `XX` already set".into());
                         }
-                        nx_xx = NxXx::Xx
+                        nx_xx = NxXx::Xx;
                     }
                     "EX" => {
                         if expires_at > 0 {
@@ -127,8 +131,8 @@ impl Set {
         })
     }
 
-    #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    #[tracing::instrument(skip(self, connection, db), level = "debug")]
+    pub async fn apply(self, connection: &mut Connection, db: &Db) -> common::Result<Frame> {
         let get = self.get;
         let res = db.set(self.into())?;
         let response = if get {
@@ -136,6 +140,9 @@ impl Set {
         } else {
             Frame::ok()
         };
-        Ok(response)
+        if let Err(e) = connection.write_frame(&response).await {
+            error!("{:?}", e);
+        }
+        Ok(Frame::NoRes)
     }
 }

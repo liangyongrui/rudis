@@ -37,12 +37,11 @@ impl Shutdown {
     /// Returns `true` if the shutdown signal has been received.
     #[inline]
     pub fn check_shutdown(&mut self) -> bool {
-        match self.notify.try_recv() {
-            Err(TryRecvError::Empty) => false,
-            _ => {
-                self.shutdown = true;
-                true
-            }
+        if let Err(TryRecvError::Empty) = self.notify.try_recv() {
+            false
+        } else {
+            self.shutdown = true;
+            true
         }
     }
 

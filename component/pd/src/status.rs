@@ -47,47 +47,52 @@ struct Server {
 pub fn create_group() {
     let status = &mut *STATUS.write();
     status.latest_group_id += 1;
-    status.groups.push(Group::new(status.latest_group_id))
+    status.groups.push(Group::new(status.latest_group_id));
 }
 
 /// 初始化服务器
-pub fn server_init(data: ServerInit) -> common::Result<ServerStatus> {
+pub fn server_init(data: &ServerInit) -> common::Result<ServerStatus> {
     let status = &mut *STATUS.write();
-    if let Some(g) = status.groups.iter_mut().find(|t| t.id == data.group_id) {
-        g.latest_server_id += 1;
-        let is_follower = g.servers.iter().any(|t| t.role == ServerRole::Leader);
-        let role = if is_follower {
-            ServerRole::Follower
-        } else {
-            ServerRole::Leader
-        };
-        let now = now_timestamp_ms();
-        let server = Server {
-            id: g.latest_server_id,
-            latest_heartbeat: now,
-            role,
-            server_addr: data.server_addr,
-            forward_addr: data.forward_addr,
-            join_time: now,
-        };
-        if let ServerRole::Leader = role {
-            g.leader = Some(LeaderInfo {
-                server_id: server.id,
-                server_addr: server.server_addr,
-                forward_addr: server.forward_addr,
-            });
-        }
-        let res = ServerStatus {
-            server_id: server.id,
-            group_id: g.id,
-            role,
-            current_leader: g.leader,
-        };
-        g.servers.push(server);
-        Ok(res)
-    } else {
-        Err("group not exists.".into())
-    }
+    status
+        .groups
+        .iter_mut()
+        .find(|t| t.id == data.group_id)
+        .map_or_else(
+            || Err("group not exists.".into()),
+            |g| {
+                g.latest_server_id += 1;
+                let is_follower = g.servers.iter().any(|t| t.role == ServerRole::Leader);
+                let role = if is_follower {
+                    ServerRole::Follower
+                } else {
+                    ServerRole::Leader
+                };
+                let now = now_timestamp_ms();
+                let server = Server {
+                    id: g.latest_server_id,
+                    latest_heartbeat: now,
+                    role,
+                    server_addr: data.server_addr,
+                    forward_addr: data.forward_addr,
+                    join_time: now,
+                };
+                if let ServerRole::Leader = role {
+                    g.leader = Some(LeaderInfo {
+                        server_id: server.id,
+                        server_addr: server.server_addr,
+                        forward_addr: server.forward_addr,
+                    });
+                }
+                let res = ServerStatus {
+                    server_id: server.id,
+                    group_id: g.id,
+                    role,
+                    current_leader: g.leader,
+                };
+                g.servers.push(server);
+                Ok(res)
+            },
+        )
 }
 impl Status {
     /// 获取节点的最新状态
@@ -123,13 +128,13 @@ impl Status {
 }
 
 /// SEVER_HEARTBEAT
-pub fn server_heartbeat(data: ServerStatus) -> Option<ServerStatus> {
+pub fn server_heartbeat(data: &ServerStatus) -> Option<ServerStatus> {
     let status = &mut *STATUS.write();
     let res = status.heartbeat_server(data.group_id, data.server_id)?;
-    if data != res {
-        Some(res)
-    } else {
+    if data == &res {
         None
+    } else {
+        Some(res)
     }
 }
 

@@ -6,6 +6,7 @@ pub mod incr;
 pub mod set;
 
 #[cfg(test)]
+#[allow(clippy::too_many_lines)]
 mod test {
 
     use common::options::NxXx;

@@ -33,9 +33,9 @@ impl Inner {
     async fn wait_slot(&self, slot_id: usize) {
         loop {
             if self.snapshot_lock[slot_id].load(std::sync::atomic::Ordering::Acquire) {
-                self.notify_lock_update.notified().await
+                self.notify_lock_update.notified().await;
             } else {
-                return;
+                break;
             }
         }
     }
@@ -53,7 +53,7 @@ impl Inner {
 
         tokio::task::spawn_blocking(move || {
             if let Err(e) = self.sync_snapshot_without_lock(slot_id) {
-                error!("{:?}", e)
+                error!("{:?}", e);
             }
         });
 
@@ -120,7 +120,7 @@ impl Inner {
         let stream = BufReader::new(stream);
         tokio::task::spawn_blocking(move || {
             if let Err(e) = receive_cmd(&tx, stream) {
-                error!("{:?}", e)
+                error!("{:?}", e);
             }
         });
         self.cmd_rx.store(Some(Arc::new(rx)));
@@ -133,7 +133,7 @@ impl Task {
     pub fn new(db: Arc<Db>) -> Self {
         let mut snapshot_lock = Vec::with_capacity(SLOT_SIZE);
         for _ in 0..SLOT_SIZE {
-            snapshot_lock.push(AtomicBool::new(false))
+            snapshot_lock.push(AtomicBool::new(false));
         }
         Self {
             inner: Arc::new(Inner {
@@ -155,7 +155,7 @@ impl Task {
     }
 
     pub fn close_sync_cmd(&self) {
-        self.inner.cmd_rx.store(None)
+        self.inner.cmd_rx.store(None);
     }
     pub fn sync_cmd(&self) -> common::Result<()> {
         self.inner.clone().sync_cmd()

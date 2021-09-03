@@ -18,7 +18,7 @@ pub struct Req<'a> {
 impl<'a> Read<Vec<DataType>> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &Dict) -> common::Result<Vec<DataType>> {
-        if let Some(v) = dict.d_get(self.key) {
+        if let Some(v) = dict.get(self.key) {
             return if let DataType::Deque(ref deque) = v.data {
                 let (b, e) = deque.shape(self.start, self.stop);
                 Ok(deque.range(b..e).cloned().collect())

@@ -51,7 +51,7 @@ impl Handle {
                 Some(frame) => frame,
                 None => return Ok(()),
             };
-            let res = self.apply_frame(frame);
+            let res = Self::apply_frame(frame);
             let res = match res {
                 Ok(f) => f,
                 Err(e) => Frame::Error(e.to_string()),
@@ -60,13 +60,13 @@ impl Handle {
         }
     }
 
-    pub fn apply_frame(&self, frame: Frame) -> common::Result<Frame> {
+    pub fn apply_frame(frame: Frame) -> common::Result<Frame> {
         let parse = &mut Parse::new(frame)?;
         let command_name = parse.next_string()?.to_lowercase();
         match &command_name[..] {
             common::pd_message::cmd::SEVER_INIT => server_init_apply(parse),
             common::pd_message::cmd::SEVER_HEARTBEAT => server_heartbeat_apply(parse),
-            common::pd_message::cmd::CRATE_GROUP => crate_group_apply(),
+            common::pd_message::cmd::CRATE_GROUP => Ok(crate_group_apply()),
             _ => Ok(Frame::ok()),
         }
     }
