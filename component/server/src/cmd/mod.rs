@@ -2,30 +2,37 @@ mod base;
 mod hash;
 mod list;
 mod set;
-mod syncsnapshot;
 mod sorted_set;
+mod syncsnapshot;
 
 use connection::parse::{frame::Frame, Parse};
 use db::Db;
 
-use self::{base::{
+use self::{
+    base::{
         decr::Decr, decrby::Decrby, del::Del, exists::Exists, expire::Expire, expireat::Expireat,
         get::Get, incr::Incr, incrby::Incrby, pexpire::Pexpire, pexpireat::Pexpireat,
         psetex::Psetex, pttl::Pttl, set::Set, setex::Setex, ttl::Ttl, unknown::Unknown,
-    }, hash::{
+    },
+    hash::{
         hdel::Hdel, hexists::Hexists, hget::Hget, hgetall::Hgetall, hincrby::Hincrby, hmget::Hmget,
         hset::Hset, hsetnx::Hsetnx,
-    }, list::{
+    },
+    list::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
-    }, set::{
+    },
+    set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
-    }, sorted_set::{
+    },
+    sorted_set::{
         zadd::Zadd, zrange::Zrange, zrangebylex::Zrangebylex, zrangebyscore::Zrangebyscore,
         zrank::Zrank, zrem::Zrem, zremrangebylex::Zremrangebylex, zremrangebyrank::Zremrangebyrank,
         zremrangebyscore::Zremrangebyscore, zrevrange::Zrevrange, zrevrangebylex::Zrevrangebylex,
         zrevrangebyscore::Zrevrangebyscore, zrevrank::Zrevrank,
-    }, syncsnapshot::SyncSnapshot};
+    },
+    syncsnapshot::SyncSnapshot,
+};
 
 /// Enumeration of supported Redis commands.
 ///

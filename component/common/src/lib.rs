@@ -62,3 +62,5 @@ pub const SYNC_SNAPSHOT: &[u8] = b"*1\r\n$12\r\nsyncsnapshot\r\n";
 pub const SYNC_CMD: &[u8] = b"*1\r\n$7\r\nsynccmd\r\n";
 pub const SYNC_CMD_PING: &[u8] = b"*1\r\n$11\r\nsynccmdping\r\n";
 pub const OK_FRAME: &[u8] = b"+OK\r\n";
+
+pub const SLOT_SIZE: usize = 16384;

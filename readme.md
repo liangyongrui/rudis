@@ -13,16 +13,11 @@ rust cloud cache
 
 ## todo list
 
-1. [ ] 单点 pd
-   - [ ] 服务注册 pd 启动
-   - [ ] 独立启动
-1. [ ] 主从
-   - [ ] 可靠的主从复制
-   - [ ] pd, 用来协调主从
 1. [ ] 各个 task 的优雅退出
 1. [ ] 规范每个模块的命名
 1. [ ] thiserror
 1. [ ] 检查代码中的 todo 和 各种可能的 panic
+1. [ ] 再次检查主从复制的逻辑
 1. [ ] roadmap
 1. [ ] 起个好名字
    - rudis(**ru**sty **di**ctionary **s**erver)

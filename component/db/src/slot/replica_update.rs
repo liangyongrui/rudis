@@ -32,20 +32,22 @@ impl Slot {
             cmd::WriteCmd::None => Ordering::Equal,
         }
     }
+
     fn call_update<T, C: Write<T> + Clone>(&self, id: u64, cmd: C) -> Ordering {
-        if let Some(s) = &mut *self.share_status.write() {
-            match id.cmp(&(s.dict.last_write_op_id() + 1)) {
-                Ordering::Less => Ordering::Less,
-                Ordering::Equal => {
-                    s.dict.write_id = id;
-                    let _ = cmd.apply(s.dict.borrow_mut());
-                    Ordering::Equal
+        self.share_status
+            .write()
+            .as_mut()
+            .map_or(Ordering::Greater, |s| {
+                match id.cmp(&(s.dict.last_write_op_id() + 1)) {
+                    Ordering::Less => Ordering::Less,
+                    Ordering::Equal => {
+                        s.dict.write_id = id;
+                        let _ = cmd.apply(s.dict.borrow_mut());
+                        Ordering::Equal
+                    }
+                    Ordering::Greater => Ordering::Greater,
                 }
-                Ordering::Greater => Ordering::Greater,
-            }
-        } else {
-            Ordering::Greater
-        }
+            })
     }
 
     pub fn call_expires_update<T, C: ExpiresWrite<T> + Clone>(&self, id: u64, cmd: C) -> Ordering {

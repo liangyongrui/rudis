@@ -1,3 +1,22 @@
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::doc_markdown)]
+#![allow(unstable_name_collisions)]
+#![allow(clippy::semicolon_if_nothing_returned)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::enum_glob_use)]
+#![allow(clippy::missing_errors_doc)] //
+#![allow(clippy::let_underscore_drop)] //
+#![allow(clippy::missing_panics_doc)] //
+#![allow(clippy::single_match_else)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::wildcard_imports)]
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::too_many_lines)]
+#![allow(clippy::cast_possible_wrap)]
+#![allow(clippy::shadow_unrelated)]
+
 pub mod child_process;
 mod expire;
 mod forward;
@@ -9,7 +28,7 @@ use std::{
     sync::{atomic::AtomicBool, Arc},
 };
 
-use common::config::CONFIG;
+use common::{config::CONFIG, SLOT_SIZE};
 use crc::Crc;
 use dict::{
     cmd,
@@ -20,7 +39,7 @@ use forward::Forward;
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
 
-use crate::{expire::Expiration, forward::Message, slot::Slot};
+use crate::{expire::Expiration, slot::Slot};
 
 #[derive(Clone)]
 pub struct BgTask {
@@ -43,7 +62,6 @@ pub struct Db {
 }
 
 // https://redis.io/topics/cluster-spec
-pub const SLOT_SIZE: usize = 16384;
 const SIZE_MOD: u16 = 16383;
 const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
 
@@ -65,6 +83,7 @@ impl Db {
             read_only: AtomicBool::new(false),
             role: Mutex::new(Role::Master),
         });
+
         if let Some(pd) = CONFIG.from_pd {
             pd_handle::run(db.clone(), pd).await.unwrap();
         }
@@ -251,51 +270,5 @@ impl Db {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.get_slot(&cmd.key)
             .sorted_set_remove_by_score_range(cmd)
-    }
-}
-
-impl Db {
-    pub fn process_forward(&self, Message { id, slot, cmd }: Message) {
-        // match cmd {
-        //     cmd::WriteCmd::Del(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
-        //     cmd::WriteCmd::Expire(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
-        //     cmd::WriteCmd::Incr(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::Set(req) => self.get_slot_by_id(&slot).call_expires_update(id, req),
-        //     cmd::WriteCmd::KvpDel(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::KvpIncr(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::KvpSet(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::DequePop(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::DequePush(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::SetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::SetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::SortedSetAdd(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::SortedSetRemove(req) => self.get_slot_by_id(&slot).call_update(id, req),
-        //     cmd::WriteCmd::SortedSetRemoveByRankRange(req) => {
-        //         self.get_slot_by_id(&slot).call_update(id, req)
-        //     }
-        //     cmd::WriteCmd::SortedSetRemoveByScoreRange(req) => {
-        //         self.get_slot_by_id(&slot).call_update(id, req)
-        //     }
-        //     cmd::WriteCmd::SortedSetRemoveByLexRange(req) => {
-        //         self.get_slot_by_id(&slot).call_update(id, req)
-        //     }
-        //     cmd::WriteCmd::None => (),
-        // }
-    }
-}
-
-#[cfg(test)]
-mod test {
-    #[test]
-    fn test() {
-        let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-        let s = &v[2..10];
-        let a = s.iter().position(|t| *t == 5).unwrap();
-        assert_eq!(a, 3);
-        let s2 = &s[a..];
-        assert_eq!(s2, &[5, 6, 7, 8, 9]);
-        let b = s2.iter().position(|t| *t == 7).unwrap();
-        assert_eq!(b, 2);
-        assert_eq!(&s[a..a + b + 1], &[5, 6, 7]);
     }
 }

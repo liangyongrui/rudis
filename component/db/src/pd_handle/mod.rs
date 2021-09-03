@@ -11,6 +11,7 @@ use common::{
 };
 use connection::{parse::frame::Frame, Connection};
 use tokio::net::TcpStream;
+use tracing::error;
 
 use crate::Db;
 
@@ -19,16 +20,16 @@ pub async fn run(db: Arc<Db>, pd: Pd) -> common::Result<()> {
     let handle = PdHandle {
         connection,
         pd,
-        db,
         latest_status: ServerStatus::default(),
+        replica_task: replica::Task::new(db),
     };
     handle.init().await
 }
 struct PdHandle {
     connection: Connection,
     pd: Pd,
-    db: Arc<Db>,
     latest_status: ServerStatus,
+    replica_task: replica::Task,
 }
 
 impl PdHandle {
@@ -75,20 +76,28 @@ impl PdHandle {
                 .await?;
             let status: Option<ServerStatus> = bincode::deserialize(&self.read_bytes().await?)?;
             if let Some(status) = status {
-                self.update_status(status)?;
+                if let Err(e) = self.update_status(status) {
+                    error!("{:?}", e)
+                }
             }
         }
     }
 
-    fn update_status(&self, status: ServerStatus) -> common::Result<()> {
+    fn update_status(&mut self, status: ServerStatus) -> common::Result<()> {
         match (self.latest_status.role, status.role) {
             (_, ServerRole::Follower)
                 if self.latest_status.current_leader != status.current_leader =>
             {
                 // update leader
+                self.replica_task.update_leader(status.current_leader);
+                self.replica_task.sync_all_snapshot()?;
+                self.replica_task.sync_cmd()?;
+                self.latest_status = status;
             }
             (ServerRole::Follower, ServerRole::Leader) => {
                 // 自己变成leader
+                self.replica_task.close_sync_cmd();
+                self.latest_status = status;
             }
             _ => {
                 // do nothing

@@ -1,5 +1,6 @@
 use std::process::exit;
 
+use common::SLOT_SIZE;
 use connection::parse::Parse;
 use db::child_process;
 use nix::unistd::ForkResult;
@@ -23,7 +24,7 @@ impl SyncSnapshot {
     #[tracing::instrument(skip(handler))]
     pub fn apply(self, handler: Handler) {
         // 先拿到需要传输的数据，避免死锁
-        let slots = if self.slot_id == u16::MAX as usize {
+        let slots = if self.slot_id == SLOT_SIZE as usize {
             // 全部slot
             handler
                 .db
