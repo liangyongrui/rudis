@@ -9,6 +9,8 @@ rust cloud cache
 edition = "2018"
 name = "rcc"
 version = "0.0.0"
+license = "MIT"
+readme = "readme.md"
 
 [profile.release]
 codegen-units = 1
