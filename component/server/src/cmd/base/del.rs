@@ -1,7 +1,6 @@
-use std::sync::Arc;
-
 use connection::Connection;
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 use tracing::error;
 
@@ -9,7 +8,7 @@ use crate::Frame;
 /// https://redis.io/commands/del
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
-    pub keys: Vec<Arc<[u8]>>,
+    pub keys: Vec<Key>,
 }
 
 impl Del {

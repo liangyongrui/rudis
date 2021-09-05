@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/zrevrank
 #[derive(Debug, ParseFrames)]
 pub struct Zrevrank {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub member: String,
 }
 impl<'a> From<&'a Zrevrank> for dict::cmd::sorted_set::rank::Req<'a> {

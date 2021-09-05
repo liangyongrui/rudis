@@ -5,10 +5,7 @@
 
 mod replica_update;
 
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::collections::{HashMap, HashSet};
 
 use dict::{
     cmd,
@@ -17,6 +14,7 @@ use dict::{
     data_type::DataType,
     Dict, Value,
 };
+use keys::Key;
 use parking_lot::RwLock;
 
 use crate::{expire, forward, BgTask};
@@ -277,7 +275,7 @@ impl Slot {
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
+    ) -> common::Result<HashMap<Key, DataType, ahash::RandomState>> {
         self.call_read(cmd)
     }
 

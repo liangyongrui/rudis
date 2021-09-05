@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/incr
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Incr {
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 impl From<Incr> for dict::cmd::simple::incr::Req {

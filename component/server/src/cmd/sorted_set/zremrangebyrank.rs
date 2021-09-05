@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,7 +7,7 @@ use crate::Frame;
 /// https://redis.io/commands/zremrangebyrank
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebyrank {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub range: (i64, i64),
 }
 

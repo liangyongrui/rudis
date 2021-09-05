@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,8 +7,8 @@ use crate::Frame;
 /// https://redis.io/commands/hexists
 #[derive(Debug, ParseFrames)]
 pub struct Hexists {
-    pub key: Arc<[u8]>,
-    pub field: Arc<[u8]>,
+    pub key: Key,
+    pub field: Key,
 }
 
 impl<'a> From<&'a Hexists> for dict::cmd::kvp::exists::Req<'a> {

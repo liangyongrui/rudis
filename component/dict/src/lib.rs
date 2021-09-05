@@ -11,15 +11,16 @@
 pub mod cmd;
 pub mod data_type;
 
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use common::now_timestamp_ms;
 use data_type::DataType;
+use keys::Key;
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Dict {
     pub write_id: u64,
-    pub inner: HashMap<Arc<[u8]>, Value, ahash::RandomState>,
+    pub inner: HashMap<Key, Value, ahash::RandomState>,
 }
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -61,11 +62,7 @@ impl Dict {
     }
 
     #[inline]
-    pub fn get_mut_or_insert_with<F: FnOnce() -> Value>(
-        &mut self,
-        key: Arc<[u8]>,
-        f: F,
-    ) -> &mut Value {
+    pub fn get_mut_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value {
         match self.inner.entry(key) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
                 let expires_at = o.get().expires_at;
@@ -84,7 +81,7 @@ impl Dict {
     }
 
     #[inline]
-    pub fn insert(&mut self, k: Arc<[u8]>, v: Value) -> Option<Value> {
+    pub fn insert(&mut self, k: Key, v: Value) -> Option<Value> {
         self.inner.insert(k, v)
     }
 

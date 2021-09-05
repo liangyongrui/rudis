@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/smismember
 #[derive(Debug, ParseFrames)]
 pub struct Smismember {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub values: Vec<String>,
 }
 

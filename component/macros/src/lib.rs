@@ -69,7 +69,7 @@ fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
                             let #field_name = parse.next_int()? as #field_type;
                         };
                     }
-                    if *ident == "Arc" {
+                    if *ident == "Key" {
                         return quote! {
                             let #field_name = parse.next_key()?;
                         };
@@ -97,7 +97,7 @@ fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
                                             }
                                         };
                                     }
-                                    if *ident == "Arc" {
+                                    if *ident == "Key" {
                                         return quote! {
                                             let mut #field_name = vec![parse.next_key()?];
                                             loop {

@@ -1,12 +1,11 @@
-use std::sync::Arc;
-
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
+use keys::Key;
 
 /// https://redis.io/commands/zrevrange
 #[derive(Debug)]
 pub struct Zrevrange {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub range: (i64, i64),
     pub withscores: bool,
 }

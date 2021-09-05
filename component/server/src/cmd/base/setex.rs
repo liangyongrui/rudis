@@ -1,11 +1,10 @@
-use std::sync::Arc;
-
 use common::{
     now_timestamp_ms,
     options::{ExpiresAt, NxXx},
 };
 use db::Db;
 use dict::data_type::DataType;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -13,7 +12,7 @@ use crate::Frame;
 /// https://redis.io/commands/setex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Setex {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub seconds: u64,
     pub value: DataType,
 }

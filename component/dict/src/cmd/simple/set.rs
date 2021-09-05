@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use common::options::{ExpiresAt, NxXx};
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -11,7 +10,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub value: DataType,
     pub expires_at: ExpiresAt,
     pub nx_xx: NxXx,

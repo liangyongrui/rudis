@@ -1,8 +1,7 @@
-use std::sync::Arc;
-
 use common::options::NxXx;
 use db::Db;
 use dict::data_type::DataType;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -10,7 +9,7 @@ use crate::Frame;
 /// https://redis.io/commands/rpush
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Rpush {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub values: Vec<DataType>,
 }
 

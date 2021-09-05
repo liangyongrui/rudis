@@ -1,17 +1,16 @@
-use std::sync::Arc;
-
 use common::options::NxXx;
 use connection::parse::{Parse, ParseError};
 use db::Db;
 use dict::data_type::DataType;
+use keys::Key;
 
 use crate::{frame_parse::next_data_type, Frame};
 
 /// https://redis.io/commands/hset
 #[derive(Debug, Clone)]
 pub struct Hset {
-    pub key: Arc<[u8]>,
-    pub entries: Vec<(Arc<[u8]>, DataType)>,
+    pub key: Key,
+    pub entries: Vec<(Key, DataType)>,
 }
 
 impl From<Hset> for dict::cmd::kvp::set::Req {

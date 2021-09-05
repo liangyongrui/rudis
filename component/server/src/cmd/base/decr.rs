@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,7 +7,7 @@ use crate::Frame;
 /// https://redis.io/commands/decr
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Decr {
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 impl From<Decr> for dict::cmd::simple::incr::Req {

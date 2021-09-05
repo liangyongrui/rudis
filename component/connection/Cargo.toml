@@ -11,3 +11,4 @@ tracing = "0.1"
 common = { path = "../common" }
 nom = "7"
 atoi = "0.4"
+keys = { path = "../keys" }

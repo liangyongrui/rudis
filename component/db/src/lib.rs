@@ -29,6 +29,7 @@ use dict::{
     Dict,
 };
 use forward::Forward;
+use keys::Key;
 use parking_lot::Mutex;
 use tokio::sync::broadcast;
 use tracing::error;
@@ -166,7 +167,7 @@ impl Db {
     pub fn kvp_get_all(
         &self,
         cmd: cmd::kvp::get_all::Req<'_>,
-    ) -> common::Result<HashMap<Arc<[u8]>, DataType, ahash::RandomState>> {
+    ) -> common::Result<HashMap<Key, DataType, ahash::RandomState>> {
         self.get_slot(cmd.key).kvp_get_all(cmd)
     }
     #[inline]

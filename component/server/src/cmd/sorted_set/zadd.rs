@@ -1,9 +1,10 @@
-use std::{convert::TryInto, sync::Arc};
+use std::convert::TryInto;
 
 use common::options::{GtLt, NxXx};
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 use dict::data_type::{sorted_set::Node, DataType};
+use keys::Key;
 use tracing::debug;
 
 use crate::frame_parse::next_data_type;
@@ -11,7 +12,7 @@ use crate::frame_parse::next_data_type;
 /// https://redis.io/commands/zadd
 #[derive(Debug, Clone)]
 pub struct Zadd {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub nx_xx: NxXx,
     pub gt_lt: GtLt,
     pub ch: bool,

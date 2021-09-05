@@ -1,6 +1,7 @@
-use std::{ops::Bound, sync::Arc};
+use std::ops::Bound;
 
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,7 +9,7 @@ use crate::Frame;
 /// https://redis.io/commands/zremrangebylex
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub min: String,
     pub max: String,
 }

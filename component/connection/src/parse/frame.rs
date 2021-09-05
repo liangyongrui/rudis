@@ -7,6 +7,7 @@
 use std::{fmt, sync::Arc, vec};
 
 use common::{u8_to_i64, u8_to_string};
+use keys::Key;
 use nom::{
     branch::alt,
     bytes::streaming::{tag, take_while, take_while1, take_while_m_n},
@@ -23,7 +24,7 @@ pub enum Frame {
     Simple(Arc<str>),
     Error(String),
     Integer(i64),
-    Bulk(Arc<[u8]>),
+    Bulk(Key),
     Null,
     Array(Vec<Frame>),
     /// not transfer

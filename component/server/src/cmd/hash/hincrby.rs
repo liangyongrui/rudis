@@ -1,14 +1,13 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/hincrby
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
-    pub key: Arc<[u8]>,
-    pub field: Arc<[u8]>,
+    pub key: Key,
+    pub field: Key,
     pub value: i64,
 }
 

@@ -1,12 +1,13 @@
-use std::{ops::Bound, sync::Arc};
+use std::ops::Bound;
 
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
+use keys::Key;
 
 /// https://redis.io/commands/zrangebylex
 #[derive(Debug)]
 pub struct Zrangebylex {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub range_item: (Bound<String>, Bound<String>),
     pub limit: Option<(i64, i64)>,
 }

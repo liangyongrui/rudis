@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -10,8 +9,8 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Arc<[u8]>,
-    pub fields: Vec<Arc<[u8]>>,
+    pub key: Key,
+    pub fields: Vec<Key>,
 }
 
 #[derive(Debug, PartialEq, Eq)]

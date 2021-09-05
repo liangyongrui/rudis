@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use common::{
     now_timestamp_ms,
     options::{ExpiresAt, NxXx},
@@ -10,6 +8,7 @@ use connection::{
 };
 use db::Db;
 use dict::data_type::DataType;
+use keys::Key;
 use tracing::error;
 
 use crate::frame_parse::data_type_to_frame;
@@ -20,7 +19,7 @@ use crate::frame_parse::data_type_to_frame;
 #[derive(Debug, Clone)]
 pub struct Set {
     /// the lookup key
-    pub key: Arc<[u8]>,
+    pub key: Key,
     /// the value to be stored
     pub value: DataType,
     // None not set, true nx, false xx

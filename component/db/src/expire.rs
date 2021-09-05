@@ -6,6 +6,7 @@ use std::{borrow::Borrow, collections::BTreeSet, sync::Arc, time::Duration};
 
 use common::now_timestamp_ms;
 use dict::cmd::ExpiresStatusUpdate;
+use keys::Key;
 use parking_lot::Mutex;
 use tokio::{sync::Notify, time};
 use tracing::debug;
@@ -18,7 +19,7 @@ use crate::Db;
 pub struct Entry {
     pub expires_at: u64,
     pub slot: usize,
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 pub enum Message {

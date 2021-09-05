@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use common::options::{GtLt, NxXx};
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -10,7 +9,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub expires_at: u64,
     pub nx_xx: NxXx,
     pub gt_lt: GtLt,

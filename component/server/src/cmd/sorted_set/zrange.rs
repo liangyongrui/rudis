@@ -1,8 +1,9 @@
-use std::{ops::Bound, sync::Arc};
+use std::ops::Bound;
 
 use common::{float::Float, other_type::ZrangeItem, BoundExt};
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
+use keys::Key;
 
 enum By {
     Score,
@@ -13,7 +14,7 @@ enum By {
 /// https://redis.io/commands/zrange
 #[derive(Debug)]
 pub struct Zrange {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub range_item: ZrangeItem,
     pub rev: bool,
     pub limit: Option<(i64, i64)>,

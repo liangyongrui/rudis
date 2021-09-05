@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,7 +7,7 @@ use crate::Frame;
 /// https://redis.io/commands/llen
 #[derive(Debug, ParseFrames)]
 pub struct Llen {
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 impl<'a> From<&'a Llen> for dict::cmd::deque::len::Req<'a> {

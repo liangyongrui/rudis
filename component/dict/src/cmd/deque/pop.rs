@@ -1,5 +1,4 @@
-use std::sync::Arc;
-
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -10,7 +9,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub count: usize,
     // true left, false right
     pub left: bool,

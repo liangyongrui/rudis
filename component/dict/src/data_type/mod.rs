@@ -9,6 +9,7 @@ mod set;
 pub mod sorted_set;
 
 pub use common::float::Float;
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
@@ -18,7 +19,7 @@ pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
 pub enum DataType {
     Null,
     String(Arc<str>),
-    Bytes(Arc<[u8]>),
+    Bytes(Key),
     Integer(i64),
     Float(Float),
     Kvp(Box<Kvp>),

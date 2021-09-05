@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,7 +7,7 @@ use crate::Frame;
 /// https://redis.io/commands/zrem
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Zrem {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub members: Vec<String>,
 }
 

@@ -1,13 +1,12 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/incrby
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Incrby {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub value: i64,
 }
 

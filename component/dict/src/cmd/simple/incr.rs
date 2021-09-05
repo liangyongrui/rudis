@@ -1,5 +1,6 @@
-use std::{convert::TryInto, sync::Arc};
+use std::convert::TryInto;
 
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub value: i64,
 }
 impl From<Req> for WriteCmd {

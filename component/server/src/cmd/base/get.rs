@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -14,7 +13,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 impl<'a> From<&'a Get> for dict::cmd::simple::get::Req<'a> {

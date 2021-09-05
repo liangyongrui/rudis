@@ -14,3 +14,4 @@ tracing = "0.1"
 connection = { path = "../connection" }
 nix = "0.22"
 bincode = "1"
+keys = { path = "../keys" }

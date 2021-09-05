@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
@@ -8,7 +7,7 @@ use crate::{frame_parse::data_type_to_frame, Frame};
 /// https://redis.io/commands/lpop
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Lpop {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub count: Option<i64>,
 }
 

@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,8 +7,8 @@ use crate::Frame;
 /// https://redis.io/commands/hdel
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hdel {
-    pub key: Arc<[u8]>,
-    pub fields: Vec<Arc<[u8]>>,
+    pub key: Key,
+    pub fields: Vec<Key>,
 }
 
 impl From<Hdel> for dict::cmd::kvp::del::Req {

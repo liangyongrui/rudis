@@ -1,6 +1,5 @@
-use std::{sync::Arc, vec};
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
@@ -8,7 +7,7 @@ use crate::{frame_parse::data_type_to_frame, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 impl<'a> From<&'a Hgetall> for dict::cmd::kvp::get_all::Req<'a> {

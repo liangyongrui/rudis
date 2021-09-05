@@ -7,8 +7,7 @@ pub mod set;
 pub mod simple;
 pub mod sorted_set;
 
-use std::sync::Arc;
-
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::Dict;
@@ -30,7 +29,7 @@ pub enum ExpiresStatus {
 /// 删除before 添加new
 #[derive(Debug, PartialEq, Eq)]
 pub struct ExpiresStatusUpdate {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub before: u64,
     pub new: u64,
 }

@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -8,7 +7,7 @@ use crate::Frame;
 /// https://redis.io/commands/smembers
 #[derive(Debug, ParseFrames)]
 pub struct Smembers {
-    pub key: Arc<[u8]>,
+    pub key: Key,
 }
 
 impl<'a> From<&'a Smembers> for dict::cmd::set::get_all::Req<'a> {

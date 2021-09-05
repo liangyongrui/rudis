@@ -1,8 +1,9 @@
 pub mod frame;
 
-use std::{fmt, str, sync::Arc, vec};
+use std::{fmt, str, vec};
 
 pub use frame::parse;
+use keys::Key;
 
 use crate::Frame;
 
@@ -64,7 +65,7 @@ impl Parse {
     /// 1. EndOfStream
     /// 1. not bytes
     #[inline]
-    pub fn next_key(&mut self) -> Result<Arc<[u8]>, ParseError> {
+    pub fn next_key(&mut self) -> Result<Key, ParseError> {
         self.next_bulk()
     }
 
@@ -73,7 +74,7 @@ impl Parse {
     /// # Errors
     /// 1. EndOfStream
     /// 1. not bytes
-    pub fn next_bulk(&mut self) -> Result<Arc<[u8]>, ParseError> {
+    pub fn next_bulk(&mut self) -> Result<Key, ParseError> {
         match self.next_frame()? {
             Frame::Bulk(b) => Ok(b),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
@@ -105,6 +106,7 @@ impl Parse {
     /// This includes `Simple`, `Bulk`, and `Integer` frame types. `Simple` and
     /// `Bulk` frame types are parsed.
     ///
+    /// # Errors
     /// If the next entry cannot be represented as an integer, then an error is
     /// returned.
     pub fn next_int(&mut self) -> Result<i64, ParseError> {
@@ -130,6 +132,8 @@ impl Parse {
     }
 
     /// Ensure there are no more entries in the array
+    /// # Errors
+    /// if has more entries
     pub fn finish(&mut self) -> Result<(), ParseError> {
         if self.parts.next().is_none() {
             Ok(())

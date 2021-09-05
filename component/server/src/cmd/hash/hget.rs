@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use db::Db;
+use keys::Key;
 use macros::ParseFrames;
 
 use crate::{frame_parse, Frame};
@@ -8,8 +7,8 @@ use crate::{frame_parse, Frame};
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
-    pub key: Arc<[u8]>,
-    pub field: Arc<[u8]>,
+    pub key: Key,
+    pub field: Key,
 }
 
 impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {

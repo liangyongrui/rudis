@@ -1,13 +1,14 @@
-use std::{ops::Bound, sync::Arc};
+use std::ops::Bound;
 
 use common::{float::Float, BoundExt};
 use connection::parse::{frame::Frame, Parse};
 use db::Db;
+use keys::Key;
 
 /// https://redis.io/commands/zremrangebyscore
 #[derive(Debug, Clone)]
 pub struct Zremrangebyscore {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     pub range: (Bound<f64>, Bound<f64>),
 }
 

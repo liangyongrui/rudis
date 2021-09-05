@@ -1,6 +1,5 @@
-use std::sync::Arc;
-
 use common::options::NxXx;
+use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -12,9 +11,9 @@ use crate::{
 /// 追加entries, 如果key 不存在，插入新的再追加
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
-    pub key: Arc<[u8]>,
+    pub key: Key,
     // key-value list
-    pub entries: Vec<(Arc<[u8]>, DataType)>,
+    pub entries: Vec<(Key, DataType)>,
     /// nx_xx 根据 kvp 的 key 决定
     pub nx_xx: NxXx,
 }
