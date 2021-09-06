@@ -13,6 +13,8 @@ rust cloud cache
 
 ## todo list
 
+1. [ ] servo_arc = "0.1.1"
+1. [ ] 除了 key，别的都用 box<[u8]>
 1. [ ] loop 向上抛的异常
 1. [ ] 各个 task 的优雅退出
 1. [ ] 规范每个模块的命名

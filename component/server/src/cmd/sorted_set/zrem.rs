@@ -8,7 +8,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Zrem {
     pub key: Key,
-    pub members: Vec<String>,
+    pub members: Vec<Box<[u8]>>,
 }
 
 impl From<Zrem> for dict::cmd::sorted_set::remove::Req {

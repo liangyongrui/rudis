@@ -21,7 +21,9 @@ impl Smembers {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.set_get_all((&self).into())?;
         Ok(Frame::Array(
-            res.iter().map(|t| Frame::Simple((&t[..]).into())).collect(),
+            res.iter()
+                .map(|t| Frame::Simple(t.as_bytes().into()))
+                .collect(),
         ))
     }
 }

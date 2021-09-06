@@ -8,7 +8,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hdel {
     pub key: Key,
-    pub fields: Vec<Key>,
+    pub fields: Vec<Box<[u8]>>,
 }
 
 impl From<Hdel> for dict::cmd::kvp::del::Req {

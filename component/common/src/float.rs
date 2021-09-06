@@ -2,7 +2,11 @@ use std::hash;
 
 use serde::{Deserialize, Serialize};
 
-/// 自定义的f64，为了实现 Ord, Eq
+/// Custom f64, in order to realize Ord, Eq.
+///
+/// # Warnings
+///
+/// NaN is not allowed.
 #[derive(Debug, PartialEq, Clone, Copy, Deserialize, Serialize)]
 pub struct Float(pub f64);
 impl Eq for Float {}
@@ -26,6 +30,7 @@ impl PartialOrd for Float {
 impl Ord for Float {
     #[inline]
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        // Float
         self.partial_cmp(other).unwrap()
     }
 }

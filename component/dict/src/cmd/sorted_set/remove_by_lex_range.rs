@@ -1,6 +1,4 @@
-use std::ops::Bound;
-
-use common::BoundExt;
+use common::{other_type::LexRange, BoundExt};
 use keys::Key;
 use serde::{Deserialize, Serialize};
 
@@ -13,8 +11,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Key,
-    /// 这里的得分区间(小, 大)
-    pub range: (Bound<String>, Bound<String>),
+    pub range: LexRange,
     pub rev: bool,
 }
 

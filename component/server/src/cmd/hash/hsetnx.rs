@@ -10,7 +10,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: Key,
-    pub field: Key,
+    pub field: Box<[u8]>,
     pub value: DataType,
 }
 

@@ -67,16 +67,16 @@ impl Zrange {
                 let min = if min == "-" {
                     Bound::Unbounded
                 } else if let Some(s) = min.strip_prefix('(') {
-                    Bound::Excluded(s.to_owned())
+                    Bound::Excluded(s.as_bytes().into())
                 } else {
-                    Bound::Included(min[1..].to_owned())
+                    Bound::Included(min[1..].as_bytes().into())
                 };
                 let max = if max == "+" {
                     Bound::Unbounded
                 } else if let Some(s) = max.strip_prefix('(') {
-                    Bound::Excluded(s.to_owned())
+                    Bound::Excluded(s.as_bytes().into())
                 } else {
-                    Bound::Included(max[1..].to_owned())
+                    Bound::Included(max[1..].as_bytes().into())
                 };
                 ZrangeItem::Lex((min, max))
             }
@@ -131,9 +131,9 @@ impl Zrange {
 
         let mut res = vec![];
         for n in response {
-            res.push(Frame::Simple(n.key.into()));
+            res.push(Frame::Simple(n.key));
             if self.withscores {
-                res.push(Frame::Simple(n.score.0.to_string().into()));
+                res.push(Frame::Simple(n.score.0.to_string().as_bytes().into()));
             }
         }
         Ok(Frame::Array(res))

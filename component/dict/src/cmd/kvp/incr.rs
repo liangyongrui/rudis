@@ -12,7 +12,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Key,
-    pub field: Key,
+    pub field: Box<[u8]>,
     pub value: i64,
 }
 impl From<Req> for WriteCmd {

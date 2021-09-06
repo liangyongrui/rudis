@@ -115,7 +115,8 @@ impl Inner {
 
     fn sync_cmd(self: Arc<Self>) -> common::Result<()> {
         let (tx, rx) = flume::unbounded();
-        let mut stream = TcpStream::connect(self.leader.lock().unwrap().forward_addr)?;
+        let mut stream =
+            TcpStream::connect(self.leader.lock().ok_or("leader is none")?.forward_addr)?;
         stream.write_all(SYNC_CMD)?;
         let stream = BufReader::new(stream);
         tokio::task::spawn_blocking(move || {

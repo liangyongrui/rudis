@@ -1,6 +1,4 @@
-use std::ops::Bound;
-
-use common::BoundExt;
+use common::{other_type::LexRange, BoundExt};
 
 use crate::{
     cmd::Read,
@@ -11,8 +9,7 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    /// 这里的得分区间(小, 大)
-    pub range: (Bound<String>, Bound<String>),
+    pub range: LexRange,
     //  (offset, count)
     ///  A negative `count` returns all elements from the offset.
     pub limit: Option<(usize, i64)>,

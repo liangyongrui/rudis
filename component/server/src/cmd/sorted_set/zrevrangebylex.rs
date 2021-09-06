@@ -1,5 +1,6 @@
 use std::ops::Bound;
 
+use common::other_type::LexRange;
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 use keys::Key;
@@ -8,15 +9,15 @@ use keys::Key;
 #[derive(Debug)]
 pub struct Zrevrangebylex {
     pub key: Key,
-    pub range_item: (Bound<String>, Bound<String>),
+    pub range_item: LexRange,
     pub limit: Option<(i64, i64)>,
 }
 
 impl Zrevrangebylex {
     pub fn parse_frames(parse: &mut Parse) -> common::Result<Self> {
         let key = parse.next_key()?;
-        let min = parse.next_string()?;
-        let max = parse.next_string()?;
+        let min = parse.next_bulk()?;
+        let max = parse.next_bulk()?;
         let mut limit = None;
         loop {
             let lowercase = match parse.next_string() {
@@ -29,20 +30,21 @@ impl Zrevrangebylex {
                 s => return Err(format!("unknown token: {}", s).into()),
             }
         }
+
         let range_item = {
-            let min = if min == "+" {
+            let min = if min == b"+"[..].into() {
                 Bound::Unbounded
-            } else if let Some(s) = min.strip_prefix('(') {
-                Bound::Excluded(s.to_owned())
+            } else if let Some(s) = min.strip_prefix(b"(") {
+                Bound::Excluded(s.into())
             } else {
-                Bound::Included(min[1..].to_owned())
+                Bound::Included(min[1..].into())
             };
-            let max = if max == "-" {
+            let max = if max == b"-"[..].into() {
                 Bound::Unbounded
-            } else if let Some(s) = max.strip_prefix('(') {
-                Bound::Excluded(s.to_owned())
+            } else if let Some(s) = max.strip_prefix(b"(") {
+                Bound::Excluded(s.into())
             } else {
-                Bound::Included(max[1..].to_owned())
+                Bound::Included(max[1..].into())
             };
             (min, max)
         };
@@ -69,7 +71,7 @@ impl Zrevrangebylex {
         let response = db.sorted_set_range_by_lex(cmd)?;
         let mut res = vec![];
         for n in response {
-            res.push(Frame::Simple(n.key.into()));
+            res.push(Frame::Simple(n.key));
         }
         Ok(Frame::Array(res))
     }

@@ -1,5 +1,6 @@
 use std::ops::Bound;
 
+use common::other_type::LexRange;
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 use keys::Key;
@@ -8,7 +9,7 @@ use keys::Key;
 #[derive(Debug)]
 pub struct Zrangebylex {
     pub key: Key,
-    pub range_item: (Bound<String>, Bound<String>),
+    pub range_item: LexRange,
     pub limit: Option<(i64, i64)>,
 }
 
@@ -33,16 +34,16 @@ impl Zrangebylex {
             let min = if min == "-" {
                 Bound::Unbounded
             } else if let Some(s) = min.strip_prefix('(') {
-                Bound::Excluded(s.to_owned())
+                Bound::Excluded(s.as_bytes().into())
             } else {
-                Bound::Included(min[1..].to_owned())
+                Bound::Included(min[1..].as_bytes().into())
             };
             let max = if max == "+" {
                 Bound::Unbounded
             } else if let Some(s) = max.strip_prefix('(') {
-                Bound::Excluded(s.to_owned())
+                Bound::Excluded(s.as_bytes().into())
             } else {
-                Bound::Included(max[1..].to_owned())
+                Bound::Included(max[1..].as_bytes().into())
             };
             (min, max)
         };
@@ -69,7 +70,7 @@ impl Zrangebylex {
         let response = db.sorted_set_range_by_lex(cmd)?;
         let mut res = vec![];
         for n in response {
-            res.push(Frame::Simple(n.key.into()));
+            res.push(Frame::Simple(n.key));
         }
         Ok(Frame::Array(res))
     }

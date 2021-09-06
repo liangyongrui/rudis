@@ -25,7 +25,6 @@ pub mod shutdown;
 
 use std::{
     ops::Bound,
-    sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
 
@@ -54,20 +53,9 @@ impl<T> BoundExt<T> for Bound<T> {
 pub fn now_timestamp_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
+        // unwrap is safe
         .unwrap()
         .as_millis() as u64
-}
-
-#[inline]
-pub fn u8_to_string(data: &[u8]) -> Arc<str> {
-    std::str::from_utf8(data)
-        .map(|s| s.into())
-        .expect("protocol error; invalid string")
-}
-
-#[inline]
-pub fn u8_to_i64(data: &[u8]) -> i64 {
-    atoi::atoi::<i64>(data).expect("protocol error; invalid number")
 }
 
 pub trait ParseSerdeType<'de, T: Deserialize<'de> + Serialize> {

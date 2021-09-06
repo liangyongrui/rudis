@@ -20,7 +20,7 @@ async fn decr() {
     next_frame_eq(&mut connection, Frame::Integer(-1)).await;
 
     write_cmd(&mut connection.stream, vec!["GET", "decr_test"]).await;
-    next_frame_eq(&mut connection, Frame::Simple("-1".into())).await;
+    next_frame_eq(&mut connection, Frame::Simple(b"-1"[..].into())).await;
 
     write_cmd(&mut connection.stream, vec!["SET", "mykey", "10"]).await;
     next_frame_eq(&mut connection, Frame::ok()).await;
@@ -38,7 +38,7 @@ async fn decr() {
     write_cmd(&mut connection.stream, vec!["DECR", "mykey"]).await;
     next_frame_eq(
         &mut connection,
-        Frame::Error("number too large to fit in target type".to_owned()),
+        Frame::Error(b"value is not an integer or out of range"[..].into()),
     )
     .await;
     dbg!("end1");
@@ -46,7 +46,7 @@ async fn decr() {
     write_cmd(&mut connection.stream, vec!["DECR", "mykey"]).await;
     next_frame_eq(
         &mut connection,
-        Frame::Error("number too large to fit in target type".to_owned()),
+        Frame::Error(b"value is not an integer or out of range"[..].into()),
     )
     .await;
     dbg!("end2");
@@ -179,7 +179,7 @@ async fn incr() {
     next_frame_eq(&mut connection, Frame::Integer(11)).await;
 
     write_cmd(&mut connection.stream, vec!["GET", "mykey"]).await;
-    next_frame_eq(&mut connection, Frame::Simple("11".into())).await;
+    next_frame_eq(&mut connection, Frame::Simple(b"11"[..].into())).await;
 }
 
 #[tokio::test]

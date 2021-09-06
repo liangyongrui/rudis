@@ -24,9 +24,9 @@ pub fn data_type_to_frame(dt: DataType) -> Frame {
         DataType::String(s) => Frame::Simple(s),
         DataType::Bytes(b) => Frame::Bulk(b),
         DataType::Integer(i) => Frame::Integer(i),
-        DataType::Float(f) => Frame::Simple(format!("{}", f.0).into()),
+        DataType::Float(f) => Frame::Simple(format!("{}", f.0).as_bytes().into()),
         DataType::Null => Frame::Null,
-        _ => Frame::Error("type not support".into()),
+        _ => Frame::Error(b"type not support"[..].into()),
     }
 }
 
@@ -35,8 +35,8 @@ pub fn ref_data_type_to_frame(dt: &DataType) -> Frame {
         DataType::String(s) => Frame::Simple(s.clone()),
         DataType::Bytes(b) => Frame::Bulk(b.clone()),
         DataType::Integer(i) => Frame::Integer(*i),
-        DataType::Float(f) => Frame::Simple(format!("{}", f.0).into()),
+        DataType::Float(f) => Frame::Simple(format!("{}", f.0).as_bytes().into()),
         DataType::Null => Frame::Null,
-        _ => Frame::Error("type not support".into()),
+        _ => Frame::Error(b"type not support"[..].into()),
     }
 }

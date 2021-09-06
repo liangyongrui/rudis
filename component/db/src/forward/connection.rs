@@ -7,7 +7,7 @@ use tokio::{
     net::{TcpListener, TcpStream},
     select, time,
 };
-use tracing::warn;
+use tracing::{error, warn};
 
 use super::Message;
 
@@ -15,22 +15,30 @@ use super::Message;
 pub struct ForwardConnections(Arc<Mutex<Vec<flume::Sender<super::Message>>>>);
 
 impl ForwardConnections {
-    pub async fn new() -> Self {
+    pub async fn new() -> common::Result<Self> {
         let fc = Self(Arc::new(Mutex::new(vec![])));
         let res = fc.clone();
+        let mut listener = Listener::new(TcpListener::bind(CONFIG.forward_addr).await?);
         tokio::spawn(async move {
-            let mut listener = Listener::new(TcpListener::bind(CONFIG.forward_addr).await.unwrap());
             loop {
-                let stream = listener.accept().await.unwrap();
+                let stream = match listener.accept().await {
+                    Ok(s) => s,
+                    Err(e) => {
+                        error!("forward connect accept fail: {:?}", e);
+                        continue;
+                    }
+                };
                 let fc = fc.clone();
                 tokio::spawn(async move {
                     let (tx, rx) = flume::unbounded();
                     fc.0.lock().push(tx);
-                    new_connect_task(stream, rx).await.unwrap();
+                    if let Err(e) = run_connect_task(stream, rx).await {
+                        error!("forward fail: {:?}", e);
+                    }
                 });
             }
         });
-        res
+        Ok(res)
     }
 
     pub fn push_all(&self, msg: &Message) {
@@ -68,7 +76,7 @@ impl Listener {
     }
 }
 
-async fn new_connect_task(
+async fn run_connect_task(
     mut stream: TcpStream,
     rx: flume::Receiver<super::Message>,
 ) -> common::Result<()> {

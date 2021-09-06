@@ -10,7 +10,6 @@ use common::{
     },
 };
 use connection::{parse::frame::Frame, Connection};
-use keys::Key;
 use tokio::net::TcpStream;
 use tracing::error;
 
@@ -54,7 +53,7 @@ impl PdHandle {
         res
     }
 
-    async fn read_bytes(&mut self) -> common::Result<Key> {
+    async fn read_bytes(&mut self) -> common::Result<Box<[u8]>> {
         let frame = match self.connection.read_frame().await? {
             Some(f) => f,
             None => return Err("EOF".into()),

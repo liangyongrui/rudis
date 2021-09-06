@@ -26,14 +26,14 @@ async fn zadd() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("one".into()),
-        Frame::Simple("1".into()),
-        Frame::Simple("uno".into()),
-        Frame::Simple("1".into()),
-        Frame::Simple("two".into()),
-        Frame::Simple("2".into()),
-        Frame::Simple("three".into()),
-        Frame::Simple("3".into()),
+        Frame::Simple(b"one"[..].into()),
+        Frame::Simple(b"1"[..].into()),
+        Frame::Simple(b"uno"[..].into()),
+        Frame::Simple(b"1"[..].into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"2"[..].into()),
+        Frame::Simple(b"three"[..].into()),
+        Frame::Simple(b"3"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -53,20 +53,20 @@ async fn zrange() {
 
     write_cmd(&mut connection.stream, vec!["ZRANGE", "myzset", "0", "-1"]).await;
     let res = Frame::Array(vec![
-        Frame::Simple("one".into()),
-        Frame::Simple("two".into()),
-        Frame::Simple("three".into()),
+        Frame::Simple(b"one"[..].into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"three"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(&mut connection.stream, vec!["ZRANGE", "myzset", "2", "3"]).await;
-    let res = Frame::Array(vec![Frame::Simple("three".into())]);
+    let res = Frame::Array(vec![Frame::Simple(b"three"[..].into())]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(&mut connection.stream, vec!["ZRANGE", "myzset", "-2", "-1"]).await;
     let res = Frame::Array(vec![
-        Frame::Simple("two".into()),
-        Frame::Simple("three".into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"three"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -76,10 +76,10 @@ async fn zrange() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("one".into()),
-        Frame::Simple("1".into()),
-        Frame::Simple("two".into()),
-        Frame::Simple("2".into()),
+        Frame::Simple(b"one"[..].into()),
+        Frame::Simple(b"1"[..].into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"2"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -90,7 +90,7 @@ async fn zrange() {
         ],
     )
     .await;
-    let res = Frame::Array(vec![Frame::Simple("three".into())]);
+    let res = Frame::Array(vec![Frame::Simple(b"three"[..].into())]);
     next_frame_eq(&mut connection, res).await;
 }
 
@@ -113,9 +113,9 @@ async fn zrangebylex() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("a".into()),
-        Frame::Simple("b".into()),
-        Frame::Simple("c".into()),
+        Frame::Simple(b"a"[..].into()),
+        Frame::Simple(b"b"[..].into()),
+        Frame::Simple(b"c"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -124,7 +124,10 @@ async fn zrangebylex() {
         vec!["ZRANGEBYLEX", "myzset", "-", "(c"],
     )
     .await;
-    let res = Frame::Array(vec![Frame::Simple("a".into()), Frame::Simple("b".into())]);
+    let res = Frame::Array(vec![
+        Frame::Simple(b"a"[..].into()),
+        Frame::Simple(b"b"[..].into()),
+    ]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(
@@ -133,11 +136,11 @@ async fn zrangebylex() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("b".into()),
-        Frame::Simple("c".into()),
-        Frame::Simple("d".into()),
-        Frame::Simple("e".into()),
-        Frame::Simple("f".into()),
+        Frame::Simple(b"b"[..].into()),
+        Frame::Simple(b"c"[..].into()),
+        Frame::Simple(b"d"[..].into()),
+        Frame::Simple(b"e"[..].into()),
+        Frame::Simple(b"f"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -161,9 +164,9 @@ async fn zrangebyscore() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("one".into()),
-        Frame::Simple("two".into()),
-        Frame::Simple("three".into()),
+        Frame::Simple(b"one"[..].into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"three"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -173,8 +176,8 @@ async fn zrangebyscore() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("one".into()),
-        Frame::Simple("two".into()),
+        Frame::Simple(b"one"[..].into()),
+        Frame::Simple(b"two"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -183,7 +186,7 @@ async fn zrangebyscore() {
         vec!["ZRANGEBYSCORE", "myzset", "(1", "2"],
     )
     .await;
-    let res = Frame::Array(vec![Frame::Simple("two".into())]);
+    let res = Frame::Array(vec![Frame::Simple(b"two"[..].into())]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(
@@ -237,10 +240,10 @@ async fn zrem() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("one".into()),
-        Frame::Simple("1".into()),
-        Frame::Simple("three".into()),
-        Frame::Simple("3".into()),
+        Frame::Simple(b"one"[..].into()),
+        Frame::Simple(b"1"[..].into()),
+        Frame::Simple(b"three"[..].into()),
+        Frame::Simple(b"3"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -269,16 +272,16 @@ async fn zremrangebylex() {
 
     write_cmd(&mut connection.stream, vec!["ZRANGE", "myzset", "0", "-1"]).await;
     let res = Frame::Array(vec![
-        Frame::Simple("ALPHA".into()),
-        Frame::Simple("aaaa".into()),
-        Frame::Simple("alpha".into()),
-        Frame::Simple("b".into()),
-        Frame::Simple("c".into()),
-        Frame::Simple("d".into()),
-        Frame::Simple("e".into()),
-        Frame::Simple("foo".into()),
-        Frame::Simple("zap".into()),
-        Frame::Simple("zip".into()),
+        Frame::Simple(b"ALPHA"[..].into()),
+        Frame::Simple(b"aaaa"[..].into()),
+        Frame::Simple(b"alpha"[..].into()),
+        Frame::Simple(b"b"[..].into()),
+        Frame::Simple(b"c"[..].into()),
+        Frame::Simple(b"d"[..].into()),
+        Frame::Simple(b"e"[..].into()),
+        Frame::Simple(b"foo"[..].into()),
+        Frame::Simple(b"zap"[..].into()),
+        Frame::Simple(b"zip"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -291,10 +294,10 @@ async fn zremrangebylex() {
 
     write_cmd(&mut connection.stream, vec!["ZRANGE", "myzset", "0", "-1"]).await;
     let res = Frame::Array(vec![
-        Frame::Simple("ALPHA".into()),
-        Frame::Simple("aaaa".into()),
-        Frame::Simple("zap".into()),
-        Frame::Simple("zip".into()),
+        Frame::Simple(b"ALPHA"[..].into()),
+        Frame::Simple(b"aaaa"[..].into()),
+        Frame::Simple(b"zap"[..].into()),
+        Frame::Simple(b"zip"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -325,8 +328,8 @@ async fn zremrangebyrank() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("three".into()),
-        Frame::Simple("3".into()),
+        Frame::Simple(b"three"[..].into()),
+        Frame::Simple(b"3"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -357,10 +360,10 @@ async fn zremrangebyscore() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("two".into()),
-        Frame::Simple("2".into()),
-        Frame::Simple("three".into()),
-        Frame::Simple("3".into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"2"[..].into()),
+        Frame::Simple(b"three"[..].into()),
+        Frame::Simple(b"3"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -384,9 +387,9 @@ async fn zrevrange() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("three".into()),
-        Frame::Simple("two".into()),
-        Frame::Simple("one".into()),
+        Frame::Simple(b"three"[..].into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"one"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -395,7 +398,7 @@ async fn zrevrange() {
         vec!["zrevrange", "myzset", "2", "3"],
     )
     .await;
-    let res = Frame::Array(vec![Frame::Simple("one".into())]);
+    let res = Frame::Array(vec![Frame::Simple(b"one"[..].into())]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(
@@ -404,8 +407,8 @@ async fn zrevrange() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("two".into()),
-        Frame::Simple("one".into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"one"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -429,9 +432,9 @@ async fn zrevrangebylex() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("c".into()),
-        Frame::Simple("b".into()),
-        Frame::Simple("a".into()),
+        Frame::Simple(b"c"[..].into()),
+        Frame::Simple(b"b"[..].into()),
+        Frame::Simple(b"a"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -440,7 +443,10 @@ async fn zrevrangebylex() {
         vec!["ZrevRANGEBYLEX", "myzset", "(c", "-"],
     )
     .await;
-    let res = Frame::Array(vec![Frame::Simple("b".into()), Frame::Simple("a".into())]);
+    let res = Frame::Array(vec![
+        Frame::Simple(b"b"[..].into()),
+        Frame::Simple(b"a"[..].into()),
+    ]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(
@@ -449,11 +455,11 @@ async fn zrevrangebylex() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("f".into()),
-        Frame::Simple("e".into()),
-        Frame::Simple("d".into()),
-        Frame::Simple("c".into()),
-        Frame::Simple("b".into()),
+        Frame::Simple(b"f"[..].into()),
+        Frame::Simple(b"e"[..].into()),
+        Frame::Simple(b"d"[..].into()),
+        Frame::Simple(b"c"[..].into()),
+        Frame::Simple(b"b"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 }
@@ -477,9 +483,9 @@ async fn zrevrangebyscore() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("three".into()),
-        Frame::Simple("two".into()),
-        Frame::Simple("one".into()),
+        Frame::Simple(b"three"[..].into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"one"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -489,8 +495,8 @@ async fn zrevrangebyscore() {
     )
     .await;
     let res = Frame::Array(vec![
-        Frame::Simple("two".into()),
-        Frame::Simple("one".into()),
+        Frame::Simple(b"two"[..].into()),
+        Frame::Simple(b"one"[..].into()),
     ]);
     next_frame_eq(&mut connection, res).await;
 
@@ -499,7 +505,7 @@ async fn zrevrangebyscore() {
         vec!["zrevrangebyscore", "myzset", "2", "(1"],
     )
     .await;
-    let res = Frame::Array(vec![Frame::Simple("two".into())]);
+    let res = Frame::Array(vec![Frame::Simple(b"two"[..].into())]);
     next_frame_eq(&mut connection, res).await;
 
     write_cmd(

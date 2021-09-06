@@ -1,7 +1,7 @@
 use structopt::StructOpt;
 use tokio::net::TcpListener;
 
-pub const DEFAULT_PORT: &str = "6380";
+pub const DEFAULT_PORT: &str = "6666";
 
 pub fn main() -> common::Result<()> {
     // enable logging

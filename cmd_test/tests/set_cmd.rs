@@ -19,7 +19,10 @@ async fn sadd() {
     write_cmd(&mut connection.stream, vec!["SMEMBERS", "myset"]).await;
     next_array_frame_sorted_eq(
         &mut connection,
-        vec![Frame::Simple("Hello".into()), Frame::Simple("World".into())],
+        vec![
+            Frame::Simple(b"Hello"[..].into()),
+            Frame::Simple(b"World"[..].into()),
+        ],
     )
     .await;
 }
@@ -51,7 +54,10 @@ async fn smembers() {
     write_cmd(&mut connection.stream, vec!["SMEMBERS", "myset"]).await;
     next_array_frame_sorted_eq(
         &mut connection,
-        vec![Frame::Simple("Hello".into()), Frame::Simple("World".into())],
+        vec![
+            Frame::Simple(b"Hello"[..].into()),
+            Frame::Simple(b"World"[..].into()),
+        ],
     )
     .await;
 }
@@ -96,7 +102,10 @@ async fn srem() {
     write_cmd(&mut connection.stream, vec!["SMEMBERS", "myset"]).await;
     next_array_frame_sorted_eq(
         &mut connection,
-        vec![Frame::Simple("two".into()), Frame::Simple("three".into())],
+        vec![
+            Frame::Simple(b"two"[..].into()),
+            Frame::Simple(b"three"[..].into()),
+        ],
     )
     .await;
 }

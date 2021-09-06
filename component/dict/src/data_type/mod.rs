@@ -2,14 +2,13 @@
 //!
 //! 类型主要分为两种，简单类型 和 集合类型
 
-use std::{convert::TryFrom, sync::Arc};
+use std::convert::TryFrom;
 mod deque;
 mod kvp;
 mod set;
 pub mod sorted_set;
 
 pub use common::float::Float;
-use keys::Key;
 use serde::{Deserialize, Serialize};
 
 pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
@@ -18,8 +17,8 @@ pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum DataType {
     Null,
-    String(Arc<str>),
-    Bytes(Key),
+    String(Box<[u8]>),
+    Bytes(Box<[u8]>),
     Integer(i64),
     Float(Float),
     Kvp(Box<Kvp>),
@@ -35,12 +34,12 @@ impl From<&[u8]> for DataType {
 }
 impl From<&str> for DataType {
     fn from(s: &str) -> Self {
-        DataType::String(s.into())
+        DataType::String(s.as_bytes().into())
     }
 }
 impl From<String> for DataType {
     fn from(s: String) -> Self {
-        DataType::String(s.into())
+        DataType::String(s.as_bytes().into())
     }
 }
 impl From<i64> for DataType {
@@ -54,8 +53,10 @@ impl TryFrom<&DataType> for i64 {
 
     fn try_from(value: &DataType) -> Result<Self, Self::Error> {
         let res = match value {
-            DataType::String(s) => s.parse()?,
-            DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
+            DataType::String(b) | DataType::Bytes(b) => atoi::atoi::<i64>(b)
+                .ok_or_else::<Self::Error, _>(|| {
+                    "value is not an integer or out of range".into()
+                })?,
             DataType::Integer(i) => *i,
             _ => {
                 return Err(
@@ -72,8 +73,7 @@ impl TryFrom<&DataType> for String {
 
     fn try_from(value: &DataType) -> Result<Self, Self::Error> {
         let res = match value {
-            DataType::String(s) => s.as_ref().to_owned(),
-            DataType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
+            DataType::String(b) | DataType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
             DataType::Integer(i) => format!("{}", i),
             DataType::Float(f) => format!("{}", f.0),
             _ => {
@@ -91,8 +91,7 @@ impl TryFrom<&DataType> for f64 {
 
     fn try_from(value: &DataType) -> Result<Self, Self::Error> {
         let res = match value {
-            DataType::String(s) => s.to_string().parse()?,
-            DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
+            DataType::String(b) | DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,
             #[allow(clippy::cast_precision_loss)]
             DataType::Integer(i) => *i as _,
             DataType::Float(f) => f.0,

@@ -66,7 +66,7 @@ impl Parse {
     /// 1. not bytes
     #[inline]
     pub fn next_key(&mut self) -> Result<Key, ParseError> {
-        self.next_bulk()
+        self.next_bulk().map(|t| t.into())
     }
 
     /// next bulk
@@ -74,9 +74,9 @@ impl Parse {
     /// # Errors
     /// 1. EndOfStream
     /// 1. not bytes
-    pub fn next_bulk(&mut self) -> Result<Key, ParseError> {
+    pub fn next_bulk(&mut self) -> Result<Box<[u8]>, ParseError> {
         match self.next_frame()? {
-            Frame::Bulk(b) => Ok(b),
+            Frame::Bulk(b) | Frame::Simple(b) => Ok(b),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
@@ -92,8 +92,7 @@ impl Parse {
             //
             // While errors are stored as strings, they are considered separate
             // types.
-            Frame::Simple(s) => Ok(s.to_string()),
-            Frame::Bulk(data) => str::from_utf8(&data[..])
+            Frame::Bulk(data) | Frame::Simple(data) => str::from_utf8(&data[..])
                 .map(std::string::ToString::to_string)
                 .map_err(|_| "protocol error; invalid string".into()),
             Frame::Ping => Ok("PING".to_owned()),
@@ -119,11 +118,7 @@ impl Parse {
             Frame::Integer(v) => Ok(v),
             // Simple and bulk frames must be parsed as integers. If the parsing
             // fails, an error is returned.
-            Frame::Simple(data) => match atoi::<i64>(data.as_bytes()) {
-                Some(e) => Ok(e),
-                None => Err(INVALID.into()),
-            },
-            Frame::Bulk(data) => match atoi::<i64>(&data) {
+            Frame::Bulk(data) | Frame::Simple(data) => match atoi::<i64>(&data) {
                 Some(e) => Ok(e),
                 None => Err(INVALID.into()),
             },

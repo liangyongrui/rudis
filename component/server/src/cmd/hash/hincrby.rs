@@ -7,7 +7,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
     pub key: Key,
-    pub field: Key,
+    pub field: Box<[u8]>,
     pub value: i64,
 }
 

@@ -285,6 +285,7 @@ name = "dict"
 version = "0.0.0"
 dependencies = [
  "ahash",
+ "atoi",
  "common",
  "flume",
  "keys",

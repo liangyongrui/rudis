@@ -1,13 +1,8 @@
 //! Provides a type representing a Redis protocol frame as well as utilities for
 //! parsing frames from a byte array.
-//!
-//! 目前使用的是 RESP2
-//! todo 支持 RESP3
 
-use std::{fmt, sync::Arc, vec};
+use std::{fmt, vec};
 
-use common::{u8_to_i64, u8_to_string};
-use keys::Key;
 use nom::{
     branch::alt,
     bytes::streaming::{tag, take_while, take_while1, take_while_m_n},
@@ -21,10 +16,10 @@ use nom::{
 pub enum Frame {
     Ping,
     Pong,
-    Simple(Arc<str>),
-    Error(String),
+    Simple(Box<[u8]>),
+    Bulk(Box<[u8]>),
+    Error(Box<[u8]>),
     Integer(i64),
-    Bulk(Key),
     Null,
     Array(Vec<Frame>),
     /// not transfer
@@ -34,7 +29,7 @@ pub enum Frame {
 impl Frame {
     #[inline]
     pub fn ok() -> Self {
-        Frame::Simple("OK".into())
+        Frame::Simple(b"OK"[..].into())
     }
 }
 
@@ -43,13 +38,13 @@ impl fmt::Display for Frame {
         use std::str;
 
         match self {
-            Frame::Simple(response) => response.fmt(fmt),
-            Frame::Error(msg) => write!(fmt, "error: {}", msg),
             Frame::Integer(num) => num.fmt(fmt),
-            Frame::Bulk(msg) => match str::from_utf8(msg) {
-                Ok(string) => string.fmt(fmt),
-                Err(_) => write!(fmt, "{:?}", msg),
-            },
+            Frame::Bulk(msg) | Frame::Simple(msg) | Frame::Error(msg) => {
+                match str::from_utf8(msg) {
+                    Ok(string) => string.fmt(fmt),
+                    Err(_) => write!(fmt, "{:?}", msg),
+                }
+            }
             Frame::Null => "(nil)".fmt(fmt),
             Frame::Array(parts) => {
                 for (i, part) in parts.iter().enumerate() {
@@ -80,7 +75,7 @@ fn parse_simple(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         take_while(|c| c != b'\r' && c != b'\n'),
         tag(b"\r\n"),
     )(i)?;
-    Ok((i, Frame::Simple(u8_to_string(resp))))
+    Ok((i, Frame::Simple(resp.into())))
 }
 
 #[inline]
@@ -90,14 +85,7 @@ fn parse_error(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         take_while1(|c| c != b'\r' && c != b'\n'),
         tag(b"\r\n"),
     )(i)?;
-    Ok((
-        i,
-        Frame::Error(
-            std::str::from_utf8(resp)
-                .expect("protocol error; invalid string")
-                .to_string(),
-        ),
-    ))
+    Ok((i, Frame::Error(resp.into())))
 }
 
 #[inline]
@@ -105,7 +93,7 @@ fn parse_int(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, int) = delimited(
         tag(":"),
         map(take_while1(|c| c != b'\r' && c != b'\n'), |int: &[u8]| {
-            u8_to_i64(int)
+            atoi::atoi::<i64>(int).unwrap_or(0)
         }),
         tag(b"\r\n"),
     )(i)?;
@@ -116,7 +104,7 @@ fn parse_int(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, _) = tag("$")(i)?;
     let (i, len) = map(take_while1(|c| c != b'\r' && c != b'\n'), |int| {
-        u8_to_i64(int)
+        atoi::atoi::<i64>(int).unwrap_or(0)
     })(i)?;
     let (i, _) = tag(b"\r\n")(i)?;
     if len < 0 {
@@ -125,7 +113,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         let len = len as usize;
         let (i, data) = take_while_m_n(len, len, |_| true)(i)?;
         let (i, _) = tag(b"\r\n")(i)?;
-        Ok((i, Frame::Bulk(Arc::from(Box::from(data)))))
+        Ok((i, Frame::Bulk(Box::from(data))))
     }
 }
 
@@ -133,7 +121,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, _) = tag("*")(i)?;
     let (i, len) = map(take_while1(|c| c != b'\r' && c != b'\n'), |int| {
-        u8_to_i64(int)
+        atoi::atoi::<i64>(int).unwrap_or(0)
     })(i)?;
     let (mut i, _) = tag(b"\r\n")(i)?;
     if len < 0 {
@@ -176,12 +164,12 @@ impl Frame {
         match self {
             Frame::Simple(a) => {
                 res.push(b'+');
-                res.extend_from_slice(a.as_bytes());
+                res.extend_from_slice(a);
                 res.extend_from_slice(b"\r\n");
             }
             Frame::Error(a) => {
                 res.push(b'-');
-                res.extend_from_slice(a.as_bytes());
+                res.extend_from_slice(a);
                 res.extend_from_slice(b"\r\n");
             }
             Frame::Integer(a) => {
@@ -236,7 +224,7 @@ mod test {
                 Frame::Bulk(b"hello"[..].into()),
                 Frame::Integer(2),
             ]),
-            Frame::Simple("abc".into()),
+            Frame::Simple(b"abc"[..].into()),
         ]);
         assert_eq!(t, f);
         let v: Vec<u8> = (&f).into();

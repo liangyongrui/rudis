@@ -31,9 +31,13 @@ impl Unknown {
     /// This usually means the command is not yet implemented by `rcc`.
     #[tracing::instrument(skip(self))]
     pub fn apply(self) -> Frame {
-        Frame::Error(format!(
-            "ERR unknown command '{}', params: {:?}",
-            self.command_name, self.params
-        ))
+        Frame::Error(
+            format!(
+                "ERR unknown command '{}', params: {:?}",
+                self.command_name, self.params
+            )
+            .as_bytes()
+            .into(),
+        )
     }
 }

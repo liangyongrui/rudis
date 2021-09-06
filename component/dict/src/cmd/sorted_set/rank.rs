@@ -3,7 +3,7 @@ use crate::{cmd::Read, data_type::DataType, Dict};
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    pub member: &'a str,
+    pub member: &'a [u8],
     /// true 大的在前， false 小的在前
     pub rev: bool,
 }
@@ -18,14 +18,14 @@ impl Read<Option<usize>> for Req<'_> {
                     if self.rev {
                         for n in sorted_set.value.iter().rev() {
                             ans += 1;
-                            if n.key == self.member {
+                            if &*n.key == self.member {
                                 return Ok(Some(ans - 1));
                             }
                         }
                     } else {
                         for n in &sorted_set.value {
                             ans += 1;
-                            if n.key == self.member {
+                            if &*n.key == self.member {
                                 return Ok(Some(ans - 1));
                             }
                         }

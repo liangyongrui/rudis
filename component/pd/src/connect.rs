@@ -54,7 +54,7 @@ impl Handle {
             let res = Self::apply_frame(frame);
             let res = match res {
                 Ok(f) => f,
-                Err(e) => Frame::Error(e.to_string()),
+                Err(e) => Frame::Error(e.to_string().as_bytes().into()),
             };
             self.connection.write_frame(&res).await?;
         }

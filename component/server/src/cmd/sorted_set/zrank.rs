@@ -7,7 +7,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames)]
 pub struct Zrank {
     pub key: Key,
-    pub member: String,
+    pub member: Box<[u8]>,
 }
 
 impl<'a> From<&'a Zrank> for dict::cmd::sorted_set::rank::Req<'a> {

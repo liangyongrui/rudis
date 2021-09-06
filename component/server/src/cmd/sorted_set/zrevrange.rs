@@ -52,12 +52,12 @@ impl Zrevrange {
         let mut res = vec![];
         if withscores {
             for n in response {
-                res.push(Frame::Simple(n.key.into()));
-                res.push(Frame::Simple(n.score.0.to_string().into()));
+                res.push(Frame::Simple(n.key));
+                res.push(Frame::Simple(n.score.0.to_string().as_bytes().into()));
             }
         } else {
             for n in response {
-                res.push(Frame::Simple(n.key.into()));
+                res.push(Frame::Simple(n.key));
             }
         }
         Ok(Frame::Array(res))

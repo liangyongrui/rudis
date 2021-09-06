@@ -20,37 +20,39 @@ impl From<Req> for WriteCmd {
         Self::Set(req)
     }
 }
-/// 返回 原始值
-/// 如果原始值的类型不为SimpleType, 则返回 null
+
 impl ExpiresWrite<DataType> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<DataType>> {
         if let (NxXx::None, ExpiresAt::Specific(expires_at)) = (self.nx_xx, self.expires_at) {
-            let expires_status = if expires_at > 0 {
-                dict.insert(
+            let (old, expires_status) = if expires_at > 0 {
+                let old = dict.insert(
                     self.key.clone(),
                     Value {
                         data: self.value,
                         expires_at,
                     },
                 );
-                ExpiresStatus::Update(ExpiresStatusUpdate {
-                    key: self.key,
-                    before: 0,
-                    new: expires_at,
-                })
+                (
+                    old,
+                    ExpiresStatus::Update(ExpiresStatusUpdate {
+                        key: self.key,
+                        before: 0,
+                        new: expires_at,
+                    }),
+                )
             } else {
-                dict.insert(
+                let old = dict.insert(
                     self.key,
                     Value {
                         data: self.value,
                         expires_at,
                     },
                 );
-                ExpiresStatus::None
+                (old, ExpiresStatus::None)
             };
             return Ok(ExpiresWriteResp {
-                payload: DataType::Null,
+                payload: old.map_or(DataType::Null, |v| v.data),
                 expires_status,
             });
         }
@@ -63,26 +65,25 @@ impl ExpiresWrite<DataType> for Req {
                     expires_status: ExpiresStatus::None,
                 });
             }
+            let old_expires_at = old.expires_at;
             let expires_at = match self.expires_at {
                 ExpiresAt::Specific(i) => i,
-                ExpiresAt::Last => old.expires_at,
+                ExpiresAt::Last => old_expires_at,
             };
-            let old = dict
-                .insert(
-                    self.key,
-                    Value {
-                        data: self.value,
-                        expires_at,
-                    },
-                )
-                .unwrap();
+            let old = dict.insert(
+                self.key,
+                Value {
+                    data: self.value,
+                    expires_at,
+                },
+            );
             let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
                 key,
-                before: old.expires_at,
+                before: old_expires_at,
                 new: expires_at,
             });
             Ok(ExpiresWriteResp {
-                payload: old.data,
+                payload: old.map_or(DataType::Null, |v| v.data),
                 expires_status,
             })
         } else {

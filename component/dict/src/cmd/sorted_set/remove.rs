@@ -10,7 +10,7 @@ use crate::{
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Req {
     pub key: Key,
-    pub members: Vec<String>,
+    pub members: Vec<Box<[u8]>>,
 }
 
 pub struct Resp {

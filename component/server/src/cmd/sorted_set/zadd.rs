@@ -61,7 +61,7 @@ impl Zadd {
             }
         };
         debug!(?score);
-        let member = parse.next_string()?;
+        let member = parse.next_bulk()?;
         let mut nodes = vec![Node::new(member, (&score).try_into()?)];
         loop {
             let score = match next_data_type(parse) {
@@ -69,7 +69,7 @@ impl Zadd {
                 Err(ParseError::EndOfStream) => break,
                 Err(err) => return Err(err.into()),
             };
-            let member = parse.next_string()?;
+            let member = parse.next_bulk()?;
             nodes.push(Node::new(member, score));
         }
 

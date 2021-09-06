@@ -105,6 +105,6 @@ mod test {
         .payload
         .unwrap()
         .data;
-        assert_eq!(res, DataType::String("world".into()));
+        assert_eq!(res, DataType::String(b"world"[..].into()));
     }
 }

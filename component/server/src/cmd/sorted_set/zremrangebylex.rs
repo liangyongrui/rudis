@@ -10,8 +10,8 @@ use crate::Frame;
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
     pub key: Key,
-    pub min: String,
-    pub max: String,
+    pub min: Box<[u8]>,
+    pub max: Box<[u8]>,
 }
 
 impl From<Zremrangebylex> for dict::cmd::sorted_set::remove_by_lex_range::Req {
@@ -19,16 +19,16 @@ impl From<Zremrangebylex> for dict::cmd::sorted_set::remove_by_lex_range::Req {
         let min = old.min;
         let max = old.max;
         let range = {
-            let min = if min == "-" {
+            let min = if min == b"-"[..].into() {
                 Bound::Unbounded
-            } else if let Some(s) = min.strip_prefix('(') {
+            } else if let Some(s) = min.strip_prefix(b"(") {
                 Bound::Excluded(s.into())
             } else {
                 Bound::Included(min[1..].into())
             };
-            let max = if max == "+" {
+            let max = if max == b"+"[..].into() {
                 Bound::Unbounded
-            } else if let Some(s) = max.strip_prefix('(') {
+            } else if let Some(s) = max.strip_prefix(b"(") {
                 Bound::Excluded(s.into())
             } else {
                 Bound::Included(max[1..].into())

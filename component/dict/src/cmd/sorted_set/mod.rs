@@ -45,11 +45,11 @@ pub(self) fn bigger_range(range: (Bound<Float>, Bound<Float>)) -> (Bound<Node>, 
     (
         range.0.map(|f| Node {
             score: f,
-            key: "".to_owned(),
+            key: [][..].into(),
         }),
         range.1.map(|f| Node {
             score: Float(f.0 + 0.1),
-            key: "".to_owned(),
+            key: [][..].into(),
         }),
     )
 }

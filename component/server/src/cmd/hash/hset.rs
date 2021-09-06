@@ -10,7 +10,7 @@ use crate::{frame_parse::next_data_type, Frame};
 #[derive(Debug, Clone)]
 pub struct Hset {
     pub key: Key,
-    pub entries: Vec<(Key, DataType)>,
+    pub entries: Vec<(Box<[u8]>, DataType)>,
 }
 
 impl From<Hset> for dict::cmd::kvp::set::Req {

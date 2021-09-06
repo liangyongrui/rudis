@@ -34,8 +34,8 @@ impl Get {
             dict::data_type::DataType::Null => Frame::Null,
             dict::data_type::DataType::String(s) => Frame::Simple(s),
             dict::data_type::DataType::Bytes(b) => Frame::Bulk(b),
-            dict::data_type::DataType::Integer(i) => Frame::Simple(i.to_string().into()),
-            dict::data_type::DataType::Float(i) => Frame::Simple(i.0.to_string().into()),
+            dict::data_type::DataType::Integer(i) => Frame::Simple(i.to_string().as_bytes().into()),
+            dict::data_type::DataType::Float(i) => Frame::Simple(i.0.to_string().as_bytes().into()),
             _ => {
                 return Err(
                     "WRONGTYPE Operation against a key holding the wrong kind of value".into(),

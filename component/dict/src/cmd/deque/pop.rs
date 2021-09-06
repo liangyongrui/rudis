@@ -25,17 +25,13 @@ impl Write<Vec<DataType>> for Req {
     fn apply(self, dict: &mut Dict) -> common::Result<Vec<DataType>> {
         if let Some(v) = dict.get_mut(&self.key) {
             return if let DataType::Deque(ref mut deque) = v.data {
-                let mut res = vec![];
                 let count = self.count.min(deque.len());
-                if self.left {
-                    for _ in 0..count {
-                        res.push(deque.pop_front().unwrap());
-                    }
+                let res = if self.left {
+                    deque.drain(..count).collect()
                 } else {
-                    for _ in 0..count {
-                        res.push(deque.pop_back().unwrap());
-                    }
-                }
+                    let len = deque.len();
+                    deque.drain(len - count..).rev().collect()
+                };
                 Ok(res)
             } else {
                 Err("WRONGTYPE Operation against a key holding the wrong kind of value".into())

@@ -24,7 +24,6 @@ fn loop_status() {
         sleep(Duration::from_secs(1));
         match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
             Ok(nix::sys::wait::WaitStatus::Exited(pid, _)) => match STATUS.lock().remove(&pid) {
-                // Some(Info::HdpSnapshot { base_id }) => finsh_snapshot(pid, base_id),
                 Some(e) => info!("{:?} exited: {}", e, pid),
                 None => error!("unknown pid: {}", pid),
             },
@@ -38,13 +37,3 @@ fn loop_status() {
 pub fn add(pid: Pid, info: Info) {
     STATUS.lock().insert(pid, info);
 }
-
-// fn finsh_snapshot(pid: Pid, base_id: u64) {
-//     info!("snapshot exited: {}, {}", pid, base_id);
-//     let _ = crate::hdp::snapshot::IN_PROGRESS.compare_exchange(
-//         true,
-//         false,
-//         std::sync::atomic::Ordering::Acquire,
-//         std::sync::atomic::Ordering::Relaxed,
-//     );
-// }

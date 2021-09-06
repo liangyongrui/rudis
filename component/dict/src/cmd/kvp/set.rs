@@ -13,7 +13,7 @@ use crate::{
 pub struct Req {
     pub key: Key,
     // key-value list
-    pub entries: Vec<(Key, DataType)>,
+    pub entries: Vec<(Box<[u8]>, DataType)>,
     /// nx_xx 根据 kvp 的 key 决定
     pub nx_xx: NxXx,
 }

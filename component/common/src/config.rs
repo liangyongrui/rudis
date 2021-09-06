@@ -59,7 +59,7 @@ fn get_config() -> crate::Result<Config> {
         .merge(config::Environment::with_prefix("RCC"))?
         .set_default("max_connections", 3000)?
         .set_default("server_addr", "0.0.0.0:6379")?
-        .set_default("forward_addr", "0.0.0.0:6380")?;
+        .set_default("forward_addr", "0.0.0.0:0")?;
 
     settings.try_into().map_err(|t| t.into())
 }

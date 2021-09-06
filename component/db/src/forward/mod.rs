@@ -1,11 +1,15 @@
 mod connection;
 
+use std::process::exit;
+
+use tracing::error;
+
 use self::connection::ForwardConnections;
 pub use self::message::Message;
 
 pub mod message;
 
-/// 转发服务的状态
+/// Forward
 pub struct Forward {
     pub tx: flume::Sender<Message>,
     rx: flume::Receiver<Message>,
@@ -16,11 +20,20 @@ impl Forward {
         let (tx, rx) = flume::unbounded();
         Self { tx, rx }
     }
+
     pub fn listen(self) {
         tokio::spawn(self.run());
     }
+
     async fn run(self) {
-        let forward_connection = ForwardConnections::new().await;
+        let forward_connection = match ForwardConnections::new().await {
+            Ok(f) => f,
+            Err(e) => {
+                error!("{:?}", e);
+                // failed to activate
+                exit(-1);
+            }
+        };
         while let Ok(msg) = self.rx.recv_async().await {
             forward_connection.push_all(&msg);
         }

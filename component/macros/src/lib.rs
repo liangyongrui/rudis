@@ -74,6 +74,11 @@ fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
                             let #field_name = parse.next_key()?;
                         };
                     }
+                    if *ident == "Box" {
+                        return quote! {
+                            let #field_name = parse.next_bulk()?;
+                        };
+                    }
                     if *ident == "Vec" {
                         if let syn::PathArguments::AngleBracketed(
                             syn::AngleBracketedGenericArguments { args, .. },
@@ -102,6 +107,18 @@ fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
                                             let mut #field_name = vec![parse.next_key()?];
                                             loop {
                                                 match parse.next_key() {
+                                                    Ok(key) => #field_name.push(key),
+                                                    Err(connection::parse::ParseError::EndOfStream) => break,
+                                                    Err(err) => return Err(err.into()),
+                                                }
+                                            }
+                                        };
+                                    }
+                                    if *ident == "Box" {
+                                        return quote! {
+                                            let mut #field_name = vec![parse.next_bulk()?];
+                                            loop {
+                                                match parse.next_bulk() {
                                                     Ok(key) => #field_name.push(key),
                                                     Err(connection::parse::ParseError::EndOfStream) => break,
                                                     Err(err) => return Err(err.into()),

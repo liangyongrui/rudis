@@ -7,7 +7,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames)]
 pub struct Zrevrank {
     pub key: Key,
-    pub member: String,
+    pub member: Box<[u8]>,
 }
 impl<'a> From<&'a Zrevrank> for dict::cmd::sorted_set::rank::Req<'a> {
     fn from(old: &'a Zrevrank) -> Self {
