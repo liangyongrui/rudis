@@ -19,10 +19,10 @@ redis-benchmark -t set,get,rpush,lpop,lrange,hset -n 1000000 -r 100000 -c 1000 -
 
 看起来差距不大，但是有几个需要注意的点
 
-1. 测试rcc的时候，rcc 的cpu利用率 大约300%, redis-benchmark 几乎 400%. 也就是压测工具跑满了, rcc 还没跑满, 其实没压到rcc的瓶颈
-1. 测试redis的时候，redis 的cpu利用率 大约400%, redis-benchmark 不到 300%. 也就是压测工具没跑满了, redis 跑满了，这是真的压测结果
-1. 如果有条件，把redis-benchmark放在另一台机器上，rcc应该可以跑出更好的数据
-1. 如果有条件，用更多的线程，rcc的性能大概率会更好，但是redis基本上就这样了
+1. 测试 rcc 的时候，rcc 的 cpu 利用率 大约 300%, redis-benchmark 几乎 400%. 也就是压测工具跑满了, rcc 还没跑满, 其实没压到 rcc 的瓶颈
+1. 测试 redis 的时候，redis 的 cpu 利用率 大约 400%, redis-benchmark 不到 300%. 也就是压测工具没跑满了, redis 跑满了，这是真的压测结果
+1. 如果有条件，把 redis-benchmark 放在另一台机器上，rcc 应该可以跑出更好的数据
+1. 如果有条件，用更多的线程，rcc 的性能大概率会更好，但是 redis 基本上就这样了
 
 ### rcc
 
