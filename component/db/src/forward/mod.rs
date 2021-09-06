@@ -29,7 +29,7 @@ impl Forward {
         let forward_connection = match ForwardConnections::new().await {
             Ok(f) => f,
             Err(e) => {
-                error!("{:?}", e);
+                error!("ForwardConnections new error: {:?}", e);
                 // failed to activate
                 exit(-1);
             }

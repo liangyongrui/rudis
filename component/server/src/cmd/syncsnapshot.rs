@@ -68,7 +68,7 @@ impl SyncSnapshot {
                 };
                 match run(handler.connection.stream) {
                     Ok(_) => {}
-                    Err(e) => error!("{:?}", e),
+                    Err(e) => error!("send snapshot error: {:?}", e),
                 }
                 exit(0);
             }

@@ -2,7 +2,7 @@
 
 use std::{borrow::BorrowMut, cmp::Ordering};
 
-use dict::cmd::WriteCmd;
+use dict::{cmd::WriteCmd, Dict, MemDict};
 use tracing::error;
 
 use super::{
@@ -34,7 +34,7 @@ impl Slot {
         }
     }
 
-    fn call_update<T, C: Write<T> + Clone>(&self, id: u64, cmd: C) -> Ordering {
+    fn call_update<T, C: Write<T, MemDict> + Clone>(&self, id: u64, cmd: C) -> Ordering {
         self.share_status
             .write()
             .as_mut()
@@ -42,7 +42,7 @@ impl Slot {
                 match id.cmp(&(s.dict.last_write_op_id() + 1)) {
                     Ordering::Less => Ordering::Less,
                     Ordering::Equal => {
-                        s.dict.write_id = id;
+                        s.dict.set_write_id(id);
                         if let Err(e) = cmd.apply(s.dict.borrow_mut()) {
                             error!("call update: {:?}", e);
                         }
@@ -53,12 +53,16 @@ impl Slot {
             })
     }
 
-    pub fn call_expires_update<T, C: ExpiresWrite<T> + Clone>(&self, id: u64, cmd: C) -> Ordering {
+    pub fn call_expires_update<T, C: ExpiresWrite<T, MemDict> + Clone>(
+        &self,
+        id: u64,
+        cmd: C,
+    ) -> Ordering {
         let res = if let Some(s) = &mut *self.share_status.write() {
             match id.cmp(&(s.dict.last_write_op_id() + 1)) {
                 Ordering::Less => return Ordering::Less,
                 Ordering::Equal => {
-                    s.dict.write_id = id;
+                    s.dict.set_write_id(id);
                     cmd.apply(&mut s.dict)
                 }
                 Ordering::Greater => return Ordering::Greater,

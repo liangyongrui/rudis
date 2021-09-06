@@ -29,9 +29,9 @@ impl From<Req> for WriteCmd {
         Self::DequePush(req)
     }
 }
-impl Write<Resp> for Req {
+impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<Resp> {
+    fn apply(self, dict: &mut D) -> common::Result<Resp> {
         if let Some(v) = dict.get_mut(&self.key) {
             if let DataType::Deque(ref mut deque) = v.data {
                 let old_len = deque.len();
@@ -97,12 +97,12 @@ mod test {
             deque::{push, range},
             Read, Write,
         },
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = push::Req {
             key: b"hello"[..].into(),
             elements: vec![

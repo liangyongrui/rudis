@@ -8,9 +8,9 @@ pub struct Req<'a> {
     pub rev: bool,
 }
 
-impl Read<Option<usize>> for Req<'_> {
+impl<D: Dict> Read<Option<usize>, D> for Req<'_> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &Dict) -> common::Result<Option<usize>> {
+    fn apply(self, dict: &D) -> common::Result<Option<usize>> {
         dict.get(self.key).map_or(Ok(None), |v| {
             if let DataType::SortedSet(ref sorted_set) = v.data {
                 if sorted_set.hash.contains_key(self.member) {

@@ -17,9 +17,9 @@ impl From<Req> for WriteCmd {
     }
 }
 /// 返回 原始值
-impl ExpiresWrite<Option<Value>> for Req {
+impl<D: Dict> ExpiresWrite<Option<Value>, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<Option<Value>>> {
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<Option<Value>>> {
         if dict.exists(&self.key) {
             let res = dict.remove(&self.key);
 
@@ -65,12 +65,12 @@ mod test {
             ExpiresStatusUpdate,
         },
         data_type::DataType,
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = del::Req {
             key: b"hello"[..].into(),
         }

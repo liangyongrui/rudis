@@ -5,7 +5,7 @@
 use std::{borrow::Borrow, collections::BTreeSet, sync::Arc, time::Duration};
 
 use common::now_timestamp_ms;
-use dict::cmd::ExpiresStatusUpdate;
+use dict::{cmd::ExpiresStatusUpdate, Dict};
 use keys::Key;
 use parking_lot::Mutex;
 use tokio::{sync::Notify, time};

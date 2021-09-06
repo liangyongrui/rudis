@@ -7,9 +7,9 @@ pub struct Req<'a> {
     pub key: &'a [u8],
 }
 
-impl<'a> Read<HashSet<Box<[u8]>, ahash::RandomState>> for Req<'a> {
+impl<'a, D: Dict> Read<HashSet<Box<[u8]>, ahash::RandomState>, D> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &Dict) -> common::Result<HashSet<Box<[u8]>, ahash::RandomState>> {
+    fn apply(self, dict: &D) -> common::Result<HashSet<Box<[u8]>, ahash::RandomState>> {
         if let Some(v) = dict.get(self.key) {
             return if let DataType::Set(ref set) = v.data {
                 Ok(set.inner.clone())

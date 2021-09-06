@@ -20,9 +20,9 @@ impl From<Req> for WriteCmd {
         Self::SortedSetRemoveByLexRange(req)
     }
 }
-impl Write<Vec<Node>> for Req {
+impl<D: Dict> Write<Vec<Node>, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<Vec<Node>> {
+    fn apply(self, dict: &mut D) -> common::Result<Vec<Node>> {
         if let Some(old) = dict.get_mut(&self.key) {
             if let DataType::SortedSet(ref mut sorted_set) = old.data {
                 let score = match sorted_set.value.iter().next() {

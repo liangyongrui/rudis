@@ -17,10 +17,10 @@ pub enum Resp {
     Ttl(u64),
 }
 
-impl<'a> Read<Resp> for Req<'a> {
+impl<'a, D: Dict> Read<Resp, D> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
 
-    fn apply(self, dict: &Dict) -> common::Result<Resp> {
+    fn apply(self, dict: &D) -> common::Result<Resp> {
         let now = now_timestamp_ms();
         let res = dict
             .raw_get(self.key)

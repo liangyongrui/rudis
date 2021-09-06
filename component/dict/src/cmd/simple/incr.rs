@@ -21,9 +21,9 @@ impl From<Req> for WriteCmd {
 }
 
 /// 返回 更新后的值
-impl Write<i64> for Req {
+impl<D: Dict> Write<i64, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<i64> {
+    fn apply(self, dict: &mut D) -> common::Result<i64> {
         if let Some(v) = dict.get_mut(&self.key) {
             let old: i64 = (&v.data).try_into()?;
             let new = old + self.value;
@@ -46,12 +46,12 @@ impl Write<i64> for Req {
 mod test {
     use crate::{
         cmd::{simple::incr, Write},
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let cmd = incr::Req {
             key: b"hello"[..].into(),
             value: 10,

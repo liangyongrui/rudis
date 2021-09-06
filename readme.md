@@ -13,7 +13,6 @@ rust cloud cache
 
 ## todo list
 
-1. [ ] 优化各种 error anyhow+thiserror
 1. [ ] 再次检查主从复制的逻辑
 1. [ ] 去掉中文注释, 尽可能的增加英文注释
 1. [ ] roadmap

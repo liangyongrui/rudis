@@ -22,9 +22,9 @@ impl From<Req> for WriteCmd {
 }
 
 /// 返回 更新后的值
-impl Write<i64> for Req {
+impl<D: Dict> Write<i64, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<i64> {
+    fn apply(self, dict: &mut D) -> common::Result<i64> {
         let v = dict.get_mut_or_insert_with(self.key, || Value {
             expires_at: 0,
             data: DataType::Kvp(Box::new(Kvp::new())),
@@ -55,12 +55,12 @@ mod test {
             kvp::{get_all, incr, set},
             Read, Write,
         },
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = set::Req {
             key: b"hello"[..].into(),
             entries: vec![

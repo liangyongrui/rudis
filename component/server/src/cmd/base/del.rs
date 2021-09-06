@@ -29,7 +29,7 @@ impl Del {
         }
         let response = Frame::Integer(res);
         if let Err(e) = connection.write_frame(&response).await {
-            error!("{:?}", e);
+            error!("connection error: {:?}", e);
         }
         Ok(Frame::NoRes)
     }

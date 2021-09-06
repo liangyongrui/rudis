@@ -12,7 +12,7 @@ use dict::{
     cmd::{ExpiresWrite, ExpiresWriteResp, Read, Write},
     data_type,
     data_type::DataType,
-    Dict, Value,
+    Dict, MemDict, Value,
 };
 use parking_lot::RwLock;
 use tracing::error;
@@ -28,7 +28,7 @@ pub struct Slot {
 
 #[derive(Default)]
 pub struct ShareStatus {
-    pub dict: Dict,
+    pub dict: MemDict,
 }
 impl Slot {
     pub fn new(slot_id: usize, bg_task: BgTask) -> Self {
@@ -43,7 +43,7 @@ impl Slot {
     ///
     /// dict 中的过期数据最好提前清理一下,
     /// 如果快照复制过来的, 过期数据并不多
-    pub fn replace_dict(&self, dict: Dict) {
+    pub fn replace_dict(&self, dict: MemDict) {
         if let Err(e) = self
             .bg_task
             .expire_sender
@@ -72,7 +72,7 @@ impl Slot {
     }
 
     #[inline]
-    fn call_write<T, C: Write<T> + Clone>(&self, cmd: C) -> common::Result<T> {
+    fn call_write<T, C: Write<T, MemDict> + Clone>(&self, cmd: C) -> common::Result<T> {
         let cc = cmd.clone();
         // 加锁执行命令
         let (res, id) = {
@@ -98,7 +98,10 @@ impl Slot {
     }
 
     #[inline]
-    fn call_expires_write<T, C: ExpiresWrite<T> + Clone>(&self, cmd: C) -> common::Result<T> {
+    fn call_expires_write<T, C: ExpiresWrite<T, MemDict> + Clone>(
+        &self,
+        cmd: C,
+    ) -> common::Result<T> {
         let cc = cmd.clone();
         // 加锁执行命令
         let (res, id) = {
@@ -149,7 +152,7 @@ impl Slot {
     }
 
     #[inline]
-    fn call_read<T, C: Read<T> + Clone>(&self, cmd: C) -> common::Result<T> {
+    fn call_read<T, C: Read<T, MemDict> + Clone>(&self, cmd: C) -> common::Result<T> {
         let share_status = self.share_status.read();
         match &*share_status {
             Some(s) => cmd.apply(&s.dict),

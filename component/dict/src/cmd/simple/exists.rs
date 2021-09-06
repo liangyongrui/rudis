@@ -5,9 +5,9 @@ pub struct Req<'a> {
     pub key: &'a [u8],
 }
 
-impl<'a> Read<bool> for Req<'a> {
+impl<'a, D: Dict> Read<bool, D> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &Dict) -> common::Result<bool> {
+    fn apply(self, dict: &D) -> common::Result<bool> {
         Ok(dict.exists(self.key))
     }
 }
@@ -25,12 +25,12 @@ mod test {
             ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
         },
         data_type::DataType,
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = exists::Req {
             key: b"hello"[..].into(),
         }

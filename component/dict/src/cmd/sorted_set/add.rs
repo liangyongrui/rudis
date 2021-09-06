@@ -36,9 +36,9 @@ impl From<Req> for WriteCmd {
         Self::SortedSetAdd(req)
     }
 }
-impl Write<Resp> for Req {
+impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<Resp> {
+    fn apply(self, dict: &mut D) -> common::Result<Resp> {
         let old = dict.get_mut_or_insert_with(self.key, || Value {
             data: DataType::SortedSet(Box::new(SortedSet::new())),
             expires_at: 0,

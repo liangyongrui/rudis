@@ -29,9 +29,9 @@ impl From<Req> for WriteCmd {
         Self::KvpSet(req)
     }
 }
-impl Write<Resp> for Req {
+impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<Resp> {
+    fn apply(self, dict: &mut D) -> common::Result<Resp> {
         let old = dict.get_mut_or_insert_with(self.key, || Value {
             data: DataType::Kvp(Box::new(Kvp::new())),
             expires_at: 0,

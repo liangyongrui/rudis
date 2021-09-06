@@ -20,9 +20,9 @@ impl From<Req> for WriteCmd {
         Self::DequePop(req)
     }
 }
-impl Write<Vec<DataType>> for Req {
+impl<D: Dict> Write<Vec<DataType>, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<Vec<DataType>> {
+    fn apply(self, dict: &mut D) -> common::Result<Vec<DataType>> {
         if let Some(v) = dict.get_mut(&self.key) {
             return if let DataType::Deque(ref mut deque) = v.data {
                 let count = self.count.min(deque.len());
@@ -50,12 +50,12 @@ mod test {
             deque::{pop, push},
             Write,
         },
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = push::Req {
             key: b"hello"[..].into(),
             elements: vec![

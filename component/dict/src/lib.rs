@@ -15,8 +15,27 @@ use common::now_timestamp_ms;
 use data_type::DataType;
 use keys::Key;
 use serde::{Deserialize, Serialize};
+
+pub trait Dict {
+    fn next_id(&mut self) -> u64;
+    fn last_write_op_id(&self) -> u64;
+    fn set_write_id(&mut self, id: u64);
+
+    fn exists(&self, key: &[u8]) -> bool;
+    fn get(&self, key: &[u8]) -> Option<&Value>;
+    fn get_mut(&mut self, key: &[u8]) -> Option<&mut Value>;
+    fn get_mut_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value;
+    fn remove(&mut self, key: &[u8]) -> Option<Value>;
+    fn insert(&mut self, k: Key, v: Value) -> Option<Value>;
+    fn raw_get(&self, k: &[u8]) -> Option<&Value>;
+    fn len(&self) -> usize;
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Dict {
+pub struct MemDict {
     pub write_id: u64,
     pub inner: HashMap<Key, Value, ahash::RandomState>,
 }
@@ -29,38 +48,38 @@ pub struct Value {
     pub expires_at: u64,
 }
 
-impl Dict {
+impl Dict for MemDict {
     #[inline]
-    pub fn next_id(&mut self) -> u64 {
+    fn next_id(&mut self) -> u64 {
         self.write_id += 1;
         self.write_id
     }
 
-    pub fn last_write_op_id(&self) -> u64 {
+    fn last_write_op_id(&self) -> u64 {
         self.write_id
     }
 
     #[inline]
-    pub fn exists(&self, key: &[u8]) -> bool {
+    fn exists(&self, key: &[u8]) -> bool {
         self.get(key).is_some()
     }
 
     #[inline]
-    pub fn get(&self, key: &[u8]) -> Option<&Value> {
+    fn get(&self, key: &[u8]) -> Option<&Value> {
         self.inner
             .get(key)
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
     #[inline]
-    pub fn get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
+    fn get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
         self.inner
             .get_mut(key)
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
     }
 
     #[inline]
-    pub fn get_mut_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value {
+    fn get_mut_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value {
         match self.inner.entry(key) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
                 let expires_at = o.get().expires_at;
@@ -74,27 +93,26 @@ impl Dict {
     }
 
     #[inline]
-    pub fn remove(&mut self, key: &[u8]) -> Option<Value> {
+    fn remove(&mut self, key: &[u8]) -> Option<Value> {
         self.inner.remove(key)
     }
 
     #[inline]
-    pub fn insert(&mut self, k: Key, v: Value) -> Option<Value> {
+    fn insert(&mut self, k: Key, v: Value) -> Option<Value> {
         self.inner.insert(k, v)
     }
 
     #[inline]
-    pub fn raw_get(&self, k: &[u8]) -> Option<&Value> {
+    fn raw_get(&self, k: &[u8]) -> Option<&Value> {
         self.inner.get(k)
     }
 
     #[inline]
-    pub fn len(&self) -> usize {
+    fn len(&self) -> usize {
         self.inner.len()
     }
 
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
+    fn set_write_id(&mut self, id: u64) {
+        self.write_id = id;
     }
 }

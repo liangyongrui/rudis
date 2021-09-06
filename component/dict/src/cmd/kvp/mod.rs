@@ -15,12 +15,12 @@ mod test {
     use crate::{
         cmd::{Read, Write},
         data_type::DataType,
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = set::Req {
             key: b"hello"[..].into(),
             entries: vec![

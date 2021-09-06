@@ -8,10 +8,10 @@ use std::{
 use arc_swap::ArcSwapOption;
 use common::{pd_message::LeaderInfo, SYNC_CMD};
 use connection::parse::frame::Frame;
-use dict::Dict;
+use dict::MemDict;
 use parking_lot::Mutex;
 use tokio::sync::Notify;
-use tracing::error;
+use tracing::{error, warn};
 
 use crate::{forward::Message, Db, SLOT_SIZE};
 
@@ -53,7 +53,7 @@ impl Inner {
 
         tokio::task::spawn_blocking(move || {
             if let Err(e) = self.sync_snapshot_without_lock(slot_id) {
-                error!("{:?}", e);
+                error!("sync_snapshot error: {:?}", e);
             }
         });
 
@@ -71,7 +71,7 @@ impl Inner {
         stream.write_all(&req)?;
         while let Some(slot_id) = bincode::deserialize_from::<_, Option<u16>>(&mut stream)? {
             let slot_id = slot_id as usize;
-            let dict: Dict = bincode::deserialize_from(&mut stream)?;
+            let dict: MemDict = bincode::deserialize_from(&mut stream)?;
             self.db.replace_dict(slot_id, dict);
             self.snapshot_lock[slot_id].store(false, std::sync::atomic::Ordering::Release);
         }
@@ -99,7 +99,7 @@ impl Inner {
                             self.db.slots[slot_id].process_forward(msg.id, msg.cmd.clone())
                         {
                             if let Err(e) = self.clone().sync_snapshot(slot_id) {
-                                error!("{:?}", e); // 别的同步正在进行, 重试几次
+                                warn!("process_cmd: {:?}", e); // 别的同步正在进行, 重试几次
                                 tokio::time::sleep(Duration::from_secs(1)).await;
                             }
                         } else {
@@ -121,7 +121,7 @@ impl Inner {
         let stream = BufReader::new(stream);
         tokio::task::spawn_blocking(move || {
             if let Err(e) = receive_cmd(&tx, stream) {
-                error!("{:?}", e);
+                error!("sync_cmd error: {:?}", e);
             }
         });
         self.cmd_rx.store(Some(Arc::new(rx)));

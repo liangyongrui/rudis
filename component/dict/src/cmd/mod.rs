@@ -33,30 +33,30 @@ pub struct ExpiresStatusUpdate {
     pub before: u64,
     pub new: u64,
 }
-pub trait ExpiresWrite<T>
+pub trait ExpiresWrite<T, D: Dict>
 where
     Self: Into<WriteCmd>,
 {
     /// apply with expire time
     /// # Errors
     /// inner error
-    fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<T>>;
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<T>>;
 }
-pub trait Write<T>
+pub trait Write<T, D: Dict>
 where
     Self: Into<WriteCmd>,
 {
     /// apply
     /// # Errors
     /// inner error
-    fn apply(self, dict: &mut Dict) -> common::Result<T>;
+    fn apply(self, dict: &mut D) -> common::Result<T>;
 }
 
-pub trait Read<T> {
+pub trait Read<T, D: Dict> {
     /// apply
     /// # Errors
     /// inner error
-    fn apply(self, dict: &Dict) -> common::Result<T>;
+    fn apply(self, dict: &D) -> common::Result<T>;
 }
 
 #[allow(clippy::module_name_repetitions)]

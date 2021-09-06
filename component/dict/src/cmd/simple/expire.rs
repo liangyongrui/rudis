@@ -20,9 +20,9 @@ impl From<Req> for WriteCmd {
     }
 }
 /// 返回 是否更新成功
-impl ExpiresWrite<bool> for Req {
+impl<D: Dict> ExpiresWrite<bool, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<bool>> {
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<bool>> {
         dict.get_mut(&self.key).map_or(
             Ok(ExpiresWriteResp {
                 payload: false,
@@ -82,12 +82,12 @@ mod test {
             ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
         },
         data_type::DataType,
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let date_time = now_timestamp_ms() + 1000;
         let cmd = set::Req {
             key: b"hello"[..].into(),

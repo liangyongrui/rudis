@@ -22,7 +22,7 @@ use crc::Crc;
 use dict::{
     cmd,
     data_type::{self, DataType},
-    Dict,
+    MemDict,
 };
 use forward::Forward;
 use parking_lot::Mutex;
@@ -76,7 +76,7 @@ impl Db {
 
         if let Some(pd) = CONFIG.from_pd {
             if let Err(e) = pd_handle::run(db.clone(), pd).await {
-                error!("{:?}", e);
+                error!("pd_handle run error: {:?}", e);
                 exit(-1)
             };
         }
@@ -103,7 +103,7 @@ impl Db {
     }
 
     #[inline]
-    pub fn replace_dict(&self, slot_id: usize, dict: Dict) {
+    pub fn replace_dict(&self, slot_id: usize, dict: MemDict) {
         self.slots[slot_id].replace_dict(dict);
     }
 }

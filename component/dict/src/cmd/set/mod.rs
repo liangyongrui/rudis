@@ -9,12 +9,12 @@ mod test {
     use super::*;
     use crate::{
         cmd::{Read, Write},
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let res = add::Req {
             key: b"hello"[..].into(),
             members: vec![b"k1"[..].into(), b"k2"[..].into(), b"k3"[..].into()],

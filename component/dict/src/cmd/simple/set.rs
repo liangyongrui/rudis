@@ -21,9 +21,9 @@ impl From<Req> for WriteCmd {
     }
 }
 
-impl ExpiresWrite<DataType> for Req {
+impl<D: Dict> ExpiresWrite<DataType, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<DataType>> {
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<DataType>> {
         if let (NxXx::None, ExpiresAt::Specific(expires_at)) = (self.nx_xx, self.expires_at) {
             let (old, expires_status) = if expires_at > 0 {
                 let old = dict.insert(
@@ -133,12 +133,12 @@ mod test {
     use super::*;
     use crate::{
         cmd::{simple::get, Read},
-        Dict,
+        MemDict,
     };
 
     #[test]
     fn test1() {
-        let mut dict = Dict::default();
+        let mut dict = MemDict::default();
         let date_time = now_timestamp_ms() + 1000;
         let cmd = Req {
             key: b"hello"[..].into(),

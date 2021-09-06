@@ -20,9 +20,9 @@ pub struct Req<'a> {
     pub rev: bool,
 }
 
-impl Read<Vec<data_type::sorted_set::Node>> for Req<'_> {
+impl<D: Dict> Read<Vec<data_type::sorted_set::Node>, D> for Req<'_> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &Dict) -> common::Result<Vec<data_type::sorted_set::Node>> {
+    fn apply(self, dict: &D) -> common::Result<Vec<data_type::sorted_set::Node>> {
         if let Some(value) = dict.get(self.key) {
             if let DataType::SortedSet(ref ss) = value.data {
                 let value = &ss.value;
