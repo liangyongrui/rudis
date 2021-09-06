@@ -13,6 +13,7 @@ rust cloud cache
 
 ## todo list
 
+1. [ ] 不需要插入的 key 不用 arc
 1. [ ] servo_arc = "0.1.1"
 1. [ ] 除了 key，别的都用 box<[u8]>
 1. [ ] loop 向上抛的异常

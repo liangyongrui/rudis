@@ -197,7 +197,7 @@ impl Db {
     pub fn set_get_all(
         &self,
         cmd: cmd::set::get_all::Req<'_>,
-    ) -> common::Result<HashSet<String, ahash::RandomState>> {
+    ) -> common::Result<HashSet<Box<[u8]>, ahash::RandomState>> {
         self.get_slot(cmd.key).set_get_all(cmd)
     }
     #[inline]

@@ -1,7 +1,5 @@
-mod simple_arc;
-
 /// Save 1 byte than `std::sync::Arc<[u8]>`
-pub type Key2 = simple_arc::Arc<[u8]>;
+// pub type Key = servo_arc::Arc<[u8]>;
 
 pub type Key = std::sync::Arc<[u8]>;
 

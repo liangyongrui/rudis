@@ -1,5 +1,4 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -7,8 +6,8 @@ use crate::Frame;
 /// https://redis.io/commands/sismember
 #[derive(Debug, ParseFrames)]
 pub struct Sismember {
-    pub key: Key,
-    pub value: String,
+    pub key: Box<[u8]>,
+    pub value: Box<[u8]>,
 }
 
 impl<'a> From<&'a Sismember> for dict::cmd::set::exists::Req<'a> {

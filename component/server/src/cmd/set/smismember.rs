@@ -1,20 +1,19 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/smismember
 #[derive(Debug, ParseFrames)]
 pub struct Smismember {
-    pub key: Key,
-    pub values: Vec<String>,
+    pub key: Box<[u8]>,
+    pub values: Vec<Box<[u8]>>,
 }
 
 impl<'a> From<&'a Smismember> for dict::cmd::set::exists::Req<'a> {
     fn from(old: &'a Smismember) -> Self {
         Self {
             key: &old.key,
-            fields: old.values.iter().map(std::string::String::as_str).collect(),
+            fields: old.values.iter().map(|t| &**t).collect(),
         }
     }
 }

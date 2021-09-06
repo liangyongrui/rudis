@@ -1,5 +1,4 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::{frame_parse, Frame};
@@ -7,8 +6,8 @@ use crate::{frame_parse, Frame};
 /// https://redis.io/commands/hget
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
-    pub key: Key,
-    pub field: Key,
+    pub key: Box<[u8]>,
+    pub field: Box<[u8]>,
 }
 
 impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {

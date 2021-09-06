@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub struct Set {
-    pub inner: HashSet<String, ahash::RandomState>,
+    pub inner: HashSet<Box<[u8]>, ahash::RandomState>,
 }
 
 impl Set {
@@ -17,7 +17,7 @@ impl Set {
 }
 
 impl Deref for Set {
-    type Target = HashSet<String, ahash::RandomState>;
+    type Target = HashSet<Box<[u8]>, ahash::RandomState>;
 
     fn deref(&self) -> &Self::Target {
         &self.inner

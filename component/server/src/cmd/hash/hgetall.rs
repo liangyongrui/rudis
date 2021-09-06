@@ -1,5 +1,4 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
@@ -7,7 +6,7 @@ use crate::{frame_parse::data_type_to_frame, Frame};
 /// https://redis.io/commands/hgetall
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
-    pub key: Key,
+    pub key: Box<[u8]>,
 }
 
 impl<'a> From<&'a Hgetall> for dict::cmd::kvp::get_all::Req<'a> {

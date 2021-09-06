@@ -8,7 +8,7 @@ use crate::Frame;
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Sadd {
     pub key: Key,
-    pub values: Vec<String>,
+    pub values: Vec<Box<[u8]>>,
 }
 
 impl From<Sadd> for dict::cmd::set::add::Req {

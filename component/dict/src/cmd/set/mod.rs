@@ -5,7 +5,6 @@ pub mod remove;
 
 #[cfg(test)]
 mod test {
-    use std::convert::TryInto;
 
     use super::*;
     use crate::{
@@ -18,7 +17,7 @@ mod test {
         let mut dict = Dict::default();
         let res = add::Req {
             key: b"hello"[..].into(),
-            members: vec!["k1".into(), "k2".into(), "k3".into()],
+            members: vec![b"k1"[..].into(), b"k2"[..].into(), b"k3"[..].into()],
         }
         .apply(&mut dict)
         .unwrap();
@@ -37,14 +36,15 @@ mod test {
         assert_eq!(
             {
                 let mut v = res.into_iter().collect::<Vec<_>>();
-                v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
+                v.sort();
+                // v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
                 v
             },
-            vec!["k1".to_owned(), "k2".to_owned(), "k3".to_owned()]
+            vec![b"k1"[..].into(), b"k2"[..].into(), b"k3"[..].into()]
         );
         let res = add::Req {
             key: b"hello"[..].into(),
-            members: vec!["k1".into(), "k4".into(), "k5".into()],
+            members: vec![b"k1"[..].into(), b"k4"[..].into(), b"k5"[..].into()],
         }
         .apply(&mut dict)
         .unwrap();
@@ -64,21 +64,22 @@ mod test {
         assert_eq!(
             {
                 let mut v = res.into_iter().collect::<Vec<_>>();
-                v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
+                v.sort();
+                // v.sort_unstable_by_key::<String, _>(|t| t.try_into().unwrap());
                 v
             },
             vec![
-                "k1".to_owned(),
-                "k2".to_owned(),
-                "k3".to_owned(),
-                "k4".to_owned(),
-                "k5".to_owned(),
+                b"k1"[..].into(),
+                b"k2"[..].into(),
+                b"k3"[..].into(),
+                b"k4"[..].into(),
+                b"k5"[..].into(),
             ]
         );
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            fields: vec!["k1"],
+            fields: vec![&b"k1"[..]],
         }
         .apply(&dict)
         .unwrap();
@@ -86,7 +87,7 @@ mod test {
 
         let res = remove::Req {
             key: b"hello"[..].into(),
-            members: vec!["k1".into(), "k10".into()],
+            members: vec![b"k1"[..].into(), b"k10"[..].into()],
         }
         .apply(&mut dict)
         .unwrap();
@@ -100,7 +101,7 @@ mod test {
 
         let res = exists::Req {
             key: b"hello"[..].into(),
-            fields: vec!["k1"],
+            fields: vec![&b"k1"[..]],
         }
         .apply(&dict)
         .unwrap();

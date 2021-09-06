@@ -1,5 +1,4 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -7,7 +6,7 @@ use crate::Frame;
 /// https://redis.io/commands/llen
 #[derive(Debug, ParseFrames)]
 pub struct Llen {
-    pub key: Key,
+    pub key: Box<[u8]>,
 }
 
 impl<'a> From<&'a Llen> for dict::cmd::deque::len::Req<'a> {

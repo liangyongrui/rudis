@@ -1,5 +1,4 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
@@ -7,7 +6,7 @@ use crate::Frame;
 /// https://redis.io/commands/smembers
 #[derive(Debug, ParseFrames)]
 pub struct Smembers {
-    pub key: Key,
+    pub key: Box<[u8]>,
 }
 
 impl<'a> From<&'a Smembers> for dict::cmd::set::get_all::Req<'a> {
@@ -20,10 +19,6 @@ impl Smembers {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.set_get_all((&self).into())?;
-        Ok(Frame::Array(
-            res.iter()
-                .map(|t| Frame::Simple(t.as_bytes().into()))
-                .collect(),
-        ))
+        Ok(Frame::Array(res.into_iter().map(Frame::Simple).collect()))
     }
 }

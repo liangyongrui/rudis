@@ -1,12 +1,11 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
 /// https://redis.io/commands/zrevrank
 #[derive(Debug, ParseFrames)]
 pub struct Zrevrank {
-    pub key: Key,
+    pub key: Box<[u8]>,
     pub member: Box<[u8]>,
 }
 impl<'a> From<&'a Zrevrank> for dict::cmd::sorted_set::rank::Req<'a> {

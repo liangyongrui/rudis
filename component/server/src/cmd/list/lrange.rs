@@ -1,5 +1,4 @@
 use db::Db;
-use keys::Key;
 use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
@@ -7,7 +6,7 @@ use crate::{frame_parse::data_type_to_frame, Frame};
 /// https://redis.io/commands/lrange
 #[derive(Debug, ParseFrames)]
 pub struct Lrange {
-    pub key: Key,
+    pub key: Box<[u8]>,
     pub start: i64,
     pub stop: i64,
 }
