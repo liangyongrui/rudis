@@ -126,19 +126,16 @@ impl Expiration {
     ) {
         loop {
             let next = Expiration::purge_expired_keys(&data, db.borrow());
-            debug!(next);
             if next == 0 {
                 // There are no keys expiring in the future.
                 // Wait until the task is notified.
                 notify.notified().await;
-                debug!("notify 2");
             }
             let now = now_timestamp_ms();
             if next > now {
                 tokio::select! {
                     _ = time::sleep(Duration::from_millis(next - now)) =>{}
                     _ = notify.notified() => {
-                        debug!("notify 1");
                     }
                 }
             }
@@ -206,6 +203,7 @@ mod test {
 
     #[tokio::test]
     async fn test() {
+        #[allow(clippy::let_underscore_drop)]
         let _ = tracing_subscriber::fmt::Subscriber::builder()
             .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
             .with_max_level(tracing::Level::DEBUG)

@@ -5,7 +5,7 @@ pub const DEFAULT_PORT: &str = "6666";
 
 pub fn main() -> common::Result<()> {
     // enable logging
-    // see https://docs.rs/tracing for more info
+    // see <https://docs.rs/tracing for more info
     let _ = tracing_subscriber::fmt::Subscriber::builder()
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .with_max_level(tracing::Level::INFO)

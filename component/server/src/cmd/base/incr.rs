@@ -3,7 +3,7 @@ use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
-/// https://redis.io/commands/incr
+/// <https://redis.io/commands/incr>
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Incr {
     pub key: Key,

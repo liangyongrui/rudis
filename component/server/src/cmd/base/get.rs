@@ -8,7 +8,8 @@ use crate::Frame;
 /// If the key does not exist the special value nil is returned. An error is
 /// returned if the value stored at key is not a string, because GET only
 /// handles string values.
-/// https://redis.io/commands/get
+///
+/// <https://redis.io/commands/get>
 #[derive(Debug, ParseFrames)]
 pub struct Get {
     /// Name of the key to get

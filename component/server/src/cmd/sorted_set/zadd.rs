@@ -9,7 +9,7 @@ use tracing::debug;
 
 use crate::frame_parse::next_data_type;
 
-/// https://redis.io/commands/zadd
+/// <https://redis.io/commands/zadd>
 #[derive(Debug, Clone)]
 pub struct Zadd {
     pub key: Key,

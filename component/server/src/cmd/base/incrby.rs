@@ -3,7 +3,7 @@ use keys::Key;
 use macros::ParseFrames;
 
 use crate::Frame;
-/// https://redis.io/commands/incrby
+/// <https://redis.io/commands/incrby>
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Incrby {
     pub key: Key,

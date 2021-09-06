@@ -85,14 +85,14 @@ async fn run_connect_task(
         select! {
             // 转发消息
             msg = rx.recv_async() => {
-                let _ = stream.write_all(&bincode::serialize(&msg?)?).await;
+                 stream.write_all(&bincode::serialize(&msg?)?).await?;
             }
             // 处理心跳
             n = stream.read(&mut ping_buf) => {
                 if n? == 0 {
                     return Err("EOF".into());
                 }
-                let _ = stream.write_all(&bincode::serialize(&super::Message::none())?).await;
+                stream.write_all(&bincode::serialize(&super::Message::none())?).await?;
             }
         }
     }

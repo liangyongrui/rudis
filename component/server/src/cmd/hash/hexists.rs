@@ -3,7 +3,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/hexists
+/// <https://redis.io/commands/hexists>
 #[derive(Debug, ParseFrames)]
 pub struct Hexists {
     pub key: Box<[u8]>,

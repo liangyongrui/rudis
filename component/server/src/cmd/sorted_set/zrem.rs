@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/zrem
+/// <https://redis.io/commands/zrem>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Zrem {
     pub key: Key,

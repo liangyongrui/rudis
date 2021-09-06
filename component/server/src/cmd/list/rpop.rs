@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
 
-/// https://redis.io/commands/rpop
+/// <https://redis.io/commands/rpop>
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Rpop {
     pub key: Key,

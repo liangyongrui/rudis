@@ -6,7 +6,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/lpushx
+/// <https://redis.io/commands/lpushx>
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Lpushx {
     pub key: Key,

@@ -37,16 +37,25 @@ pub trait ExpiresWrite<T>
 where
     Self: Into<WriteCmd>,
 {
+    /// apply with expire time
+    /// # Errors
+    /// inner error
     fn apply(self, dict: &mut Dict) -> common::Result<ExpiresWriteResp<T>>;
 }
 pub trait Write<T>
 where
     Self: Into<WriteCmd>,
 {
+    /// apply
+    /// # Errors
+    /// inner error
     fn apply(self, dict: &mut Dict) -> common::Result<T>;
 }
 
 pub trait Read<T> {
+    /// apply
+    /// # Errors
+    /// inner error
     fn apply(self, dict: &Dict) -> common::Result<T>;
 }
 

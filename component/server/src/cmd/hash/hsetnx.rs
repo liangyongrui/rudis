@@ -6,7 +6,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/hsetnx
+/// <https://redis.io/commands/hsetnx>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: Key,

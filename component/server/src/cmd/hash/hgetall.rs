@@ -3,7 +3,7 @@ use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
 
-/// https://redis.io/commands/hgetall
+/// <https://redis.io/commands/hgetall>
 #[derive(Debug, ParseFrames)]
 pub struct Hgetall {
     pub key: Box<[u8]>,

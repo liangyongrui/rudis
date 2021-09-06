@@ -84,7 +84,7 @@ impl Inner {
     fn lock_slot(&self, slot_id: usize) {
         if slot_id != SLOT_SIZE {}
         for l in &self.snapshot_lock {
-            l.store(true, std::sync::atomic::Ordering::Release);
+            l.store(true, std::sync::atomic::Ordering::Relaxed);
         }
     }
 

@@ -3,7 +3,7 @@ use macros::ParseFrames;
 
 use crate::{frame_parse, Frame};
 
-/// https://redis.io/commands/hget
+/// <https://redis.io/commands/hget>
 #[derive(Debug, ParseFrames)]
 pub struct Hget {
     pub key: Box<[u8]>,

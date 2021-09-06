@@ -3,6 +3,7 @@
 use std::{borrow::BorrowMut, cmp::Ordering};
 
 use dict::cmd::WriteCmd;
+use tracing::error;
 
 use super::{
     cmd::{self, ExpiresWrite, ExpiresWriteResp, Write},
@@ -42,7 +43,9 @@ impl Slot {
                     Ordering::Less => Ordering::Less,
                     Ordering::Equal => {
                         s.dict.write_id = id;
-                        let _ = cmd.apply(s.dict.borrow_mut());
+                        if let Err(e) = cmd.apply(s.dict.borrow_mut()) {
+                            error!("call update: {:?}", e);
+                        }
                         Ordering::Equal
                     }
                     Ordering::Greater => Ordering::Greater,
@@ -69,12 +72,14 @@ impl Slot {
                 cmd::ExpiresStatus::None => (),
                 cmd::ExpiresStatus::Update(u) => {
                     if u.before != u.new {
-                        let _ = self.bg_task.expire_sender.send(expire::Message::Update(
+                        if let Err(e) = self.bg_task.expire_sender.send(expire::Message::Update(
                             expire::Update {
                                 status: u,
                                 slot: self.slot_id,
                             },
-                        ));
+                        )) {
+                            error!("call_expires_update: {:?}", e);
+                        }
                     }
                 }
             }

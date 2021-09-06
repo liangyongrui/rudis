@@ -13,15 +13,7 @@ rust cloud cache
 
 ## todo list
 
-1. [ ] 不需要插入的 key 不用 arc
-1. [ ] servo_arc = "0.1.1"
-1. [ ] 除了 key，别的都用 box<[u8]>
-1. [ ] loop 向上抛的异常
-1. [ ] 各个 task 的优雅退出
-1. [ ] 规范每个模块的命名
 1. [ ] 优化各种 error anyhow+thiserror
-1. [ ] 检查代码中各种可能的 panic
-1. [ ] 规范 tokio task 的使用
 1. [ ] 再次检查主从复制的逻辑
 1. [ ] 去掉中文注释, 尽可能的增加英文注释
 1. [ ] roadmap

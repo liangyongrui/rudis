@@ -1,13 +1,9 @@
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::shadow_unrelated)]
-#![allow(clippy::doc_markdown)]
-#![allow(unstable_name_collisions)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
-#![allow(clippy::let_underscore_drop)]
 
 pub mod child_process;
 mod expire;
@@ -55,7 +51,7 @@ pub struct Db {
     pub role: Mutex<Role>,
 }
 
-// https://redis.io/topics/cluster-spec
+// <https://redis.io/topics/cluster-spec
 const SIZE_MOD: u16 = 16383;
 const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
 
@@ -113,6 +109,7 @@ impl Db {
 }
 
 /// cmd
+#[allow(clippy::missing_errors_doc)]
 impl Db {
     #[inline]
     pub fn get(&self, cmd: cmd::simple::get::Req) -> common::Result<DataType> {

@@ -6,7 +6,7 @@ use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
 
-/// https://redis.io/commands/hmget
+/// <https://redis.io/commands/hmget>
 #[derive(Debug, ParseFrames)]
 pub struct Hmget {
     pub key: Key,

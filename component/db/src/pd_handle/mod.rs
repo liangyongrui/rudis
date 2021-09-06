@@ -49,7 +49,11 @@ impl PdHandle {
             .await?;
         let status: ServerStatus = bincode::deserialize(&self.read_bytes().await?)?;
         let res = self.update_status(status);
-        tokio::spawn(self.heartbeat());
+        tokio::spawn(async {
+            if let Err(e) = self.heartbeat().await {
+                error!("pd heartbeat error: {:?}", e);
+            }
+        });
         res
     }
 

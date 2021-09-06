@@ -3,7 +3,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/smembers
+/// <https://redis.io/commands/smembers>
 #[derive(Debug, ParseFrames)]
 pub struct Smembers {
     pub key: Box<[u8]>,

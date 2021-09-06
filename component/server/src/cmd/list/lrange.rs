@@ -3,7 +3,7 @@ use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
 
-/// https://redis.io/commands/lrange
+/// <https://redis.io/commands/lrange>
 #[derive(Debug, ParseFrames)]
 pub struct Lrange {
     pub key: Box<[u8]>,

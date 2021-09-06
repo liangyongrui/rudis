@@ -1,7 +1,7 @@
 use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 
-/// https://redis.io/commands/zrevrange
+/// <https://redis.io/commands/zrevrange>
 #[derive(Debug)]
 pub struct Zrevrange {
     pub key: Box<[u8]>,

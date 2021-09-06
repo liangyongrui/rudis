@@ -6,7 +6,7 @@ use keys::Key;
 
 use crate::{frame_parse::next_data_type, Frame};
 
-/// https://redis.io/commands/hset
+/// <https://redis.io/commands/hset>
 #[derive(Debug, Clone)]
 pub struct Hset {
     pub key: Key,

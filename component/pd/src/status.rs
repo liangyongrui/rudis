@@ -127,7 +127,7 @@ impl Status {
     }
 }
 
-/// SEVER_HEARTBEAT
+/// server heartbeat
 pub fn server_heartbeat(data: &ServerStatus) -> Option<ServerStatus> {
     let status = &mut *STATUS.write();
     let res = status.heartbeat_server(data.group_id, data.server_id)?;

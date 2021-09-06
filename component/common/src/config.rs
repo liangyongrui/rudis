@@ -69,6 +69,7 @@ mod test {
     use crate::config::CONFIG;
     #[test]
     fn test() {
+        #[allow(clippy::let_underscore_drop)]
         let _ = tracing_subscriber::fmt::Subscriber::builder()
             .with_max_level(tracing::Level::DEBUG)
             .try_init();

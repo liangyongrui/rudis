@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/exists
+/// <https://redis.io/commands/exists>
 #[derive(Debug, ParseFrames)]
 pub struct Exists {
     pub keys: Vec<Key>,

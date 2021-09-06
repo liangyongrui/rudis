@@ -1,13 +1,10 @@
+#![allow(unstable_name_collisions)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::shadow_unrelated)]
-#![allow(clippy::doc_markdown)]
-#![allow(unstable_name_collisions)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
-#![allow(clippy::let_underscore_drop)]
 
 /// redis 命令
 mod cmd;
@@ -93,7 +90,7 @@ pub struct Handler {
 /// # Panics
 ///
 /// No panics.
-pub async fn run(listener: TcpListener, shutdown: impl Future) -> common::Result<()> {
+pub async fn run(listener: TcpListener, shutdown: impl Future) {
     // Initialize the listener state
     let mut server = Listener {
         listener,
@@ -117,8 +114,6 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) -> common::Result
             info!("shutting down");
         }
     }
-
-    Ok(())
 }
 
 impl Listener {
@@ -217,7 +212,7 @@ impl Handler {
     /// Currently, pipelining is not implemented. Pipelining is the ability to
     /// process more than one request concurrently per connection without
     /// interleaving frames. See for more details:
-    /// https://redis.io/topics/pipelining
+    /// <https://redis.io/topics/pipelining>
     ///
     /// When the shutdown signal is received, the connection is processed until
     /// it reaches a safe state, at which point it is terminated.

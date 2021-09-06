@@ -6,7 +6,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/zremrangebylex
+/// <https://redis.io/commands/zremrangebylex>
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Zremrangebylex {
     pub key: Key,

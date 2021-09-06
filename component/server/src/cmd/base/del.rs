@@ -5,7 +5,7 @@ use macros::ParseFrames;
 use tracing::error;
 
 use crate::Frame;
-/// https://redis.io/commands/del
+/// <https://redis.io/commands/del>
 #[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
     pub keys: Vec<Key>,

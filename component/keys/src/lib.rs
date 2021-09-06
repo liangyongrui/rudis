@@ -1,3 +1,10 @@
+#![deny(clippy::all)]
+#![deny(clippy::pedantic)]
+#![allow(clippy::shadow_unrelated)]
+#![allow(clippy::cast_sign_loss)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::must_use_candidate)]
+
 /// Save 1 byte than `std::sync::Arc<[u8]>`
 // pub type Key = servo_arc::Arc<[u8]>;
 

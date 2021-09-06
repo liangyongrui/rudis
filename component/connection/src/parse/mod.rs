@@ -54,7 +54,7 @@ impl Parse {
     /// entry is a frame.
     ///
     /// # Errors
-    /// EndOfStream
+    /// `EndOfStream`
     pub fn next_frame(&mut self) -> Result<Frame, ParseError> {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
@@ -62,7 +62,7 @@ impl Parse {
     /// next key
     ///
     /// # Errors
-    /// 1. EndOfStream
+    /// 1. `EndOfStream`
     /// 1. not bytes
     #[inline]
     pub fn next_key(&mut self) -> Result<Key, ParseError> {
@@ -72,7 +72,7 @@ impl Parse {
     /// next bulk
     ///
     /// # Errors
-    /// 1. EndOfStream
+    /// 1. `EndOfStream`
     /// 1. not bytes
     pub fn next_bulk(&mut self) -> Result<Box<[u8]>, ParseError> {
         match self.next_frame()? {

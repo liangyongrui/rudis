@@ -5,7 +5,7 @@ use connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 use keys::Key;
 
-/// https://redis.io/commands/zrangebyscore
+/// <https://redis.io/commands/zrangebyscore>
 #[derive(Debug)]
 pub struct Zrangebyscore {
     pub key: Key,

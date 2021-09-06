@@ -2,7 +2,7 @@ use db::Db;
 use macros::ParseFrames;
 
 use crate::Frame;
-/// https://redis.io/commands/zrank
+/// <https://redis.io/commands/zrank>
 #[derive(Debug, ParseFrames)]
 pub struct Zrank {
     pub key: Box<[u8]>,

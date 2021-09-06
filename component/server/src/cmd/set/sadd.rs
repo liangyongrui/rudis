@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 
-/// https://redis.io/commands/sadd
+/// <https://redis.io/commands/sadd>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Sadd {
     pub key: Key,

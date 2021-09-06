@@ -11,7 +11,7 @@ enum By {
     Rank,
 }
 
-/// https://redis.io/commands/zrange
+/// <https://redis.io/commands/zrange>
 #[derive(Debug)]
 pub struct Zrange {
     pub key: Key,

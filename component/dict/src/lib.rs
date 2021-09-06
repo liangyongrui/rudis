@@ -1,11 +1,9 @@
+#![allow(unstable_name_collisions)]
 #![deny(clippy::all)]
 #![deny(clippy::pedantic)]
 #![allow(clippy::shadow_unrelated)]
-#![allow(clippy::doc_markdown)]
-#![allow(unstable_name_collisions)]
 #![allow(clippy::cast_sign_loss)]
 #![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::missing_errors_doc)]
 #![allow(clippy::must_use_candidate)]
 
 pub mod cmd;

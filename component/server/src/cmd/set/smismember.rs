@@ -2,7 +2,7 @@ use db::Db;
 use macros::ParseFrames;
 
 use crate::Frame;
-/// https://redis.io/commands/smismember
+/// <https://redis.io/commands/smismember>
 #[derive(Debug, ParseFrames)]
 pub struct Smismember {
     pub key: Box<[u8]>,

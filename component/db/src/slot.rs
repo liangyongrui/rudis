@@ -15,6 +15,7 @@ use dict::{
     Dict, Value,
 };
 use parking_lot::RwLock;
+use tracing::error;
 
 use crate::{expire, forward, BgTask};
 
@@ -43,10 +44,13 @@ impl Slot {
     /// dict 中的过期数据最好提前清理一下,
     /// 如果快照复制过来的, 过期数据并不多
     pub fn replace_dict(&self, dict: Dict) {
-        let _ = self
+        if let Err(e) = self
             .bg_task
             .expire_sender
-            .send(expire::Message::Clear(self.slot_id));
+            .send(expire::Message::Clear(self.slot_id))
+        {
+            error!("replace_dict Clear: {:?}", e);
+        };
         let expires_add = dict
             .inner
             .iter()
@@ -58,10 +62,13 @@ impl Slot {
             })
             .collect();
         *self.share_status.write() = Some(Box::new(ShareStatus { dict }));
-        let _ = self
+        if let Err(e) = self
             .bg_task
             .expire_sender
-            .send(expire::Message::BatchAdd(expires_add));
+            .send(expire::Message::BatchAdd(expires_add))
+        {
+            error!("replace_dict BatchAdd: {:?}", e);
+        };
     }
 
     #[inline]
@@ -79,11 +86,13 @@ impl Slot {
         };
 
         // 转发执行完成的请求
-        let _ = self.bg_task.forward_sender.send(forward::Message {
+        if let Err(e) = self.bg_task.forward_sender.send(forward::Message {
             id,
             slot: self.slot_id,
             cmd: cmd.into(),
-        });
+        }) {
+            error!("call_write: {:?}", e);
+        };
 
         res
     }
@@ -111,12 +120,14 @@ impl Slot {
                     cmd::ExpiresStatus::None => (),
                     cmd::ExpiresStatus::Update(u) => {
                         if u.before != u.new {
-                            let _ = self.bg_task.expire_sender.send(expire::Message::Update(
-                                expire::Update {
+                            if let Err(e) = self.bg_task.expire_sender.send(
+                                expire::Message::Update(expire::Update {
                                     status: u,
                                     slot: self.slot_id,
-                                },
-                            ));
+                                }),
+                            ) {
+                                error!("call_expires_write expire_sender: {:?}", e);
+                            };
                         }
                     }
                 }
@@ -126,11 +137,13 @@ impl Slot {
         };
 
         // 转发执行完成的请求
-        let _ = self.bg_task.forward_sender.send(forward::Message {
+        if let Err(e) = self.bg_task.forward_sender.send(forward::Message {
             id,
             slot: self.slot_id,
             cmd: cmd.into(),
-        });
+        }) {
+            error!("call_expires_write forward_sender: {:?}", e);
+        };
 
         res
     }

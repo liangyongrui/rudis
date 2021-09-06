@@ -10,7 +10,7 @@ use tokio::{net::TcpListener, signal};
 
 pub fn main() -> common::Result<()> {
     // enable logging
-    // see https://docs.rs/tracing for more info
+    // see <https://docs.rs/tracing for more info
     let _ = tracing_subscriber::fmt::Subscriber::builder()
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
         .with_max_level(tracing::Level::INFO)
@@ -23,6 +23,7 @@ pub fn main() -> common::Result<()> {
         .unwrap()
         .block_on(async {
             let listener = TcpListener::bind(CONFIG.server_addr).await?;
-            server::run(listener, signal::ctrl_c()).await
+            server::run(listener, signal::ctrl_c()).await;
+            Ok(())
         })
 }
