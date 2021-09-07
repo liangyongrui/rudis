@@ -44,7 +44,7 @@ Rudis 是一款用 Rust 编写，多线程处理，兼容 redis 的数据库。�
 
 1. 准备最新版的 [rust 工具链](https://rustup.rs/)
 1. clone 代码
-   - git clone git@github.com:liangyongrui/rudis.git
+   - `git clone git@github.com:liangyongrui/rudis.git`
 1. 依次执行
    - `cd rudis`
    - `cargo build --release`
