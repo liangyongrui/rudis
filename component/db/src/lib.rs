@@ -25,8 +25,6 @@ use dict::{
     MemDict,
 };
 use forward::Forward;
-use parking_lot::Mutex;
-use tokio::sync::broadcast;
 use tracing::error;
 
 use crate::{expire::Expiration, slot::Slot};
@@ -39,16 +37,9 @@ pub struct BgTask {
     pub forward_sender: flume::Sender<forward::Message>,
 }
 
-pub enum Role {
-    Master,
-    Replica(broadcast::Sender<()>),
-}
-
 pub struct Db {
     pub slots: Vec<Slot>,
     pub read_only: AtomicBool,
-    // 为了优雅退出，这里的角色只是存了一下连接状态
-    pub role: Mutex<Role>,
 }
 
 // <https://redis.io/topics/cluster-spec
@@ -71,7 +62,6 @@ impl Db {
         let db = Arc::new(Self {
             slots,
             read_only: AtomicBool::new(false),
-            role: Mutex::new(Role::Master),
         });
 
         if let Some(pd) = CONFIG.from_pd {

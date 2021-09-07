@@ -2,7 +2,7 @@
 
 **ru**sty **di**ctionary **s**erver
 
-![test](https://github.com/liangyongrui/rudis/workflows/Rust/badge.svg) ![coverage](https://codecov.io/gh/liangyongrui/rudis/branch/master/graph/badge.svg)
+![test](https://github.com/liangyongrui/rudis/workflows/CI/badge.svg) ![coverage](https://codecov.io/gh/liangyongrui/rudis/branch/main/graph/badge.svg)
 
 [中文](./readme-zh.md)
 
@@ -50,14 +50,15 @@ Rudis is a database written in Rust, multi-threaded, and compatible with redis. 
    - `cargo build --release`
    - `./target/release/server` (Specify address to start: `RUDIS_server_addr=0.0.0.0:6379 ./target/release/server`)
 
-## 0.1.0 Roadmap
+## Current roadmap (Version 0.1)
 
 1. [ ] Pass Redis TCL test
 1. [ ] Complete high-availability pd
 
 ## Benchmarks
 
-The performance of Rudis is better than Redis 6.2.5.[see more](./docs/benchmark.md)
+The performance of Rudis is better than Redis 6.2.5.
+[Check the details.](./docs/benchmark.md)
 
 ## Supported redis commands
 

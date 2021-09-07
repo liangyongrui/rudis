@@ -40,12 +40,6 @@ pub struct Pd {
     pub group_id: usize,
 }
 
-#[derive(Deserialize, Debug)]
-pub struct Master {
-    pub ip: String,
-    pub port: u16,
-}
-
 fn get_config() -> crate::Result<Config> {
     info!("loading config");
 

@@ -2,7 +2,7 @@
 
 **ru**sty **di**ctionary **s**erver
 
-![test](https://github.com/liangyongrui/rudis/workflows/Rust/badge.svg) ![coverage](https://codecov.io/gh/liangyongrui/rudis/branch/master/graph/badge.svg)
+![test](https://github.com/liangyongrui/rudis/workflows/CI/badge.svg) ![coverage](https://codecov.io/gh/liangyongrui/rudis/branch/main/graph/badge.svg)
 
 [English](./readme.md)
 
@@ -50,14 +50,15 @@ Rudis 是一款用 Rust 编写，多线程处理，兼容 redis 的数据库。�
    - `cargo build --release`
    - `./target/release/server` (指定启动地址：`RUDIS_server_addr=0.0.0.0:6379 ./target/release/server`)
 
-## 0.1.0 Roadmap
+## Current roadmap (Version 0.1)
 
 1. [ ] 通过 Redis TCL test
 1. [ ] 完成高可用 pd
 
 ## Benchmarks
 
-Rudis 的性能比 Redis 6.2.5 更好。[查看更多](./docs/benchmark-zh.md)
+Rudis 的性能比 Redis 6.2.5 更好。
+[查看详情 ](./docs/benchmark-zh.md)
 
 ## Supported Redis commands
 

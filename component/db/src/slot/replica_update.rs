@@ -1,5 +1,3 @@
-//! 复制master数据的操作
-
 use std::{borrow::BorrowMut, cmp::Ordering};
 
 use dict::{cmd::WriteCmd, Dict, MemDict};
