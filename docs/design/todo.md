@@ -2,6 +2,10 @@
 
 ## 一定要做的 TODO
 
+1. [ ] test
+   1. [ ] ./runtest --host 0.0.0.0 --port 6379 --cluster-mode
+   1. [ ] 代码覆盖率超过 90%
+   1. [ ] memtier_benchmark -n 10000 -c 200 -t 4 -R --hide-histogram
 1. [ ] 补齐大部分 cmd
 1. [ ] make file
    - [ ] 启动配置
@@ -9,10 +13,6 @@
 1. [ ] 兼容 redis cluster
 1. [ ] 持久化
 1. [ ] 完善 pd
-1. [ ] test
-   1. [ ] 代码覆盖率超过 90%
-   1. [ ] memtier_benchmark -n 10000 -c 200 -t 4 -R --hide-histogram
-   1. [ ] Redis TCL test
 1. [ ] 连接权限管理
 1. [ ] 内存不够时候的淘汰机制
 1. [ ] 自定义插件

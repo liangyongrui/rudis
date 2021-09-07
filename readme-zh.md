@@ -36,7 +36,7 @@ Rudis 是一款用 Rust 编写，多线程处理，兼容 redis 的数据库。�
 ## known issues, warnings
 
 - **免责申明** 请暂时不要用于生产环境。
-- 如果你很在意稳定性，推荐用[Redis](redis.io). Rudis is beta.
+- 如果你很在意稳定性，推荐用[Redis](https://redis.io/). Rudis is beta.
 - PD 模块没有测试过，暂时不是高可用的，可能会出现单点故障问题
 - 暂时只支持 linux 和 macos
 

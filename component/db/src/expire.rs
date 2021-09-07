@@ -39,28 +39,11 @@ pub struct Update {
 #[derive(Debug)]
 pub struct Expiration {
     data: Arc<Mutex<BTreeSet<Entry>>>,
-    notify: Arc<Notify>,
-    pub tx: flume::Sender<Message>,
-    rx: flume::Receiver<Message>,
 }
 
 impl Expiration {
-    pub fn new() -> Self {
-        let (tx, rx) = flume::unbounded();
-
-        Self {
-            tx,
-            rx,
-            data: Arc::new(Mutex::new(BTreeSet::new())),
-            notify: Arc::new(Notify::new()),
-        }
-    }
-
-    pub fn listen(self, db: Arc<Db>) {
-        let Expiration {
-            data, notify, rx, ..
-        } = self;
-
+    pub fn init(rx: flume::Receiver<Message>, db: Arc<Db>, data: Arc<Mutex<BTreeSet<Entry>>>) {
+        let notify = Arc::new(Notify::new());
         let data_c = Arc::clone(&data);
         let notify_c = Arc::clone(&notify);
         tokio::spawn(Expiration::recv_task(data_c, notify_c, rx));
@@ -188,6 +171,19 @@ impl Expiration {
             }
         }
     }
+}
+
+pub fn scan_all(db: &Db) {
+    db.expiration_data.lock().retain(|entry| {
+        let slot = db.get_slot_by_id(entry.slot);
+        let lock = slot.share_status.read();
+        let dict = match &*lock {
+            Some(s) => &s.dict,
+            None => return false,
+        };
+        // 只保留key存在，且过期时间能对上的记录
+        matches!(dict.get(&entry.key), Some(value) if value.expires_at == entry.expires_at)
+    });
 }
 
 #[cfg(test)]

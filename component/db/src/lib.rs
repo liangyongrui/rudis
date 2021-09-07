@@ -12,9 +12,9 @@ mod pd_handle;
 mod slot;
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, HashMap, HashSet},
     process::exit,
-    sync::{atomic::AtomicBool, Arc},
+    sync::Arc,
 };
 
 use common::{config::CONFIG, SLOT_SIZE};
@@ -25,6 +25,7 @@ use dict::{
     MemDict,
 };
 use forward::Forward;
+use parking_lot::Mutex;
 use tracing::error;
 
 use crate::{expire::Expiration, slot::Slot};
@@ -39,7 +40,7 @@ pub struct BgTask {
 
 pub struct Db {
     pub slots: Vec<Slot>,
-    pub read_only: AtomicBool,
+    pub expiration_data: Arc<Mutex<BTreeSet<expire::Entry>>>,
 }
 
 // <https://redis.io/topics/cluster-spec
@@ -48,20 +49,21 @@ const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
 
 impl Db {
     pub async fn new() -> Arc<Self> {
-        let expiration = Expiration::new();
         let forward = Forward::new();
-
+        let (expire_tx, expire_rx) = flume::unbounded();
         let bg_task = BgTask {
-            expire_sender: expiration.tx.clone(),
+            expire_sender: expire_tx,
             forward_sender: forward.tx.clone(),
         };
         let mut slots = Vec::with_capacity(SLOT_SIZE);
         for i in 0..SLOT_SIZE {
             slots.push(Slot::new(i, bg_task.clone()));
         }
+        let expiration_data = Arc::new(Mutex::new(BTreeSet::new()));
+
         let db = Arc::new(Self {
             slots,
-            read_only: AtomicBool::new(false),
+            expiration_data: expiration_data.clone(),
         });
 
         if let Some(pd) = CONFIG.from_pd {
@@ -70,8 +72,7 @@ impl Db {
                 exit(-1)
             };
         }
-
-        expiration.listen(Arc::clone(&db));
+        Expiration::init(expire_rx, db.clone(), expiration_data);
         forward.listen();
         db
     }
@@ -136,6 +137,17 @@ impl Db {
     #[inline]
     pub fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> common::Result<cmd::kvp::del::Resp> {
         self.get_slot(&cmd.key).kvp_del(cmd)
+    }
+    #[inline]
+    pub fn flushall(self: Arc<Self>, sync: bool) {
+        for s in &self.slots {
+            s.flush(sync);
+        }
+        if sync {
+            expire::scan_all(&self);
+        } else {
+            tokio::task::spawn_blocking(move || expire::scan_all(&self));
+        }
     }
     #[inline]
     pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> common::Result<cmd::kvp::set::Resp> {

@@ -159,6 +159,18 @@ impl Slot {
             None => Err("slot not support".into()),
         }
     }
+
+    /// clean all data
+    pub(crate) fn flush(&self, sync: bool) {
+        let mut status = self.share_status.write();
+        if let Some(inner) = &mut *status {
+            let old = std::mem::take(inner);
+            drop(status);
+            if !sync {
+                tokio::task::spawn_blocking(|| old);
+            }
+        }
+    }
 }
 
 /// 写命令

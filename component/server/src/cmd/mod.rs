@@ -1,9 +1,13 @@
 mod base;
 mod hash;
 mod list;
+/// <https://redis.io/commands#server>
+mod server;
 mod set;
 mod sorted_set;
 mod syncsnapshot;
+
+use std::sync::Arc;
 
 use connection::{
     parse::{frame::Frame, Parse},
@@ -25,6 +29,7 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
+    server::flushall::Flushall,
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
@@ -104,6 +109,7 @@ pub enum Write {
     Expireat(Expireat),
     Expire(Expire),
     Pexpire(Pexpire),
+    Flushall(Flushall),
 }
 
 impl Command {
@@ -197,6 +203,7 @@ impl Command {
             "expire" => Command::Write(Write::Expire(Expire::parse_frames(&mut parse)?)),
             "pexpire" => Command::Write(Write::Pexpire(Pexpire::parse_frames(&mut parse)?)),
             "syncsnapshot" => Command::SyncSnapshot(SyncSnapshot::parse_frames(&mut parse)?),
+            "flushall" => Command::Write(Write::Flushall(Flushall::parse_frames(&mut parse)?)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -220,42 +227,38 @@ impl Command {
 
 impl Write {
     #[inline]
-    pub async fn apply(self, connection: &mut Connection, db: &Db) -> common::Result<Frame> {
-        use Write::{
-            Decr, Decrby, Del, Expire, Expireat, Hdel, Hincrby, Hset, Hsetnx, Incr, Incrby, Lpop,
-            Lpush, Lpushx, Pexpire, Pexpireat, Psetex, Rpop, Rpush, Rpushx, Sadd, Set, Setex, Srem,
-            Zadd, Zrem, Zremrangebylex, Zremrangebyrank, Zremrangebyscore,
-        };
+    pub async fn apply(self, connection: &mut Connection, db: &Arc<Db>) -> common::Result<Frame> {
         match self {
-            Set(cmd) => cmd.apply(connection, db).await,
-            Psetex(cmd) => cmd.apply(db),
-            Setex(cmd) => cmd.apply(db),
-            Del(cmd) => cmd.apply(connection, db).await,
-            Pexpireat(cmd) => cmd.apply(db),
-            Expireat(cmd) => cmd.apply(db),
-            Expire(cmd) => cmd.apply(db),
-            Pexpire(cmd) => cmd.apply(db),
-            Incrby(cmd) => cmd.apply(db),
-            Incr(cmd) => cmd.apply(db),
-            Decr(cmd) => cmd.apply(db),
-            Decrby(cmd) => cmd.apply(db),
-            Lpush(cmd) => cmd.apply(db),
-            Rpush(cmd) => cmd.apply(db),
-            Lpushx(cmd) => cmd.apply(db),
-            Rpushx(cmd) => cmd.apply(db),
-            Lpop(cmd) => cmd.apply(db),
-            Rpop(cmd) => cmd.apply(db),
-            Hset(cmd) => cmd.apply(db),
-            Hdel(cmd) => cmd.apply(db),
-            Hsetnx(cmd) => cmd.apply(db),
-            Hincrby(cmd) => cmd.apply(db),
-            Sadd(cmd) => cmd.apply(db),
-            Srem(cmd) => cmd.apply(db),
-            Zadd(cmd) => cmd.apply(db),
-            Zrem(cmd) => cmd.apply(db),
-            Zremrangebyrank(cmd) => cmd.apply(db),
-            Zremrangebyscore(cmd) => cmd.apply(db),
-            Zremrangebylex(cmd) => cmd.apply(db),
+            Write::Set(cmd) => cmd.apply(connection, db).await,
+            Write::Psetex(cmd) => cmd.apply(db),
+            Write::Setex(cmd) => cmd.apply(db),
+            Write::Del(cmd) => cmd.apply(connection, db).await,
+            Write::Pexpireat(cmd) => cmd.apply(db),
+            Write::Expireat(cmd) => cmd.apply(db),
+            Write::Expire(cmd) => cmd.apply(db),
+            Write::Pexpire(cmd) => cmd.apply(db),
+            Write::Incrby(cmd) => cmd.apply(db),
+            Write::Incr(cmd) => cmd.apply(db),
+            Write::Decr(cmd) => cmd.apply(db),
+            Write::Decrby(cmd) => cmd.apply(db),
+            Write::Lpush(cmd) => cmd.apply(db),
+            Write::Rpush(cmd) => cmd.apply(db),
+            Write::Lpushx(cmd) => cmd.apply(db),
+            Write::Rpushx(cmd) => cmd.apply(db),
+            Write::Lpop(cmd) => cmd.apply(db),
+            Write::Rpop(cmd) => cmd.apply(db),
+            Write::Hset(cmd) => cmd.apply(db),
+            Write::Hdel(cmd) => cmd.apply(db),
+            Write::Hsetnx(cmd) => cmd.apply(db),
+            Write::Hincrby(cmd) => cmd.apply(db),
+            Write::Sadd(cmd) => cmd.apply(db),
+            Write::Srem(cmd) => cmd.apply(db),
+            Write::Zadd(cmd) => cmd.apply(db),
+            Write::Zrem(cmd) => cmd.apply(db),
+            Write::Zremrangebyrank(cmd) => cmd.apply(db),
+            Write::Zremrangebyscore(cmd) => cmd.apply(db),
+            Write::Zremrangebylex(cmd) => cmd.apply(db),
+            Write::Flushall(cmd) => Ok(cmd.apply(db.clone())),
         }
     }
 }

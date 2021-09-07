@@ -36,7 +36,7 @@ Rudis is a database written in Rust, multi-threaded, and compatible with redis. 
 ## known issues, warnings
 
 - **Disclaimer** Please don't use rudis in production now.
-- If reliability is your primary constraint, use [Redis](redis.io). Rudis is beta.
+- If reliability is your primary constraint, use [Redis](https://redis.io/). Rudis is beta.
 - The PD module has not been tested and is temporarily not highly available, so there may be a single point of failure problem
 - Only supports linux and macos
 
@@ -44,7 +44,7 @@ Rudis is a database written in Rust, multi-threaded, and compatible with redis. 
 
 1. Prepare the latest version of [rust toolchain](https://rustup.rs/)
 1. Clone code
-   - git clone git@github.com:liangyongrui/rudis.git
+   - `git clone git@github.com:liangyongrui/rudis.git`
 1. Execute in sequence
    - `cd rudis`
    - `cargo build --release`
