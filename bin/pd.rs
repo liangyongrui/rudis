@@ -25,7 +25,7 @@ pub fn main() -> common::Result<()> {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "rcc-pd", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "A Redis server placement driver")]
+#[structopt(name = "rudis-pd", version = env!("CARGO_PKG_VERSION"), author = env!("CARGO_PKG_AUTHORS"), about = "A Redis server placement driver")]
 struct Cli {
     #[structopt(name = "port", long = "--port")]
     port: Option<String>,

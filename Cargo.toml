@@ -4,10 +4,10 @@ members = ["cmd_test", "component/*"]
 [package]
 authors = ["LiangYongrui <leungyongrui@gmail.com>"]
 description = """
-rust cloud cache
+rusty dictionary server
 """
 edition = "2018"
-name = "rcc"
+name = "rudis"
 version = "0.0.0"
 license = "MIT"
 readme = "readme.md"

@@ -28,7 +28,7 @@ impl Unknown {
 
     /// Responds to the client, indicating the command is not recognized.
     ///
-    /// This usually means the command is not yet implemented by `rcc`.
+    /// This usually means the command is not yet implemented by `rudis`.
     #[tracing::instrument(skip(self))]
     pub fn apply(self) -> Frame {
         Frame::Error(

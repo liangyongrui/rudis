@@ -49,14 +49,14 @@ pub struct Master {
 fn get_config() -> crate::Result<Config> {
     info!("loading config");
 
-    let name = env::var("RCC_CONFIG").unwrap_or_else(|_| "config".into());
+    let name = env::var("RUDIS_CONFIG").unwrap_or_else(|_| "config".into());
     let config_file = config::File::with_name(&name).required(false);
     debug!("config_file: {:#?}", config_file);
 
     let mut settings = config::Config::default();
     settings
         .merge(config_file)?
-        .merge(config::Environment::with_prefix("RCC"))?
+        .merge(config::Environment::with_prefix("RUDIS"))?
         .set_default("max_connections", 3000)?
         .set_default("server_addr", "0.0.0.0:6379")?
         .set_default("forward_addr", "0.0.0.0:0")?;

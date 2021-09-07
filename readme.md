@@ -1,8 +1,6 @@
-# RCC
+# rudis
 
-rust cloud cache
-
-(希望有人能起个更好听的名字)
+**ru**sty **di**ctionary **s**erver
 
 ## 特点
 
@@ -16,12 +14,6 @@ rust cloud cache
 1. [ ] 再次检查主从复制的逻辑
 1. [ ] 去掉中文注释, 尽可能的增加英文注释
 1. [ ] roadmap
-1. [ ] 起个好名字
-   - rcc (**r**usty **c**loud **c**ache)
-   - rudis(**ru**sty **di**ctionary **s**erver)
-   - redis_rs
-   - redis_iox
-   - redox (喜欢这个，但是被别的项目用了。。)
 1. [ ] 英文 readme
 1. [ ] icon
 1. [ ] license

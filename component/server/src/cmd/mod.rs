@@ -109,7 +109,7 @@ pub enum Write {
 impl Command {
     /// Parse a command from a received frame.
     ///
-    /// The `Frame` must represent a Redis command supported by `rcc` and
+    /// The `Frame` must represent a Redis command supported by `rudis` and
     /// be the array variant.
     ///
     /// # Returns

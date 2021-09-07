@@ -77,7 +77,7 @@ pub struct Handler {
     _limit_connections: Limit,
 }
 
-/// Run the rcc server.
+/// Run the rudis server.
 ///
 /// Accepts connections from the supplied listener. For each inbound connection,
 /// a task is spawned to handle that connection. The server runs until the
