@@ -1,6 +1,6 @@
 # benchmark
 
-[中文](./benchmark-zh.md)
+[English](./benchmark.md)
 
 ## Platform
 
@@ -9,7 +9,7 @@ Mac mini (2018)
 - OS: macOS 11.5.1 (20G80)
 - CPU: 3.2GHz 6-core Intel Core i7
 
-The client and server are on the same machine.
+客户端和服务端在同一台机器
 
 ## Test Cmd
 
@@ -19,13 +19,13 @@ redis-benchmark -t set,get,rpush,lpop,lrange,hset -n 1000000 -r 100000 -c 1000 -
 
 ## Result
 
-It seems that the gap is not big, but there are a few points to note:
+看起来差距不大，但是有几个需要注意的点：
 
-1. When testing `rudis`, the peak cpu utilization of `rudis` is about 330%, and `redis-benchmark` is almost 400%. That is to say, the stress test tool is full, and `rudis` is not full yet, but it is actually not pressed. The bottleneck of rudis.
-1. When testing `redis`, the peak cpu utilization of `redis` is about 400%, and `redis-benchmark` is about 300%. That is, the stress test tool is not full, and `redis` is full.
-1. But even so, the performance of `rudis` is still better than that of `redis`.
-1. If possible, put `redis-benchmark` on another machine, `rudis` should be able to run better data.
-1. If you have the conditions, use more threads, the performance of `rudis` will likely be better. But `redis` is limited by io, and the performance is basically that way.
+1. 测试 `rudis` 的时候，`rudis` 的 cpu 利用率 峰值大约 330%, `redis-benchmark` 几乎 400%. 也就是压测工具跑满了, `rudis` 还没跑满, 其实没压到 rudis 的瓶颈。
+1. 测试 `redis` 的时候，`redis` 的 cpu 利用率 峰值大约 400%, `redis-benchmark` 大约 300% . 也就是压测工具没跑满了, `redis` 跑满了。
+1. 不过即使是这样，`rudis` 的性能表现还是比 `redis` 要好。
+1. 如果有条件，把 `redis-benchmark` 放在另一台机器上，`rudis` 应该可以跑出更好的数据。
+1. 如果有条件，用更多的线程，`rudis` 的性能大概率会更好。但是 `redis` 受限于 io, 性能基本上就这样了。
 
 ### rudis
 
