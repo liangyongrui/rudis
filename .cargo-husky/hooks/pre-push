@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+echo '+cargo +nightly fmt -- --check'
+rustup component add rustfmt --toolchain nightly
+cargo +nightly fmt -- --check
+
+echo '+cargo test --workspace'
+cargo test --workspace
+
+echo '+cargo clippy'
+cargo clippy
