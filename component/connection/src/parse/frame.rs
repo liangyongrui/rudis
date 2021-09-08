@@ -138,7 +138,7 @@ fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     } else {
         let mut res = vec![];
         for _ in 0..len {
-            let (ni, f) = parse(i)?;
+            let (ni, f) = parse_alt(i)?;
             res.push(f);
             i = ni;
         }
@@ -157,7 +157,7 @@ fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 /// # Errors
 /// parse failed
 #[inline]
-fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
+fn parse_alt(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     alt((
         parse_simple,
         parse_error,
@@ -174,9 +174,9 @@ fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 /// parse failed
 #[inline]
 
-pub fn parse_2(i: &[u8]) -> common::Result<Option<(usize, Frame)>> {
+pub fn parse(i: &[u8]) -> common::Result<Option<(usize, Frame)>> {
     let old_len = i.len();
-    match parse(i) {
+    match parse_alt(i) {
         Ok(o) => Ok(Some((old_len - o.0.len(), o.1))),
         Err(nom::Err::Incomplete(_)) => Ok(None),
         Err(e) => return Err(format!("parse failed, {:?}", e).into()),
@@ -263,7 +263,7 @@ mod test {
     #[test]
     fn test() {
         let s = "*2\r\n*3\r\n:1\r\n$5\r\nhello\r\n:2\r\n+abc\r\n";
-        let (_, f) = parse(s.as_bytes()).unwrap();
+        let (_, f) = parse_alt(s.as_bytes()).unwrap();
         let t = Frame::Array(vec![
             Frame::Array(vec![
                 Frame::Integer(1),
@@ -296,7 +296,7 @@ mod test {
         ]);
         let set: Vec<u8> = (&raw).into();
         assert_eq!(&set[..], b);
-        let (_, f) = parse(s.as_bytes()).unwrap();
+        let (_, f) = parse_alt(s.as_bytes()).unwrap();
         assert_eq!(raw, f);
     }
 }

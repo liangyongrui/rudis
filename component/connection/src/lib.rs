@@ -59,7 +59,7 @@ impl Connection {
             // 这个 unsafe 不知道咋办
             // 可能需要等 https://github.com/rust-lang/polonius
             if let Some((advance, frame)) =
-                parse::frame::parse_2(unsafe { &*(&mut self.read_buffer as *mut BytesMut) })?
+                parse::frame::parse(unsafe { &*(&mut self.read_buffer as *mut BytesMut) })?
             {
                 self.advance = advance;
                 return Ok(Some(frame));
