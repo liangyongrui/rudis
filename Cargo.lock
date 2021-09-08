@@ -292,6 +292,7 @@ version = "0.0.0"
 dependencies = [
  "ahash",
  "atoi",
+ "bincode",
  "common",
  "flume",
  "keys",

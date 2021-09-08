@@ -150,6 +150,10 @@ impl Db {
         }
     }
     #[inline]
+    pub fn dump(&self, cmd: cmd::server::dump::Req) -> common::Result<Option<Vec<u8>>> {
+        self.get_slot(cmd.key).dump(cmd)
+    }
+    #[inline]
     pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> common::Result<cmd::kvp::set::Resp> {
         self.get_slot(&cmd.key).kvp_set(cmd)
     }

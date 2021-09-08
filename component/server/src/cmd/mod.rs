@@ -29,7 +29,7 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
-    server::{flushall::Flushall, info::Info},
+    server::{dump::Dump, flushall::Flushall, info::Info},
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
@@ -77,6 +77,7 @@ pub enum Read {
     Pttl(Pttl),
     Exists(Exists),
     Info(Info),
+    Dump(Dump),
 }
 
 #[derive(Debug, Clone)]
@@ -206,6 +207,7 @@ impl Command {
             "syncsnapshot" => Command::SyncSnapshot(SyncSnapshot::parse_frames(&mut parse)?),
             "flushall" => Command::Write(Write::Flushall(Flushall::parse_frames(&mut parse)?)),
             "info" => Command::Read(Read::Info(Info)),
+            "dump" => Command::Read(Read::Dump(Dump::parse_frames(&mut parse)?)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -291,6 +293,7 @@ impl Read {
             Read::Ttl(cmd) => cmd.apply(db),
             Read::Pttl(cmd) => cmd.apply(db),
             Read::Info(cmd) => Ok(cmd.apply(db)),
+            Read::Dump(cmd) => cmd.apply(db),
         }
     }
 }

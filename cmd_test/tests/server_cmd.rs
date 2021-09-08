@@ -38,3 +38,14 @@ async fn info() {
 
     write_cmd(&mut connection.stream, vec!["INFO"]).await;
 }
+
+#[tokio::test]
+async fn dump() {
+    let mut connection = start_server().await;
+
+    write_cmd(&mut connection.stream, vec!["SET", "key1", "Hello"]).await;
+    next_frame_eq(&mut connection, Frame::ok()).await;
+
+    write_cmd(&mut connection.stream, vec!["dump", "key1"]).await;
+    write_cmd(&mut connection.stream, vec!["dump", "key2"]).await;
+}

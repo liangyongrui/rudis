@@ -3,6 +3,7 @@
 
 pub mod deque;
 pub mod kvp;
+pub mod server;
 pub mod set;
 pub mod simple;
 pub mod sorted_set;

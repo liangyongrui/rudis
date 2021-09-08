@@ -14,3 +14,4 @@ tracing = "0.1"
 tokio = "1"
 keys = { path = "../keys" }
 atoi = "0.4"
+bincode = "1"

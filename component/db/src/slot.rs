@@ -279,6 +279,11 @@ impl Slot {
     }
 
     #[inline]
+    pub fn dump(&self, cmd: cmd::server::dump::Req<'_>) -> common::Result<Option<Vec<u8>>> {
+        self.call_read(cmd)
+    }
+
+    #[inline]
     pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> common::Result<cmd::simple::ttl::Resp> {
         self.call_read(cmd)
     }
