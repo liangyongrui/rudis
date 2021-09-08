@@ -17,7 +17,7 @@ impl<'a> From<&'a Smembers> for dict::cmd::set::get_all::Req<'a> {
 
 impl Smembers {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.set_get_all((&self).into())?;
         Ok(Frame::Array(
             res.into_iter()

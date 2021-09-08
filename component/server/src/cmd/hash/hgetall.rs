@@ -17,7 +17,7 @@ impl<'a> From<&'a Hgetall> for dict::cmd::kvp::get_all::Req<'a> {
 
 impl Hgetall {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let v = db.kvp_get_all((&self).into())?;
         Ok(Frame::Array(
             v.into_iter()

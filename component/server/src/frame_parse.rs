@@ -12,20 +12,9 @@ pub fn next_data_type(parse: &mut Parse) -> Result<DataType, ParseError> {
 
 pub fn data_type_to_frame(dt: DataType) -> Frame<'static> {
     match dt {
-        DataType::String(s) => Frame::OwnedSimple(s.into()),
-        DataType::Bytes(b) => Frame::OwnedBulk(b.into()),
+        DataType::String(s) => Frame::OwnedSimple(s),
+        DataType::Bytes(b) => Frame::OwnedBulk(b),
         DataType::Integer(i) => Frame::Integer(i),
-        DataType::Float(f) => Frame::OwnedStringSimple(format!("{}", f.0)),
-        DataType::Null => Frame::Null,
-        _ => Frame::Error(b"type not support"[..].into()),
-    }
-}
-
-pub fn ref_data_type_to_frame(dt: &DataType) -> Frame<'static> {
-    match dt {
-        DataType::String(s) => Frame::OwnedSimple(s.clone().into()),
-        DataType::Bytes(b) => Frame::OwnedBulk(b.clone().into()),
-        DataType::Integer(i) => Frame::Integer(*i),
         DataType::Float(f) => Frame::OwnedStringSimple(format!("{}", f.0)),
         DataType::Null => Frame::Null,
         _ => Frame::Error(b"type not support"[..].into()),

@@ -22,7 +22,7 @@ impl From<Sadd> for dict::cmd::set::add::Req {
 
 impl Sadd {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.set_add(self.into())?;
         Ok(Frame::Integer((res.new_len - res.old_len) as _))
     }

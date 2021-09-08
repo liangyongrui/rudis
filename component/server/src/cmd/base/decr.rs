@@ -21,7 +21,7 @@ impl From<Decr> for dict::cmd::simple::incr::Req {
 
 impl Decr {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let response = db.incr(self.into())?;
         Ok(Frame::Integer(response))
     }

@@ -20,7 +20,7 @@ impl<'a> From<&'a Zrevrank> for dict::cmd::sorted_set::rank::Req<'a> {
 
 impl Zrevrank {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let response = match db.sorted_set_rank((&self).into())? {
             None => Frame::Null,
             Some(v) => Frame::Integer(v as _),

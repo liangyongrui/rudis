@@ -68,7 +68,7 @@ impl Pexpireat {
     }
 
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.expire(self.req)?;
         let response = Frame::Integer(if res { 1 } else { 0 });
         Ok(response)

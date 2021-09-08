@@ -273,7 +273,7 @@ impl<'a> Write {
 
 impl Read {
     #[inline]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         match self {
             Read::Get(cmd) => cmd.apply(db),
             Read::Llen(cmd) => cmd.apply(db),

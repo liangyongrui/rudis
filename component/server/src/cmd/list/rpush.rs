@@ -26,7 +26,7 @@ impl From<Rpush> for dict::cmd::deque::push::Req {
 
 impl Rpush {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let response = db.deque_push(self.into())?;
         Ok(Frame::Integer(response.new_len as _))
     }

@@ -30,7 +30,7 @@ impl From<Psetex> for dict::cmd::simple::set::Req {
 
 impl Psetex {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         db.set(self.into())?;
         Ok(Frame::ok())
     }

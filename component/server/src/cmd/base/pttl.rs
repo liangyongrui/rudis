@@ -12,7 +12,7 @@ pub struct Pttl {
 
 impl Pttl {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.ttl(dict::cmd::simple::ttl::Req { key: &self.key })?;
         let response = Frame::Integer(match res {
             dict::cmd::simple::ttl::Resp::None => -1,

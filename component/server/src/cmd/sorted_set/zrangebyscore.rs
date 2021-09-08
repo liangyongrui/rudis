@@ -58,7 +58,7 @@ impl Zrangebyscore {
         })
     }
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let limit = self
             .limit
             .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));

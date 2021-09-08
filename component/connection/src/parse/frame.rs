@@ -78,7 +78,7 @@ impl fmt::Debug for Frame<'_> {
 }
 
 #[inline]
-fn parse_simple(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse_simple(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, resp) = delimited(
         tag(b"+"),
         take_while(|c| c != b'\r' && c != b'\n'),
@@ -88,7 +88,7 @@ fn parse_simple(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 }
 
 #[inline]
-fn parse_error(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse_error(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, resp) = delimited(
         tag(b"-"),
         take_while1(|c| c != b'\r' && c != b'\n'),
@@ -98,7 +98,7 @@ fn parse_error(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 }
 
 #[inline]
-fn parse_int(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse_int(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, int) = delimited(
         tag(":"),
         map(take_while1(|c| c != b'\r' && c != b'\n'), |int: &[u8]| {
@@ -110,7 +110,7 @@ fn parse_int(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 }
 
 #[inline]
-fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, _) = tag("$")(i)?;
     let (i, len) = map(take_while1(|c| c != b'\r' && c != b'\n'), |int| {
         atoi::atoi::<i64>(int).unwrap_or(0)
@@ -127,7 +127,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 }
 
 #[inline]
-fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, _) = tag("*")(i)?;
     let (i, len) = map(take_while1(|c| c != b'\r' && c != b'\n'), |int| {
         atoi::atoi::<i64>(int).unwrap_or(0)
@@ -147,7 +147,7 @@ fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 }
 
 #[inline]
-fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     let (i, _) = tag(b"PING\r\n")(i)?;
     Ok((i, Frame::Ping))
 }
@@ -157,7 +157,7 @@ fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 /// # Errors
 /// parse failed
 #[inline]
-fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
+fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     alt((
         parse_simple,
         parse_error,
@@ -174,7 +174,7 @@ fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame<'_>> {
 /// parse failed
 #[inline]
 
-pub fn parse_2(i: &[u8]) -> common::Result<Option<(usize, Frame<'_>)>> {
+pub fn parse_2(i: &[u8]) -> common::Result<Option<(usize, Frame)>> {
     let old_len = i.len();
     match parse(i) {
         Ok(o) => Ok(Some((old_len - o.0.len(), o.1))),

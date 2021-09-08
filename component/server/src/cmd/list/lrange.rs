@@ -22,7 +22,7 @@ impl<'a> From<&'a Lrange> for dict::cmd::deque::range::Req<'a> {
 }
 impl Lrange {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let response = db.deque_range((&self).into())?;
         Ok(Frame::Array(
             response.into_iter().map(data_type_to_frame).collect(),

@@ -48,7 +48,7 @@ impl Zremrangebyscore {
     }
 
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.sorted_set_remove_by_score_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))
     }

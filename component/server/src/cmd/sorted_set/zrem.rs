@@ -22,7 +22,7 @@ impl From<Zrem> for dict::cmd::sorted_set::remove::Req {
 
 impl Zrem {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let resp = db.sorted_set_remove(self.into())?;
         Ok(Frame::Integer((resp.old_len - resp.new_len) as _))
     }

@@ -22,7 +22,7 @@ impl From<Hdel> for dict::cmd::kvp::del::Req {
 
 impl Hdel {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let response = db.kvp_del(self.into())?;
         Ok(Frame::Integer((response.old_len - response.new_len) as _))
     }

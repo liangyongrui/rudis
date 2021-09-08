@@ -21,9 +21,9 @@ impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {
 
 impl Hget {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
-        Ok(frame_parse::ref_data_type_to_frame(
-            &db.kvp_get((&self).into())?[0],
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+        Ok(frame_parse::data_type_to_frame(
+            db.kvp_get((&self).into())?.into_iter().next().unwrap(),
         ))
     }
 }

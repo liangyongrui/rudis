@@ -45,7 +45,7 @@ impl From<Zremrangebylex> for dict::cmd::sorted_set::remove_by_lex_range::Req {
 
 impl Zremrangebylex {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db.sorted_set_remove_by_lex_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))
     }

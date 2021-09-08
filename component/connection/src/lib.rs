@@ -80,7 +80,7 @@ impl Connection {
     // /// # Errors
     // /// parse failed
     // #[inline]
-    // fn parse_frame(&mut self) -> common::Result<Option<Frame<'_>>> {
+    // fn parse_frame(&mut self) -> common::Result<Option<Frame>> {
     //     let old_len = self.read_buffer.len();
     //     match parse::parse(self.read_buffer.as_ref()) {
     //         Ok((left, frame)) => {
