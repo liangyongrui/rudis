@@ -45,18 +45,18 @@ impl Zrevrange {
     }
 
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let withscores = self.withscores;
         let response = db.sorted_set_range_by_rank((&self).into())?;
         let mut res = vec![];
         if withscores {
             for n in response {
-                res.push(Frame::Simple(n.key));
-                res.push(Frame::Simple(n.score.0.to_string().as_bytes().into()));
+                res.push(Frame::OwnedSimple(n.key.into()));
+                res.push(Frame::OwnedStringSimple(n.score.0.to_string()));
             }
         } else {
             for n in response {
-                res.push(Frame::Simple(n.key));
+                res.push(Frame::OwnedSimple(n.key.into()));
             }
         }
         Ok(Frame::Array(res))

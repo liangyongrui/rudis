@@ -84,7 +84,7 @@ impl Zadd {
     }
 
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let ch = self.ch;
         let res = db.sorted_set_add(self.into())?;
         if ch {

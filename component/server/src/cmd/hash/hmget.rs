@@ -15,7 +15,7 @@ pub struct Hmget {
 
 impl Hmget {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let v = db.kvp_get(dict::cmd::kvp::get::Req {
             key: &self.key,
             fields: self.fields.iter().map(|t| t.borrow()).collect(),

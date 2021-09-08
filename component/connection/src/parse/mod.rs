@@ -2,7 +2,6 @@ pub mod frame;
 
 use std::{fmt, str, vec};
 
-pub use frame::parse;
 use keys::Key;
 
 use crate::Frame;
@@ -14,9 +13,9 @@ use crate::Frame;
 /// cursor-like API. Each command struct includes a `parse_frame` method that
 /// uses a `Parse` to extract its fields.
 #[derive(Debug)]
-pub struct Parse {
+pub struct Parse<'a> {
     /// Array frame iterator.
-    parts: vec::IntoIter<Frame>,
+    parts: vec::IntoIter<Frame<'a>>,
 }
 #[allow(clippy::module_name_repetitions)]
 /// Error encountered while parsing a frame.
@@ -33,12 +32,12 @@ pub enum ParseError {
     Other(common::Error),
 }
 
-impl Parse {
+impl<'a> Parse<'a> {
     /// Create a new `Parse` to parse the contents of `frame`.
     ///
     /// # Errors
     /// if `frame` is not an array frame (or Ping).
-    pub fn new(frame: Frame) -> Result<Parse, ParseError> {
+    pub fn new(frame: Frame<'a>) -> Result<Self, ParseError> {
         let array = match frame {
             Frame::Array(array) => array,
             Frame::Ping => vec![Frame::Ping],
@@ -55,7 +54,7 @@ impl Parse {
     ///
     /// # Errors
     /// `EndOfStream`
-    pub fn next_frame(&mut self) -> Result<Frame, ParseError> {
+    pub fn next_frame(&mut self) -> Result<Frame<'a>, ParseError> {
         self.parts.next().ok_or(ParseError::EndOfStream)
     }
 
@@ -76,7 +75,7 @@ impl Parse {
     /// 1. not bytes
     pub fn next_bulk(&mut self) -> Result<Box<[u8]>, ParseError> {
         match self.next_frame()? {
-            Frame::Bulk(b) | Frame::Simple(b) => Ok(b),
+            Frame::Bulk(b) | Frame::Simple(b) => Ok(b.into()),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
@@ -92,7 +91,7 @@ impl Parse {
             //
             // While errors are stored as strings, they are considered separate
             // types.
-            Frame::Bulk(data) | Frame::Simple(data) => str::from_utf8(&data[..])
+            Frame::Bulk(data) | Frame::Simple(data) => str::from_utf8(data)
                 .map(std::string::ToString::to_string)
                 .map_err(|_| "protocol error; invalid string".into()),
             Frame::Ping => Ok("PING".to_owned()),
@@ -118,7 +117,7 @@ impl Parse {
             Frame::Integer(v) => Ok(v),
             // Simple and bulk frames must be parsed as integers. If the parsing
             // fails, an error is returned.
-            Frame::Bulk(data) | Frame::Simple(data) => match atoi::<i64>(&data) {
+            Frame::Bulk(data) | Frame::Simple(data) => match atoi::<i64>(data) {
                 Some(e) => Ok(e),
                 None => Err(INVALID.into()),
             },

@@ -55,7 +55,7 @@ impl Zrangebylex {
     }
 
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let limit = self
             .limit
             .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
@@ -70,7 +70,7 @@ impl Zrangebylex {
         let response = db.sorted_set_range_by_lex(cmd)?;
         let mut res = vec![];
         for n in response {
-            res.push(Frame::Simple(n.key));
+            res.push(Frame::OwnedSimple(n.key.into()));
         }
         Ok(Frame::Array(res))
     }

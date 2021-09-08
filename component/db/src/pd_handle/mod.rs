@@ -36,18 +36,15 @@ impl PdHandle {
     async fn init(mut self) -> common::Result<()> {
         self.connection
             .write_frame(&Frame::Array(vec![
-                Frame::Bulk(SEVER_INIT.as_bytes().into()),
-                Frame::Bulk(
-                    bincode::serialize(&ServerInit {
-                        group_id: self.pd.group_id,
-                        server_addr: CONFIG.server_addr,
-                        forward_addr: CONFIG.forward_addr,
-                    })?
-                    .into(),
-                ),
+                Frame::Bulk(SEVER_INIT.as_bytes()),
+                Frame::Bulk(&bincode::serialize(&ServerInit {
+                    group_id: self.pd.group_id,
+                    server_addr: CONFIG.server_addr,
+                    forward_addr: CONFIG.forward_addr,
+                })?),
             ]))
             .await?;
-        let status: ServerStatus = bincode::deserialize(&self.read_bytes().await?)?;
+        let status: ServerStatus = bincode::deserialize(self.read_bytes().await?)?;
         let res = self.update_status(status);
         tokio::spawn(async {
             if let Err(e) = self.heartbeat().await {
@@ -57,7 +54,7 @@ impl PdHandle {
         res
     }
 
-    async fn read_bytes(&mut self) -> common::Result<Box<[u8]>> {
+    async fn read_bytes(&mut self) -> common::Result<&[u8]> {
         let frame = match self.connection.read_frame().await? {
             Some(f) => f,
             None => return Err("EOF".into()),
@@ -74,11 +71,11 @@ impl PdHandle {
             interval.tick().await;
             self.connection
                 .write_frame(&Frame::Array(vec![
-                    Frame::Bulk(SEVER_HEARTBEAT.as_bytes().into()),
-                    Frame::Bulk(bincode::serialize(&self.latest_status)?.into()),
+                    Frame::Bulk(SEVER_HEARTBEAT.as_bytes()),
+                    Frame::Bulk(&bincode::serialize(&self.latest_status)?),
                 ]))
                 .await?;
-            let status: Option<ServerStatus> = bincode::deserialize(&self.read_bytes().await?)?;
+            let status: Option<ServerStatus> = bincode::deserialize(self.read_bytes().await?)?;
             if let Some(status) = status {
                 if let Err(e) = self.update_status(status) {
                     error!("update_status error: {:?}", e);

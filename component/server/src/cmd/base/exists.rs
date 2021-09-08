@@ -12,7 +12,7 @@ pub struct Exists {
 
 impl Exists {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let mut res = 0;
         for cmd in self
             .keys

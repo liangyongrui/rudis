@@ -23,7 +23,7 @@ impl From<Hincrby> for dict::cmd::kvp::incr::Req {
 
 impl Hincrby {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let i = db.kvp_incr(self.into())?;
         Ok(Frame::Integer(i))
     }

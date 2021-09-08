@@ -26,7 +26,7 @@ impl From<Hsetnx> for dict::cmd::kvp::set::Req {
 
 impl Hsetnx {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let res = db.kvp_set(self.into())?;
         Ok(Frame::Integer((res.new_len - res.old_len) as _))
     }

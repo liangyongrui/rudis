@@ -22,7 +22,7 @@ impl From<Rpop> for dict::cmd::deque::pop::Req {
 }
 impl Rpop {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let res = db.deque_pop(self.into())?;
         Ok(Frame::Array(
             res.into_iter().map(data_type_to_frame).collect(),

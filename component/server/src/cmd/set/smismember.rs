@@ -20,7 +20,7 @@ impl<'a> From<&'a Smismember> for dict::cmd::set::exists::Req<'a> {
 
 impl Smismember {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let res = db.set_exists((&self).into())?;
 
         Ok(Frame::Array(

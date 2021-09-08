@@ -24,7 +24,7 @@ impl From<Zremrangebyrank> for dict::cmd::sorted_set::remove_by_rank_range::Req 
 
 impl Zremrangebyrank {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let res = db.sorted_set_remove_by_rank_range(self.into())?;
         Ok(Frame::Integer(res.len() as _))
     }

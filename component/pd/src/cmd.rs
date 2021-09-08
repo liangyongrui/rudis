@@ -3,21 +3,21 @@ use connection::parse::{frame::Frame, Parse};
 
 use crate::status;
 
-pub fn server_init_apply(parse: &mut Parse) -> common::Result<Frame> {
+pub fn server_init_apply<'a>(parse: &'a mut Parse<'a>) -> common::Result<Frame<'a>> {
     let payload: ServerInit = bincode::deserialize(&*parse.next_bulk()?)?;
-    Ok(Frame::Bulk(
-        bincode::serialize(&status::server_init(&payload)?)?.into(),
-    ))
+    Ok(Frame::OwnedBulk(bincode::serialize(&status::server_init(
+        &payload,
+    )?)?))
 }
 
-pub fn server_heartbeat_apply(parse: &mut Parse) -> common::Result<Frame> {
+pub fn server_heartbeat_apply<'a>(parse: &mut Parse<'a>) -> common::Result<Frame<'a>> {
     let payload: ServerStatus = bincode::deserialize(&*parse.next_bulk()?)?;
-    Ok(Frame::Bulk(
-        bincode::serialize(&status::server_heartbeat(&payload))?.into(),
-    ))
+    Ok(Frame::OwnedBulk(bincode::serialize(
+        &status::server_heartbeat(&payload),
+    )?))
 }
 
-pub fn crate_group_apply() -> Frame {
+pub fn crate_group_apply() -> Frame<'static> {
     status::create_group();
     Frame::ok()
 }

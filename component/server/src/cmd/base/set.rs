@@ -131,7 +131,11 @@ impl Set {
     }
 
     #[tracing::instrument(skip(self, connection, db), level = "debug")]
-    pub async fn apply(self, connection: &mut Connection, db: &Db) -> common::Result<Frame> {
+    pub async fn apply<'a>(
+        self,
+        connection: &'a mut Connection,
+        db: &Db,
+    ) -> common::Result<Frame<'a>> {
         let get = self.get;
         let res = db.set(self.into())?;
         let response = if get {

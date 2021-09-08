@@ -30,7 +30,7 @@ impl From<Setex> for dict::cmd::simple::set::Req {
 
 impl Setex {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         db.set(self.into())?;
         Ok(Frame::ok())
     }

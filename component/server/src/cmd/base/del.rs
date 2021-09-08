@@ -13,7 +13,11 @@ pub struct Del {
 
 impl Del {
     #[tracing::instrument(skip(self, connection, db), level = "debug")]
-    pub async fn apply(self, connection: &mut Connection, db: &Db) -> common::Result<Frame> {
+    pub async fn apply<'a>(
+        self,
+        connection: &'a mut Connection,
+        db: &Db,
+    ) -> common::Result<Frame<'a>> {
         let mut res = 0;
         let mut delay = Vec::with_capacity(self.keys.len());
         for cmd in self

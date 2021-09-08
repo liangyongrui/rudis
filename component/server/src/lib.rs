@@ -17,6 +17,7 @@ use common::config::CONFIG;
 use connection::{parse::frame::Frame, Connection};
 use db::Db;
 use tokio::{
+    io::AsyncWriteExt,
     net::{TcpListener, TcpStream},
     time::{self, Duration},
 };
@@ -251,9 +252,10 @@ impl Handler {
             // peer.
             let res = match res {
                 Ok(f) => f,
-                Err(e) => Frame::Error(e.to_string().as_bytes().into()),
+                Err(e) => Frame::OwnedError(e.to_string()),
             };
-            self.connection.write_frame(&res).await?;
+            let bytes: Vec<u8> = (&res).into();
+            self.connection.stream.write_all(&bytes).await?;
         }
     }
 }

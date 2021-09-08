@@ -21,7 +21,7 @@ impl<'a> From<&'a Hexists> for dict::cmd::kvp::exists::Req<'a> {
 
 impl Hexists {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let res = db.kvp_exists((&self).into())?;
         Ok(Frame::Integer(if res { 1 } else { 0 }))
     }

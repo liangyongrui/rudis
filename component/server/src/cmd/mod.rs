@@ -46,12 +46,12 @@ use self::{
 ///
 /// Methods called on `Command` are delegated to the command implementation.
 #[derive(Debug)]
-pub enum Command {
+pub enum Command<'a> {
     Ping,
     Read(Read),
     Write(Write),
     SyncSnapshot(SyncSnapshot),
-    Unknown(Unknown),
+    Unknown(Unknown<'a>),
 }
 #[derive(Debug)]
 pub enum Read {
@@ -114,7 +114,7 @@ pub enum Write {
     Flushall(Flushall),
 }
 
-impl Command {
+impl<'a> Command<'a> {
     /// Parse a command from a received frame.
     ///
     /// The `Frame` must represent a Redis command supported by `rudis` and
@@ -123,7 +123,7 @@ impl Command {
     /// # Returns
     ///
     /// On success, the command value is returned, otherwise, `Err` is returned.
-    pub fn from_frame(frame: Frame) -> common::Result<Command> {
+    pub fn from_frame(frame: Frame<'a>) -> common::Result<Self> {
         // The frame  value is decorated with `Parse`. `Parse` provides a
         // "cursor" like API which makes parsing the command easier.
         //
@@ -229,9 +229,13 @@ impl Command {
     }
 }
 
-impl Write {
+impl<'a> Write {
     #[inline]
-    pub async fn apply(self, connection: &mut Connection, db: &Arc<Db>) -> common::Result<Frame> {
+    pub async fn apply(
+        self,
+        connection: &'a mut Connection,
+        db: &'a Arc<Db>,
+    ) -> common::Result<Frame<'a>> {
         match self {
             Write::Set(cmd) => cmd.apply(connection, db).await,
             Write::Psetex(cmd) => cmd.apply(db),
@@ -269,7 +273,7 @@ impl Write {
 
 impl Read {
     #[inline]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         match self {
             Read::Get(cmd) => cmd.apply(db),
             Read::Llen(cmd) => cmd.apply(db),

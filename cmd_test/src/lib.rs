@@ -14,21 +14,18 @@ trait NewCmd {
 
 pub async fn write_cmd(stream: &mut TcpStream, cmd: Vec<&str>) {
     debug!(?cmd);
-    let args = cmd
-        .into_iter()
-        .map(|t| Frame::Bulk(t.as_bytes().into()))
-        .collect();
+    let args = cmd.into_iter().map(|t| Frame::Bulk(t.as_bytes())).collect();
     let cmd: Vec<u8> = (&Frame::Array(args)).into();
     stream.write_all(&cmd).await.unwrap();
     stream.flush().await.unwrap();
 }
 
-pub async fn next_frame_eq(connection: &mut Connection, right: Frame) {
+pub async fn next_frame_eq(connection: &mut Connection, right: Frame<'_>) {
     let left = connection.read_frame().await.unwrap().unwrap();
     assert_eq!(left, right);
 }
 
-pub async fn next_array_frame_sorted_eq(connection: &mut Connection, mut right: Vec<Frame>) {
+pub async fn next_array_frame_sorted_eq(connection: &mut Connection, mut right: Vec<Frame<'_>>) {
     let left = connection.read_frame().await.unwrap().unwrap();
     if let Frame::Array(mut left) = left {
         left.sort();
@@ -39,7 +36,7 @@ pub async fn next_array_frame_sorted_eq(connection: &mut Connection, mut right: 
     }
 }
 
-pub async fn next_frame_in(connection: &mut Connection, rights: Vec<Frame>) {
+pub async fn next_frame_in(connection: &mut Connection, rights: Vec<Frame<'_>>) {
     let left = connection.read_frame().await.unwrap().unwrap();
     for right in rights {
         if left == right {

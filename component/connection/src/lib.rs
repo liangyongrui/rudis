@@ -20,6 +20,7 @@ use tokio::{
 pub struct Connection {
     pub stream: TcpStream,
     read_buffer: BytesMut,
+    advance: usize,
 }
 
 impl Connection {
@@ -28,13 +29,15 @@ impl Connection {
         Connection {
             stream: socket,
             read_buffer: BytesMut::with_capacity(8 * 1024),
+            advance: 0,
         }
     }
 
+    /// todo
     /// Write a single `Frame` value to the underlying stream.
     #[inline]
     #[tracing::instrument(skip(self), level = "debug")]
-    pub async fn write_frame(&mut self, frame: &Frame) -> io::Result<()> {
+    pub async fn write_frame<'a>(&mut self, frame: &'a Frame<'a>) -> io::Result<()> {
         let bytes: Vec<u8> = frame.into();
         self.stream.write_all(&bytes).await
     }
@@ -46,9 +49,19 @@ impl Connection {
     /// 1. parse failed
     /// 1. connect end
     /// 1. other io error
-    pub async fn read_frame(&mut self) -> common::Result<Option<Frame>> {
+    pub async fn read_frame(&mut self) -> common::Result<Option<Frame<'_>>> {
+        let advance = self.advance;
+        if advance != 0 {
+            self.read_buffer.advance(advance);
+            self.advance = 0;
+        }
         loop {
-            if let Some(frame) = self.parse_frame()? {
+            // 这个 unsafe 不知道咋办
+            // 可能需要等 https://github.com/rust-lang/polonius
+            if let Some((advance, frame)) =
+                parse::frame::parse_2(unsafe { &*(&mut self.read_buffer as *mut BytesMut) })?
+            {
+                self.advance = advance;
                 return Ok(Some(frame));
             }
 
@@ -62,21 +75,21 @@ impl Connection {
         }
     }
 
-    /// Read a frame from the buffer.
-    ///
-    /// # Errors
-    /// parse failed
-    #[inline]
-    fn parse_frame(&mut self) -> common::Result<Option<Frame>> {
-        let old_len = self.read_buffer.len();
-        match parse::parse(self.read_buffer.as_ref()) {
-            Ok((left, frame)) => {
-                let len = old_len - left.len();
-                self.read_buffer.advance(len);
-                Ok(Some(frame))
-            }
-            Err(nom::Err::Incomplete(_)) => Ok(None),
-            Err(e) => Err(format!("parse failed, {:?}", e).into()),
-        }
-    }
+    // /// Read a frame from the buffer.
+    // ///
+    // /// # Errors
+    // /// parse failed
+    // #[inline]
+    // fn parse_frame(&mut self) -> common::Result<Option<Frame<'_>>> {
+    //     let old_len = self.read_buffer.len();
+    //     match parse::parse(self.read_buffer.as_ref()) {
+    //         Ok((left, frame)) => {
+    //             let len = old_len - left.len();
+    //             self.read_buffer.advance(len);
+    //             Ok(Some(frame))
+    //         }
+    //         Err(nom::Err::Incomplete(_)) => Ok(None),
+    //         Err(e) => Err(format!("parse failed, {:?}", e).into()),
+    //     }
+    // }
 }

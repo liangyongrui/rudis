@@ -21,7 +21,7 @@ impl From<Decrby> for dict::cmd::simple::incr::Req {
 
 impl Decrby {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let response = db.incr(self.into())?;
         Ok(Frame::Integer(response))
     }

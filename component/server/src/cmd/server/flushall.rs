@@ -26,7 +26,7 @@ impl Flushall {
         Ok(Self { sync })
     }
     #[tracing::instrument(skip(db))]
-    pub fn apply(self, db: Arc<Db>) -> Frame {
+    pub fn apply(self, db: Arc<Db>) -> Frame<'static> {
         db.flushall(self.sync);
         Frame::ok()
     }

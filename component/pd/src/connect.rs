@@ -5,6 +5,7 @@ use connection::{
     Connection,
 };
 use tokio::{
+    io::AsyncWriteExt,
     net::{TcpListener, TcpStream},
     time,
 };
@@ -51,17 +52,18 @@ impl Handle {
                 Some(frame) => frame,
                 None => return Ok(()),
             };
-            let res = Self::apply_frame(frame);
+            let parse = &mut Parse::new(frame)?;
+            let res = Self::apply_frame(parse);
             let res = match res {
                 Ok(f) => f,
-                Err(e) => Frame::Error(e.to_string().as_bytes().into()),
+                Err(e) => Frame::OwnedError(e.to_string()),
             };
-            self.connection.write_frame(&res).await?;
+            let bytes: Vec<u8> = (&res).into();
+            self.connection.stream.write_all(&bytes).await?;
         }
     }
 
-    pub fn apply_frame(frame: Frame) -> common::Result<Frame> {
-        let parse = &mut Parse::new(frame)?;
+    pub fn apply_frame<'a>(parse: &'a mut Parse<'a>) -> common::Result<Frame<'a>> {
         let command_name = parse.next_string()?.to_lowercase();
         match &command_name[..] {
             common::pd_message::cmd::SEVER_INIT => server_init_apply(parse),

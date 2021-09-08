@@ -59,7 +59,7 @@ impl Zrevrangebyscore {
     }
 
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub fn apply(self, db: &Db) -> common::Result<Frame> {
+    pub fn apply(self, db: &Db) -> common::Result<Frame<'_>> {
         let limit = self
             .limit
             .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
@@ -76,12 +76,12 @@ impl Zrevrangebyscore {
         let mut res = vec![];
         if self.withscores {
             for n in response {
-                res.push(Frame::Simple(n.key));
-                res.push(Frame::Simple(n.score.0.to_string().as_bytes().into()));
+                res.push(Frame::OwnedSimple(n.key.into()));
+                res.push(Frame::OwnedStringSimple(n.score.0.to_string()));
             }
         } else {
             for n in response {
-                res.push(Frame::Simple(n.key));
+                res.push(Frame::OwnedSimple(n.key.into()));
             }
         }
         Ok(Frame::Array(res))
