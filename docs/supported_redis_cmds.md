@@ -65,3 +65,8 @@ All the implemented commands are compatible with redis 7.0 version.
 | zset | zrevrangebylex   | yes     | Same as redis                                                                                                                    |
 | zset | zremrangebyrank  | yes     | O(N+M) with N being the number of elements in the sorted set and M the number of elements returned.                              |
 | zset | zremrangebyscore | yes     | Same as redis                                                                                                                    |
+
+## server command
+
+1. flushall
+1. info: return some fake data

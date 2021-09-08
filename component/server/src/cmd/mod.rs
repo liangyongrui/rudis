@@ -29,7 +29,7 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
-    server::flushall::Flushall,
+    server::{flushall::Flushall, info::Info},
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
@@ -76,6 +76,7 @@ pub enum Read {
     Ttl(Ttl),
     Pttl(Pttl),
     Exists(Exists),
+    Info(Info),
 }
 
 #[derive(Debug, Clone)]
@@ -204,6 +205,7 @@ impl Command {
             "pexpire" => Command::Write(Write::Pexpire(Pexpire::parse_frames(&mut parse)?)),
             "syncsnapshot" => Command::SyncSnapshot(SyncSnapshot::parse_frames(&mut parse)?),
             "flushall" => Command::Write(Write::Flushall(Flushall::parse_frames(&mut parse)?)),
+            "info" => Command::Read(Read::Info(Info)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -266,34 +268,29 @@ impl Write {
 impl Read {
     #[inline]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        use Read::{
-            Exists, Get, Hexists, Hget, Hgetall, Hmget, Llen, Lrange, Pttl, Sismember, Smembers,
-            Smismember, Ttl, Zrange, Zrangebylex, Zrangebyscore, Zrank, Zrevrange, Zrevrangebylex,
-            Zrevrangebyscore, Zrevrank,
-        };
-
         match self {
-            Get(cmd) => cmd.apply(db),
-            Llen(cmd) => cmd.apply(db),
-            Hgetall(cmd) => cmd.apply(db),
-            Hget(cmd) => cmd.apply(db),
-            Hmget(cmd) => cmd.apply(db),
-            Hexists(cmd) => cmd.apply(db),
-            Sismember(cmd) => cmd.apply(db),
-            Smembers(cmd) => cmd.apply(db),
-            Smismember(cmd) => cmd.apply(db),
-            Zrangebylex(cmd) => cmd.apply(db),
-            Zrangebyscore(cmd) => cmd.apply(db),
-            Zrank(cmd) => cmd.apply(db),
-            Zrevrange(cmd) => cmd.apply(db),
-            Zrevrangebylex(cmd) => cmd.apply(db),
-            Zrevrangebyscore(cmd) => cmd.apply(db),
-            Zrevrank(cmd) => cmd.apply(db),
-            Zrange(cmd) => cmd.apply(db),
-            Lrange(cmd) => cmd.apply(db),
-            Exists(cmd) => cmd.apply(db),
-            Ttl(cmd) => cmd.apply(db),
-            Pttl(cmd) => cmd.apply(db),
+            Read::Get(cmd) => cmd.apply(db),
+            Read::Llen(cmd) => cmd.apply(db),
+            Read::Hgetall(cmd) => cmd.apply(db),
+            Read::Hget(cmd) => cmd.apply(db),
+            Read::Hmget(cmd) => cmd.apply(db),
+            Read::Hexists(cmd) => cmd.apply(db),
+            Read::Sismember(cmd) => cmd.apply(db),
+            Read::Smembers(cmd) => cmd.apply(db),
+            Read::Smismember(cmd) => cmd.apply(db),
+            Read::Zrangebylex(cmd) => cmd.apply(db),
+            Read::Zrangebyscore(cmd) => cmd.apply(db),
+            Read::Zrank(cmd) => cmd.apply(db),
+            Read::Zrevrange(cmd) => cmd.apply(db),
+            Read::Zrevrangebylex(cmd) => cmd.apply(db),
+            Read::Zrevrangebyscore(cmd) => cmd.apply(db),
+            Read::Zrevrank(cmd) => cmd.apply(db),
+            Read::Zrange(cmd) => cmd.apply(db),
+            Read::Lrange(cmd) => cmd.apply(db),
+            Read::Exists(cmd) => cmd.apply(db),
+            Read::Ttl(cmd) => cmd.apply(db),
+            Read::Pttl(cmd) => cmd.apply(db),
+            Read::Info(cmd) => Ok(cmd.apply(db)),
         }
     }
 }
