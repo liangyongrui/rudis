@@ -48,36 +48,36 @@ use self::{
 #[derive(Debug)]
 pub enum Command<'a> {
     Ping,
-    Read(Read),
+    Read(Read<'a>),
     Write(Write),
     SyncSnapshot(SyncSnapshot),
     Unknown(Unknown<'a>),
 }
 #[derive(Debug)]
-pub enum Read {
+pub enum Read<'a> {
     Zrangebylex(Zrangebylex),
     Zrangebyscore(Zrangebyscore),
-    Zrank(Zrank),
+    Zrank(Zrank<'a>),
     Zrevrange(Zrevrange),
     Zrevrangebylex(Zrevrangebylex),
     Zrevrangebyscore(Zrevrangebyscore),
-    Zrevrank(Zrevrank),
+    Zrevrank(Zrevrank<'a>),
     Zrange(Zrange),
-    Sismember(Sismember),
-    Smembers(Smembers),
+    Sismember(Sismember<'a>),
+    Smembers(Smembers<'a>),
     Smismember(Smismember),
-    Hexists(Hexists),
-    Hget(Hget),
+    Hexists(Hexists<'a>),
+    Hget(Hget<'a>),
     Hmget(Hmget),
-    Hgetall(Hgetall),
-    Llen(Llen),
-    Lrange(Lrange),
-    Get(Get),
-    Ttl(Ttl),
-    Pttl(Pttl),
+    Hgetall(Hgetall<'a>),
+    Llen(Llen<'a>),
+    Lrange(Lrange<'a>),
+    Get(Get<'a>),
+    Ttl(Ttl<'a>),
+    Pttl(Pttl<'a>),
     Exists(Exists),
     Info(Info),
-    Dump(Dump),
+    Dump(Dump<'a>),
 }
 
 #[derive(Debug, Clone)]
@@ -136,78 +136,80 @@ impl<'a> Command<'a> {
         // matching.
         let command_name = parse.next_string()?.to_lowercase();
 
+        let parse_mut = unsafe { &mut *(&mut parse as *mut _) };
+
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
         let command = match &command_name[..] {
             "ping" => Command::Ping,
-            "ttl" => Command::Read(Read::Ttl(Ttl::parse_frames(&mut parse)?)),
-            "pttl" => Command::Read(Read::Pttl(Pttl::parse_frames(&mut parse)?)),
+            "ttl" => Command::Read(Read::Ttl(Ttl::parse_frames(parse_mut)?)),
+            "pttl" => Command::Read(Read::Pttl(Pttl::parse_frames(parse_mut)?)),
             "zrangebylex" => {
-                Command::Read(Read::Zrangebylex(Zrangebylex::parse_frames(&mut parse)?))
+                Command::Read(Read::Zrangebylex(Zrangebylex::parse_frames(parse_mut)?))
             }
-            "zrangebyscore" => Command::Read(Read::Zrangebyscore(Zrangebyscore::parse_frames(
-                &mut parse,
-            )?)),
-            "zrank" => Command::Read(Read::Zrank(Zrank::parse_frames(&mut parse)?)),
-            "zrem" => Command::Write(Write::Zrem(Zrem::parse_frames(&mut parse)?)),
+            "zrangebyscore" => {
+                Command::Read(Read::Zrangebyscore(Zrangebyscore::parse_frames(parse_mut)?))
+            }
+            "zrank" => Command::Read(Read::Zrank(Zrank::parse_frames(parse_mut)?)),
+            "zrem" => Command::Write(Write::Zrem(Zrem::parse_frames(parse_mut)?)),
             "zremrangebylex" => Command::Write(Write::Zremrangebylex(
-                Zremrangebylex::parse_frames(&mut parse)?,
+                Zremrangebylex::parse_frames(parse_mut)?,
             )),
             "zremrangebyrank" => Command::Write(Write::Zremrangebyrank(
-                Zremrangebyrank::parse_frames(&mut parse)?,
+                Zremrangebyrank::parse_frames(parse_mut)?,
             )),
             "zremrangebyscore" => Command::Write(Write::Zremrangebyscore(
-                Zremrangebyscore::parse_frames(&mut parse)?,
+                Zremrangebyscore::parse_frames(parse_mut)?,
             )),
-            "zrevrange" => Command::Read(Read::Zrevrange(Zrevrange::parse_frames(&mut parse)?)),
+            "zrevrange" => Command::Read(Read::Zrevrange(Zrevrange::parse_frames(parse_mut)?)),
             "zrevrangebylex" => Command::Read(Read::Zrevrangebylex(Zrevrangebylex::parse_frames(
-                &mut parse,
+                parse_mut,
             )?)),
             "zrevrangebyscore" => Command::Read(Read::Zrevrangebyscore(
-                Zrevrangebyscore::parse_frames(&mut parse)?,
+                Zrevrangebyscore::parse_frames(parse_mut)?,
             )),
-            "zrevrank" => Command::Read(Read::Zrevrank(Zrevrank::parse_frames(&mut parse)?)),
-            "zrange" => Command::Read(Read::Zrange(Zrange::parse_frames(&mut parse)?)),
-            "zadd" => Command::Write(Write::Zadd(Zadd::parse_frames(&mut parse)?)),
-            "sadd" => Command::Write(Write::Sadd(Sadd::parse_frames(&mut parse)?)),
-            "sismember" => Command::Read(Read::Sismember(Sismember::parse_frames(&mut parse)?)),
-            "smismember" => Command::Read(Read::Smismember(Smismember::parse_frames(&mut parse)?)),
-            "smembers" => Command::Read(Read::Smembers(Smembers::parse_frames(&mut parse)?)),
-            "srem" => Command::Write(Write::Srem(Srem::parse_frames(&mut parse)?)),
-            "hincrby" => Command::Write(Write::Hincrby(Hincrby::parse_frames(&mut parse)?)),
-            "hexists" => Command::Read(Read::Hexists(Hexists::parse_frames(&mut parse)?)),
-            "hdel" => Command::Write(Write::Hdel(Hdel::parse_frames(&mut parse)?)),
-            "hsetnx" => Command::Write(Write::Hsetnx(Hsetnx::parse_frames(&mut parse)?)),
-            "hget" => Command::Read(Read::Hget(Hget::parse_frames(&mut parse)?)),
-            "hmget" => Command::Read(Read::Hmget(Hmget::parse_frames(&mut parse)?)),
-            "hset" => Command::Write(Write::Hset(Hset::parse_frames(&mut parse)?)),
-            "hgetall" => Command::Read(Read::Hgetall(Hgetall::parse_frames(&mut parse)?)),
-            "llen" => Command::Read(Read::Llen(Llen::parse_frames(&mut parse)?)),
-            "rpop" => Command::Write(Write::Rpop(Rpop::parse_frames(&mut parse)?)),
-            "lpop" => Command::Write(Write::Lpop(Lpop::parse_frames(&mut parse)?)),
-            "lrange" => Command::Read(Read::Lrange(Lrange::parse_frames(&mut parse)?)),
-            "lpush" => Command::Write(Write::Lpush(Lpush::parse_frames(&mut parse)?)),
-            "rpush" => Command::Write(Write::Rpush(Rpush::parse_frames(&mut parse)?)),
-            "lpushx" => Command::Write(Write::Lpushx(Lpushx::parse_frames(&mut parse)?)),
-            "rpushx" => Command::Write(Write::Rpushx(Rpushx::parse_frames(&mut parse)?)),
-            "incrby" => Command::Write(Write::Incrby(Incrby::parse_frames(&mut parse)?)),
-            "incr" => Command::Write(Write::Incr(Incr::parse_frames(&mut parse)?)),
-            "decrby" => Command::Write(Write::Decrby(Decrby::parse_frames(&mut parse)?)),
-            "decr" => Command::Write(Write::Decr(Decr::parse_frames(&mut parse)?)),
-            "get" => Command::Read(Read::Get(Get::parse_frames(&mut parse)?)),
-            "set" => Command::Write(Write::Set(Set::parse_frames(&mut parse)?)),
-            "del" => Command::Write(Write::Del(Del::parse_frames(&mut parse)?)),
-            "exists" => Command::Read(Read::Exists(Exists::parse_frames(&mut parse)?)),
-            "psetex" => Command::Write(Write::Psetex(Psetex::parse_frames(&mut parse)?)),
-            "setex" => Command::Write(Write::Setex(Setex::parse_frames(&mut parse)?)),
-            "pexpireat" => Command::Write(Write::Pexpireat(Pexpireat::parse_frames(&mut parse)?)),
-            "expireat" => Command::Write(Write::Expireat(Expireat::parse_frames(&mut parse)?)),
-            "expire" => Command::Write(Write::Expire(Expire::parse_frames(&mut parse)?)),
-            "pexpire" => Command::Write(Write::Pexpire(Pexpire::parse_frames(&mut parse)?)),
-            "syncsnapshot" => Command::SyncSnapshot(SyncSnapshot::parse_frames(&mut parse)?),
-            "flushall" => Command::Write(Write::Flushall(Flushall::parse_frames(&mut parse)?)),
+            "zrevrank" => Command::Read(Read::Zrevrank(Zrevrank::parse_frames(parse_mut)?)),
+            "zrange" => Command::Read(Read::Zrange(Zrange::parse_frames(parse_mut)?)),
+            "zadd" => Command::Write(Write::Zadd(Zadd::parse_frames(parse_mut)?)),
+            "sadd" => Command::Write(Write::Sadd(Sadd::parse_frames(parse_mut)?)),
+            "sismember" => Command::Read(Read::Sismember(Sismember::parse_frames(parse_mut)?)),
+            "smismember" => Command::Read(Read::Smismember(Smismember::parse_frames(parse_mut)?)),
+            "smembers" => Command::Read(Read::Smembers(Smembers::parse_frames(parse_mut)?)),
+            "srem" => Command::Write(Write::Srem(Srem::parse_frames(parse_mut)?)),
+            "hincrby" => Command::Write(Write::Hincrby(Hincrby::parse_frames(parse_mut)?)),
+            "hexists" => Command::Read(Read::Hexists(Hexists::parse_frames(parse_mut)?)),
+            "hdel" => Command::Write(Write::Hdel(Hdel::parse_frames(parse_mut)?)),
+            "hsetnx" => Command::Write(Write::Hsetnx(Hsetnx::parse_frames(parse_mut)?)),
+            "hget" => Command::Read(Read::Hget(Hget::parse_frames(parse_mut)?)),
+            "hmget" => Command::Read(Read::Hmget(Hmget::parse_frames(parse_mut)?)),
+            "hset" => Command::Write(Write::Hset(Hset::parse_frames(parse_mut)?)),
+            "hgetall" => Command::Read(Read::Hgetall(Hgetall::parse_frames(parse_mut)?)),
+            "llen" => Command::Read(Read::Llen(Llen::parse_frames(parse_mut)?)),
+            "rpop" => Command::Write(Write::Rpop(Rpop::parse_frames(parse_mut)?)),
+            "lpop" => Command::Write(Write::Lpop(Lpop::parse_frames(parse_mut)?)),
+            "lrange" => Command::Read(Read::Lrange(Lrange::parse_frames(parse_mut)?)),
+            "lpush" => Command::Write(Write::Lpush(Lpush::parse_frames(parse_mut)?)),
+            "rpush" => Command::Write(Write::Rpush(Rpush::parse_frames(parse_mut)?)),
+            "lpushx" => Command::Write(Write::Lpushx(Lpushx::parse_frames(parse_mut)?)),
+            "rpushx" => Command::Write(Write::Rpushx(Rpushx::parse_frames(parse_mut)?)),
+            "incrby" => Command::Write(Write::Incrby(Incrby::parse_frames(parse_mut)?)),
+            "incr" => Command::Write(Write::Incr(Incr::parse_frames(parse_mut)?)),
+            "decrby" => Command::Write(Write::Decrby(Decrby::parse_frames(parse_mut)?)),
+            "decr" => Command::Write(Write::Decr(Decr::parse_frames(parse_mut)?)),
+            "get" => Command::Read(Read::Get(Get::parse_frames(parse_mut)?)),
+            "set" => Command::Write(Write::Set(Set::parse_frames(parse_mut)?)),
+            "del" => Command::Write(Write::Del(Del::parse_frames(parse_mut)?)),
+            "exists" => Command::Read(Read::Exists(Exists::parse_frames(parse_mut)?)),
+            "psetex" => Command::Write(Write::Psetex(Psetex::parse_frames(parse_mut)?)),
+            "setex" => Command::Write(Write::Setex(Setex::parse_frames(parse_mut)?)),
+            "pexpireat" => Command::Write(Write::Pexpireat(Pexpireat::parse_frames(parse_mut)?)),
+            "expireat" => Command::Write(Write::Expireat(Expireat::parse_frames(parse_mut)?)),
+            "expire" => Command::Write(Write::Expire(Expire::parse_frames(parse_mut)?)),
+            "pexpire" => Command::Write(Write::Pexpire(Pexpire::parse_frames(parse_mut)?)),
+            "syncsnapshot" => Command::SyncSnapshot(SyncSnapshot::parse_frames(parse_mut)?),
+            "flushall" => Command::Write(Write::Flushall(Flushall::parse_frames(parse_mut)?)),
             "info" => Command::Read(Read::Info(Info)),
-            "dump" => Command::Read(Read::Dump(Dump::parse_frames(&mut parse)?)),
+            "dump" => Command::Read(Read::Dump(Dump::parse_frames(parse_mut)?)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -215,7 +217,7 @@ impl<'a> Command<'a> {
                 // `return` is called here to skip the `finish()` call below. As
                 // the command is not recognized, there is most likely
                 // unconsumed fields remaining in the `Parse` instance.
-                return Ok(Command::Unknown(Unknown::new(&command_name, &mut parse)));
+                Command::Unknown(Unknown::new(&command_name, parse_mut))
             }
         };
 
@@ -271,7 +273,7 @@ impl<'a> Write {
     }
 }
 
-impl Read {
+impl Read<'_> {
     #[inline]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         match self {

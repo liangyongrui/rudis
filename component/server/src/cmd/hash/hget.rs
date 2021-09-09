@@ -1,29 +1,26 @@
 use db::Db;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::{frame_parse, Frame};
 
 /// <https://redis.io/commands/hget>
-#[derive(Debug, ParseFrames)]
-pub struct Hget {
-    pub key: Box<[u8]>,
-    pub field: Box<[u8]>,
+#[derive(Debug, ParseFrames2)]
+pub struct Hget<'a> {
+    pub key: &'a [u8],
+    pub field: &'a [u8],
 }
 
-impl<'a> From<&'a Hget> for dict::cmd::kvp::get::Req<'a> {
-    fn from(old: &'a Hget) -> Self {
-        Self {
-            key: &old.key,
-            fields: vec![&old.field],
-        }
-    }
-}
-
-impl Hget {
+impl Hget<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         Ok(frame_parse::data_type_to_frame(
-            db.kvp_get((&self).into())?.into_iter().next().unwrap(),
+            db.kvp_get(dict::cmd::kvp::get::Req {
+                key: self.key,
+                fields: vec![self.field],
+            })?
+            .into_iter()
+            .next()
+            .unwrap(),
         ))
     }
 }

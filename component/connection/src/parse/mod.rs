@@ -1,6 +1,6 @@
 pub mod frame;
 
-use std::{fmt, str, vec};
+use std::{cell::UnsafeCell, fmt, str, vec};
 
 use keys::Key;
 
@@ -15,7 +15,7 @@ use crate::Frame;
 #[derive(Debug)]
 pub struct Parse<'a> {
     /// Array frame iterator.
-    parts: vec::IntoIter<Frame<'a>>,
+    parts: UnsafeCell<vec::IntoIter<Frame<'a>>>,
 }
 #[allow(clippy::module_name_repetitions)]
 /// Error encountered while parsing a frame.
@@ -45,7 +45,7 @@ impl<'a> Parse<'a> {
         };
 
         Ok(Parse {
-            parts: array.into_iter(),
+            parts: UnsafeCell::new(array.into_iter()),
         })
     }
 
@@ -54,8 +54,10 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// `EndOfStream`
-    pub fn next_frame(&mut self) -> Result<Frame<'a>, ParseError> {
-        self.parts.next().ok_or(ParseError::EndOfStream)
+    pub fn next_frame(&self) -> Result<Frame<'a>, ParseError> {
+        unsafe { &mut *self.parts.get() }
+            .next()
+            .ok_or(ParseError::EndOfStream)
     }
 
     /// next key
@@ -64,7 +66,7 @@ impl<'a> Parse<'a> {
     /// 1. `EndOfStream`
     /// 1. not bytes
     #[inline]
-    pub fn next_key(&mut self) -> Result<Key, ParseError> {
+    pub fn next_key(&self) -> Result<Key, ParseError> {
         self.next_bulk().map(|t| t.into())
     }
 
@@ -73,7 +75,19 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// 1. `EndOfStream`
     /// 1. not bytes
-    pub fn next_bulk(&mut self) -> Result<Box<[u8]>, ParseError> {
+    pub fn next_bytes(&self) -> Result<&[u8], ParseError> {
+        match self.next_frame()? {
+            Frame::Bulk(b) | Frame::Simple(b) => Ok(b),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
+        }
+    }
+
+    /// next bulk
+    ///
+    /// # Errors
+    /// 1. `EndOfStream`
+    /// 1. not bytes
+    pub fn next_bulk(&self) -> Result<Box<[u8]>, ParseError> {
         match self.next_frame()? {
             Frame::Bulk(b) | Frame::Simple(b) => Ok(b.into()),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
@@ -84,7 +98,7 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// the next entry cannot be represented as a String
-    pub fn next_string(&mut self) -> Result<String, ParseError> {
+    pub fn next_string(&self) -> Result<String, ParseError> {
         match self.next_frame()? {
             // Both `Simple` and `Bulk` representation may be strings. Strings
             // are parsed to UTF-8.
@@ -107,7 +121,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// If the next entry cannot be represented as an integer, then an error is
     /// returned.
-    pub fn next_int(&mut self) -> Result<i64, ParseError> {
+    pub fn next_int(&self) -> Result<i64, ParseError> {
         use atoi::atoi;
 
         const INVALID: &str = "protocol error; invalid number";
@@ -128,8 +142,8 @@ impl<'a> Parse<'a> {
     /// Ensure there are no more entries in the array
     /// # Errors
     /// if has more entries
-    pub fn finish(&mut self) -> Result<(), ParseError> {
-        if self.parts.next().is_none() {
+    pub fn finish(&self) -> Result<(), ParseError> {
+        if unsafe { &mut *self.parts.get() }.next().is_none() {
             Ok(())
         } else {
             Err("protocol error; expected end of frame, but there was more".into())

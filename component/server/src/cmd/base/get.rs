@@ -1,5 +1,5 @@
 use db::Db;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
@@ -10,18 +10,13 @@ use crate::Frame;
 /// handles string values.
 ///
 /// <https://redis.io/commands/get>
-#[derive(Debug, ParseFrames)]
-pub struct Get {
+#[derive(Debug, ParseFrames2)]
+pub struct Get<'a> {
     /// Name of the key to get
-    pub key: Box<[u8]>,
+    pub key: &'a [u8],
 }
 
-impl<'a> From<&'a Get> for dict::cmd::simple::get::Req<'a> {
-    fn from(old: &'a Get) -> Self {
-        Self { key: &old.key }
-    }
-}
-impl Get {
+impl Get<'_> {
     /// Apply the `Get` command to the specified `Db` instance.
     ///
     /// The response is written to `dst`. This is called by the server in order
@@ -30,7 +25,7 @@ impl Get {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         // Get the value from the shared database state
         // todo
-        let response = match db.get((&self).into())? {
+        let response = match db.get(dict::cmd::simple::get::Req { key: self.key })? {
             dict::data_type::DataType::Null => Frame::Null,
             dict::data_type::DataType::String(s) => Frame::OwnedSimple(s),
             dict::data_type::DataType::Bytes(b) => Frame::OwnedBulk(b),

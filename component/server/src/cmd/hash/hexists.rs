@@ -1,28 +1,22 @@
 use db::Db;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/hexists>
-#[derive(Debug, ParseFrames)]
-pub struct Hexists {
-    pub key: Box<[u8]>,
-    pub field: Box<[u8]>,
+#[derive(Debug, ParseFrames2)]
+pub struct Hexists<'a> {
+    pub key: &'a [u8],
+    pub field: &'a [u8],
 }
 
-impl<'a> From<&'a Hexists> for dict::cmd::kvp::exists::Req<'a> {
-    fn from(old: &'a Hexists) -> Self {
-        Self {
-            key: &old.key,
-            field: &old.field,
-        }
-    }
-}
-
-impl Hexists {
+impl Hexists<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let res = db.kvp_exists((&self).into())?;
+        let res = db.kvp_exists(dict::cmd::kvp::exists::Req {
+            key: self.key,
+            field: self.field,
+        })?;
         Ok(Frame::Integer(if res { 1 } else { 0 }))
     }
 }

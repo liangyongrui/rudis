@@ -1,7 +1,7 @@
 use connection::parse::{frame::Frame, Parse, ParseError};
 use dict::data_type::DataType;
 
-pub fn next_data_type(parse: &mut Parse) -> Result<DataType, ParseError> {
+pub fn next_data_type(parse: &Parse) -> Result<DataType, ParseError> {
     match parse.next_frame()? {
         Frame::Integer(i) => Ok(DataType::Integer(i)),
         Frame::Bulk(b) => Ok(DataType::Bytes(b.into())),

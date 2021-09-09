@@ -1,24 +1,18 @@
 use db::Db;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
 
 /// <https://redis.io/commands/hgetall>
-#[derive(Debug, ParseFrames)]
-pub struct Hgetall {
-    pub key: Box<[u8]>,
+#[derive(Debug, ParseFrames2)]
+pub struct Hgetall<'a> {
+    pub key: &'a [u8],
 }
 
-impl<'a> From<&'a Hgetall> for dict::cmd::kvp::get_all::Req<'a> {
-    fn from(old: &'a Hgetall) -> Self {
-        Self { key: &old.key }
-    }
-}
-
-impl Hgetall {
+impl Hgetall<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let v = db.kvp_get_all((&self).into())?;
+        let v = db.kvp_get_all(dict::cmd::kvp::get_all::Req { key: self.key })?;
         Ok(Frame::Array(
             v.into_iter()
                 .flat_map(|(k, v)| {

@@ -1,28 +1,22 @@
 use db::Db;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/sismember>
-#[derive(Debug, ParseFrames)]
-pub struct Sismember {
-    pub key: Box<[u8]>,
-    pub value: Box<[u8]>,
+#[derive(Debug, ParseFrames2)]
+pub struct Sismember<'a> {
+    pub key: &'a [u8],
+    pub value: &'a [u8],
 }
 
-impl<'a> From<&'a Sismember> for dict::cmd::set::exists::Req<'a> {
-    fn from(old: &'a Sismember) -> Self {
-        Self {
-            key: &old.key,
-            fields: vec![&old.value],
-        }
-    }
-}
-
-impl Sismember {
+impl Sismember<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let res = db.set_exists((&self).into())?;
+        let res = db.set_exists(dict::cmd::set::exists::Req {
+            key: self.key,
+            fields: vec![self.value],
+        })?;
         Ok(Frame::Integer(if res[0] { 1 } else { 0 }))
     }
 }
