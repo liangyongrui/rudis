@@ -1,26 +1,20 @@
 use std::process::exit;
 
 use common::SLOT_SIZE;
-use connection::parse::Parse;
 use db::child_process;
+use macros::ParseFrames;
 use nix::unistd::ForkResult;
 use tokio::net::TcpStream;
 use tracing::{error, info};
 
 use crate::Handler;
 
-#[derive(Debug)]
+#[derive(Debug, ParseFrames)]
 pub struct SyncSnapshot {
     slot_id: usize,
 }
 
 impl SyncSnapshot {
-    pub fn parse_frames(parse: &Parse) -> common::Result<Self> {
-        Ok(Self {
-            slot_id: parse.next_int()? as usize,
-        })
-    }
-
     #[tracing::instrument(skip(handler))]
     pub fn apply(self, handler: Handler) {
         // 先拿到需要传输的数据，避免死锁

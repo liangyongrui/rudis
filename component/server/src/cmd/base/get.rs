@@ -1,5 +1,5 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 
@@ -10,7 +10,7 @@ use crate::Frame;
 /// handles string values.
 ///
 /// <https://redis.io/commands/get>
-#[derive(Debug, ParseFrames2)]
+#[derive(Debug, ParseFrames)]
 pub struct Get<'a> {
     /// Name of the key to get
     pub key: &'a [u8],

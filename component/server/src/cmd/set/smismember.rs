@@ -1,9 +1,9 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/smismember>
-#[derive(Debug, ParseFrames2)]
+#[derive(Debug, ParseFrames)]
 pub struct Smismember<'a> {
     pub key: &'a [u8],
     pub values: Vec<&'a [u8]>,

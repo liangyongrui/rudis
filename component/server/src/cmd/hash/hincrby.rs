@@ -1,10 +1,10 @@
 use db::Db;
 use keys::Key;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/hincrby>
-#[derive(Debug, ParseFrames2, Clone)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
     pub key: Key,
     pub field: Box<[u8]>,

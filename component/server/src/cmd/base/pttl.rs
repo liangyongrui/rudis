@@ -1,10 +1,10 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/pttl>
-#[derive(Debug, Clone, ParseFrames2)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Pttl<'a> {
     pub key: &'a [u8],
 }

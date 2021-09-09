@@ -1,9 +1,9 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/zrank>
-#[derive(Debug, ParseFrames2)]
+#[derive(Debug, ParseFrames)]
 pub struct Zrank<'a> {
     pub key: &'a [u8],
     pub member: &'a [u8],

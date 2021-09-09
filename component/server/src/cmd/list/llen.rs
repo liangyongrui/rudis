@@ -1,10 +1,10 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/llen>
-#[derive(Debug, ParseFrames2)]
+#[derive(Debug, ParseFrames)]
 pub struct Llen<'a> {
     pub key: &'a [u8],
 }

@@ -2,12 +2,12 @@ use common::options::NxXx;
 use db::Db;
 use dict::data_type::DataType;
 use keys::Key;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/hsetnx>
-#[derive(Debug, ParseFrames2, Clone)]
+#[derive(Debug, ParseFrames, Clone)]
 pub struct Hsetnx {
     pub key: Key,
     pub field: Box<[u8]>,

@@ -1,10 +1,10 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::{frame_parse, Frame};
 
 /// <https://redis.io/commands/hget>
-#[derive(Debug, ParseFrames2)]
+#[derive(Debug, ParseFrames)]
 pub struct Hget<'a> {
     pub key: &'a [u8],
     pub field: &'a [u8],

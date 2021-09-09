@@ -5,12 +5,12 @@ use common::{
 use db::Db;
 use dict::data_type::DataType;
 use keys::Key;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/psetex>
-#[derive(Debug, Clone, ParseFrames2)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Psetex {
     pub key: Key,
     pub milliseconds: u64,

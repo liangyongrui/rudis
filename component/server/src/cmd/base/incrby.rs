@@ -1,10 +1,10 @@
 use db::Db;
 use keys::Key;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/incrby>
-#[derive(Debug, Clone, ParseFrames2)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Incrby {
     pub key: Key,
     pub value: i64,

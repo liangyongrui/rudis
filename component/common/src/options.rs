@@ -1,5 +1,5 @@
+use quote::quote;
 use serde::{Deserialize, Serialize};
-
 #[derive(Debug, Clone, Copy, Deserialize, Serialize)]
 pub enum NxXx {
     // Only set the key if it does not already exist.
@@ -10,6 +10,13 @@ pub enum NxXx {
 }
 
 impl NxXx {
+    pub fn match_arms_token(field_name: &str) -> proc_macro2::TokenStream {
+        quote! {
+            "nx" => #field_name = NxXx::Nx,
+            "xx" => #field_name = NxXx::Xx,
+        }
+    }
+
     #[inline]
     #[must_use]
     pub const fn is_none(self) -> bool {
@@ -29,14 +36,31 @@ impl NxXx {
     }
 }
 
+impl Default for NxXx {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Copy)]
 pub enum GtLt {
     Gt,
     Lt,
     None,
 }
+impl Default for GtLt {
+    fn default() -> Self {
+        Self::None
+    }
+}
 
 impl GtLt {
+    pub fn match_arms_token(field_name: &str) -> proc_macro2::TokenStream {
+        quote! {
+            "gt" => #field_name = GtLt::Gt,
+            "lt" => #field_name = GtLt::Lt,
+        }
+    }
     #[inline]
     #[must_use]
     pub const fn is_none(self) -> bool {

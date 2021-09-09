@@ -14,10 +14,16 @@ use crate::Frame;
 #[derive(Debug, Clone)]
 pub struct Expire {
     pub req: Req,
+    // pub key: &'a [u8],
+    // pub seconds: u64,
+    // #[optional]
+    // pub nx_xx: NxXx,
+    // #[optional]
+    // pub gt_lt: GtLt
 }
 
 impl Expire {
-    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Expire> {
+    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Self> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;

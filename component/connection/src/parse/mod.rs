@@ -98,6 +98,25 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// the next entry cannot be represented as a String
+    pub fn next_str(&self) -> Result<&str, ParseError> {
+        match self.next_frame()? {
+            // Both `Simple` and `Bulk` representation may be strings. Strings
+            // are parsed to UTF-8.
+            //
+            // While errors are stored as strings, they are considered separate
+            // types.
+            Frame::Bulk(data) | Frame::Simple(data) => {
+                str::from_utf8(data).map_err(|_| "protocol error; invalid string".into())
+            }
+            Frame::Ping => Ok("PING"),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
+        }
+    }
+
+    /// Return the next entry as a string.
+    ///
+    /// # Errors
+    /// the next entry cannot be represented as a String
     pub fn next_string(&self) -> Result<String, ParseError> {
         match self.next_frame()? {
             // Both `Simple` and `Bulk` representation may be strings. Strings

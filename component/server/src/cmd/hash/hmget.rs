@@ -1,10 +1,10 @@
 use db::Db;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::{frame_parse::data_type_to_frame, Frame};
 
 /// <https://redis.io/commands/hmget>
-#[derive(Debug, ParseFrames2)]
+#[derive(Debug, ParseFrames)]
 pub struct Hmget<'a> {
     pub key: &'a [u8],
     pub fields: Vec<&'a [u8]>,

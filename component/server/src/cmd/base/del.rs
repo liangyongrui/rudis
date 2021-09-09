@@ -1,12 +1,11 @@
 use db::Db;
 use keys::Key;
-use macros::ParseFrames2;
+use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/del>
-#[derive(Debug, Clone, ParseFrames2)]
+#[derive(Debug, Clone, ParseFrames)]
 pub struct Del {
-    // todo ref
     pub keys: Vec<Key>,
 }
 
