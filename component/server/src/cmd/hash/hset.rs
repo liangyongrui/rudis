@@ -24,7 +24,7 @@ impl From<Hset> for dict::cmd::kvp::set::Req {
 }
 
 impl Hset {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Hset> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Hset> {
         // Read the key to set. This is a required field
         let key = parse.next_key()?;
 

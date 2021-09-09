@@ -14,7 +14,7 @@ pub struct Expireat {
 }
 
 impl Expireat {
-    pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Expireat> {
+    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Expireat> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;

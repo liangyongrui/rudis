@@ -21,7 +21,7 @@ impl<'a> From<&'a Zrevrange> for dict::cmd::sorted_set::range_by_rank::Req<'a> {
     }
 }
 impl Zrevrange {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Self> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Self> {
         let key = parse.next_bulk()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;

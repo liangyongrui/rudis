@@ -33,7 +33,7 @@ impl From<Zadd> for dict::cmd::sorted_set::add::Req {
 }
 
 impl Zadd {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Self> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Self> {
         let key = parse.next_key()?;
         let mut nx_xx = NxXx::None;
         let mut gt_lt = GtLt::None;

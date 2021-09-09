@@ -15,7 +15,7 @@ pub struct SyncSnapshot {
 }
 
 impl SyncSnapshot {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Self> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Self> {
         Ok(Self {
             slot_id: parse.next_int()? as usize,
         })

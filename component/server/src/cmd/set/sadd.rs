@@ -1,11 +1,11 @@
 use db::Db;
 use keys::Key;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/sadd>
-#[derive(Debug, ParseFrames, Clone)]
+#[derive(Debug, ParseFrames2, Clone)]
 pub struct Sadd {
     pub key: Key,
     pub values: Vec<Box<[u8]>>,

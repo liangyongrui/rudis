@@ -2,12 +2,12 @@ use common::options::NxXx;
 use db::Db;
 use dict::data_type::DataType;
 use keys::Key;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/rpushx>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames2)]
 pub struct Rpushx {
     pub key: Key,
     pub values: Vec<DataType>,

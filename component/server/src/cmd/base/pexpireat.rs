@@ -15,7 +15,7 @@ pub struct Pexpireat {
 }
 
 impl Pexpireat {
-    pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Pexpireat> {
+    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Pexpireat> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;

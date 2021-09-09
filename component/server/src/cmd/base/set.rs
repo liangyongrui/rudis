@@ -48,7 +48,7 @@ impl From<Set> for dict::cmd::simple::set::Req {
 }
 
 impl Set {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Set> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Set> {
         // Read the key to set. This is a required field
         let key = parse.next_key()?;
 

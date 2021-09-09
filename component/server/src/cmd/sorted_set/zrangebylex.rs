@@ -14,7 +14,7 @@ pub struct Zrangebylex {
 }
 
 impl Zrangebylex {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Self> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Self> {
         let key = parse.next_key()?;
         let min = parse.next_string()?;
         let max = parse.next_string()?;

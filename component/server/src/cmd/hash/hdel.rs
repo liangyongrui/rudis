@@ -1,12 +1,13 @@
 use db::Db;
 use keys::Key;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/hdel>
-#[derive(Debug, ParseFrames, Clone)]
+#[derive(Debug, ParseFrames2, Clone)]
 pub struct Hdel {
+    // todo ref
     pub key: Key,
     pub fields: Vec<Box<[u8]>>,
 }

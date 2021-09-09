@@ -1,12 +1,13 @@
 use db::Db;
 use keys::Key;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/zrem>
-#[derive(Debug, ParseFrames, Clone)]
+#[derive(Debug, ParseFrames2, Clone)]
 pub struct Zrem {
+    // todo ref
     pub key: Key,
     pub members: Vec<Box<[u8]>>,
 }

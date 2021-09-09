@@ -12,7 +12,7 @@ pub struct Flushall {
 }
 
 impl Flushall {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Flushall> {
+    pub fn parse_frames(parse: &Parse) -> common::Result<Flushall> {
         let mut sync = false;
         loop {
             #[allow(clippy::match_same_arms)]

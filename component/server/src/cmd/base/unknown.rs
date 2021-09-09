@@ -10,7 +10,7 @@ pub struct Unknown<'a> {
 impl<'a> Unknown<'a> {
     /// Create a new `Unknown` command which responds to unknown commands
     /// issued by clients
-    pub fn new(key: &impl ToString, parse: &mut Parse<'a>) -> Self {
+    pub fn new(key: &impl ToString, parse: &Parse<'a>) -> Self {
         let mut params = vec![];
         while let Ok(t) = parse.next_frame() {
             params.push(t);

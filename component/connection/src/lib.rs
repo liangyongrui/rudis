@@ -74,22 +74,4 @@ impl Connection {
             }
         }
     }
-
-    // /// Read a frame from the buffer.
-    // ///
-    // /// # Errors
-    // /// parse failed
-    // #[inline]
-    // fn parse_frame(&mut self) -> common::Result<Option<Frame>> {
-    //     let old_len = self.read_buffer.len();
-    //     match parse::parse(self.read_buffer.as_ref()) {
-    //         Ok((left, frame)) => {
-    //             let len = old_len - left.len();
-    //             self.read_buffer.advance(len);
-    //             Ok(Some(frame))
-    //         }
-    //         Err(nom::Err::Incomplete(_)) => Ok(None),
-    //         Err(e) => Err(format!("parse failed, {:?}", e).into()),
-    //     }
-    // }
 }

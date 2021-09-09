@@ -17,7 +17,7 @@ pub struct Expire {
 }
 
 impl Expire {
-    pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Expire> {
+    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Expire> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;

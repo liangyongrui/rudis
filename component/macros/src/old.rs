@@ -170,7 +170,7 @@ pub fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
     quote! {
         impl #struct_name {
-            pub fn parse_frames(parse: &mut connection::parse::Parse) -> common::Result<Self> {
+            pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Self> {
                 #(#read_token)*
                 Ok(Self {
                     #self_token

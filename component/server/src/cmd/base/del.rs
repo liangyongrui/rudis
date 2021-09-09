@@ -1,13 +1,14 @@
 use connection::Connection;
 use db::Db;
 use keys::Key;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 use tracing::error;
 
 use crate::Frame;
 /// <https://redis.io/commands/del>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames2)]
 pub struct Del {
+    // todo ref
     pub keys: Vec<Key>,
 }
 

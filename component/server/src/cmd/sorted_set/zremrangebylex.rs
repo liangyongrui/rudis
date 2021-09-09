@@ -2,13 +2,14 @@ use std::ops::Bound;
 
 use db::Db;
 use keys::Key;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 
 /// <https://redis.io/commands/zremrangebylex>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, Clone, ParseFrames2)]
 pub struct Zremrangebylex {
+    // todo ref
     pub key: Key,
     pub min: Box<[u8]>,
     pub max: Box<[u8]>,

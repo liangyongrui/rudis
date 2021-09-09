@@ -1,27 +1,21 @@
 use db::Db;
-use macros::ParseFrames;
+use macros::ParseFrames2;
 
 use crate::Frame;
 /// <https://redis.io/commands/smismember>
-#[derive(Debug, ParseFrames)]
-pub struct Smismember {
-    pub key: Box<[u8]>,
-    pub values: Vec<Box<[u8]>>,
+#[derive(Debug, ParseFrames2)]
+pub struct Smismember<'a> {
+    pub key: &'a [u8],
+    pub values: Vec<&'a [u8]>,
 }
 
-impl<'a> From<&'a Smismember> for dict::cmd::set::exists::Req<'a> {
-    fn from(old: &'a Smismember) -> Self {
-        Self {
-            key: &old.key,
-            fields: old.values.iter().map(|t| &**t).collect(),
-        }
-    }
-}
-
-impl Smismember {
+impl Smismember<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let res = db.set_exists((&self).into())?;
+        let res = db.set_exists(dict::cmd::set::exists::Req {
+            key: self.key,
+            fields: self.values,
+        })?;
 
         Ok(Frame::Array(
             res.into_iter()
