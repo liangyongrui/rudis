@@ -13,17 +13,10 @@
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
-mod old;
 mod parse_frames;
 mod utils;
 
-#[proc_macro_derive(ParseFrames)]
-pub fn derive(input: TokenStream) -> TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-    old::do_derive(&ast).into()
-}
-
-#[proc_macro_derive(ParseFrames2)]
+#[proc_macro_derive(ParseFrames2, attributes(default))]
 pub fn derive_parse_frames(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     parse_frames::do_derive(&ast).into()

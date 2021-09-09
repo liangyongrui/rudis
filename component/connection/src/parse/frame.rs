@@ -256,6 +256,11 @@ impl From<&Frame<'_>> for Vec<u8> {
         res
     }
 }
+impl From<Frame<'_>> for Vec<u8> {
+    fn from(frame: Frame) -> Self {
+        (&frame).into()
+    }
+}
 #[cfg(test)]
 mod test {
     use super::*;

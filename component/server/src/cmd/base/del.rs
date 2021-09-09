@@ -1,8 +1,6 @@
-use connection::Connection;
 use db::Db;
 use keys::Key;
 use macros::ParseFrames2;
-use tracing::error;
 
 use crate::Frame;
 /// <https://redis.io/commands/del>
@@ -13,12 +11,8 @@ pub struct Del {
 }
 
 impl Del {
-    #[tracing::instrument(skip(self, connection, db), level = "debug")]
-    pub async fn apply<'a>(
-        self,
-        connection: &'a mut Connection,
-        db: &Db,
-    ) -> common::Result<Frame<'a>> {
+    #[tracing::instrument(skip(self, db), level = "debug")]
+    pub async fn apply<'a>(self, db: &Db) -> common::Result<Frame<'a>> {
         let mut res = 0;
         let mut delay = Vec::with_capacity(self.keys.len());
         for cmd in self
@@ -32,10 +26,8 @@ impl Del {
             }
             delay.push(r);
         }
-        let response = Frame::Integer(res);
-        if let Err(e) = connection.write_frame(&response).await {
-            error!("connection error: {:?}", e);
-        }
-        Ok(Frame::NoRes)
+        // async drop
+        tokio::spawn(async { delay });
+        Ok(Frame::Integer(res))
     }
 }

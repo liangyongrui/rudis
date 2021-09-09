@@ -2,14 +2,10 @@ use common::{
     now_timestamp_ms,
     options::{ExpiresAt, NxXx},
 };
-use connection::{
-    parse::{frame::Frame, Parse},
-    Connection,
-};
+use connection::parse::{frame::Frame, Parse};
 use db::Db;
 use dict::data_type::DataType;
 use keys::Key;
-use tracing::error;
 
 use crate::frame_parse::data_type_to_frame;
 
@@ -130,22 +126,17 @@ impl Set {
         })
     }
 
-    #[tracing::instrument(skip(self, connection, db), level = "debug")]
-    pub async fn apply<'a>(
-        self,
-        connection: &'a mut Connection,
-        db: &Db,
-    ) -> common::Result<Frame<'a>> {
+    #[tracing::instrument(skip(self, db), level = "debug")]
+    pub async fn apply<'a>(self, db: &Db) -> common::Result<Frame<'a>> {
         let get = self.get;
         let res = db.set(self.into())?;
         let response = if get {
             data_type_to_frame(res)
         } else {
+            // async drop
+            tokio::spawn(async { res });
             Frame::ok()
         };
-        if let Err(e) = connection.write_frame(&response).await {
-            error!("connection error: {:?}", e);
-        }
-        Ok(Frame::NoRes)
+        Ok(response)
     }
 }

@@ -9,10 +9,7 @@ mod syncsnapshot;
 
 use std::sync::Arc;
 
-use connection::{
-    parse::{frame::Frame, Parse},
-    Connection,
-};
+use connection::parse::{frame::Frame, Parse};
 use db::Db;
 
 use self::{
@@ -49,7 +46,7 @@ use self::{
 pub enum Command<'a> {
     Ping,
     Read(Read<'a>),
-    Write(Write),
+    Write(Write<'a>),
     SyncSnapshot(SyncSnapshot),
     Unknown(Unknown<'a>),
 }
@@ -81,9 +78,9 @@ pub enum Read<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub enum Write {
+pub enum Write<'a> {
     Zrem(Zrem),
-    Zremrangebyrank(Zremrangebyrank),
+    Zremrangebyrank(Zremrangebyrank<'a>),
     Zremrangebylex(Zremrangebylex),
     Zremrangebyscore(Zremrangebyscore),
     Zadd(Zadd),
@@ -231,18 +228,18 @@ impl<'a> Command<'a> {
     }
 }
 
-impl<'a> Write {
+impl<'a> Write<'a> {
     #[inline]
     pub async fn apply(
         self,
-        connection: &'a mut Connection,
+        // connection: &'a mut Connection,
         db: &'a Arc<Db>,
     ) -> common::Result<Frame<'a>> {
         match self {
-            Write::Set(cmd) => cmd.apply(connection, db).await,
+            Write::Set(cmd) => cmd.apply(db).await,
             Write::Psetex(cmd) => cmd.apply(db),
             Write::Setex(cmd) => cmd.apply(db),
-            Write::Del(cmd) => cmd.apply(connection, db).await,
+            Write::Del(cmd) => cmd.apply(db).await,
             Write::Pexpireat(cmd) => cmd.apply(db),
             Write::Expireat(cmd) => cmd.apply(db),
             Write::Expire(cmd) => cmd.apply(db),

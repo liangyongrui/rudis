@@ -232,10 +232,9 @@ impl Handler {
             // error if the frame is not a valid redis command or it is an
             // unsupported command.
             let cmd = Command::from_frame(frame)?;
-
             let res = match cmd {
                 Command::Read(o) => o.apply(&self.db),
-                Command::Write(o) => o.apply(&mut self.connection, &self.db).await,
+                Command::Write(o) => o.apply(&self.db).await,
                 Command::Ping => Ok(Frame::Pong),
                 Command::SyncSnapshot(o) => {
                     o.apply(self);

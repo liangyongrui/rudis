@@ -14,7 +14,7 @@
 
 ## 复合类型
 
-- (基础类型, 基础类型)
+- tuple (基础类型, 基础类型, ..)
 - vec<基础类型>
   - 默认只有一个，但是需要可为空
 - vec<(基础类型, 基础类型)>
@@ -25,12 +25,16 @@
 1. 按顺序直接读取
 
 1. N 选 1 参数
+
    - 支持默认值
    - 支持选项有 value, value 是`基础类型`或 `复合类型`
    - 特殊处理一下 bool 二选一
    - 比如：none nx xx，默认 none
    - 比如：[EX seconds|PX milliseconds|EXAT timestamp|PXAT milliseconds-timestamp|KEEPTTL]
    - 比如：[LIMIT offset count]
+
+1. 默认值 tag
+   - enum 和 基础类型 都需要
 
 ## 实现
 
