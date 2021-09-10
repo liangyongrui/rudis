@@ -2,7 +2,7 @@
 
 use core::panic;
 
-use connection::{parse::frame::Frame, Connection};
+use common::connection::{parse::frame::Frame, Connection};
 use tokio::{
     io::AsyncWriteExt,
     net::{TcpListener, TcpStream},

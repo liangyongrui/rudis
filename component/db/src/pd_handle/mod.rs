@@ -4,12 +4,12 @@ use std::{sync::Arc, time::Duration};
 
 use common::{
     config::{Pd, CONFIG},
+    connection::{parse::frame::Frame, Connection},
     pd_message::{
         cmd::{SEVER_HEARTBEAT, SEVER_INIT},
         ServerInit, ServerRole, ServerStatus,
     },
 };
-use connection::{parse::frame::Frame, Connection};
 use tokio::net::TcpStream;
 use tracing::error;
 

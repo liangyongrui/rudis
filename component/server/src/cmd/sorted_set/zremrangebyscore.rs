@@ -1,7 +1,10 @@
 use std::ops::Bound;
 
-use common::{float::Float, BoundExt};
-use connection::parse::{frame::Frame, Parse};
+use common::{
+    connection::parse::{frame::Frame, Parse},
+    float::Float,
+    BoundExt,
+};
 use db::Db;
 use keys::Key;
 

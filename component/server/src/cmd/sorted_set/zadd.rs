@@ -1,7 +1,9 @@
 use std::convert::TryInto;
 
-use common::options::{GtLt, NxXx};
-use connection::parse::{frame::Frame, Parse, ParseError};
+use common::{
+    connection::parse::{frame::Frame, Parse, ParseError},
+    options::{GtLt, NxXx},
+};
 use db::Db;
 use dict::data_type::{sorted_set::Node, DataType};
 use keys::Key;

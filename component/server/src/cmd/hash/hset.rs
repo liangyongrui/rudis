@@ -1,5 +1,7 @@
-use common::options::NxXx;
-use connection::parse::{Parse, ParseError};
+use common::{
+    connection::parse::{Parse, ParseError},
+    options::NxXx,
+};
 use db::Db;
 use dict::data_type::DataType;
 use keys::Key;

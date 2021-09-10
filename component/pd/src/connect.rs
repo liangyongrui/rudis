@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use connection::{
+use common::connection::{
     parse::{frame::Frame, Parse},
     Connection,
 };

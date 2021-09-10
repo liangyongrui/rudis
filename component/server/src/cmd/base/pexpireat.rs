@@ -1,5 +1,7 @@
-use common::options::{GtLt, NxXx};
-use connection::parse::ParseError;
+use common::{
+    connection::parse::ParseError,
+    options::{GtLt, NxXx},
+};
 use db::Db;
 use dict::cmd::simple::expire::Req;
 
@@ -15,7 +17,7 @@ pub struct Pexpireat {
 }
 
 impl Pexpireat {
-    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Pexpireat> {
+    pub fn parse_frames(parse: &common::connection::parse::Parse) -> common::Result<Pexpireat> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;

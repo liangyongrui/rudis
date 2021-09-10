@@ -67,7 +67,7 @@ fn parse_required_field(field: &Field) -> proc_macro2::TokenStream {
             let mut #field_name = #tokens;
             match #next {
                 Ok(e) => #field_name = e,
-                Err(connection::parse::ParseError::EndOfStream) => (),
+                Err(common::connection::parse::ParseError::EndOfStream) => (),
                 Err(err) => return Err(err.into()),
             }
         };
@@ -113,7 +113,7 @@ fn parse_required_field(field: &Field) -> proc_macro2::TokenStream {
                             tuple2.push(quote! {{
                                 match #e {
                                     Ok(e) => e,
-                                    Err(connection::parse::ParseError::EndOfStream) => break,
+                                    Err(common::connection::parse::ParseError::EndOfStream) => break,
                                     Err(err) => return Err(err.into()),
                                 }
                             }});
@@ -134,7 +134,7 @@ fn parse_required_field(field: &Field) -> proc_macro2::TokenStream {
                             loop {
                                 match #next {
                                     Ok(e) => #field_name.push(e),
-                                    Err(connection::parse::ParseError::EndOfStream) => break,
+                                    Err(common::connection::parse::ParseError::EndOfStream) => break,
                                     Err(err) => return Err(err.into()),
                                 }
                             }
@@ -242,7 +242,7 @@ fn parse_optional_fields(fields: &[&Field]) -> proc_macro2::TokenStream {
         loop {
             let tag = match parse.next_str() {
                 Ok(e) => e,
-                Err(connection::parse::ParseError::EndOfStream) => break,
+                Err(common::connection::parse::ParseError::EndOfStream) => break,
                 Err(err) => return Err(err.into()),
             };
             match tag.to_lowercase() {
@@ -279,7 +279,7 @@ pub fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let res = if generics.lt_token.is_some() {
         quote! {
             impl <'a> #ident <'a> {
-                pub fn parse_frames(parse: &'a connection::parse::Parse<'a>) -> common::Result<Self> {
+                pub fn parse_frames(parse: &'a common::connection::parse::Parse<'a>) -> common::Result<Self> {
                     #(#read_token)*
                     Ok(Self {
                         #self_token
@@ -290,7 +290,7 @@ pub fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
     } else {
         quote! {
             impl #ident {
-                pub fn parse_frames(parse: &connection::parse::Parse<'_>) -> common::Result<Self> {
+                pub fn parse_frames(parse: &common::connection::parse::Parse<'_>) -> common::Result<Self> {
                     #(#read_token)*
                     Ok(Self {
                         #self_token

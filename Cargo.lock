@@ -173,7 +173,7 @@ version = "0.0.0"
 dependencies = [
  "bincode",
  "bytes",
- "connection",
+ "common",
  "opentelemetry",
  "opentelemetry-jaeger",
  "server",
@@ -189,12 +189,12 @@ name = "common"
 version = "0.0.0"
 dependencies = [
  "atoi",
+ "bytes",
  "config",
+ "keys",
+ "nom 7.0.0",
  "once_cell",
- "proc-macro2",
- "quote",
  "serde 1.0.130",
- "syn",
  "tokio",
  "tracing",
  "tracing-subscriber",
@@ -214,19 +214,6 @@ dependencies = [
  "serde_json",
  "toml",
  "yaml-rust",
-]
-
-[[package]]
-name = "connection"
-version = "0.0.0"
-dependencies = [
- "atoi",
- "bytes",
- "common",
- "keys",
- "nom 7.0.0",
- "tokio",
- "tracing",
 ]
 
 [[package]]
@@ -272,7 +259,6 @@ dependencies = [
  "arc-swap",
  "bincode",
  "common",
- "connection",
  "crc",
  "dict",
  "flume",
@@ -806,7 +792,6 @@ version = "0.0.0"
 dependencies = [
  "bincode",
  "common",
- "connection",
  "flume",
  "once_cell",
  "parking_lot",
@@ -1075,7 +1060,6 @@ version = "0.0.0"
 dependencies = [
  "bincode",
  "common",
- "connection",
  "db",
  "dict",
  "keys",

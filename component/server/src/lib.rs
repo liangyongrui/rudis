@@ -13,8 +13,10 @@ mod limit;
 
 use std::{future::Future, sync::Arc};
 
-use common::config::CONFIG;
-use connection::{parse::frame::Frame, Connection};
+use common::{
+    config::CONFIG,
+    connection::{parse::frame::Frame, Connection},
+};
 use db::Db;
 use tokio::{
     io::AsyncWriteExt,

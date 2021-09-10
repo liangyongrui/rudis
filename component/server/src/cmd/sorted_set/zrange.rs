@@ -1,7 +1,11 @@
 use std::ops::Bound;
 
-use common::{float::Float, other_type::ZrangeItem, BoundExt};
-use connection::parse::{frame::Frame, Parse, ParseError};
+use common::{
+    connection::parse::{frame::Frame, Parse, ParseError},
+    float::Float,
+    other_type::ZrangeItem,
+    BoundExt,
+};
 use db::Db;
 use keys::Key;
 

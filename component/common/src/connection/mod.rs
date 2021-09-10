@@ -49,7 +49,7 @@ impl Connection {
     /// 1. parse failed
     /// 1. connect end
     /// 1. other io error
-    pub async fn read_frame(&mut self) -> common::Result<Option<Frame<'_>>> {
+    pub async fn read_frame(&mut self) -> crate::Result<Option<Frame<'_>>> {
         let advance = self.advance;
         if advance != 0 {
             self.read_buffer.advance(advance);

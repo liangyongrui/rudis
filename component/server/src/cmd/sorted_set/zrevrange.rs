@@ -1,4 +1,4 @@
-use connection::parse::{frame::Frame, Parse, ParseError};
+use common::connection::parse::{frame::Frame, Parse, ParseError};
 use db::Db;
 
 /// <https://redis.io/commands/zrevrange>

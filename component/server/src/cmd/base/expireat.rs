@@ -14,7 +14,7 @@ pub struct Expireat {
 }
 
 impl Expireat {
-    pub fn parse_frames(parse: &connection::parse::Parse) -> common::Result<Expireat> {
+    pub fn parse_frames(parse: &common::connection::parse::Parse) -> common::Result<Expireat> {
         let key = parse.next_key()?;
         let expires_at = parse.next_int()?;
         let mut nx_xx = NxXx::None;
@@ -49,7 +49,7 @@ impl Expireat {
                     }
                     not_support => return Err(format!("not support cmd: {}", not_support).into()),
                 },
-                Err(connection::parse::ParseError::EndOfStream) => {
+                Err(common::connection::parse::ParseError::EndOfStream) => {
                     break;
                 }
                 Err(err) => return Err(err.into()),

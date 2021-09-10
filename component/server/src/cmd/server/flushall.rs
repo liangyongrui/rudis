@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use connection::parse::{Parse, ParseError};
+use common::connection::parse::{Parse, ParseError};
 use db::Db;
 
 use crate::Frame;

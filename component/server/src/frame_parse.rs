@@ -1,4 +1,4 @@
-use connection::parse::{frame::Frame, Parse, ParseError};
+use common::connection::parse::{frame::Frame, Parse, ParseError};
 use dict::data_type::DataType;
 
 pub fn next_data_type(parse: &Parse) -> Result<DataType, ParseError> {

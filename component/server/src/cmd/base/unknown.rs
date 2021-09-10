@@ -1,4 +1,4 @@
-use connection::parse::{frame::Frame, Parse};
+use common::connection::parse::{frame::Frame, Parse};
 
 /// Represents an "unknown" command. This is not a real `Redis` command.
 #[derive(Debug)]

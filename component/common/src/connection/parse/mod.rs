@@ -4,7 +4,7 @@ use std::{cell::UnsafeCell, fmt, str, vec};
 
 use keys::Key;
 
-use crate::Frame;
+use self::frame::Frame;
 
 /// Utility for parsing a command
 ///
@@ -29,7 +29,7 @@ pub enum ParseError {
     EndOfStream,
 
     /// All other errors
-    Other(common::Error),
+    Other(crate::Error),
 }
 
 impl<'a> Parse<'a> {

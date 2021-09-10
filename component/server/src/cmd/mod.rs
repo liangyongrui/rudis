@@ -9,7 +9,7 @@ mod syncsnapshot;
 
 use std::sync::Arc;
 
-use connection::parse::{frame::Frame, Parse};
+use common::connection::parse::{frame::Frame, Parse};
 use db::Db;
 
 use self::{

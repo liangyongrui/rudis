@@ -10,6 +10,5 @@ once_cell = "1"
 parking_lot = "0.11"
 common = { path = "../common" }
 tokio = { version = "1", features = ["full"] }
-connection = { path = "../connection" }
 tracing = "0.1"
 bincode = "1"

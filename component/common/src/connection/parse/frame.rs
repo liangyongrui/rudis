@@ -174,7 +174,7 @@ fn parse_alt(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 /// parse failed
 #[inline]
 
-pub fn parse(i: &[u8]) -> common::Result<Option<(usize, Frame)>> {
+pub fn parse(i: &[u8]) -> crate::Result<Option<(usize, Frame)>> {
     let old_len = i.len();
     match parse_alt(i) {
         Ok(o) => Ok(Some((old_len - o.0.len(), o.1))),

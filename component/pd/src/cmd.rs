@@ -1,5 +1,7 @@
-use common::pd_message::{ServerInit, ServerStatus};
-use connection::parse::{frame::Frame, Parse};
+use common::{
+    connection::parse::{frame::Frame, Parse},
+    pd_message::{ServerInit, ServerStatus},
+};
 
 use crate::status;
 

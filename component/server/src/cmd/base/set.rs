@@ -1,8 +1,11 @@
 use common::{
+    connection::{
+        parse,
+        parse::{frame::Frame, Parse},
+    },
     now_timestamp_ms,
     options::{ExpiresAt, NxXx},
 };
-use connection::parse::{frame::Frame, Parse};
 use db::Db;
 use dict::data_type::DataType;
 use keys::Key;
@@ -109,7 +112,7 @@ impl Set {
                     }
                     not_support => return Err(format!("not support cmd: {}", not_support).into()),
                 },
-                Err(connection::parse::ParseError::EndOfStream) => {
+                Err(parse::ParseError::EndOfStream) => {
                     break;
                 }
                 Err(err) => return Err(err.into()),

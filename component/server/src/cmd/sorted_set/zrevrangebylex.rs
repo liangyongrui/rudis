@@ -1,7 +1,9 @@
 use std::ops::Bound;
 
-use common::other_type::LexRange;
-use connection::parse::{frame::Frame, Parse, ParseError};
+use common::{
+    connection::parse::{frame::Frame, Parse, ParseError},
+    other_type::LexRange,
+};
 use db::Db;
 use keys::Key;
 
