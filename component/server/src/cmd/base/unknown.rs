@@ -1,16 +1,16 @@
-use connection::parse::{frame::Frame, Parse};
+use common::connection::parse::{frame::Frame, Parse};
 
 /// Represents an "unknown" command. This is not a real `Redis` command.
 #[derive(Debug)]
-pub struct Unknown {
+pub struct Unknown<'a> {
     command_name: String,
-    params: Vec<Frame>,
+    params: Vec<Frame<'a>>,
 }
 
-impl Unknown {
+impl<'a> Unknown<'a> {
     /// Create a new `Unknown` command which responds to unknown commands
     /// issued by clients
-    pub fn new(key: &impl ToString, parse: &mut Parse) -> Unknown {
+    pub fn new(key: &impl ToString, parse: &Parse<'a>) -> Self {
         let mut params = vec![];
         while let Ok(t) = parse.next_frame() {
             params.push(t);
@@ -30,14 +30,10 @@ impl Unknown {
     ///
     /// This usually means the command is not yet implemented by `rudis`.
     #[tracing::instrument(skip(self))]
-    pub fn apply(self) -> Frame {
-        Frame::Error(
-            format!(
-                "ERR unknown command '{}', params: {:?}",
-                self.command_name, self.params
-            )
-            .as_bytes()
-            .into(),
-        )
+    pub fn apply(self) -> Frame<'static> {
+        Frame::OwnedError(format!(
+            "ERR unknown command '{}', params: {:?}",
+            self.command_name, self.params
+        ))
     }
 }

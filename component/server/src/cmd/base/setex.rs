@@ -10,7 +10,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/setex>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Setex {
     pub key: Key,
     pub seconds: u64,

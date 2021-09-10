@@ -7,6 +7,7 @@ use crate::Frame;
 /// <https://redis.io/commands/zrem>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Zrem {
+    // todo ref
     pub key: Key,
     pub members: Vec<Box<[u8]>>,
 }

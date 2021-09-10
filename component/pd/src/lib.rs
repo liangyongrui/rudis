@@ -5,8 +5,8 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::must_use_candidate)]
 
+use common::connection::Connection;
 use connect::{Handle, Listener};
-use connection::Connection;
 use status::server_survival_check;
 use tokio::net::TcpListener;
 use tracing::error;

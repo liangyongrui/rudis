@@ -1,7 +1,7 @@
 //! 测试redis官网的demo
 
 use cmd_test::{next_frame_eq, start_server, write_cmd};
-use connection::parse::frame::Frame;
+use common::connection::parse::frame::Frame;
 
 #[tokio::test]
 async fn zadd() {

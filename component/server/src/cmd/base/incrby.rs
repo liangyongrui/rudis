@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/incrby>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Incrby {
     pub key: Key,
     pub value: i64,

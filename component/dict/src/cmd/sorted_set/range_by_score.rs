@@ -1,5 +1,6 @@
 use std::ops::{Bound, RangeBounds};
 
+use common::options::Limit;
 use tracing::debug;
 
 use crate::{
@@ -11,11 +12,8 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    /// 这里的得分区间(小, 大)
     pub range: (Bound<Float>, Bound<Float>),
-    //  (offset, count)
-    ///  A negative `count` returns all elements from the offset.
-    pub limit: Option<(usize, i64)>,
+    pub limit: Limit,
     /// true 大的在前， false 小的在前
     pub rev: bool,
 }

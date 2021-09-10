@@ -7,7 +7,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/rpushx>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Rpushx {
     pub key: Key,
     pub values: Vec<DataType>,

@@ -1,4 +1,6 @@
-use common::{other_type::LexRange, BoundExt};
+use std::ops::Bound;
+
+use common::{options::Limit, BoundExt};
 
 use crate::{
     cmd::Read,
@@ -9,10 +11,8 @@ use crate::{
 #[derive(Debug, Clone)]
 pub struct Req<'a> {
     pub key: &'a [u8],
-    pub range: LexRange,
-    //  (offset, count)
-    ///  A negative `count` returns all elements from the offset.
-    pub limit: Option<(usize, i64)>,
+    pub range: (Bound<&'a [u8]>, Bound<&'a [u8]>),
+    pub limit: Limit,
     /// true 大的在前， false 小的在前
     pub rev: bool,
 }
@@ -28,8 +28,14 @@ impl<D: Dict> Read<Vec<data_type::sorted_set::Node>, D> for Req<'_> {
                     None => return Ok(vec![]),
                 };
                 let range = (
-                    self.range.0.map(|key| Node { score, key }),
-                    self.range.1.map(|key| Node { score, key }),
+                    self.range.0.map(|key| Node {
+                        score,
+                        key: key.into(),
+                    }),
+                    self.range.1.map(|key| Node {
+                        score,
+                        key: key.into(),
+                    }),
                 );
                 let (offset, count) = super::shape_limit(self.limit, value.len());
                 let iter = value.range(range);

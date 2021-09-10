@@ -7,6 +7,7 @@ use crate::Frame;
 /// <https://redis.io/commands/srem>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Srem {
+    // todo ref
     pub key: Key,
     pub values: Vec<Box<[u8]>>,
 }

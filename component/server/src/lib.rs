@@ -13,10 +13,13 @@ mod limit;
 
 use std::{future::Future, sync::Arc};
 
-use common::config::CONFIG;
-use connection::{parse::frame::Frame, Connection};
+use common::{
+    config::CONFIG,
+    connection::{parse::frame::Frame, Connection},
+};
 use db::Db;
 use tokio::{
+    io::AsyncWriteExt,
     net::{TcpListener, TcpStream},
     time::{self, Duration},
 };
@@ -231,10 +234,9 @@ impl Handler {
             // error if the frame is not a valid redis command or it is an
             // unsupported command.
             let cmd = Command::from_frame(frame)?;
-
             let res = match cmd {
                 Command::Read(o) => o.apply(&self.db),
-                Command::Write(o) => o.apply(&mut self.connection, &self.db).await,
+                Command::Write(o) => o.apply(&self.db).await,
                 Command::Ping => Ok(Frame::Pong),
                 Command::SyncSnapshot(o) => {
                     o.apply(self);
@@ -251,9 +253,10 @@ impl Handler {
             // peer.
             let res = match res {
                 Ok(f) => f,
-                Err(e) => Frame::Error(e.to_string().as_bytes().into()),
+                Err(e) => Frame::OwnedError(e.to_string()),
             };
-            self.connection.write_frame(&res).await?;
+            let bytes: Vec<u8> = (&res).into();
+            self.connection.stream.write_all(&bytes).await?;
         }
     }
 }

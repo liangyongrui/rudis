@@ -25,4 +25,4 @@ opentelemetry = { version = "0.16", default-features = false, features = [
 ] }
 bytes = "1"
 bincode = "1"
-connection = { path = "../component/connection" }
+common = { path = "../component/common" }

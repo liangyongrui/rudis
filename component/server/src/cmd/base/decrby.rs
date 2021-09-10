@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/decrby>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Decrby {
     pub key: Key,
     pub value: i64,

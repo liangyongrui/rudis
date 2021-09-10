@@ -17,8 +17,8 @@ pub use self::{deque::Deque, kvp::Kvp, set::Set, sorted_set::SortedSet};
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum DataType {
     Null,
-    String(Box<[u8]>),
-    Bytes(Box<[u8]>),
+    String(Vec<u8>),
+    Bytes(Vec<u8>),
     Integer(i64),
     Float(Float),
     Kvp(Box<Kvp>),

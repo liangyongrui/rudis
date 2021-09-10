@@ -1,7 +1,7 @@
 //! Provides a type representing a Redis protocol frame as well as utilities for
 //! parsing frames from a byte array.
 
-use std::{fmt, vec};
+use std::{convert::TryFrom, fmt, vec};
 
 use nom::{
     branch::alt,
@@ -10,30 +10,36 @@ use nom::{
     sequence::delimited,
 };
 
+use crate::float::Float;
+
 /// A frame in the Redis protocol.
 ///
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Frame {
+pub enum Frame<'a> {
     Ping,
     Pong,
-    Simple(Box<[u8]>),
-    Bulk(Box<[u8]>),
-    Error(Box<[u8]>),
+    Simple(&'a [u8]),
+    OwnedSimple(Vec<u8>),
+    OwnedStringSimple(String),
+    Bulk(&'a [u8]),
+    OwnedBulk(Vec<u8>),
+    Error(&'a [u8]),
+    OwnedError(String),
     Integer(i64),
     Null,
-    Array(Vec<Frame>),
+    Array(Vec<Frame<'a>>),
     /// not transfer
     NoRes,
 }
 
-impl Frame {
+impl Frame<'_> {
     #[inline]
     pub fn ok() -> Self {
         Frame::Simple(b"OK"[..].into())
     }
 }
 
-impl fmt::Display for Frame {
+impl fmt::Display for Frame<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         use std::str;
 
@@ -45,6 +51,11 @@ impl fmt::Display for Frame {
                     Err(_) => write!(fmt, "{:?}", msg),
                 }
             }
+            Frame::OwnedBulk(msg) | Frame::OwnedSimple(msg) => match str::from_utf8(msg) {
+                Ok(string) => string.fmt(fmt),
+                Err(_) => write!(fmt, "{:?}", msg),
+            },
+            Frame::OwnedError(msg) | Frame::OwnedStringSimple(msg) => msg.fmt(fmt),
             Frame::Null => "(nil)".fmt(fmt),
             Frame::Array(parts) => {
                 for (i, part) in parts.iter().enumerate() {
@@ -62,7 +73,7 @@ impl fmt::Display for Frame {
         }
     }
 }
-impl fmt::Debug for Frame {
+impl fmt::Debug for Frame<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         std::fmt::Display::fmt(&self, f)
     }
@@ -75,7 +86,7 @@ fn parse_simple(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         take_while(|c| c != b'\r' && c != b'\n'),
         tag(b"\r\n"),
     )(i)?;
-    Ok((i, Frame::Simple(resp.into())))
+    Ok((i, Frame::Simple(resp)))
 }
 
 #[inline]
@@ -85,7 +96,7 @@ fn parse_error(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         take_while1(|c| c != b'\r' && c != b'\n'),
         tag(b"\r\n"),
     )(i)?;
-    Ok((i, Frame::Error(resp.into())))
+    Ok((i, Frame::Error(resp)))
 }
 
 #[inline]
@@ -113,7 +124,7 @@ fn parse_bulk(i: &[u8]) -> nom::IResult<&[u8], Frame> {
         let len = len as usize;
         let (i, data) = take_while_m_n(len, len, |_| true)(i)?;
         let (i, _) = tag(b"\r\n")(i)?;
-        Ok((i, Frame::Bulk(Box::from(data))))
+        Ok((i, Frame::Bulk(data)))
     }
 }
 
@@ -129,7 +140,7 @@ fn parse_array(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     } else {
         let mut res = vec![];
         for _ in 0..len {
-            let (ni, f) = parse(i)?;
+            let (ni, f) = parse_alt(i)?;
             res.push(f);
             i = ni;
         }
@@ -148,7 +159,7 @@ fn parse_ping(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 /// # Errors
 /// parse failed
 #[inline]
-pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
+fn parse_alt(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     alt((
         parse_simple,
         parse_error,
@@ -159,7 +170,22 @@ pub fn parse(i: &[u8]) -> nom::IResult<&[u8], Frame> {
     ))(i)
 }
 
-impl Frame {
+/// parse bytes to frame
+///
+/// # Errors
+/// parse failed
+#[inline]
+
+pub fn parse(i: &[u8]) -> crate::Result<Option<(usize, Frame)>> {
+    let old_len = i.len();
+    match parse_alt(i) {
+        Ok(o) => Ok(Some((old_len - o.0.len(), o.1))),
+        Err(nom::Err::Incomplete(_)) => Ok(None),
+        Err(e) => return Err(format!("parse failed, {:?}", e).into()),
+    }
+}
+
+impl Frame<'_> {
     pub fn write(&self, res: &mut Vec<u8>) {
         match self {
             Frame::Simple(a) => {
@@ -167,9 +193,24 @@ impl Frame {
                 res.extend_from_slice(a);
                 res.extend_from_slice(b"\r\n");
             }
+            Frame::OwnedSimple(a) => {
+                res.push(b'+');
+                res.extend_from_slice(a);
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::OwnedStringSimple(a) => {
+                res.push(b'+');
+                res.extend_from_slice(a.as_bytes());
+                res.extend_from_slice(b"\r\n");
+            }
             Frame::Error(a) => {
                 res.push(b'-');
                 res.extend_from_slice(a);
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::OwnedError(a) => {
+                res.push(b'-');
+                res.extend_from_slice(a.as_bytes());
                 res.extend_from_slice(b"\r\n");
             }
             Frame::Integer(a) => {
@@ -178,6 +219,13 @@ impl Frame {
                 res.extend_from_slice(b"\r\n");
             }
             Frame::Bulk(b) => {
+                res.push(b'$');
+                res.extend_from_slice(b.len().to_string().as_bytes());
+                res.extend_from_slice(b"\r\n");
+                res.extend_from_slice(&b[..]);
+                res.extend_from_slice(b"\r\n");
+            }
+            Frame::OwnedBulk(b) => {
                 res.push(b'$');
                 res.extend_from_slice(b.len().to_string().as_bytes());
                 res.extend_from_slice(b"\r\n");
@@ -200,7 +248,52 @@ impl Frame {
     }
 }
 
-impl From<&Frame> for Vec<u8> {
+impl<'a> TryFrom<Frame<'a>> for &'a str {
+    type Error = crate::Error;
+
+    fn try_from(value: Frame<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Frame::Bulk(data) | Frame::Simple(data) => {
+                std::str::from_utf8(data).map_err(|_| "protocol error; invalid string".into())
+            }
+            Frame::Ping => Ok("PING"),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
+        }
+    }
+}
+/// # Errors
+/// frame type not match
+pub fn to_lowercase_str(frame: &Frame<'_>) -> crate::Result<String> {
+    match frame {
+        Frame::Bulk(data) | Frame::Simple(data) => std::str::from_utf8(data)
+            .map(str::to_lowercase)
+            .map_err(|_| "protocol error; invalid string".into()),
+        Frame::Ping => Ok("PING".to_lowercase()),
+        frame => Err(format!("protocol error; got {:?}", frame).into()),
+    }
+}
+
+impl<'a> TryFrom<Frame<'a>> for Float {
+    type Error = crate::Error;
+
+    fn try_from(value: Frame<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Frame::Bulk(b) | Frame::Simple(b) => {
+                let s = std::str::from_utf8(b)
+                    .map_err::<Self::Error, _>(|_| "protocol error".into())?;
+                Ok(Float(
+                    s.parse()
+                        .map_err::<Self::Error, _>(|_| "protocol error".into())?,
+                ))
+            }
+            #[allow(clippy::cast_precision_loss)]
+            Frame::Integer(i) => Ok(Float(i as _)),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
+        }
+    }
+}
+
+impl From<&Frame<'_>> for Vec<u8> {
     fn from(frame: &Frame) -> Self {
         if let Frame::NoRes = frame {
             return vec![];
@@ -210,6 +303,11 @@ impl From<&Frame> for Vec<u8> {
         res
     }
 }
+impl From<Frame<'_>> for Vec<u8> {
+    fn from(frame: Frame) -> Self {
+        (&frame).into()
+    }
+}
 #[cfg(test)]
 mod test {
     use super::*;
@@ -217,7 +315,7 @@ mod test {
     #[test]
     fn test() {
         let s = "*2\r\n*3\r\n:1\r\n$5\r\nhello\r\n:2\r\n+abc\r\n";
-        let (_, f) = parse(s.as_bytes()).unwrap();
+        let (_, f) = parse_alt(s.as_bytes()).unwrap();
         let t = Frame::Array(vec![
             Frame::Array(vec![
                 Frame::Integer(1),
@@ -245,12 +343,12 @@ mod test {
         let b = s.as_bytes();
         let raw = Frame::Array(vec![
             Frame::Bulk(b"SET"[..].into()),
-            Frame::Bulk(hello.as_bytes().into()),
-            Frame::Bulk(world.as_bytes().into()),
+            Frame::Bulk(hello.as_bytes()),
+            Frame::Bulk(world.as_bytes()),
         ]);
         let set: Vec<u8> = (&raw).into();
         assert_eq!(&set[..], b);
-        let (_, f) = parse(s.as_bytes()).unwrap();
+        let (_, f) = parse_alt(s.as_bytes()).unwrap();
         assert_eq!(raw, f);
     }
 }

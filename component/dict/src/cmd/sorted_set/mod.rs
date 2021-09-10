@@ -1,6 +1,6 @@
 use std::ops::Bound;
 
-use common::BoundExt;
+use common::{options::Limit, BoundExt};
 
 use crate::data_type::{sorted_set::Node, Float};
 
@@ -14,10 +14,18 @@ pub mod remove_by_lex_range;
 pub mod remove_by_rank_range;
 pub mod remove_by_score_range;
 
-pub(self) fn shape_limit(limit: Option<(usize, i64)>, len: usize) -> (usize, usize) {
+pub(self) fn shape_limit(limit: Limit, len: usize) -> (usize, usize) {
     match limit {
-        Some((offset, count)) => (offset, if count < 0 { len } else { count as usize }),
-        None => (0, len),
+        Limit::Limit(mut offset, count) => {
+            if offset < 0 {
+                offset = 0.max(len as i64 - offset);
+            }
+            (
+                offset as usize,
+                if count < 0 { len } else { count as usize },
+            )
+        }
+        Limit::None => (0, len),
     }
 }
 

@@ -1,55 +1,27 @@
-use std::ops::Bound;
-
-use common::{float::Float, BoundExt};
-use connection::parse::{frame::Frame, Parse};
+use common::{connection::parse::frame::Frame, options::RangeCmdOrder};
 use db::Db;
-use keys::Key;
+use macros::ParseFrames;
 
 /// <https://redis.io/commands/zremrangebyscore>
-#[derive(Debug, Clone)]
-pub struct Zremrangebyscore {
-    pub key: Key,
-    pub range: (Bound<f64>, Bound<f64>),
+#[derive(Debug, ParseFrames)]
+pub struct Zremrangebyscore<'a> {
+    pub key: &'a [u8],
+    pub min: &'a str,
+    pub max: &'a str,
 }
 
-impl From<Zremrangebyscore> for dict::cmd::sorted_set::remove_by_score_range::Req {
-    fn from(old: Zremrangebyscore) -> Self {
-        Self {
-            key: old.key,
-            rev: false,
-            range: (old.range.0.map(Float), old.range.1.map(Float)),
-        }
-    }
-}
-
-impl Zremrangebyscore {
-    pub fn parse_frames(parse: &mut Parse) -> common::Result<Self> {
-        let key = parse.next_key()?;
-        let min = parse.next_string()?;
-        let max = parse.next_string()?;
-        let range = {
-            let min = if min == "-inf" {
-                Bound::Unbounded
-            } else if let Some(s) = min.strip_prefix('(') {
-                Bound::Excluded(s.parse::<f64>()?)
-            } else {
-                Bound::Included(min.parse::<f64>()?)
-            };
-            let max = if max == "+inf" {
-                Bound::Unbounded
-            } else if let Some(s) = max.strip_prefix('(') {
-                Bound::Excluded(s.parse::<f64>()?)
-            } else {
-                Bound::Included(max.parse::<f64>()?)
-            };
-            (min, max)
-        };
-        Ok(Self { key, range })
-    }
-
+impl Zremrangebyscore<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let res = db.sorted_set_remove_by_score_range(self.into())?;
+        let min = RangeCmdOrder::parse_float_bound(self.min)?;
+        let max = RangeCmdOrder::parse_float_bound(self.max)?;
+        let res = db.sorted_set_remove_by_score_range(
+            dict::cmd::sorted_set::remove_by_score_range::Req {
+                key: self.key.into(),
+                range: (min, max),
+                rev: false,
+            },
+        )?;
         Ok(Frame::Integer(res.len() as _))
     }
 }

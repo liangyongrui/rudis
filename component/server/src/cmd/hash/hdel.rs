@@ -7,6 +7,7 @@ use crate::Frame;
 /// <https://redis.io/commands/hdel>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hdel {
+    // todo ref
     pub key: Key,
     pub fields: Vec<Box<[u8]>>,
 }

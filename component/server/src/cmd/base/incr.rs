@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/incr>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Incr {
     pub key: Key,
 }

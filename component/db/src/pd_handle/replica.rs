@@ -6,8 +6,7 @@ use std::{
 };
 
 use arc_swap::ArcSwapOption;
-use common::{pd_message::LeaderInfo, SYNC_CMD};
-use connection::parse::frame::Frame;
+use common::{connection::parse::frame::Frame, pd_message::LeaderInfo, SYNC_CMD};
 use dict::MemDict;
 use parking_lot::Mutex;
 use tokio::sync::Notify;
