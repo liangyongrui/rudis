@@ -10,7 +10,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/psetex>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Psetex {
     pub key: Key,
     pub milliseconds: u64,

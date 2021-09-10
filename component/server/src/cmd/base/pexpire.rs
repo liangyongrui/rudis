@@ -10,7 +10,7 @@ use macros::ParseFrames;
 ///
 /// 这个命令不知道是不是官方文档错了，文档上写的 \[NX|XX|GT|LT],
 /// 我实现的是 \[NX|XX] 和 \[GT|LT] 每组可以指定0或1个
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Pexpire<'a> {
     pub key: &'a [u8],
     pub milliseconds: u64,

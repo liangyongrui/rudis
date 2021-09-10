@@ -5,7 +5,7 @@ use db::Db;
 use macros::ParseFrames;
 
 /// <https://redis.io/commands/flushall>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Flushall {
     pub sync: bool,
 }

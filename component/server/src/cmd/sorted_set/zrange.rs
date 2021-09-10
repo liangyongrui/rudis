@@ -1,135 +1,58 @@
-use std::ops::Bound;
-
 use common::{
-    connection::parse::{frame::Frame, Parse, ParseError},
-    float::Float,
-    other_type::ZrangeItem,
-    BoundExt,
+    connection::parse::frame::Frame,
+    options::{Limit, RangeCmdOrder},
 };
 use db::Db;
-use keys::Key;
+use macros::ParseFrames;
 
-enum By {
-    Score,
-    Lex,
-    Rank,
-}
-
-/// <https://redis.io/commands/zrange>
-#[derive(Debug)]
-pub struct Zrange {
-    pub key: Key,
-    pub range_item: ZrangeItem,
+#[derive(Debug, ParseFrames)]
+pub struct Zrange<'a> {
+    pub key: &'a [u8],
+    pub min: &'a str,
+    pub max: &'a str,
+    #[optional]
+    pub order: RangeCmdOrder,
     pub rev: bool,
-    pub limit: Option<(i64, i64)>,
+    #[optional]
+    pub limit: Limit,
     pub withscores: bool,
 }
 
-impl Zrange {
-    pub fn parse_frames(parse: &Parse) -> common::Result<Self> {
-        let key = parse.next_key()?;
-        let min = parse.next_string()?;
-        let max = parse.next_string()?;
-        let mut by = By::Rank;
-        let mut rev = false;
-        let mut limit = None;
-        let mut withscores = false;
-        loop {
-            let lowercase = match parse.next_string() {
-                Ok(s) => s.to_lowercase(),
-                Err(ParseError::EndOfStream) => break,
-                Err(err) => return Err(err.into()),
-            };
-            match &lowercase[..] {
-                "byscore" => by = By::Score,
-                "bylex" => by = By::Lex,
-                "limit" => limit = Some((parse.next_int()?, parse.next_int()?)),
-                "rev" => rev = true,
-                "withscores" => withscores = true,
-                s => return Err(format!("unknown token: {}", s).into()),
-            }
-        }
-        let range_item = match by {
-            By::Score => {
-                let min = if min == "-inf" {
-                    Bound::Unbounded
-                } else if let Some(s) = min.strip_prefix('(') {
-                    Bound::Excluded(s.parse::<f64>()?)
-                } else {
-                    Bound::Included(min.parse::<f64>()?)
-                };
-                let max = if max == "+inf" {
-                    Bound::Unbounded
-                } else if let Some(s) = max.strip_prefix('(') {
-                    Bound::Excluded(s.parse::<f64>()?)
-                } else {
-                    Bound::Included(max.parse::<f64>()?)
-                };
-                ZrangeItem::Socre((min, max))
-            }
-            By::Lex => {
-                let min = if min == "-" {
-                    Bound::Unbounded
-                } else if let Some(s) = min.strip_prefix('(') {
-                    Bound::Excluded(s.as_bytes().into())
-                } else {
-                    Bound::Included(min[1..].as_bytes().into())
-                };
-                let max = if max == "+" {
-                    Bound::Unbounded
-                } else if let Some(s) = max.strip_prefix('(') {
-                    Bound::Excluded(s.as_bytes().into())
-                } else {
-                    Bound::Included(max[1..].as_bytes().into())
-                };
-                ZrangeItem::Lex((min, max))
-            }
-            By::Rank => ZrangeItem::Rank((min.parse()?, max.parse()?)),
-        };
-        Ok(Self {
-            key,
-            range_item,
-            rev,
-            limit,
-            withscores,
-        })
-    }
-
+impl Zrange<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let limit = self
-            .limit
-            .map(|t| (if t.0 < 0 { 0 } else { t.0 as _ }, t.1));
-        let key = &self.key;
-        let rev = self.rev;
-        let response = match self.range_item {
-            ZrangeItem::Rank((start, stop)) => {
-                let cmd = dict::cmd::sorted_set::range_by_rank::Req {
-                    key,
-                    start,
-                    stop,
-                    limit,
-                    rev,
-                };
-                db.sorted_set_range_by_rank(cmd)?
-            }
-            ZrangeItem::Socre((b, e)) => {
+        let response = match self.order {
+            RangeCmdOrder::Byscore => {
+                let min = RangeCmdOrder::parse_float_bound(self.min)?;
+                let max = RangeCmdOrder::parse_float_bound(self.max)?;
                 let cmd = dict::cmd::sorted_set::range_by_score::Req {
-                    key,
-                    rev,
-                    range: (b.map(Float), e.map(Float)),
-                    limit,
+                    key: self.key,
+                    range: if self.rev { (max, min) } else { (min, max) },
+                    limit: self.limit,
+                    rev: self.rev,
                 };
                 db.sorted_set_range_by_score(cmd)?
             }
-            ZrangeItem::Lex((b, e)) => {
+            RangeCmdOrder::Bylex => {
+                let min = RangeCmdOrder::parse_lex_bound(self.min)?;
+                let max = RangeCmdOrder::parse_lex_bound(self.max)?;
                 let cmd = dict::cmd::sorted_set::range_by_lex::Req {
-                    key,
-                    rev,
-                    range: (b, e),
-                    limit,
+                    key: self.key,
+                    range: if self.rev { (max, min) } else { (min, max) },
+                    limit: self.limit,
+                    rev: self.rev,
                 };
                 db.sorted_set_range_by_lex(cmd)?
+            }
+            RangeCmdOrder::Byrank => {
+                let cmd = dict::cmd::sorted_set::range_by_rank::Req {
+                    key: self.key,
+                    start: self.min.parse()?,
+                    stop: self.max.parse()?,
+                    limit: self.limit,
+                    rev: self.rev,
+                };
+                db.sorted_set_range_by_rank(cmd)?
             }
         };
 

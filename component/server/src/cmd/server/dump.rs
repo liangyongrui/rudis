@@ -4,7 +4,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/dump>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Dump<'a> {
     pub key: &'a [u8],
 }

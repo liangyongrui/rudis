@@ -5,7 +5,7 @@ use keys::Key;
 use macros::ParseFrames;
 
 /// <https://redis.io/commands/hset>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Hset {
     pub key: Key,
     pub entries: Vec<(Box<[u8]>, DataType)>,

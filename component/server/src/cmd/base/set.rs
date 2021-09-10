@@ -13,7 +13,7 @@ use crate::frame_parse::data_type_to_frame;
 /// Set `key` to hold the string `value`.
 ///
 /// <https://redis.io/commands/set>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Set {
     /// the lookup key
     pub key: Key,

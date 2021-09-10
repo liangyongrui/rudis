@@ -8,7 +8,7 @@ use keys::Key;
 use macros::ParseFrames;
 
 /// <https://redis.io/commands/zadd>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Zadd {
     pub key: Key,
     #[optional]

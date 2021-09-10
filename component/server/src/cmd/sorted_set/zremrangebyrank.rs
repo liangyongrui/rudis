@@ -4,7 +4,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/zremrangebyrank>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Zremrangebyrank<'a> {
     pub key: &'a [u8],
     pub range: (i64, i64),

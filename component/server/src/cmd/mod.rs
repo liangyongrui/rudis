@@ -52,14 +52,14 @@ pub enum Command<'a> {
 }
 #[derive(Debug)]
 pub enum Read<'a> {
-    Zrangebylex(Zrangebylex),
-    Zrangebyscore(Zrangebyscore),
+    Zrangebylex(Zrangebylex<'a>),
+    Zrangebyscore(Zrangebyscore<'a>),
     Zrank(Zrank<'a>),
-    Zrevrange(Zrevrange),
-    Zrevrangebylex(Zrevrangebylex),
-    Zrevrangebyscore(Zrevrangebyscore),
+    Zrevrange(Zrevrange<'a>),
+    Zrevrangebylex(Zrevrangebylex<'a>),
+    Zrevrangebyscore(Zrevrangebyscore<'a>),
     Zrevrank(Zrevrank<'a>),
-    Zrange(Zrange),
+    Zrange(Zrange<'a>),
     Sismember(Sismember<'a>),
     Smembers(Smembers<'a>),
     Smismember(Smismember<'a>),
@@ -77,12 +77,12 @@ pub enum Read<'a> {
     Dump(Dump<'a>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub enum Write<'a> {
     Zrem(Zrem),
     Zremrangebyrank(Zremrangebyrank<'a>),
-    Zremrangebylex(Zremrangebylex),
-    Zremrangebyscore(Zremrangebyscore),
+    Zremrangebylex(Zremrangebylex<'a>),
+    Zremrangebyscore(Zremrangebyscore<'a>),
     Zadd(Zadd),
     Sadd(Sadd),
     Srem(Srem),

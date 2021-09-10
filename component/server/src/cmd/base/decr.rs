@@ -5,7 +5,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/decr>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Decr {
     pub key: Key,
 }

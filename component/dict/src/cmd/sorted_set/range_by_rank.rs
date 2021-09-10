@@ -1,3 +1,4 @@
+use common::options::Limit;
 use tracing::debug;
 
 use crate::{
@@ -11,9 +12,7 @@ pub struct Req<'a> {
     pub key: &'a [u8],
     pub start: i64,
     pub stop: i64,
-    /// `(offset, count)`
-    ///  A negative `count` returns all elements from the offset.
-    pub limit: Option<(usize, i64)>,
+    pub limit: Limit,
     /// true 大的在前， false 小的在前
     pub rev: bool,
 }

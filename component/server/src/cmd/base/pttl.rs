@@ -4,7 +4,7 @@ use macros::ParseFrames;
 use crate::Frame;
 
 /// <https://redis.io/commands/pttl>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Pttl<'a> {
     pub key: &'a [u8],
 }

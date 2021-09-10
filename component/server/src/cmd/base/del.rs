@@ -4,7 +4,7 @@ use macros::ParseFrames;
 
 use crate::Frame;
 /// <https://redis.io/commands/del>
-#[derive(Debug, Clone, ParseFrames)]
+#[derive(Debug, ParseFrames)]
 pub struct Del {
     pub keys: Vec<Key>,
 }
