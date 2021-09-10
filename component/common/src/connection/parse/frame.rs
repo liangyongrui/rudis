@@ -1,7 +1,7 @@
 //! Provides a type representing a Redis protocol frame as well as utilities for
 //! parsing frames from a byte array.
 
-use std::{fmt, vec};
+use std::{convert::TryFrom, fmt, vec};
 
 use nom::{
     branch::alt,
@@ -9,6 +9,8 @@ use nom::{
     combinator::map,
     sequence::delimited,
 };
+
+use crate::float::Float;
 
 /// A frame in the Redis protocol.
 ///
@@ -242,6 +244,51 @@ impl Frame<'_> {
             Frame::Ping => res.extend_from_slice(b"+PING\r\n"),
             Frame::Pong => res.extend_from_slice(b"+PONG\r\n"),
             Frame::NoRes => {}
+        }
+    }
+}
+
+impl<'a> TryFrom<Frame<'a>> for &'a str {
+    type Error = crate::Error;
+
+    fn try_from(value: Frame<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Frame::Bulk(data) | Frame::Simple(data) => {
+                std::str::from_utf8(data).map_err(|_| "protocol error; invalid string".into())
+            }
+            Frame::Ping => Ok("PING"),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
+        }
+    }
+}
+/// # Errors
+/// frame type not match
+pub fn to_lowercase_str(frame: &Frame<'_>) -> crate::Result<String> {
+    match frame {
+        Frame::Bulk(data) | Frame::Simple(data) => std::str::from_utf8(data)
+            .map(str::to_lowercase)
+            .map_err(|_| "protocol error; invalid string".into()),
+        Frame::Ping => Ok("PING".to_lowercase()),
+        frame => Err(format!("protocol error; got {:?}", frame).into()),
+    }
+}
+
+impl<'a> TryFrom<Frame<'a>> for Float {
+    type Error = crate::Error;
+
+    fn try_from(value: Frame<'a>) -> Result<Self, Self::Error> {
+        match value {
+            Frame::Bulk(b) | Frame::Simple(b) => {
+                let s = std::str::from_utf8(b)
+                    .map_err::<Self::Error, _>(|_| "protocol error".into())?;
+                Ok(Float(
+                    s.parse()
+                        .map_err::<Self::Error, _>(|_| "protocol error".into())?,
+                ))
+            }
+            #[allow(clippy::cast_precision_loss)]
+            Frame::Integer(i) => Ok(Float(i as _)),
+            frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
 }

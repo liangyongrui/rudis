@@ -1,74 +1,33 @@
-use common::options::{GtLt, NxXx};
+use common::{
+    connection::parse::frame::Frame,
+    options::{GtLt, NxXx},
+};
 use db::Db;
-use dict::cmd::simple::expire::Req;
-
-use crate::Frame;
+use macros::ParseFrames;
 
 /// <https://redis.io/commands/expireat>
 ///
 /// 这个命令不知道是不是官方文档错了，文档上写的 \[NX|XX|GT|LT],
 /// 我实现的是 \[NX|XX] 和 \[GT|LT] 每组可以指定0或1个
-#[derive(Debug, Clone)]
-pub struct Expireat {
-    pub req: Req,
+#[derive(Debug, Clone, ParseFrames)]
+pub struct Expireat<'a> {
+    pub key: &'a [u8],
+    pub timestamp: u64,
+    #[optional]
+    pub nx_xx: NxXx,
+    #[optional]
+    pub gt_lt: GtLt,
 }
 
-impl Expireat {
-    pub fn parse_frames(parse: &common::connection::parse::Parse) -> common::Result<Expireat> {
-        let key = parse.next_key()?;
-        let expires_at = parse.next_int()?;
-        let mut nx_xx = NxXx::None;
-        let mut gt_lt = GtLt::None;
-        loop {
-            // Attempt to parse another string.
-            match parse.next_string() {
-                Ok(s) => match &s.to_uppercase()[..] {
-                    "NX" => {
-                        if !nx_xx.is_none() {
-                            return Err("`NX` or `XX` already set".into());
-                        }
-                        nx_xx = NxXx::Nx;
-                    }
-                    "XX" => {
-                        if !nx_xx.is_none() {
-                            return Err("`NX` or `XX` already set".into());
-                        }
-                        nx_xx = NxXx::Xx;
-                    }
-                    "GT" => {
-                        if !gt_lt.is_none() {
-                            return Err("`GT` or `LT` already set".into());
-                        }
-                        gt_lt = GtLt::Gt;
-                    }
-                    "LT" => {
-                        if !gt_lt.is_none() {
-                            return Err("`GT` or `LT` already set".into());
-                        }
-                        gt_lt = GtLt::Lt;
-                    }
-                    not_support => return Err(format!("not support cmd: {}", not_support).into()),
-                },
-                Err(common::connection::parse::ParseError::EndOfStream) => {
-                    break;
-                }
-                Err(err) => return Err(err.into()),
-            }
-        }
-
-        Ok(Self {
-            req: Req {
-                key,
-                expires_at: expires_at as u64 * 1000,
-                nx_xx,
-                gt_lt,
-            },
-        })
-    }
-
+impl Expireat<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let res = db.expire(self.req)?;
+        let res = db.expire(dict::cmd::simple::expire::Req {
+            key: self.key.into(),
+            expires_at: self.timestamp * 1000,
+            nx_xx: self.nx_xx,
+            gt_lt: self.gt_lt,
+        })?;
         let response = Frame::Integer(if res { 1 } else { 0 });
         Ok(response)
     }

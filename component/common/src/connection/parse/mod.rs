@@ -1,10 +1,11 @@
 pub mod frame;
 
-use std::{cell::UnsafeCell, fmt, str, vec};
+use std::{cell::UnsafeCell, convert::TryInto, fmt, str, vec};
 
 use keys::Key;
 
 use self::frame::Frame;
+use crate::float::Float;
 
 /// Utility for parsing a command
 ///
@@ -30,6 +31,15 @@ pub enum ParseError {
 
     /// All other errors
     Other(crate::Error),
+}
+
+impl Clone for ParseError {
+    fn clone(&self) -> Self {
+        match self {
+            Self::EndOfStream => Self::EndOfStream,
+            Self::Other(arg0) => Self::Other(arg0.to_string().into()),
+        }
+    }
 }
 
 impl<'a> Parse<'a> {
@@ -82,6 +92,15 @@ impl<'a> Parse<'a> {
         }
     }
 
+    /// next float
+    ///
+    /// # Errors
+    /// 1. `EndOfStream`
+    /// 1. not bytes
+    pub fn next_float(&self) -> Result<Float, ParseError> {
+        Ok(self.next_frame()?.try_into()?)
+    }
+
     /// next bulk
     ///
     /// # Errors
@@ -99,18 +118,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// the next entry cannot be represented as a String
     pub fn next_str(&self) -> Result<&str, ParseError> {
-        match self.next_frame()? {
-            // Both `Simple` and `Bulk` representation may be strings. Strings
-            // are parsed to UTF-8.
-            //
-            // While errors are stored as strings, they are considered separate
-            // types.
-            Frame::Bulk(data) | Frame::Simple(data) => {
-                str::from_utf8(data).map_err(|_| "protocol error; invalid string".into())
-            }
-            Frame::Ping => Ok("PING"),
-            frame => Err(format!("protocol error; got {:?}", frame).into()),
-        }
+        Ok(self.next_frame()?.try_into()?)
     }
 
     /// Return the next entry as a string.
@@ -118,18 +126,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// the next entry cannot be represented as a String
     pub fn next_string(&self) -> Result<String, ParseError> {
-        match self.next_frame()? {
-            // Both `Simple` and `Bulk` representation may be strings. Strings
-            // are parsed to UTF-8.
-            //
-            // While errors are stored as strings, they are considered separate
-            // types.
-            Frame::Bulk(data) | Frame::Simple(data) => str::from_utf8(data)
-                .map(std::string::ToString::to_string)
-                .map_err(|_| "protocol error; invalid string".into()),
-            Frame::Ping => Ok("PING".to_owned()),
-            frame => Err(format!("protocol error; got {:?}", frame).into()),
-        }
+        self.next_str().map(std::borrow::ToOwned::to_owned)
     }
 
     /// Return the next entry as an integer.
@@ -169,7 +166,11 @@ impl<'a> Parse<'a> {
         }
     }
 }
-
+impl From<crate::Error> for ParseError {
+    fn from(e: crate::Error) -> Self {
+        Self::Other(e)
+    }
+}
 impl From<String> for ParseError {
     fn from(src: String) -> ParseError {
         ParseError::Other(src.into())

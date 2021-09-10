@@ -104,10 +104,10 @@ pub enum Write<'a> {
     Del(Del),
     Psetex(Psetex),
     Setex(Setex),
-    Pexpireat(Pexpireat),
-    Expireat(Expireat),
-    Expire(Expire),
-    Pexpire(Pexpire),
+    Pexpireat(Pexpireat<'a>),
+    Expireat(Expireat<'a>),
+    Expire(Expire<'a>),
+    Pexpire(Pexpire<'a>),
     Flushall(Flushall),
 }
 

@@ -1,8 +1,8 @@
+use common::connection::parse::frame::Frame;
 use db::Db;
 use keys::Key;
 use macros::ParseFrames;
 
-use crate::Frame;
 /// <https://redis.io/commands/hincrby>
 #[derive(Debug, ParseFrames, Clone)]
 pub struct Hincrby {
