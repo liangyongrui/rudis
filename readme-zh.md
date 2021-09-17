@@ -58,7 +58,7 @@ Rudis 是一款用 Rust 编写，多线程处理，兼容 redis 的数据库。�
 ## Benchmarks
 
 Rudis 的性能比 Redis 6.2.5 更好。
-[查看详情 ](./docs/benchmark-zh.md)
+[查看详情](./docs/benchmark-zh.md)
 
 ## Supported Redis commands
 
