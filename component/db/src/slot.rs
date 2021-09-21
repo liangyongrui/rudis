@@ -269,6 +269,11 @@ impl Slot {
     ) -> common::Result<Vec<data_type::sorted_set::Node>> {
         self.call_write(cmd)
     }
+
+    #[inline]
+    pub fn restore(&self, cmd: cmd::server::restore::Req) -> common::Result<()> {
+        self.call_expires_write(cmd)
+    }
 }
 
 /// 读命令

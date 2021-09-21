@@ -1,5 +1,6 @@
 use db::Db;
 use macros::ParseFrames;
+use tracing::debug;
 
 use crate::Frame;
 
@@ -14,7 +15,10 @@ impl Dump<'_> {
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
         let res = db
             .dump(dict::cmd::server::dump::Req { key: self.key })?
-            .map_or(Frame::Null, Frame::OwnedBulk);
+            .map_or(Frame::Null, |v| {
+                debug!("{:?}", v);
+                Frame::OwnedBulk(v)
+            });
         Ok(res)
     }
 }

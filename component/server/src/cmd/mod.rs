@@ -26,7 +26,7 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
-    server::{dump::Dump, flushall::Flushall, info::Info},
+    server::{dump::Dump, flushall::Flushall, info::Info, restore::Restore},
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
@@ -109,6 +109,7 @@ pub enum Write<'a> {
     Expire(Expire<'a>),
     Pexpire(Pexpire<'a>),
     Flushall(Flushall),
+    Restore(Restore<'a>),
 }
 
 impl<'a> Command<'a> {
@@ -207,6 +208,7 @@ impl<'a> Command<'a> {
             "flushall" => Command::Write(Write::Flushall(Flushall::parse_frames(parse_ref)?)),
             "info" => Command::Read(Read::Info(Info)),
             "dump" => Command::Read(Read::Dump(Dump::parse_frames(parse_ref)?)),
+            "restore" => Command::Write(Write::Restore(Restore::parse_frames(parse_ref)?)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -230,16 +232,12 @@ impl<'a> Command<'a> {
 
 impl<'a> Write<'a> {
     #[inline]
-    pub async fn apply(
-        self,
-        // connection: &'a mut Connection,
-        db: &'a Arc<Db>,
-    ) -> common::Result<Frame<'a>> {
+    pub async fn apply(self, db: &'a Arc<Db>) -> common::Result<Frame<'a>> {
         match self {
-            Write::Set(cmd) => cmd.apply(db).await,
+            Write::Set(cmd) => cmd.apply(db),
             Write::Psetex(cmd) => cmd.apply(db),
             Write::Setex(cmd) => cmd.apply(db),
-            Write::Del(cmd) => cmd.apply(db).await,
+            Write::Del(cmd) => cmd.apply(db),
             Write::Pexpireat(cmd) => cmd.apply(db),
             Write::Expireat(cmd) => cmd.apply(db),
             Write::Expire(cmd) => cmd.apply(db),
@@ -266,6 +264,7 @@ impl<'a> Write<'a> {
             Write::Zremrangebyscore(cmd) => cmd.apply(db),
             Write::Zremrangebylex(cmd) => cmd.apply(db),
             Write::Flushall(cmd) => Ok(cmd.apply(db.clone())),
+            Write::Restore(cmd) => cmd.apply(db),
         }
     }
 }

@@ -130,14 +130,17 @@ impl Db {
     pub fn incr(&self, cmd: cmd::simple::incr::Req) -> common::Result<i64> {
         self.get_slot(&cmd.key).incr(cmd)
     }
+
     #[inline]
     pub fn kvp_incr(&self, cmd: cmd::kvp::incr::Req) -> common::Result<i64> {
         self.get_slot(&cmd.key).kvp_incr(cmd)
     }
+
     #[inline]
     pub fn kvp_del(&self, cmd: cmd::kvp::del::Req) -> common::Result<cmd::kvp::del::Resp> {
         self.get_slot(&cmd.key).kvp_del(cmd)
     }
+
     #[inline]
     pub fn flushall(self: Arc<Self>, sync: bool) {
         for s in &self.slots {
@@ -149,14 +152,22 @@ impl Db {
             tokio::task::spawn_blocking(move || expire::scan_all(&self));
         }
     }
+
     #[inline]
     pub fn dump(&self, cmd: cmd::server::dump::Req) -> common::Result<Option<Vec<u8>>> {
         self.get_slot(cmd.key).dump(cmd)
     }
+
+    #[inline]
+    pub fn restore(&self, cmd: cmd::server::restore::Req) -> common::Result<()> {
+        self.get_slot(cmd.key).restore(cmd)
+    }
+
     #[inline]
     pub fn kvp_set(&self, cmd: cmd::kvp::set::Req) -> common::Result<cmd::kvp::set::Resp> {
         self.get_slot(&cmd.key).kvp_set(cmd)
     }
+
     #[inline]
     pub fn kvp_exists(&self, cmd: cmd::kvp::exists::Req) -> common::Result<bool> {
         self.get_slot(cmd.key).kvp_exists(cmd)

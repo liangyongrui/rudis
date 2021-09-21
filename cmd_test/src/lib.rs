@@ -12,6 +12,13 @@ trait NewCmd {
     fn cmd(self) -> Vec<u8>;
 }
 
+pub async fn write_cmd_bytes(stream: &mut TcpStream, cmd: Vec<&'_ [u8]>) {
+    debug!(?cmd);
+    let args = cmd.into_iter().map(|t| Frame::Bulk(t)).collect();
+    let cmd: Vec<u8> = (&Frame::Array(args)).into();
+    stream.write_all(&cmd).await.unwrap();
+    stream.flush().await.unwrap();
+}
 pub async fn write_cmd(stream: &mut TcpStream, cmd: Vec<&str>) {
     debug!(?cmd);
     let args = cmd.into_iter().map(|t| Frame::Bulk(t.as_bytes())).collect();

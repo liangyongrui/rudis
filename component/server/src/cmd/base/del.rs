@@ -1,6 +1,7 @@
 use db::Db;
 use keys::Key;
 use macros::ParseFrames;
+use tracing::debug;
 
 use crate::Frame;
 /// <https://redis.io/commands/del>
@@ -11,7 +12,7 @@ pub struct Del {
 
 impl Del {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub async fn apply<'a>(self, db: &Db) -> common::Result<Frame<'a>> {
+    pub fn apply<'a>(self, db: &Db) -> common::Result<Frame<'a>> {
         let mut res = 0;
         let mut delay = Vec::with_capacity(self.keys.len());
         for cmd in self
@@ -27,6 +28,7 @@ impl Del {
         }
         // async drop
         tokio::spawn(async { delay });
+        debug!("{}", res);
         Ok(Frame::Integer(res))
     }
 }

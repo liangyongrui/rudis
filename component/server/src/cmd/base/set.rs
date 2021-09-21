@@ -29,7 +29,7 @@ pub struct Set {
 
 impl Set {
     #[tracing::instrument(skip(self, db), level = "debug")]
-    pub async fn apply<'a>(self, db: &Db) -> common::Result<Frame<'a>> {
+    pub fn apply<'a>(self, db: &Db) -> common::Result<Frame<'a>> {
         let get = self.get;
         let res = db.set(dict::cmd::simple::set::Req {
             key: self.key,

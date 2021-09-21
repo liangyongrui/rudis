@@ -33,7 +33,6 @@ impl Connection {
         }
     }
 
-    /// todo
     /// Write a single `Frame` value to the underlying stream.
     #[inline]
     #[tracing::instrument(skip(self), level = "debug")]

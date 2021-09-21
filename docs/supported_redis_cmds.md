@@ -71,3 +71,4 @@ All the implemented commands are compatible with redis 7.0 version.
 1. flushall
 1. info: return some fake data
 1. DUMP: Data structure is not the same
+1. RESTORE: not support [IDLETIME seconds] [FREQ frequency]

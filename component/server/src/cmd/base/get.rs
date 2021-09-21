@@ -23,8 +23,6 @@ impl Get<'_> {
     /// to execute a received command.
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        // Get the value from the shared database state
-        // todo
         let response = match db.get(dict::cmd::simple::get::Req { key: self.key })? {
             dict::data_type::DataType::Null => Frame::Null,
             dict::data_type::DataType::String(s) => Frame::OwnedSimple(s),
