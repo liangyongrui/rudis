@@ -26,7 +26,9 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
-    server::{dump::Dump, flushall::Flushall, info::Info, restore::Restore},
+    server::{
+        config::Config, debug::Debug, dump::Dump, flushall::Flushall, info::Info, restore::Restore,
+    },
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
     },
@@ -75,6 +77,8 @@ pub enum Read<'a> {
     Exists(Exists<'a>),
     Info(Info),
     Dump(Dump<'a>),
+    Debug(Debug<'a>),
+    Config(Config<'a>),
 }
 
 #[derive(Debug)]
@@ -209,6 +213,8 @@ impl<'a> Command<'a> {
             "info" => Command::Read(Read::Info(Info)),
             "dump" => Command::Read(Read::Dump(Dump::parse_frames(parse_ref)?)),
             "restore" => Command::Write(Write::Restore(Restore::parse_frames(parse_ref)?)),
+            "debug" => Command::Read(Read::Debug(Debug::parse_frames(parse_ref)?)),
+            "config" => Command::Read(Read::Config(Config::parse_frames(parse_ref)?)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -296,6 +302,8 @@ impl Read<'_> {
             Read::Pttl(cmd) => cmd.apply(db),
             Read::Info(cmd) => Ok(cmd.apply(db)),
             Read::Dump(cmd) => cmd.apply(db),
+            Read::Debug(cmd) => cmd.apply(db),
+            Read::Config(cmd) => cmd.apply(db),
         }
     }
 }

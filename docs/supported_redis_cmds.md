@@ -72,3 +72,5 @@ All the implemented commands are compatible with redis 7.0 version.
 1. info: return some fake data
 1. DUMP: Data structure is not the same
 1. RESTORE: not support [IDLETIME seconds] [FREQ frequency]
+1. debug: just response "ok"
+1. config: just response "ok"
