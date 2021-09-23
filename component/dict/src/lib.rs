@@ -32,6 +32,8 @@ pub trait Dict {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    fn update_last_visit_time(&mut self, key: &[u8]);
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -46,6 +48,7 @@ pub struct Value {
     /// unix timestamp ms
     /// 0 表示不过期
     pub expires_at: u64,
+    pub last_visit_time: u64,
 }
 
 impl Dict for MemDict {
@@ -114,5 +117,11 @@ impl Dict for MemDict {
 
     fn set_write_id(&mut self, id: u64) {
         self.write_id = id;
+    }
+
+    fn update_last_visit_time(&mut self, key: &[u8]) {
+        if let Some(o) = self.get_mut(key) {
+            o.last_visit_time = now_timestamp_ms();
+        }
     }
 }

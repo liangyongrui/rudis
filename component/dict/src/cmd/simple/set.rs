@@ -31,6 +31,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                     Value {
                         data: self.value,
                         expires_at,
+                        last_visit_time: 0,
                     },
                 );
                 (
@@ -47,6 +48,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                     Value {
                         data: self.value,
                         expires_at,
+                        last_visit_time: 0,
                     },
                 );
                 (old, ExpiresStatus::None)
@@ -75,6 +77,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                 Value {
                     data: self.value,
                     expires_at,
+                    last_visit_time: 0,
                 },
             );
             let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
@@ -103,6 +106,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                 Value {
                     data: self.value,
                     expires_at,
+                    last_visit_time: 0,
                 },
             );
 

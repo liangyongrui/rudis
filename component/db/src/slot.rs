@@ -5,7 +5,7 @@
 
 mod replica_update;
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use dict::{
     cmd,
@@ -14,6 +14,7 @@ use dict::{
     data_type::DataType,
     Dict, MemDict, Value,
 };
+use keys::Key;
 use parking_lot::RwLock;
 use tracing::error;
 
@@ -29,6 +30,7 @@ pub struct Slot {
 #[derive(Default)]
 pub struct ShareStatus {
     pub dict: MemDict,
+    pub lru_pool: BTreeSet<(u64, Key)>,
 }
 impl Slot {
     pub fn new(slot_id: usize, bg_task: BgTask) -> Self {
@@ -61,7 +63,11 @@ impl Slot {
                 key: k.clone(),
             })
             .collect();
-        *self.share_status.write() = Some(Box::new(ShareStatus { dict }));
+        // todo lru_pool
+        *self.share_status.write() = Some(Box::new(ShareStatus {
+            dict,
+            lru_pool: BTreeSet::new(),
+        }));
         if let Err(e) = self
             .bg_task
             .expire_sender

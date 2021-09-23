@@ -28,6 +28,7 @@ impl<D: Dict> Write<i64, D> for Req {
         let v = dict.get_mut_or_insert_with(self.key, || Value {
             expires_at: 0,
             data: DataType::Kvp(Box::new(Kvp::new())),
+            last_visit_time: 0,
         });
         match v.data {
             DataType::Kvp(ref mut kvp) => {

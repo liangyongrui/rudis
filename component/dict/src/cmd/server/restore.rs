@@ -33,6 +33,7 @@ impl<D: Dict> ExpiresWrite<(), D> for Req<'_> {
         let v = Value {
             data: bincode::deserialize(self.value)?,
             expires_at: self.expires_at,
+            last_visit_time: 0,
         };
         let key: Key = self.key.into();
         dict.insert(key.clone(), v);

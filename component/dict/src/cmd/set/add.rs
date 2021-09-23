@@ -31,6 +31,7 @@ impl<D: Dict> Write<Resp, D> for Req {
         let old = dict.get_mut_or_insert_with(self.key, || Value {
             data: DataType::Set(Box::new(Set::new())),
             expires_at: 0,
+            last_visit_time: 0,
         });
         if let DataType::Set(ref mut set) = old.data {
             let old_len = set.len();
