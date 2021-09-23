@@ -2,7 +2,7 @@ use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+    cmd::{ExpiresOp, ExpiresOpResp, ExpiresStatus, ExpiresStatusUpdate, WriteCmd},
     Dict, Value,
 };
 
@@ -20,9 +20,9 @@ impl<'a> From<Req<'a>> for WriteCmd {
     }
 }
 
-impl<D: Dict> ExpiresWrite<(), D> for Req<'_> {
+impl<D: Dict> ExpiresOp<(), D> for Req<'_> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<()>> {
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresOpResp<()>> {
         let mut before = 0;
         if let Some(v) = dict.get(self.key) {
             if !self.replace {
@@ -33,11 +33,12 @@ impl<D: Dict> ExpiresWrite<(), D> for Req<'_> {
         let v = Value {
             data: bincode::deserialize(self.value)?,
             expires_at: self.expires_at,
-            last_visit_time: 0,
+            last_visit_time: common::now_timestamp_ms(),
         };
         let key: Key = self.key.into();
         dict.insert(key.clone(), v);
-        Ok(ExpiresWriteResp {
+        // todo set last_visit_time
+        Ok(ExpiresOpResp {
             payload: (),
             expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                 key,

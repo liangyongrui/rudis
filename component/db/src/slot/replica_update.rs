@@ -4,7 +4,7 @@ use dict::{cmd::WriteCmd, Dict, MemDict};
 use tracing::error;
 
 use super::{
-    cmd::{self, ExpiresWrite, ExpiresWriteResp, Write},
+    cmd::{self, ExpiresOp, ExpiresOpResp, Write},
     Slot,
 };
 use crate::expire;
@@ -34,7 +34,7 @@ impl Slot {
 
     fn call_update<T, C: Write<T, MemDict> + Clone>(&self, id: u64, cmd: C) -> Ordering {
         self.share_status
-            .write()
+            .lock()
             .as_mut()
             .map_or(Ordering::Greater, |s| {
                 match id.cmp(&(s.dict.last_write_op_id() + 1)) {
@@ -51,12 +51,12 @@ impl Slot {
             })
     }
 
-    pub fn call_expires_update<T, C: ExpiresWrite<T, MemDict> + Clone>(
+    pub fn call_expires_update<T, C: ExpiresOp<T, MemDict> + Clone>(
         &self,
         id: u64,
         cmd: C,
     ) -> Ordering {
-        let res = if let Some(s) = &mut *self.share_status.write() {
+        let res = if let Some(s) = &mut *self.share_status.lock() {
             match id.cmp(&(s.dict.last_write_op_id() + 1)) {
                 Ordering::Less => return Ordering::Less,
                 Ordering::Equal => {
@@ -69,7 +69,7 @@ impl Slot {
             return Ordering::Greater;
         };
 
-        if let Ok(ExpiresWriteResp { expires_status, .. }) = res {
+        if let Ok(ExpiresOpResp { expires_status, .. }) = res {
             match expires_status {
                 cmd::ExpiresStatus::None => (),
                 cmd::ExpiresStatus::Update(u) => {

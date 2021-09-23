@@ -2,6 +2,8 @@
 
 ## 一定要做的 TODO
 
+1. [ ] now_timestamp_ms vs tokio::task::LocalKey
+1. [ ] 检测剩余内存，做 lru
 1. [ ] test
    1. [ ] ./runtest --host 0.0.0.0 --port 6379 --cluster-mode
    1. [ ] 代码覆盖率超过 90%

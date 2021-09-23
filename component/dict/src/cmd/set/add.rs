@@ -28,10 +28,10 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<Resp> {
-        let old = dict.get_mut_or_insert_with(self.key, || Value {
+        let old = dict.get_or_insert_with(self.key, || Value {
             data: DataType::Set(Box::new(Set::new())),
             expires_at: 0,
-            last_visit_time: 0,
+            last_visit_time: common::now_timestamp_ms(),
         });
         if let DataType::Set(ref mut set) = old.data {
             let old_len = set.len();

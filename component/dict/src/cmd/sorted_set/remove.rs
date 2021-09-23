@@ -27,7 +27,7 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<Resp> {
-        if let Some(old) = dict.get_mut(&self.key) {
+        if let Some(old) = dict.get(&self.key) {
             if let DataType::SortedSet(ref mut sorted_set) = old.data {
                 let old_len = sorted_set.hash.len();
                 for ref m in self.members {

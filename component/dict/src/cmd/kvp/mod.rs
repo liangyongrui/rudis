@@ -42,7 +42,7 @@ mod test {
         let res = get_all::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             {
@@ -81,7 +81,7 @@ mod test {
         let res = get_all::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             {
@@ -105,21 +105,21 @@ mod test {
             key: b"hello"[..].into(),
             fields: vec![b"k1"[..].into()],
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, vec![b"v1"[..].into()]);
         let res = get::Req {
             key: b"hello"[..].into(),
             fields: vec![b"k6"[..].into()],
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, vec![DataType::Null]);
         let res = get::Req {
             key: b"hello2"[..].into(),
             fields: vec![b"k1"[..].into()],
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, vec![DataType::Null]);
 
@@ -127,7 +127,7 @@ mod test {
             key: b"hello"[..].into(),
             field: b"k1"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert!(res);
 
@@ -149,7 +149,7 @@ mod test {
             key: b"hello"[..].into(),
             field: b"k1"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert!(!res);
     }

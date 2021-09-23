@@ -29,7 +29,7 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<Resp> {
-        if let Some(v) = dict.get_mut(&self.key) {
+        if let Some(v) = dict.get(&self.key) {
             return if let DataType::Kvp(ref mut kvp) = v.data {
                 let old_len = kvp.len();
                 for f in self.fields {

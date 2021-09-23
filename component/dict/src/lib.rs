@@ -9,7 +9,7 @@
 pub mod cmd;
 pub mod data_type;
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use common::now_timestamp_ms;
 use data_type::DataType;
@@ -18,17 +18,27 @@ use serde::{Deserialize, Serialize};
 
 pub trait Dict {
     fn next_id(&mut self) -> u64;
+
     fn last_write_op_id(&self) -> u64;
+
     fn set_write_id(&mut self, id: u64);
 
-    fn exists(&self, key: &[u8]) -> bool;
-    fn get(&self, key: &[u8]) -> Option<&Value>;
-    fn get_mut(&mut self, key: &[u8]) -> Option<&mut Value>;
-    fn get_mut_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value;
+    fn exists(&mut self, key: &[u8]) -> bool;
+
+    fn get(&mut self, key: &[u8]) -> Option<&mut Value>;
+
+    fn get_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value;
+
     fn remove(&mut self, key: &[u8]) -> Option<Value>;
+
     fn insert(&mut self, k: Key, v: Value) -> Option<Value>;
+
     fn raw_get(&self, k: &[u8]) -> Option<&Value>;
+
+    fn raw_get_mut(&mut self, k: &[u8]) -> Option<&mut Value>;
+
     fn len(&self) -> usize;
+
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -40,6 +50,7 @@ pub trait Dict {
 pub struct MemDict {
     pub write_id: u64,
     pub inner: HashMap<Key, Value, ahash::RandomState>,
+    pub lru_pool: BTreeSet<(u64, Key)>,
 }
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -62,32 +73,37 @@ impl Dict for MemDict {
         self.write_id
     }
 
+    fn set_write_id(&mut self, id: u64) {
+        self.write_id = id;
+    }
+
     #[inline]
-    fn exists(&self, key: &[u8]) -> bool {
+    fn exists(&mut self, key: &[u8]) -> bool {
         self.get(key).is_some()
     }
 
     #[inline]
-    fn get(&self, key: &[u8]) -> Option<&Value> {
-        self.inner
-            .get(key)
-            .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
-    }
-
     #[inline]
-    fn get_mut(&mut self, key: &[u8]) -> Option<&mut Value> {
+    fn get(&mut self, key: &[u8]) -> Option<&mut Value> {
         self.inner
             .get_mut(key)
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
+            .map(|v| {
+                v.last_visit_time = now_timestamp_ms();
+                v
+            })
     }
 
     #[inline]
-    fn get_mut_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value {
+    fn get_or_insert_with<F: FnOnce() -> Value>(&mut self, key: Key, f: F) -> &mut Value {
         match self.inner.entry(key) {
             std::collections::hash_map::Entry::Occupied(mut o) => {
                 let expires_at = o.get().expires_at;
-                if expires_at > 0 && expires_at <= now_timestamp_ms() {
+                let now = now_timestamp_ms();
+                if expires_at > 0 && expires_at <= now {
                     *o.get_mut() = f();
+                } else {
+                    o.get_mut().last_visit_time = now;
                 }
                 o.into_mut()
             }
@@ -110,17 +126,17 @@ impl Dict for MemDict {
         self.inner.get(k)
     }
 
+    fn raw_get_mut(&mut self, k: &[u8]) -> Option<&mut Value> {
+        self.inner.get_mut(k)
+    }
+
     #[inline]
     fn len(&self) -> usize {
         self.inner.len()
     }
 
-    fn set_write_id(&mut self, id: u64) {
-        self.write_id = id;
-    }
-
     fn update_last_visit_time(&mut self, key: &[u8]) {
-        if let Some(o) = self.get_mut(key) {
+        if let Some(o) = self.raw_get_mut(key) {
             o.last_visit_time = now_timestamp_ms();
         }
     }

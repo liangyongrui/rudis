@@ -2,7 +2,7 @@ use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+    cmd::{ExpiresOp, ExpiresOpResp, ExpiresStatus, ExpiresStatusUpdate, WriteCmd},
     Dict, Value,
 };
 
@@ -17,37 +17,32 @@ impl From<Req> for WriteCmd {
     }
 }
 /// 返回 原始值
-impl<D: Dict> ExpiresWrite<Option<Value>, D> for Req {
+impl<D: Dict> ExpiresOp<Option<Value>, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<Option<Value>>> {
-        if dict.exists(&self.key) {
-            let res = dict.remove(&self.key);
-
-            let expires_status = res
-                .as_ref()
-                .map(|v| {
-                    if v.expires_at > 0 {
-                        ExpiresStatus::Update(ExpiresStatusUpdate {
-                            key: self.key,
-                            before: v.expires_at,
-                            new: 0,
-                        })
-                    } else {
-                        ExpiresStatus::None
-                    }
-                })
-                .unwrap_or(ExpiresStatus::None);
-
-            Ok(ExpiresWriteResp {
-                payload: res,
-                expires_status,
-            })
-        } else {
-            Ok(ExpiresWriteResp {
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresOpResp<Option<Value>>> {
+        let res = dict.remove(&self.key).map_or(
+            ExpiresOpResp {
                 payload: None,
                 expires_status: ExpiresStatus::None,
-            })
-        }
+            },
+            |v| {
+                let expires_status = if v.expires_at > 0 {
+                    ExpiresStatus::Update(ExpiresStatusUpdate {
+                        key: self.key,
+                        before: v.expires_at,
+                        new: 0,
+                    })
+                } else {
+                    ExpiresStatus::None
+                };
+
+                ExpiresOpResp {
+                    payload: Some(v),
+                    expires_status,
+                }
+            },
+        );
+        Ok(res)
     }
 }
 
@@ -88,13 +83,13 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: 0,
                     new: date_time,
-                })
+                }),
             }
         );
         let res = del::Req {

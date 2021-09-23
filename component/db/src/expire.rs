@@ -147,7 +147,7 @@ impl Expiration {
             let slot = db.get_slot_by_id(entry.slot);
             // 取出数据之后再析构，避免持有过长时间的slot锁
             let expired_data = {
-                let mut lock = slot.share_status.write();
+                let mut lock = slot.share_status.lock();
                 let dict = match &mut *lock {
                     Some(s) => &mut s.dict,
                     None => continue,
@@ -176,9 +176,9 @@ impl Expiration {
 pub fn scan_all(db: &Db) {
     db.expiration_data.lock().retain(|entry| {
         let slot = db.get_slot_by_id(entry.slot);
-        let lock = slot.share_status.read();
-        let dict = match &*lock {
-            Some(s) => &s.dict,
+        let mut lock = slot.share_status.lock();
+        let dict = match &mut *lock {
+            Some(s) => &mut s.dict,
             None => return false,
         };
         // 只保留key存在，且过期时间能对上的记录

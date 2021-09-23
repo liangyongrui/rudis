@@ -24,13 +24,13 @@ impl SyncSnapshot {
                 .db
                 .slots
                 .iter()
-                .map(|t| (t.slot_id, t.share_status.read()))
+                .map(|t| (t.slot_id, t.share_status.lock()))
                 .collect()
         } else {
             // 指定的slot
             vec![(
                 self.slot_id,
-                handler.db.get_slot_by_id(self.slot_id).share_status.read(),
+                handler.db.get_slot_by_id(self.slot_id).share_status.lock(),
             )]
         };
 

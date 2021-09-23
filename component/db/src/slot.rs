@@ -5,17 +5,16 @@
 
 mod replica_update;
 
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 
 use dict::{
     cmd,
-    cmd::{ExpiresWrite, ExpiresWriteResp, Read, Write},
+    cmd::{ExpiresOp, ExpiresOpResp, Read, Write},
     data_type,
     data_type::DataType,
     Dict, MemDict, Value,
 };
-use keys::Key;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use tracing::error;
 
 use crate::{expire, forward, BgTask};
@@ -23,20 +22,20 @@ use crate::{expire, forward, BgTask};
 pub struct Slot {
     pub slot_id: usize,
     // None时，表示 slot not support
-    pub share_status: RwLock<Option<Box<ShareStatus>>>,
+    pub share_status: Mutex<Option<Box<ShareStatus>>>,
     bg_task: BgTask,
 }
 
 #[derive(Default)]
 pub struct ShareStatus {
     pub dict: MemDict,
-    pub lru_pool: BTreeSet<(u64, Key)>,
 }
 impl Slot {
     pub fn new(slot_id: usize, bg_task: BgTask) -> Self {
         Self {
             slot_id,
-            share_status: RwLock::new(Some(Box::new(ShareStatus::default()))),
+            share_status: Mutex::new(Some(Box::default())),
+            // share_status: Mutex::new(Some(Box::new(ShareStatus::default()))),
             bg_task,
         }
     }
@@ -63,11 +62,7 @@ impl Slot {
                 key: k.clone(),
             })
             .collect();
-        // todo lru_pool
-        *self.share_status.write() = Some(Box::new(ShareStatus {
-            dict,
-            lru_pool: BTreeSet::new(),
-        }));
+        *self.share_status.lock() = Some(Box::new(ShareStatus { dict }));
         if let Err(e) = self
             .bg_task
             .expire_sender
@@ -82,7 +77,7 @@ impl Slot {
         let cc = cmd.clone();
         // 加锁执行命令
         let (res, id) = {
-            let mut share_status = self.share_status.write();
+            let mut share_status = self.share_status.lock();
             let s = match &mut *share_status {
                 Some(s) => s,
                 None => return Err("slot not support".into()),
@@ -104,14 +99,11 @@ impl Slot {
     }
 
     #[inline]
-    fn call_expires_write<T, C: ExpiresWrite<T, MemDict> + Clone>(
-        &self,
-        cmd: C,
-    ) -> common::Result<T> {
+    fn call_expires_write<T, C: ExpiresOp<T, MemDict> + Clone>(&self, cmd: C) -> common::Result<T> {
         let cc = cmd.clone();
         // 加锁执行命令
         let (res, id) = {
-            let mut share_status = self.share_status.write();
+            let mut share_status = self.share_status.lock();
             let s = match &mut *share_status {
                 Some(s) => s,
                 None => return Err("slot not support".into()),
@@ -121,7 +113,7 @@ impl Slot {
         };
 
         let res = match res {
-            Ok(ExpiresWriteResp {
+            Ok(ExpiresOpResp {
                 expires_status,
                 payload,
             }) => {
@@ -159,16 +151,15 @@ impl Slot {
 
     #[inline]
     fn call_read<T, C: Read<T, MemDict> + Clone>(&self, cmd: C) -> common::Result<T> {
-        let share_status = self.share_status.read();
-        match &*share_status {
-            Some(s) => cmd.apply(&s.dict),
+        match &mut *self.share_status.lock() {
+            Some(s) => cmd.apply(&mut s.dict),
             None => Err("slot not support".into()),
         }
     }
 
     /// clean all data
     pub(crate) fn flush(&self, sync: bool) {
-        let mut status = self.share_status.write();
+        let mut status = self.share_status.lock();
         if let Some(inner) = &mut *status {
             let old = std::mem::take(inner);
             drop(status);

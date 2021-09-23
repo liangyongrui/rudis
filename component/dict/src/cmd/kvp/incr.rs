@@ -25,10 +25,10 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<i64, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<i64> {
-        let v = dict.get_mut_or_insert_with(self.key, || Value {
+        let v = dict.get_or_insert_with(self.key, || Value {
             expires_at: 0,
             data: DataType::Kvp(Box::new(Kvp::new())),
-            last_visit_time: 0,
+            last_visit_time: common::now_timestamp_ms(),
         });
         match v.data {
             DataType::Kvp(ref mut kvp) => {
@@ -101,7 +101,7 @@ mod test {
         let res = get_all::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             {

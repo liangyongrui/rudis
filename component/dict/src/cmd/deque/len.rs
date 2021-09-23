@@ -7,7 +7,7 @@ pub struct Req<'a> {
 
 impl<'a, D: Dict> Read<usize, D> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &D) -> common::Result<usize> {
+    fn apply(self, dict: &mut D) -> common::Result<usize> {
         if let Some(v) = dict.get(self.key) {
             return if let DataType::Deque(ref deque) = v.data {
                 Ok(deque.len())
@@ -35,7 +35,7 @@ mod test {
     #[test]
     fn test1() {
         let mut dict = MemDict::default();
-        let res = len::Req { key: &b"hello"[..] }.apply(&dict).unwrap();
+        let res = len::Req { key: &b"hello"[..] }.apply(&mut dict).unwrap();
         assert_eq!(res, 0);
         let res = push::Req {
             key: b"hello"[..].into(),
@@ -52,7 +52,7 @@ mod test {
                 new_len: 3
             }
         );
-        let res = len::Req { key: &b"hello"[..] }.apply(&dict).unwrap();
+        let res = len::Req { key: &b"hello"[..] }.apply(&mut dict).unwrap();
         assert_eq!(res, 3);
     }
 }

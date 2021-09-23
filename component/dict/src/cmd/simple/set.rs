@@ -3,7 +3,7 @@ use keys::Key;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    cmd::{ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, WriteCmd},
+    cmd::{ExpiresOp, ExpiresOpResp, ExpiresStatus, ExpiresStatusUpdate, WriteCmd},
     data_type::DataType,
     Dict, Value,
 };
@@ -21,9 +21,9 @@ impl From<Req> for WriteCmd {
     }
 }
 
-impl<D: Dict> ExpiresWrite<DataType, D> for Req {
+impl<D: Dict> ExpiresOp<DataType, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<DataType>> {
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresOpResp<DataType>> {
         if let (NxXx::None, ExpiresAt::Specific(expires_at)) = (self.nx_xx, self.expires_at) {
             let (old, expires_status) = if expires_at > 0 {
                 let old = dict.insert(
@@ -31,7 +31,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                     Value {
                         data: self.value,
                         expires_at,
-                        last_visit_time: 0,
+                        last_visit_time: common::now_timestamp_ms(),
                     },
                 );
                 (
@@ -48,12 +48,12 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                     Value {
                         data: self.value,
                         expires_at,
-                        last_visit_time: 0,
+                        last_visit_time: common::now_timestamp_ms(),
                     },
                 );
                 (old, ExpiresStatus::None)
             };
-            return Ok(ExpiresWriteResp {
+            return Ok(ExpiresOpResp {
                 payload: old.map_or(DataType::Null, |v| v.data),
                 expires_status,
             });
@@ -62,7 +62,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
         let key = self.key.clone();
         if let Some(old) = dict.get(&self.key) {
             if self.nx_xx.is_nx() {
-                return Ok(ExpiresWriteResp {
+                return Ok(ExpiresOpResp {
                     payload: old.data.clone(),
                     expires_status: ExpiresStatus::None,
                 });
@@ -73,11 +73,11 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                 ExpiresAt::Last => old_expires_at,
             };
             let old = dict.insert(
-                self.key,
+                self.key.clone(),
                 Value {
                     data: self.value,
                     expires_at,
-                    last_visit_time: 0,
+                    last_visit_time: common::now_timestamp_ms(),
                 },
             );
             let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
@@ -85,13 +85,13 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                 before: old_expires_at,
                 new: expires_at,
             });
-            Ok(ExpiresWriteResp {
+            Ok(ExpiresOpResp {
                 payload: old.map_or(DataType::Null, |v| v.data),
                 expires_status,
             })
         } else {
             if self.nx_xx.is_xx() {
-                return Ok(ExpiresWriteResp {
+                return Ok(ExpiresOpResp {
                     payload: DataType::Null,
                     expires_status: ExpiresStatus::None,
                 });
@@ -102,11 +102,11 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
             };
 
             dict.insert(
-                self.key,
+                self.key.clone(),
                 Value {
                     data: self.value,
                     expires_at,
-                    last_visit_time: 0,
+                    last_visit_time: common::now_timestamp_ms(),
                 },
             );
 
@@ -119,7 +119,7 @@ impl<D: Dict> ExpiresWrite<DataType, D> for Req {
                     new: expires_at,
                 })
             };
-            Ok(ExpiresWriteResp {
+            Ok(ExpiresOpResp {
                 payload: DataType::Null,
                 expires_status,
             })
@@ -153,25 +153,25 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: 0,
                     new: date_time
-                })
+                }),
             }
         );
         let res = get::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world".into());
         let res = get::Req {
             key: b"n"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, DataType::Null);
         // xx
@@ -184,13 +184,13 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: "world".into(),
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: date_time,
                     new: date_time
-                })
+                }),
             }
         );
         let cmd = Req {
@@ -202,21 +202,21 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: DataType::Null,
-                expires_status: ExpiresStatus::None
-            }
+                expires_status: ExpiresStatus::None,
+            },
         );
         let res = get::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world2".into());
         let res = get::Req {
             key: b"n"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, DataType::Null);
         // nx
@@ -229,10 +229,10 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: "world2".into(),
-                expires_status: ExpiresStatus::None
-            }
+                expires_status: ExpiresStatus::None,
+            },
         );
         let cmd = Req {
             key: b"n"[..].into(),
@@ -243,21 +243,21 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: DataType::Null,
-                expires_status: ExpiresStatus::None
+                expires_status: ExpiresStatus::None,
             }
         );
         let res = get::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world2".into());
         let res = get::Req {
             key: b"n"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world3".into());
         // time
@@ -270,38 +270,38 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: "world2".into(),
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: date_time,
                     new: date_time
-                })
+                }),
             }
         );
         let res = get::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world".into());
         let res = get::Req {
             key: b"n"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world3".into());
         sleep(std::time::Duration::from_secs(1));
         let res = get::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, DataType::Null);
         let res = get::Req {
             key: b"n"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(res, "world3".into());
     }
