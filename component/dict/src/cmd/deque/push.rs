@@ -78,7 +78,7 @@ impl<D: Dict> Write<Resp, D> for Req {
                 Value {
                     data: DataType::Deque(deque),
                     expires_at: 0,
-                    last_visit_time: common::now_timestamp_ms(),
+                    visit_log: Value::new_visit_log(),
                 },
             );
             Ok(Resp {

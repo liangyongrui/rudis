@@ -35,7 +35,7 @@ impl<D: Dict> Write<Resp, D> for Req {
         let old = dict.get_or_insert_with(self.key, || Value {
             data: DataType::Kvp(Box::new(Kvp::new())),
             expires_at: 0,
-            last_visit_time: common::now_timestamp_ms(),
+            visit_log: Value::new_visit_log(),
         });
         if let DataType::Kvp(ref mut kvp) = old.data {
             let old_len = kvp.len();

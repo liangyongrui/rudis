@@ -35,7 +35,7 @@ impl<D: Dict> ExpiresOp<(), D> for Req<'_> {
         let v = Value {
             data: bincode::deserialize(self.value)?,
             expires_at: self.expires_at,
-            last_visit_time: self.last_visit_time,
+            visit_log: Value::new_visit_log(),
         };
         let key: Key = self.key.into();
         dict.insert(key.clone(), v);

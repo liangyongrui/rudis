@@ -42,7 +42,7 @@ impl<D: Dict> Write<Resp, D> for Req {
         let old = dict.get_or_insert_with(self.key, || Value {
             data: DataType::SortedSet(Box::new(SortedSet::new())),
             expires_at: 0,
-            last_visit_time: common::now_timestamp_ms(),
+            visit_log: Value::new_visit_log(),
         });
         if let DataType::SortedSet(ref mut sorted_set) = old.data {
             let old_len = sorted_set.hash.len();

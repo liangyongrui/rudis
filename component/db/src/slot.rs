@@ -280,6 +280,14 @@ impl Slot {
     }
 
     #[inline]
+    pub fn get_last_visit_time(
+        &self,
+        cmd: cmd::simple::get_last_visit_time::Req<'_>,
+    ) -> common::Result<Option<u64>> {
+        self.call_read(cmd)
+    }
+
+    #[inline]
     pub fn dump(&self, cmd: cmd::server::dump::Req<'_>) -> common::Result<Option<Vec<u8>>> {
         self.call_read(cmd)
     }

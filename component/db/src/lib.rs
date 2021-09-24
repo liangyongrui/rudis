@@ -106,10 +106,20 @@ impl Db {
     pub fn get(&self, cmd: cmd::simple::get::Req) -> common::Result<DataType> {
         self.get_slot(cmd.key).get(cmd)
     }
+
+    #[inline]
+    pub fn get_last_visit_time(
+        &self,
+        cmd: cmd::simple::get_last_visit_time::Req,
+    ) -> common::Result<Option<u64>> {
+        self.get_slot(cmd.key).get_last_visit_time(cmd)
+    }
+
     #[inline]
     pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> common::Result<cmd::simple::ttl::Resp> {
         self.get_slot(cmd.key).ttl(cmd)
     }
+
     #[inline]
     pub fn set(&self, cmd: cmd::simple::set::Req) -> common::Result<DataType> {
         self.get_slot(&cmd.key).set(cmd)

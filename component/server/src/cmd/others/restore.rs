@@ -31,7 +31,7 @@ impl Restore<'_> {
             value: self.serialized_value,
             expires_at: ttl,
             replace: self.replace,
-            last_visit_time: now_timestamp_ms()
+            last_visit_time: now_timestamp_ms() / 1000
                 - match self.idle_time {
                     IdleTime::Some(i) => i,
                     IdleTime::None => 0,

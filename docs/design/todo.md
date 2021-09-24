@@ -2,8 +2,8 @@
 
 ## 一定要做的 TODO
 
-1. [ ] now_timestamp_ms vs tokio::task::LocalKey
 1. [ ] 检测剩余内存，做 lru
+   - follower 不主动淘汰, 等 leader 的命令
 1. [ ] test
    1. [ ] ./runtest --host 0.0.0.0 --port 6379 --cluster-mode
    1. [ ] 代码覆盖率超过 90%
@@ -29,6 +29,7 @@
 1. [ ] hashTag SIMD 加速
 1. [ ] 优化 parse 宏
    - 单一选项结构, 如：`RESTORE key ttl serialized-value [REPLACE] [ABSTTL] [IDLETIME seconds] [FREQ frequency]`
+1. [ ] now_timestamp_ms vs tokio::task::LocalKey
 
 ## 一些需要探索的方向
 

@@ -31,7 +31,7 @@ impl<D: Dict> ExpiresOp<DataType, D> for Req {
                     Value {
                         data: self.value,
                         expires_at,
-                        last_visit_time: common::now_timestamp_ms(),
+                        visit_log: Value::new_visit_log(),
                     },
                 );
                 (
@@ -48,7 +48,7 @@ impl<D: Dict> ExpiresOp<DataType, D> for Req {
                     Value {
                         data: self.value,
                         expires_at,
-                        last_visit_time: common::now_timestamp_ms(),
+                        visit_log: Value::new_visit_log(),
                     },
                 );
                 (old, ExpiresStatus::None)
@@ -77,7 +77,7 @@ impl<D: Dict> ExpiresOp<DataType, D> for Req {
                 Value {
                     data: self.value,
                     expires_at,
-                    last_visit_time: common::now_timestamp_ms(),
+                    visit_log: Value::new_visit_log(),
                 },
             );
             let expires_status = ExpiresStatus::Update(ExpiresStatusUpdate {
@@ -106,7 +106,7 @@ impl<D: Dict> ExpiresOp<DataType, D> for Req {
                 Value {
                     data: self.value,
                     expires_at,
-                    last_visit_time: common::now_timestamp_ms(),
+                    visit_log: Value::new_visit_log(),
                 },
             );
 

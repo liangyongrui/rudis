@@ -35,7 +35,7 @@ impl<D: Dict> Write<i64, D> for Req {
                 Value {
                     expires_at: 0,
                     data: self.value.into(),
-                    last_visit_time: common::now_timestamp_ms(),
+                    visit_log: Value::new_visit_log(),
                 },
             );
             Ok(self.value)
