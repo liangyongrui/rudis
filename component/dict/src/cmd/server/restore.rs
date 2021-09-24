@@ -12,7 +12,9 @@ pub struct Req<'a> {
     pub value: &'a [u8],
     pub expires_at: u64,
     pub replace: bool,
+    pub last_visit_time: u64,
 }
+
 impl<'a> From<Req<'a>> for WriteCmd {
     fn from(_req: Req<'a>) -> Self {
         // todo
@@ -33,11 +35,10 @@ impl<D: Dict> ExpiresOp<(), D> for Req<'_> {
         let v = Value {
             data: bincode::deserialize(self.value)?,
             expires_at: self.expires_at,
-            last_visit_time: common::now_timestamp_ms(),
+            last_visit_time: self.last_visit_time,
         };
         let key: Key = self.key.into();
         dict.insert(key.clone(), v);
-        // todo set last_visit_time
         Ok(ExpiresOpResp {
             payload: (),
             expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {

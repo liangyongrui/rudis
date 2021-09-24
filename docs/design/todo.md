@@ -27,6 +27,8 @@
 1. [ ] Keyspace Notification
 1. [ ] [acl](https://redis.io/topics/acl)
 1. [ ] hashTag SIMD 加速
+1. [ ] 优化 parse 宏
+   - 单一选项结构, 如：`RESTORE key ttl serialized-value [REPLACE] [ABSTTL] [IDLETIME seconds] [FREQ frequency]`
 
 ## 一些需要探索的方向
 

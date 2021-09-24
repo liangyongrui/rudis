@@ -42,14 +42,13 @@ pub trait Dict {
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
-
-    fn update_last_visit_time(&mut self, key: &[u8]);
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct MemDict {
     pub write_id: u64,
     pub inner: HashMap<Key, Value, ahash::RandomState>,
+    // todo
     pub lru_pool: BTreeSet<(u64, Key)>,
 }
 
@@ -89,7 +88,8 @@ impl Dict for MemDict {
             .get_mut(key)
             .filter(|v| v.expires_at == 0 || v.expires_at > now_timestamp_ms())
             .map(|v| {
-                v.last_visit_time = now_timestamp_ms();
+                let now = now_timestamp_ms();
+                v.last_visit_time = now;
                 v
             })
     }
@@ -133,11 +133,5 @@ impl Dict for MemDict {
     #[inline]
     fn len(&self) -> usize {
         self.inner.len()
-    }
-
-    fn update_last_visit_time(&mut self, key: &[u8]) {
-        if let Some(o) = self.raw_get_mut(key) {
-            o.last_visit_time = now_timestamp_ms();
-        }
     }
 }

@@ -35,7 +35,6 @@ impl Slot {
         Self {
             slot_id,
             share_status: Mutex::new(Some(Box::default())),
-            // share_status: Mutex::new(Some(Box::new(ShareStatus::default()))),
             bg_task,
         }
     }

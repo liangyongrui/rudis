@@ -2,7 +2,7 @@ mod base;
 mod hash;
 mod list;
 /// <https://redis.io/commands#server>
-mod server;
+mod others;
 mod set;
 mod sorted_set;
 mod syncsnapshot;
@@ -26,7 +26,7 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
-    server::{
+    others::{
         config::Config, debug::Debug, dump::Dump, flushall::Flushall, info::Info, restore::Restore,
     },
     set::{
