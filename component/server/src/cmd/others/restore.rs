@@ -1,4 +1,7 @@
-use common::{now_timestamp_ms, options::IdleTime};
+use common::{
+    now_timestamp_ms,
+    options::{Freq, IdleTime},
+};
 use db::Db;
 use macros::ParseFrames;
 
@@ -14,6 +17,8 @@ pub struct Restore<'a> {
     pub absttl: bool,
     #[optional]
     pub idle_time: IdleTime,
+    #[optional]
+    pub freq: Freq,
 }
 
 impl Restore<'_> {
@@ -36,6 +41,10 @@ impl Restore<'_> {
                     IdleTime::Some(i) => i,
                     IdleTime::None => 0,
                 },
+            freq: match self.freq {
+                Freq::Some(i) => i,
+                Freq::None => 0,
+            },
         })?;
         Ok(Frame::ok())
     }

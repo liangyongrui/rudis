@@ -116,6 +116,14 @@ impl Db {
     }
 
     #[inline]
+    pub fn get_visit_times(
+        &self,
+        cmd: cmd::simple::get_visit_times::Req,
+    ) -> common::Result<Option<u64>> {
+        self.get_slot(cmd.key).get_visit_times(cmd)
+    }
+
+    #[inline]
     pub fn ttl(&self, cmd: cmd::simple::ttl::Req<'_>) -> common::Result<cmd::simple::ttl::Resp> {
         self.get_slot(cmd.key).ttl(cmd)
     }

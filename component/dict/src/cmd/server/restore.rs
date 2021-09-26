@@ -1,3 +1,4 @@
+use common::now_timestamp_ms;
 use keys::Key;
 use serde::{Deserialize, Serialize};
 
@@ -13,6 +14,7 @@ pub struct Req<'a> {
     pub expires_at: u64,
     pub replace: bool,
     pub last_visit_time: u64,
+    pub freq: u64,
 }
 
 impl<'a> From<Req<'a>> for WriteCmd {
@@ -28,14 +30,18 @@ impl<D: Dict> ExpiresOp<(), D> for Req<'_> {
         let mut before = 0;
         if let Some(v) = dict.get(self.key) {
             if !self.replace {
-                return Err("Target key name is busy".into());
+                return Err("BUSYKEY Target key name is busy".into());
             }
             before = v.expires_at;
         }
         let v = Value {
             data: bincode::deserialize(self.value)?,
             expires_at: self.expires_at,
-            visit_log: Value::new_visit_log(),
+            visit_log: Value::create_visit_log(
+                self.last_visit_time / 10,
+                Value::get_min(now_timestamp_ms()),
+                self.freq,
+            ),
         };
         let key: Key = self.key.into();
         dict.insert(key.clone(), v);

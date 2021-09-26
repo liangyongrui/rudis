@@ -27,7 +27,7 @@ All the implemented commands are compatible with redis 7.0 version.
 1. rpush
 1. rpushx
 1. lpushx
-1. lrange : O(STOP-START)
+1. lrange: O(STOP-START)
 1. lpop
 1. rpop
 1. llen
@@ -54,16 +54,16 @@ All the implemented commands are compatible with redis 7.0 version.
 ## zset
 
 1. zadd
-1. zrange : by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
-1. zrevrank : O(N) N is rank
-1. zrank : O(N) N is rank
+1. zrange: by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
+1. zrevrank: O(N) N is rank
+1. zrank: O(N) N is rank
 1. zrem
-1. zrevrange : by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
+1. zrevrange: by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
 1. zrangebyscore
 1. zrevrangebyscore
 1. zrangebylex
 1. zrevrangebylex
-1. zremrangebyrank : O(N+M) with N being the number of elements in the sorted set and M the number of elements returned.
+1. zremrangebyrank: O(N+M) with N being the number of elements in the sorted set and M the number of elements returned.
 1. zremrangebyscore
 
 ## server
@@ -74,4 +74,4 @@ All the implemented commands are compatible with redis 7.0 version.
 1. RESTORE: not support [FREQ frequency]
 1. debug: just response "ok"
 1. config: just response "ok"
-1. object: just support idletime
+1. object: just support: idletime, freq

@@ -288,6 +288,14 @@ impl Slot {
     }
 
     #[inline]
+    pub fn get_visit_times(
+        &self,
+        cmd: cmd::simple::get_visit_times::Req<'_>,
+    ) -> common::Result<Option<u64>> {
+        self.call_read(cmd)
+    }
+
+    #[inline]
     pub fn dump(&self, cmd: cmd::server::dump::Req<'_>) -> common::Result<Option<Vec<u8>>> {
         self.call_read(cmd)
     }

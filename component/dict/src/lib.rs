@@ -9,7 +9,7 @@
 pub mod cmd;
 pub mod data_type;
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::HashMap;
 
 use common::now_timestamp_ms;
 use data_type::DataType;
@@ -48,8 +48,8 @@ pub trait Dict {
 pub struct MemDict {
     pub write_id: u64,
     pub inner: HashMap<Key, Value, ahash::RandomState>,
-    // todo
-    pub lru_pool: BTreeSet<(u64, Key)>,
+    // todo lru pool
+    // todo lfu_pool
 }
 
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
@@ -86,6 +86,12 @@ impl Value {
     pub fn get_last_visit_time(&self) -> u64 {
         self.visit_log >> 32
     }
+
+    #[inline]
+    pub fn create_visit_log(last_visit_time: u64, last_desc_time: u64, visit_times: u64) -> u64 {
+        (last_visit_time << 32) + (last_desc_time << 16) + visit_times
+    }
+
     #[inline]
     pub fn new_visit_log() -> u64 {
         let now = now_timestamp_ms();
@@ -93,8 +99,7 @@ impl Value {
         let last_visit_time = now / 10_000;
         let last_desc_time = Self::get_min(now);
         // default 5
-        let visit_times = 5;
-        (last_visit_time << 32) + (last_desc_time << 16) + visit_times
+        Self::create_visit_log(last_visit_time, last_desc_time, 5)
     }
     pub fn update_visit_log(&mut self) {
         let now = now_timestamp_ms();
@@ -102,6 +107,7 @@ impl Value {
         let last_visit_time = now / 10_000;
         let old_last_desc_time = self.get_last_desc_time();
         let last_desc_time = Self::get_min(now);
+        // todo diff / minutes
         let diff = last_desc_time - old_last_desc_time;
         let mut visit_times = self.get_visit_times();
         if diff > visit_times {
@@ -113,7 +119,7 @@ impl Value {
             // todo use probability to control growth
             visit_times += 1;
         }
-        self.visit_log = (last_visit_time << 32) + (last_desc_time << 16) + visit_times;
+        self.visit_log = Self::create_visit_log(last_visit_time, last_desc_time, visit_times);
     }
 }
 impl Dict for MemDict {
