@@ -23,7 +23,7 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<Vec<DataType>, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<Vec<DataType>> {
-        if let Some(v) = dict.get_mut(&self.key) {
+        if let Some(v) = dict.get(&self.key) {
             return if let DataType::Deque(ref mut deque) = v.data {
                 let count = self.count.min(deque.len());
                 let res = if self.left {

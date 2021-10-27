@@ -2,75 +2,76 @@
 
 All the implemented commands are compatible with redis 7.0 version.
 
-| type | Command   | Support | Time Complexity |
-| ---- | --------- | ------- | --------------- |
-| base | del       | yes     | Same as redis   |
-| base | set       | yes     | Same as redis   |
-| base | get       | yes     | Same as redis   |
-| base | psetex    | yes     | Same as redis   |
-| base | setex     | yes     | Same as redis   |
-| base | exists    | yes     | Same as redis   |
-| base | pexpireat | yes     | Same as redis   |
-| base | expireat  | yes     | Same as redis   |
-| base | expire    | yes     | Same as redis   |
-| base | pexpire   | yes     | Same as redis   |
-| base | incr      | yes     | Same as redis   |
-| base | incrby    | yes     | Same as redis   |
-| base | decr      | yes     | Same as redis   |
-| base | decrby    | yes     | Same as redis   |
-| base | ttl       | yes     | Same as redis   |
-| base | pttl      | yes     | Same as redis   |
+## base
 
-| type | Command | Support | Time Complexity |
-| ---- | ------- | ------- | --------------- |
-| list | lpush   | yes     | Same as redis   |
-| list | rpush   | yes     | Same as redis   |
-| list | rpushx  | yes     | Same as redis   |
-| list | lpushx  | yes     | Same as redis   |
-| list | lrange  | yes     | O(STOP-START)   |
-| list | lpop    | yes     | Same as redis   |
-| list | rpop    | yes     | Same as redis   |
-| list | llen    | yes     | Same as redis   |
+1. del
+1. set
+1. get
+1. psetex
+1. setex
+1. exists
+1. pexpireat
+1. expireat
+1. expire
+1. pexpire
+1. incr
+1. incrby
+1. decr
+1. decrby
+1. ttl
+1. pttl
 
-| type | Command | Support | Time Complexity |
-| ---- | ------- | ------- | --------------- |
-| hash | hget    | yes     | Same as redis   |
-| hash | hmget   | yes     | Same as redis   |
-| hash | hgetAll | yes     | Same as redis   |
-| hash | hset    | yes     | Same as redis   |
-| hash | hsetnx  | yes     | Same as redis   |
-| hash | hdel    | yes     | Same as redis   |
-| hash | hexists | yes     | Same as redis   |
-| hash | hincrby | yes     | Same as redis   |
+## list
 
-| type | Command    | Support | Time Complexity |
-| ---- | ---------- | ------- | --------------- |
-| set  | smismember | yes     | Same as redis   |
-| set  | sismember  | yes     | Same as redis   |
-| set  | sadd       | yes     | Same as redis   |
-| set  | srem       | yes     | Same as redis   |
-| set  | smembers   | yes     | Same as redis   |
+1. lpush
+1. rpush
+1. rpushx
+1. lpushx
+1. lrange: O(STOP-START)
+1. lpop
+1. rpop
+1. llen
 
-| type | Command          | Support | Time Complexity                                                                                                                  |
-| ---- | ---------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| zset | zadd             | yes     | Same as redis                                                                                                                    |
-| zset | zrange           | yes     | by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned. |
-| zset | zrevrank         | yes     | O(N) N is rank                                                                                                                   |
-| zset | zrank            | yes     | O(N) N is rank                                                                                                                   |
-| zset | zrem             | yes     | Same as redis                                                                                                                    |
-| zset | zrevrange        | yes     | by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned. |
-| zset | zrangebyscore    | yes     | Same as redis                                                                                                                    |
-| zset | zrevrangebyscore | yes     | Same as redis                                                                                                                    |
-| zset | zrangebylex      | yes     | Same as redis                                                                                                                    |
-| zset | zrevrangebylex   | yes     | Same as redis                                                                                                                    |
-| zset | zremrangebyrank  | yes     | O(N+M) with N being the number of elements in the sorted set and M the number of elements returned.                              |
-| zset | zremrangebyscore | yes     | Same as redis                                                                                                                    |
+## hash
 
-## server command
+1. hget
+1. hmget
+1. hgetAll
+1. hset
+1. hsetnx
+1. hdel
+1. hexists
+1. hincrby
+
+## set
+
+1. smismember
+1. sismember
+1. sadd
+1. srem
+1. smembers
+
+## zset
+
+1. zadd
+1. zrange: by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
+1. zrevrank: O(N) N is rank
+1. zrank: O(N) N is rank
+1. zrem
+1. zrevrange: by_rank: O(N+M), other: O(log(N)+M) with N being the number of elements in the sorted set and M the number of elements returned.
+1. zrangebyscore
+1. zrevrangebyscore
+1. zrangebylex
+1. zrevrangebylex
+1. zremrangebyrank: O(N+M) with N being the number of elements in the sorted set and M the number of elements returned.
+1. zremrangebyscore
+
+## server
 
 1. flushall
 1. info: return some fake data
 1. DUMP: Data structure is not the same
-1. RESTORE: not support [IDLETIME seconds] [FREQ frequency]
+1. RESTORE: not support [FREQ frequency]
 1. debug: just response "ok"
 1. config: just response "ok"
+1. object: just support: idletime, freq

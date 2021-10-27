@@ -6,7 +6,7 @@ authors = ["LiangYongrui <leungyongrui@gmail.com>"]
 description = """
 rusty dictionary server
 """
-edition = "2018"
+edition = "2021"
 name = "rudis"
 version = "0.0.0"
 license = "MIT"

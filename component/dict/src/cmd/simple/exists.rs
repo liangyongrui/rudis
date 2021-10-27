@@ -7,7 +7,7 @@ pub struct Req<'a> {
 
 impl<'a, D: Dict> Read<bool, D> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
-    fn apply(self, dict: &D) -> common::Result<bool> {
+    fn apply(self, dict: &mut D) -> common::Result<bool> {
         Ok(dict.exists(self.key))
     }
 }
@@ -22,7 +22,7 @@ mod test {
     use crate::{
         cmd::{
             simple::{exists, set},
-            ExpiresStatus, ExpiresStatusUpdate, ExpiresWrite, ExpiresWriteResp, Read,
+            ExpiresOp, ExpiresOpResp, ExpiresStatus, ExpiresStatusUpdate, Read,
         },
         data_type::DataType,
         MemDict,
@@ -34,7 +34,7 @@ mod test {
         let res = exists::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert!(!res);
         let date_time = now_timestamp_ms() + 1000;
@@ -47,19 +47,19 @@ mod test {
         let res = cmd.apply(&mut dict).unwrap();
         assert_eq!(
             res,
-            ExpiresWriteResp {
+            ExpiresOpResp {
                 payload: DataType::Null,
                 expires_status: ExpiresStatus::Update(ExpiresStatusUpdate {
                     key: b"hello"[..].into(),
                     before: 0,
                     new: date_time
-                })
+                }),
             }
         );
         let res = exists::Req {
             key: b"hello"[..].into(),
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert!(res);
     }

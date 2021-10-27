@@ -2,7 +2,7 @@
 
 **ru**sty **di**ctionary **s**erver
 
-![test](https://github.com/liangyongrui/rudis/workflows/CI/badge.svg) ![coverage](https://codecov.io/gh/liangyongrui/rudis/branch/main/graph/badge.svg)
+![test](https://github.com/liangyongrui/rudis/workflows/CI/badge.svg) ![coverage](https://codecov.io/gh/liangyongrui/rudis/branch/main/graph/badge.svg) [![Rust Report Card](https://rust-reportcard.xuri.me/badge/github.com/liangyongrui/rudis)](https://rust-reportcard.xuri.me/report/github.com/liangyongrui/rudis)
 
 [English](./readme.md)
 

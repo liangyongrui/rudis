@@ -20,7 +20,7 @@ pub enum Resp {
 impl<'a, D: Dict> Read<Resp, D> for Req<'a> {
     #[tracing::instrument(skip(dict), level = "debug")]
 
-    fn apply(self, dict: &D) -> common::Result<Resp> {
+    fn apply(self, dict: &mut D) -> common::Result<Resp> {
         let now = now_timestamp_ms();
         let res = dict
             .raw_get(self.key)

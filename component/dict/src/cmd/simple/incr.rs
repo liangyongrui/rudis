@@ -24,7 +24,7 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<i64, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<i64> {
-        if let Some(v) = dict.get_mut(&self.key) {
+        if let Some(v) = dict.get(&self.key) {
             let old: i64 = (&v.data).try_into()?;
             let new = old + self.value;
             v.data = DataType::Integer(new);
@@ -35,6 +35,7 @@ impl<D: Dict> Write<i64, D> for Req {
                 Value {
                     expires_at: 0,
                     data: self.value.into(),
+                    visit_log: Value::new_visit_log(),
                 },
             );
             Ok(self.value)

@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use crate::Dict;
 
 #[derive(Debug, PartialEq, Eq)]
-pub struct ExpiresWriteResp<T> {
+pub struct ExpiresOpResp<T> {
     pub payload: T,
     pub expires_status: ExpiresStatus,
 }
@@ -34,14 +34,14 @@ pub struct ExpiresStatusUpdate {
     pub before: u64,
     pub new: u64,
 }
-pub trait ExpiresWrite<T, D: Dict>
+pub trait ExpiresOp<T, D: Dict>
 where
     Self: Into<WriteCmd>,
 {
     /// apply with expire time
     /// # Errors
     /// inner error
-    fn apply(self, dict: &mut D) -> common::Result<ExpiresWriteResp<T>>;
+    fn apply(self, dict: &mut D) -> common::Result<ExpiresOpResp<T>>;
 }
 pub trait Write<T, D: Dict>
 where
@@ -57,7 +57,7 @@ pub trait Read<T, D: Dict> {
     /// apply
     /// # Errors
     /// inner error
-    fn apply(self, dict: &D) -> common::Result<T>;
+    fn apply(self, dict: &mut D) -> common::Result<T>;
 }
 
 #[allow(clippy::module_name_repetitions)]

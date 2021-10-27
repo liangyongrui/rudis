@@ -2,7 +2,7 @@ mod base;
 mod hash;
 mod list;
 /// <https://redis.io/commands#server>
-mod server;
+mod others;
 mod set;
 mod sorted_set;
 mod syncsnapshot;
@@ -26,8 +26,9 @@ use self::{
         llen::Llen, lpop::Lpop, lpush::Lpush, lpushx::Lpushx, lrange::Lrange, rpop::Rpop,
         rpush::Rpush, rpushx::Rpushx,
     },
-    server::{
-        config::Config, debug::Debug, dump::Dump, flushall::Flushall, info::Info, restore::Restore,
+    others::{
+        config::Config, debug::Debug, dump::Dump, flushall::Flushall, info::Info, object::Object,
+        restore::Restore,
     },
     set::{
         sadd::Sadd, sismember::Sismember, smembers::Smembers, smismember::Smismember, srem::Srem,
@@ -72,6 +73,7 @@ pub enum Read<'a> {
     Llen(Llen<'a>),
     Lrange(Lrange<'a>),
     Get(Get<'a>),
+    Object(Object<'a>),
     Ttl(Ttl<'a>),
     Pttl(Pttl<'a>),
     Exists(Exists<'a>),
@@ -215,6 +217,7 @@ impl<'a> Command<'a> {
             "restore" => Command::Write(Write::Restore(Restore::parse_frames(parse_ref)?)),
             "debug" => Command::Read(Read::Debug(Debug::parse_frames(parse_ref)?)),
             "config" => Command::Read(Read::Config(Config::parse_frames(parse_ref)?)),
+            "object" => Command::Read(Read::Object(Object::parse_frames(parse_ref)?)),
             _ => {
                 // The command is not recognized and an Unknown command is
                 // returned.
@@ -304,6 +307,7 @@ impl Read<'_> {
             Read::Dump(cmd) => cmd.apply(db),
             Read::Debug(cmd) => cmd.apply(db),
             Read::Config(cmd) => cmd.apply(db),
+            Read::Object(cmd) => cmd.apply(db),
         }
     }
 }

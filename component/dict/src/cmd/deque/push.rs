@@ -32,7 +32,7 @@ impl From<Req> for WriteCmd {
 impl<D: Dict> Write<Resp, D> for Req {
     #[tracing::instrument(skip(dict), level = "debug")]
     fn apply(self, dict: &mut D) -> common::Result<Resp> {
-        if let Some(v) = dict.get_mut(&self.key) {
+        if let Some(v) = dict.get(&self.key) {
             if let DataType::Deque(ref mut deque) = v.data {
                 let old_len = deque.len();
                 if self.nx_xx.is_nx() {
@@ -78,6 +78,7 @@ impl<D: Dict> Write<Resp, D> for Req {
                 Value {
                     data: DataType::Deque(deque),
                     expires_at: 0,
+                    visit_log: Value::new_visit_log(),
                 },
             );
             Ok(Resp {
@@ -153,7 +154,7 @@ mod test {
             start: 0,
             stop: -1,
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
@@ -187,7 +188,7 @@ mod test {
             start: 0,
             stop: -1,
         }
-        .apply(&dict)
+        .apply(&mut dict)
         .unwrap();
         assert_eq!(
             res,
