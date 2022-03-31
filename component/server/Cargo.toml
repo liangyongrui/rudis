@@ -11,6 +11,6 @@ db = { path = "../db" }
 macros = { path = "../macros" }
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
-nix = "0.22"
+nix = "0.23"
 bincode = "1"
 keys = { path = "../keys" }

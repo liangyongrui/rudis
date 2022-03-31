@@ -26,7 +26,7 @@ impl Zadd {
         let ch = self.ch;
         let res = db.sorted_set_add(dict::cmd::sorted_set::add::Req {
             key: self.key,
-            nodes: self.nodes.into_iter().map(|t| t.into()).collect(),
+            nodes: self.nodes.into_iter().map(Into::into).collect(),
             nx_xx: self.nx_xx,
             gt_lt: self.gt_lt,
             incr: self.incr,

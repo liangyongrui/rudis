@@ -23,10 +23,13 @@ fn loop_status() {
     loop {
         sleep(Duration::from_secs(1));
         match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
-            Ok(nix::sys::wait::WaitStatus::Exited(pid, _)) => match STATUS.lock().remove(&pid) {
-                Some(e) => info!("{:?} exited: {}", e, pid),
-                None => error!("unknown pid: {}", pid),
-            },
+            Ok(nix::sys::wait::WaitStatus::Exited(pid, _)) => {
+                if let Some(e) = STATUS.lock().remove(&pid) {
+                    info!("{:?} exited: {}", e, pid);
+                } else {
+                    error!("unknown pid: {}", pid);
+                }
+            }
             Ok(nix::sys::wait::WaitStatus::StillAlive) => (),
             Ok(other_status) => warn!(?other_status),
             Err(e) => error!(?e),

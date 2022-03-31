@@ -16,11 +16,11 @@ path = "./bin/read_write_bincode.rs"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-futures = { version = "0.2" }
-tracing-subscriber = "0.2"
+tracing-subscriber = "0.3"
 server = { path = "../component/server" }
-opentelemetry-jaeger = "0.15"
-tracing-opentelemetry = "0.15"
-opentelemetry = { version = "0.16", default-features = false, features = [
+opentelemetry-jaeger = "0.16"
+tracing-opentelemetry = "0.17"
+opentelemetry = { version = "0.17", default-features = false, features = [
     "trace"
 ] }
 bytes = "1"
