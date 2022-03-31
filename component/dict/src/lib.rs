@@ -143,7 +143,6 @@ impl Dict for MemDict {
     }
 
     #[inline]
-    #[inline]
     fn get(&mut self, key: &[u8]) -> Option<&mut Value> {
         self.inner
             .get_mut(key)

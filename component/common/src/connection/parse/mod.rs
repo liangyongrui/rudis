@@ -77,7 +77,7 @@ impl<'a> Parse<'a> {
     /// 1. not bytes
     #[inline]
     pub fn next_key(&self) -> Result<Key, ParseError> {
-        self.next_bulk().map(|t| t.into())
+        self.next_bulk().map(Into::into)
     }
 
     /// next bulk

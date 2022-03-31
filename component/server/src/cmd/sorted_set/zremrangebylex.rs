@@ -20,7 +20,7 @@ impl Zremrangebylex<'_> {
         let res =
             db.sorted_set_remove_by_lex_range(dict::cmd::sorted_set::remove_by_lex_range::Req {
                 key: self.key.into(),
-                range: (min.map(|t| t.into()), max.map(|t| t.into())),
+                range: (min.map(Into::into), max.map(Into::into)),
                 rev: false,
             })?;
         Ok(Frame::Integer(res.len() as _))

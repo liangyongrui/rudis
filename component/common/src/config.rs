@@ -46,16 +46,15 @@ fn get_config() -> crate::Result<Config> {
     let name = env::var("RUDIS_CONFIG").unwrap_or_else(|_| "config".into());
     let config_file = config::File::with_name(&name).required(false);
     debug!("config_file: {:#?}", config_file);
-
-    let mut settings = config::Config::default();
-    settings
-        .merge(config_file)?
-        .merge(config::Environment::with_prefix("RUDIS"))?
-        .set_default("max_connections", 3000)?
+    config::Config::builder()
+        .add_source(config_file)
+        .add_source(config::Environment::with_prefix("RUDIS"))
+        .set_default("max_connections", 3000i64)?
         .set_default("server_addr", "0.0.0.0:6379")?
-        .set_default("forward_addr", "0.0.0.0:0")?;
-
-    settings.try_into().map_err(|t| t.into())
+        .set_default("forward_addr", "0.0.0.0:0")?
+        .build()
+        .and_then(config::Config::try_deserialize)
+        .map_err(Into::into)
 }
 
 #[cfg(test)]
