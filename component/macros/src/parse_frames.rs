@@ -348,5 +348,6 @@ pub fn do_derive(ast: &DeriveInput) -> proc_macro2::TokenStream {
         }
     };
     // eprintln!("{}", res);
+    #[allow(clippy::let_and_return)]
     res
 }

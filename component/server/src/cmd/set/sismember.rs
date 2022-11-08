@@ -17,6 +17,6 @@ impl Sismember<'_> {
             key: self.key,
             fields: vec![self.value],
         })?;
-        Ok(Frame::Integer(if res[0] { 1 } else { 0 }))
+        Ok(Frame::Integer(i64::from(res[0])))
     }
 }

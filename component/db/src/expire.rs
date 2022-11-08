@@ -38,7 +38,7 @@ pub struct Update {
 
 #[derive(Debug)]
 pub struct Expiration {
-    data: Arc<Mutex<BTreeSet<Entry>>>,
+    _data: Arc<Mutex<BTreeSet<Entry>>>,
 }
 
 impl Expiration {

@@ -5,7 +5,7 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-ahash = "0.7"
+ahash = "0.8"
 dict = { path = "../dict" }
 common = { path = "../common" }
 parking_lot = "0.12"
@@ -16,11 +16,11 @@ serde = { version = "1", features = ["derive", "rc"] }
 bincode = "1"
 arc-swap = "1"
 once_cell = "1"
-nix = "0.23"
+nix = "0.25"
 futures = "0.3"
 tokio-util = { version = "0.7", features = ["codec"] }
 tokio-serde = { version = "0.8", features = ['bincode'] }
-crc = "2"
+crc = "3"
 keys = { path = "../keys" }
 
 [dev-dependencies]

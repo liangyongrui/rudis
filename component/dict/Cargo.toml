@@ -5,7 +5,7 @@ version = "0.0.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-ahash = "0.7"
+ahash = "0.8"
 common = { path = "../common" }
 flume = "0.10"
 parking_lot = "0.12"
@@ -13,5 +13,5 @@ serde = { version = "1", features = ["derive", "rc"] }
 tracing = "0.1"
 tokio = "1"
 keys = { path = "../keys" }
-atoi = "1"
+atoi = "2"
 bincode = "1"

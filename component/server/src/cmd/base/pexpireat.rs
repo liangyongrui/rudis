@@ -28,7 +28,7 @@ impl Pexpireat<'_> {
             nx_xx: self.nx_xx,
             gt_lt: self.gt_lt,
         })?;
-        let response = Frame::Integer(if res { 1 } else { 0 });
+        let response = Frame::Integer(i64::from(res));
         Ok(response)
     }
 }

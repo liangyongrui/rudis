@@ -17,6 +17,6 @@ impl Hexists<'_> {
             key: self.key,
             field: self.field,
         })?;
-        Ok(Frame::Integer(if res { 1 } else { 0 }))
+        Ok(Frame::Integer(i64::from(res)))
     }
 }

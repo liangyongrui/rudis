@@ -181,7 +181,7 @@ pub fn parse(i: &[u8]) -> crate::Result<Option<(usize, Frame)>> {
     match parse_alt(i) {
         Ok(o) => Ok(Some((old_len - o.0.len(), o.1))),
         Err(nom::Err::Incomplete(_)) => Ok(None),
-        Err(e) => return Err(format!("parse failed, {:?}", e).into()),
+        Err(e) => Err(format!("parse failed, {:?}", e).into()),
     }
 }
 

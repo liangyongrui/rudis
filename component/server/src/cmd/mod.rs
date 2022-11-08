@@ -140,7 +140,7 @@ impl<'a> Command<'a> {
         // matching.
         let command_name = parse.next_string()?.to_lowercase();
 
-        let parse_ref = unsafe { &*(&parse as *const _) };
+        let parse_ref = unsafe { &*std::ptr::addr_of!(parse) };
 
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
@@ -241,7 +241,7 @@ impl<'a> Command<'a> {
 
 impl<'a> Write<'a> {
     #[inline]
-    pub async fn apply(self, db: &'a Arc<Db>) -> common::Result<Frame<'a>> {
+    pub fn apply(self, db: &'a Arc<Db>) -> common::Result<Frame<'a>> {
         match self {
             Write::Set(cmd) => cmd.apply(db),
             Write::Psetex(cmd) => cmd.apply(db),

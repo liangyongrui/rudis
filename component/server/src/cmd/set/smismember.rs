@@ -18,10 +18,7 @@ impl Smismember<'_> {
         })?;
 
         Ok(Frame::Array(
-            res.into_iter()
-                .map(|f| if f { 1 } else { 0 })
-                .map(Frame::Integer)
-                .collect(),
+            res.into_iter().map(i64::from).map(Frame::Integer).collect(),
         ))
     }
 }
