@@ -11,6 +11,7 @@ pub enum SetCmdExpires {
 }
 
 impl Default for SetCmdExpires {
+    #[inline]
     fn default() -> Self {
         Self::None
     }

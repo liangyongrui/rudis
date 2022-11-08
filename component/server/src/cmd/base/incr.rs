@@ -10,6 +10,7 @@ pub struct Incr {
 }
 
 impl From<Incr> for dict::cmd::simple::incr::Req {
+    #[inline]
     fn from(old: Incr) -> Self {
         Self {
             key: old.key,

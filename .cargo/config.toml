@@ -1,0 +1,55 @@
+[target.'cfg(all())']
+rustflags = [
+  "-Dfuture-incompatible",
+  "-Dnonstandard-style",
+  "-Wunused",
+  "-Dmissing_crate_level_docs",
+  # "-Dmissing_docs",
+  "-Dclippy::all",
+  "-Dclippy::pedantic",
+  "-Dclippy::nursery",
+  "-Dclippy::restriction",
+  "-Aclippy::missing_docs_in_private_items",
+  "-Aclippy::std-instead-of-alloc",
+  "-Aclippy::std-instead-of-core",
+  "-Aclippy::dbg-macro",
+  "-Aclippy::implicit-return",
+  "-Aclippy::shadow_reuse",
+  "-Aclippy::shadow_unrelated",
+  "-Aclippy::else-if-without-else",
+  "-Aclippy::integer-arithmetic",
+  "-Aclippy::exhaustive-enums",
+  "-Aclippy::exhaustive_structs",
+  "-Aclippy::as-conversions",
+  "-Aclippy::single-char-lifetime-names",
+  "-Aclippy::pattern-type-mismatch",
+  "-Aclippy::use-debug",
+  "-Aclippy::arithmetic-side-effects",
+  "-Aclippy::cast-sign-loss",
+  "-Aclippy::cast-possible-truncation",
+  "-Aclippy::map-err-ignore",
+  "-Aclippy::wildcard-enum-match-arm",
+  "-Aclippy::unwrap_used",
+  "-Aclippy::as-underscore",
+  "-Aclippy::shadow-same",
+  "-Aclippy::mod_module_files",
+  "-Aclippy::unreachable",
+  "-Aclippy::use-self",
+  "-Aclippy::pub_use",
+  "-Aclippy::separated-literal-suffix",
+  "-Aclippy::let-underscore-must-use",
+  "-Aclippy::integer-division",
+  "-Aclippy::clone-on-ref-ptr",
+  "-Aclippy::float-arithmetic",
+  "-Aclippy::default-numeric-fallback",
+  "-Aclippy::multiple-inherent-impl",
+  "-Aclippy::self-named-module-files",
+  "-Aclippy::let-underscore-drop",
+  "-Aclippy::future_not_send", # 这个以后删除
+  "-Aclippy::unwrap-in-result", # 这个以后删除
+  "-Aclippy::undocumented-unsafe-blocks", # 这个以后删除
+  "-Aclippy::string-slice", # 这个以后删除
+  "-Aclippy::indexing_slicing", # 这个以后删除
+  "-Aclippy::panic_in_result_fn", # 这个以后删除
+  "-Aunstable_name_collisions", # 这个以后删除
+]

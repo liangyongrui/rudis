@@ -24,11 +24,14 @@ fn loop_status() {
         sleep(Duration::from_secs(1));
         match waitpid(None, Some(WaitPidFlag::WNOHANG)) {
             Ok(nix::sys::wait::WaitStatus::Exited(pid, _)) => {
-                if let Some(e) = STATUS.lock().remove(&pid) {
-                    info!("{:?} exited: {}", e, pid);
-                } else {
-                    error!("unknown pid: {}", pid);
-                }
+                STATUS.lock().remove(&pid).map_or_else(
+                    || {
+                        error!("unknown pid: {}", pid);
+                    },
+                    |e| {
+                        info!("{:?} exited: {}", e, pid);
+                    },
+                );
             }
             Ok(nix::sys::wait::WaitStatus::StillAlive) => (),
             Ok(other_status) => warn!(?other_status),
@@ -37,6 +40,7 @@ fn loop_status() {
     }
 }
 
+#[inline]
 pub fn add(pid: Pid, info: Info) {
     STATUS.lock().insert(pid, info);
 }

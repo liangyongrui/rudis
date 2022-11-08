@@ -28,21 +28,25 @@ pub enum DataType {
 }
 
 impl From<&[u8]> for DataType {
+    #[inline]
     fn from(s: &[u8]) -> Self {
         DataType::Bytes(s.into())
     }
 }
 impl From<&str> for DataType {
+    #[inline]
     fn from(s: &str) -> Self {
         DataType::String(s.as_bytes().into())
     }
 }
 impl From<String> for DataType {
+    #[inline]
     fn from(s: String) -> Self {
         DataType::String(s.as_bytes().into())
     }
 }
 impl From<i64> for DataType {
+    #[inline]
     fn from(s: i64) -> Self {
         DataType::Integer(s)
     }
@@ -51,6 +55,7 @@ impl From<i64> for DataType {
 impl TryFrom<&DataType> for i64 {
     type Error = common::Error;
 
+    #[inline]
     fn try_from(value: &DataType) -> Result<Self, Self::Error> {
         let res = match value {
             DataType::String(b) | DataType::Bytes(b) => atoi::atoi::<i64>(b)
@@ -71,6 +76,7 @@ impl TryFrom<&DataType> for i64 {
 impl TryFrom<&DataType> for String {
     type Error = common::Error;
 
+    #[inline]
     fn try_from(value: &DataType) -> Result<Self, Self::Error> {
         let res = match value {
             DataType::String(b) | DataType::Bytes(b) => std::str::from_utf8(b)?.to_owned(),
@@ -89,6 +95,7 @@ impl TryFrom<&DataType> for String {
 impl TryFrom<&DataType> for f64 {
     type Error = common::Error;
 
+    #[inline]
     fn try_from(value: &DataType) -> Result<Self, Self::Error> {
         let res = match value {
             DataType::String(b) | DataType::Bytes(b) => std::str::from_utf8(b)?.parse()?,

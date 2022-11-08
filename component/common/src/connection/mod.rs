@@ -1,10 +1,3 @@
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
-#![allow(clippy::shadow_unrelated)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::must_use_candidate)]
-
 pub mod parse;
 
 use std::io;
@@ -25,8 +18,9 @@ pub struct Connection {
 
 impl Connection {
     /// Create a new `Connection`, backed by `socket`.
-    pub fn new(socket: TcpStream) -> Connection {
-        Connection {
+    #[inline]
+    pub fn new(socket: TcpStream) -> Self {
+        Self {
             stream: socket,
             read_buffer: BytesMut::with_capacity(8 * 1024),
             advance: 0,
@@ -48,6 +42,7 @@ impl Connection {
     /// 1. parse failed
     /// 1. connect end
     /// 1. other io error
+    #[inline]
     pub async fn read_frame(&mut self) -> crate::Result<Option<Frame<'_>>> {
         let advance = self.advance;
         if advance != 0 {

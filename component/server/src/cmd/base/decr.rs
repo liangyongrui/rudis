@@ -11,6 +11,7 @@ pub struct Decr {
 }
 
 impl From<Decr> for dict::cmd::simple::incr::Req {
+    #[inline]
     fn from(decr: Decr) -> Self {
         Self {
             key: decr.key,

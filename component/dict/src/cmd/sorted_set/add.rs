@@ -32,6 +32,7 @@ pub struct Resp {
     pub update_len: usize,
 }
 impl From<Req> for WriteCmd {
+    #[inline]
     fn from(req: Req) -> Self {
         Self::SortedSetAdd(req)
     }

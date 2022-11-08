@@ -7,6 +7,7 @@ pub enum Freq {
 }
 
 impl Default for Freq {
+    #[inline]
     fn default() -> Self {
         Self::None
     }

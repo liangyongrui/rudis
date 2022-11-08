@@ -25,6 +25,7 @@ pub struct Resp {
 }
 
 impl From<Req> for WriteCmd {
+    #[inline]
     fn from(req: Req) -> Self {
         Self::DequePush(req)
     }

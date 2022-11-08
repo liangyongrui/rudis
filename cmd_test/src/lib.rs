@@ -1,5 +1,6 @@
 //! 测试用的一些基础函数
-
+#![allow(clippy::restriction)]
+#![allow(clippy::pedantic)]
 use core::panic;
 
 use common::connection::{parse::frame::Frame, Connection};
@@ -14,7 +15,7 @@ trait NewCmd {
 
 pub async fn write_cmd_bytes(stream: &mut TcpStream, cmd: Vec<&'_ [u8]>) {
     debug!(?cmd);
-    let args = cmd.into_iter().map(|t| Frame::Bulk(t)).collect();
+    let args = cmd.into_iter().map(Frame::Bulk).collect();
     let cmd: Vec<u8> = (&Frame::Array(args)).into();
     stream.write_all(&cmd).await.unwrap();
     stream.flush().await.unwrap();

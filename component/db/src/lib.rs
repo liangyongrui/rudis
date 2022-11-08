@@ -1,10 +1,3 @@
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
-#![allow(clippy::shadow_unrelated)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::must_use_candidate)]
-
 pub mod child_process;
 mod expire;
 mod forward;
@@ -48,6 +41,7 @@ const SIZE_MOD: u16 = 16383;
 const CRC_HASH: Crc<u16> = Crc::<u16>::new(&crc::CRC_16_XMODEM);
 
 impl Db {
+    #[inline]
     pub async fn new() -> Arc<Self> {
         let forward = Forward::new();
         let (expire_tx, expire_rx) = flume::unbounded();
@@ -78,6 +72,7 @@ impl Db {
     }
 
     #[inline]
+    #[must_use]
     pub fn get_slot_by_id(&self, slot_id: usize) -> &Slot {
         &self.slots[slot_id]
     }

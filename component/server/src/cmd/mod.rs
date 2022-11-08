@@ -144,7 +144,7 @@ impl<'a> Command<'a> {
 
         // Match the command name, delegating the rest of the parsing to the
         // specific command.
-        let command = match &command_name[..] {
+        let command = match &*command_name {
             "ping" => Command::Ping,
             "ttl" => Command::Read(Read::Ttl(Ttl::parse_frames(parse_ref)?)),
             "pttl" => Command::Read(Read::Pttl(Pttl::parse_frames(parse_ref)?)),

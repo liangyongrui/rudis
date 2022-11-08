@@ -1,11 +1,3 @@
-#![allow(unstable_name_collisions)]
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
-#![allow(clippy::shadow_unrelated)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::must_use_candidate)]
-
 /// redis 命令
 mod cmd;
 mod frame_parse;
@@ -93,6 +85,7 @@ pub struct Handler {
 /// # Panics
 ///
 /// No panics.
+#[inline]
 pub async fn run(listener: TcpListener, shutdown: impl Future) {
     // Initialize the listener state
     let mut server = Listener {
@@ -100,21 +93,24 @@ pub async fn run(listener: TcpListener, shutdown: impl Future) {
         db: Db::new().await,
         limit_connections: Limit::new(CONFIG.max_connections),
     };
-    tokio::select! {
-        res = server.run() => {
-            // If an error is received here, accepting connections from the TCP
-            // listener failed multiple times and the server is giving up and
-            // shutting down.
-            //
-            // Errors encountered when handling individual connections do not
-            // bubble up to this point.
-            if let Err(err) = res {
-                error!(cause = %err, "failed to accept");
+    #[allow(clippy::redundant_pub_crate)]
+    {
+        tokio::select! {
+            res = server.run() => {
+                // If an error is received here, accepting connections from the TCP
+                // listener failed multiple times and the server is giving up and
+                // shutting down.
+                //
+                // Errors encountered when handling individual connections do not
+                // bubble up to this point.
+                if let Err(err) = res {
+                    error!(cause = %err, "failed to accept");
+                }
             }
-        }
-        _ = shutdown => {
-            // The shutdown signal has been received.
-            info!("shutting down");
+            _ = shutdown => {
+                // The shutdown signal has been received.
+                info!("shutting down");
+            }
         }
     }
 }

@@ -1,10 +1,3 @@
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
-#![allow(clippy::shadow_unrelated)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::must_use_candidate)]
-
 use common::connection::Connection;
 use connect::{Handle, Listener};
 use status::server_survival_check;
@@ -20,6 +13,7 @@ mod status;
 /// run pd
 /// # Errors
 /// io errors
+#[inline]
 pub async fn run(listener: TcpListener) -> common::Result<()> {
     tokio::spawn(server_survival_check());
     let mut server = Listener::new(listener);

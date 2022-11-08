@@ -12,6 +12,7 @@ pub struct Sadd {
 }
 
 impl From<Sadd> for dict::cmd::set::add::Req {
+    #[inline]
     fn from(old: Sadd) -> Self {
         Self {
             key: old.key,

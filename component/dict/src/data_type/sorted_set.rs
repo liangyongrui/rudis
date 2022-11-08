@@ -10,6 +10,7 @@ pub struct Node {
     pub key: Box<[u8]>,
 }
 impl From<(Float, Box<[u8]>)> for Node {
+    #[inline]
     fn from(o: (Float, Box<[u8]>)) -> Self {
         Self {
             score: o.0,
@@ -18,6 +19,8 @@ impl From<(Float, Box<[u8]>)> for Node {
     }
 }
 impl Node {
+    #[inline]
+    #[must_use]
     pub fn new(key: Box<[u8]>, score: f64) -> Self {
         Self {
             key,
@@ -33,6 +36,8 @@ pub struct SortedSet {
 }
 
 impl SortedSet {
+    #[inline]
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }

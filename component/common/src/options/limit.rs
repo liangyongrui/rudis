@@ -11,6 +11,7 @@ pub enum Limit {
 }
 
 impl Default for Limit {
+    #[inline]
     fn default() -> Self {
         Self::None
     }

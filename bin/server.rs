@@ -8,6 +8,8 @@ static GLOBAL: Jemalloc = Jemalloc;
 use common::config::CONFIG;
 use tokio::{net::TcpListener, signal};
 
+#[allow(clippy::missing_panics_doc)]
+#[allow(clippy::missing_errors_doc)]
 pub fn main() -> common::Result<()> {
     // enable logging
     // see <https://docs.rs/tracing for more info

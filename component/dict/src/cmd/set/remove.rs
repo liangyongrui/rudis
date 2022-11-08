@@ -21,6 +21,7 @@ pub struct Resp {
     pub new_len: usize,
 }
 impl From<Req> for WriteCmd {
+    #[inline]
     fn from(req: Req) -> Self {
         Self::SetRemove(req)
     }

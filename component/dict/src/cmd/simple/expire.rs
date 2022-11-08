@@ -15,6 +15,7 @@ pub struct Req {
     pub gt_lt: GtLt,
 }
 impl From<Req> for WriteCmd {
+    #[inline]
     fn from(req: Req) -> Self {
         Self::Expire(req)
     }

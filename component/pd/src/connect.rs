@@ -16,7 +16,7 @@ pub struct Listener {
     listener: TcpListener,
 }
 impl Listener {
-    pub fn new(listener: TcpListener) -> Self {
+    pub const fn new(listener: TcpListener) -> Self {
         Self { listener }
     }
     pub async fn accept(&mut self) -> common::Result<TcpStream> {
@@ -41,7 +41,7 @@ pub struct Handle {
 }
 
 impl Handle {
-    pub fn new(connection: Connection) -> Self {
+    pub const fn new(connection: Connection) -> Self {
         Self { connection }
     }
 
@@ -65,7 +65,7 @@ impl Handle {
 
     pub fn apply_frame<'a>(parse: &'a mut Parse<'a>) -> common::Result<Frame<'a>> {
         let command_name = parse.next_string()?.to_lowercase();
-        match &command_name[..] {
+        match &*command_name {
             common::pd_message::cmd::SEVER_INIT => server_init_apply(parse),
             common::pd_message::cmd::SEVER_HEARTBEAT => server_heartbeat_apply(parse),
             common::pd_message::cmd::CRATE_GROUP => Ok(crate_group_apply()),

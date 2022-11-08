@@ -49,7 +49,7 @@ fn get_config() -> crate::Result<Config> {
     config::Config::builder()
         .add_source(config_file)
         .add_source(config::Environment::with_prefix("RUDIS"))
-        .set_default("max_connections", 3000i64)?
+        .set_default("max_connections", 3000_i64)?
         .set_default("server_addr", "0.0.0.0:6379")?
         .set_default("forward_addr", "0.0.0.0:0")?
         .build()

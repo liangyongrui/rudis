@@ -13,6 +13,7 @@ pub struct Hdel {
 }
 
 impl From<Hdel> for dict::cmd::kvp::del::Req {
+    #[inline]
     fn from(old: Hdel) -> Self {
         Self {
             key: old.key,

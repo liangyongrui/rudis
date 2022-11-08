@@ -13,6 +13,7 @@ pub struct Zrem {
 }
 
 impl From<Zrem> for dict::cmd::sorted_set::remove::Req {
+    #[inline]
     fn from(old: Zrem) -> Self {
         Self {
             key: old.key,

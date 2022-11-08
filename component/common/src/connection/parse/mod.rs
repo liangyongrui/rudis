@@ -34,6 +34,7 @@ pub enum ParseError {
 }
 
 impl Clone for ParseError {
+    #[inline]
     fn clone(&self) -> Self {
         match self {
             Self::EndOfStream => Self::EndOfStream,
@@ -47,6 +48,7 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// if `frame` is not an array frame (or Ping).
+    #[inline]
     pub fn new(frame: Frame<'a>) -> Result<Self, ParseError> {
         let array = match frame {
             Frame::Array(array) => array,
@@ -64,6 +66,7 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// `EndOfStream`
+    #[inline]
     pub fn next_frame(&self) -> Result<Frame<'a>, ParseError> {
         unsafe { &mut *self.parts.get() }
             .next()
@@ -85,6 +88,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// 1. `EndOfStream`
     /// 1. not bytes
+    #[inline]
     pub fn next_bytes(&self) -> Result<&[u8], ParseError> {
         match self.next_frame()? {
             Frame::Bulk(b) | Frame::Simple(b) => Ok(b),
@@ -97,6 +101,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// 1. `EndOfStream`
     /// 1. not bytes
+    #[inline]
     pub fn next_float(&self) -> Result<Float, ParseError> {
         Ok(self.next_frame()?.try_into()?)
     }
@@ -106,6 +111,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// 1. `EndOfStream`
     /// 1. not bytes
+    #[inline]
     pub fn next_bulk(&self) -> Result<Box<[u8]>, ParseError> {
         match self.next_frame()? {
             Frame::Bulk(b) | Frame::Simple(b) => Ok(b.into()),
@@ -117,6 +123,7 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// the next entry cannot be represented as a String
+    #[inline]
     pub fn next_str(&self) -> Result<&str, ParseError> {
         Ok(self.next_frame()?.try_into()?)
     }
@@ -125,6 +132,7 @@ impl<'a> Parse<'a> {
     ///
     /// # Errors
     /// the next entry cannot be represented as a String
+    #[inline]
     pub fn next_string(&self) -> Result<String, ParseError> {
         self.next_str().map(std::borrow::ToOwned::to_owned)
     }
@@ -137,6 +145,7 @@ impl<'a> Parse<'a> {
     /// # Errors
     /// If the next entry cannot be represented as an integer, then an error is
     /// returned.
+    #[inline]
     pub fn next_int(&self) -> Result<i64, ParseError> {
         use atoi::atoi;
 
@@ -147,10 +156,9 @@ impl<'a> Parse<'a> {
             Frame::Integer(v) => Ok(v),
             // Simple and bulk frames must be parsed as integers. If the parsing
             // fails, an error is returned.
-            Frame::Bulk(data) | Frame::Simple(data) => match atoi::<i64>(data) {
-                Some(e) => Ok(e),
-                None => Err(INVALID.into()),
-            },
+            Frame::Bulk(data) | Frame::Simple(data) => {
+                atoi::<i64>(data).map_or_else(|| Err(INVALID.into()), Ok)
+            }
             frame => Err(format!("protocol error; expected int frame but got {:?}", frame).into()),
         }
     }
@@ -158,6 +166,7 @@ impl<'a> Parse<'a> {
     /// Ensure there are no more entries in the array
     /// # Errors
     /// if has more entries
+    #[inline]
     pub fn finish(&self) -> Result<(), ParseError> {
         if unsafe { &mut *self.parts.get() }.next().is_none() {
             Ok(())
@@ -167,27 +176,31 @@ impl<'a> Parse<'a> {
     }
 }
 impl From<crate::Error> for ParseError {
+    #[inline]
     fn from(e: crate::Error) -> Self {
         Self::Other(e)
     }
 }
 impl From<String> for ParseError {
-    fn from(src: String) -> ParseError {
-        ParseError::Other(src.into())
+    #[inline]
+    fn from(src: String) -> Self {
+        Self::Other(src.into())
     }
 }
 
 impl From<&str> for ParseError {
-    fn from(src: &str) -> ParseError {
-        src.to_string().into()
+    #[inline]
+    fn from(src: &str) -> Self {
+        src.to_owned().into()
     }
 }
 
 impl fmt::Display for ParseError {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ParseError::EndOfStream => "protocol error; unexpected end of stream".fmt(f),
-            ParseError::Other(err) => err.fmt(f),
+            Self::EndOfStream => "protocol error; unexpected end of stream".fmt(f),
+            Self::Other(err) => err.fmt(f),
         }
     }
 }

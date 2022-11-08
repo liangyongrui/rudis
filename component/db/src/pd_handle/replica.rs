@@ -94,8 +94,8 @@ impl Inner {
                     let slot_id = msg.slot;
                     loop {
                         self.wait_slot(slot_id).await;
-                        if let std::cmp::Ordering::Greater =
-                            self.db.slots[slot_id].process_forward(msg.id, msg.cmd.clone())
+                        if std::cmp::Ordering::Greater
+                            == self.db.slots[slot_id].process_forward(msg.id, msg.cmd.clone())
                         {
                             if let Err(e) = self.clone().sync_snapshot(slot_id) {
                                 warn!("process_cmd: {:?}", e); // 别的同步正在进行, 重试几次

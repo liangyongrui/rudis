@@ -1,11 +1,3 @@
-#![allow(unstable_name_collisions)]
-#![deny(clippy::all)]
-#![deny(clippy::pedantic)]
-#![allow(clippy::shadow_unrelated)]
-#![allow(clippy::cast_sign_loss)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::must_use_candidate)]
-
 pub mod cmd;
 pub mod data_type;
 
@@ -39,6 +31,7 @@ pub trait Dict {
 
     fn len(&self) -> usize;
 
+    #[inline]
     fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -68,31 +61,38 @@ impl Value {
     const MAX_VISIT_TIMES: u64 = (1 << 16) - 1;
     /// 16 bit
     #[inline]
-    fn get_min(now: u64) -> u64 {
+    const fn get_min(now: u64) -> u64 {
         (now / 60_000) & ((1 << 16) - 1)
     }
 
     #[inline]
-    fn get_last_desc_time(&self) -> u64 {
+    const fn get_last_desc_time(&self) -> u64 {
         (self.visit_log >> 16) & ((1 << 16) - 1)
     }
 
     #[inline]
-    fn get_visit_times(&self) -> u64 {
+    const fn get_visit_times(&self) -> u64 {
         self.visit_log & Self::MAX_VISIT_TIMES
     }
 
     #[inline]
-    pub fn get_last_visit_time(&self) -> u64 {
+    #[must_use]
+    pub const fn get_last_visit_time(&self) -> u64 {
         self.visit_log >> 32
     }
 
     #[inline]
-    pub fn create_visit_log(last_visit_time: u64, last_desc_time: u64, visit_times: u64) -> u64 {
+    #[must_use]
+    pub const fn create_visit_log(
+        last_visit_time: u64,
+        last_desc_time: u64,
+        visit_times: u64,
+    ) -> u64 {
         (last_visit_time << 32) + (last_desc_time << 16) + visit_times
     }
 
     #[inline]
+    #[must_use]
     pub fn new_visit_log() -> u64 {
         let now = now_timestamp_ms();
         // 32 bit
@@ -101,6 +101,8 @@ impl Value {
         // default 5
         Self::create_visit_log(last_visit_time, last_desc_time, 5)
     }
+
+    #[inline]
     pub fn update_visit_log(&mut self) {
         let now = now_timestamp_ms();
         // 32 bit
@@ -129,10 +131,12 @@ impl Dict for MemDict {
         self.write_id
     }
 
+    #[inline]
     fn last_write_op_id(&self) -> u64 {
         self.write_id
     }
 
+    #[inline]
     fn set_write_id(&mut self, id: u64) {
         self.write_id = id;
     }
@@ -185,6 +189,7 @@ impl Dict for MemDict {
         self.inner.get(k)
     }
 
+    #[inline]
     fn raw_get_mut(&mut self, k: &[u8]) -> Option<&mut Value> {
         self.inner.get_mut(k)
     }

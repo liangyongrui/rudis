@@ -13,10 +13,14 @@ pub struct Deque {
 }
 
 impl Deque {
+    #[inline]
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[inline]
+    #[must_use]
     pub fn shape(&self, mut start: i64, mut stop: i64) -> (usize, usize) {
         let len = self.len() as i64;
         if start < 0 {
@@ -41,12 +45,14 @@ impl Deque {
 impl Deref for Deque {
     type Target = VecDeque<DataType>;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
 
 impl DerefMut for Deque {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }

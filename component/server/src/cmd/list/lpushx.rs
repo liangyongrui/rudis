@@ -14,6 +14,7 @@ pub struct Lpushx {
 }
 
 impl From<Lpushx> for dict::cmd::deque::push::Req {
+    #[inline]
     fn from(old: Lpushx) -> Self {
         Self {
             key: old.key,

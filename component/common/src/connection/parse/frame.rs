@@ -34,12 +34,14 @@ pub enum Frame<'a> {
 
 impl Frame<'_> {
     #[inline]
+    #[must_use]
     pub fn ok() -> Self {
         Frame::Simple(b"OK"[..].into())
     }
 }
 
 impl fmt::Display for Frame<'_> {
+    #[inline]
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         use std::str;
 
@@ -74,6 +76,7 @@ impl fmt::Display for Frame<'_> {
     }
 }
 impl fmt::Debug for Frame<'_> {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         std::fmt::Display::fmt(&self, f)
     }
@@ -175,7 +178,6 @@ fn parse_alt(i: &[u8]) -> nom::IResult<&[u8], Frame> {
 /// # Errors
 /// parse failed
 #[inline]
-
 pub fn parse(i: &[u8]) -> crate::Result<Option<(usize, Frame)>> {
     let old_len = i.len();
     match parse_alt(i) {
@@ -186,6 +188,7 @@ pub fn parse(i: &[u8]) -> crate::Result<Option<(usize, Frame)>> {
 }
 
 impl Frame<'_> {
+    #[inline]
     pub fn write(&self, res: &mut Vec<u8>) {
         match self {
             Frame::Simple(a) => {
@@ -222,14 +225,14 @@ impl Frame<'_> {
                 res.push(b'$');
                 res.extend_from_slice(b.len().to_string().as_bytes());
                 res.extend_from_slice(b"\r\n");
-                res.extend_from_slice(&b[..]);
+                res.extend_from_slice(b);
                 res.extend_from_slice(b"\r\n");
             }
             Frame::OwnedBulk(b) => {
                 res.push(b'$');
                 res.extend_from_slice(b.len().to_string().as_bytes());
                 res.extend_from_slice(b"\r\n");
-                res.extend_from_slice(&b[..]);
+                res.extend_from_slice(b);
                 res.extend_from_slice(b"\r\n");
             }
             Frame::Null => res.extend_from_slice(b"$-1\r\n"),
@@ -251,6 +254,7 @@ impl Frame<'_> {
 impl<'a> TryFrom<Frame<'a>> for &'a str {
     type Error = crate::Error;
 
+    #[inline]
     fn try_from(value: Frame<'a>) -> Result<Self, Self::Error> {
         match value {
             Frame::Bulk(data) | Frame::Simple(data) => {
@@ -263,6 +267,7 @@ impl<'a> TryFrom<Frame<'a>> for &'a str {
 }
 /// # Errors
 /// frame type not match
+#[inline]
 pub fn to_lowercase_str(frame: &Frame<'_>) -> crate::Result<String> {
     match frame {
         Frame::Bulk(data) | Frame::Simple(data) => std::str::from_utf8(data)
@@ -276,38 +281,42 @@ pub fn to_lowercase_str(frame: &Frame<'_>) -> crate::Result<String> {
 impl<'a> TryFrom<Frame<'a>> for Float {
     type Error = crate::Error;
 
+    #[inline]
     fn try_from(value: Frame<'a>) -> Result<Self, Self::Error> {
         match value {
             Frame::Bulk(b) | Frame::Simple(b) => {
                 let s = std::str::from_utf8(b)
                     .map_err::<Self::Error, _>(|_| "protocol error".into())?;
-                Ok(Float(
+                Ok(Self(
                     s.parse()
                         .map_err::<Self::Error, _>(|_| "protocol error".into())?,
                 ))
             }
             #[allow(clippy::cast_precision_loss)]
-            Frame::Integer(i) => Ok(Float(i as _)),
+            Frame::Integer(i) => Ok(Self(i as _)),
             frame => Err(format!("protocol error; got {:?}", frame).into()),
         }
     }
 }
 
 impl From<&Frame<'_>> for Vec<u8> {
+    #[inline]
     fn from(frame: &Frame) -> Self {
         if let Frame::NoRes = frame {
             return vec![];
         }
-        let mut res = Vec::with_capacity(128);
+        let mut res = Self::with_capacity(128);
         frame.write(&mut res);
         res
     }
 }
 impl From<Frame<'_>> for Vec<u8> {
+    #[inline]
     fn from(frame: Frame) -> Self {
         (&frame).into()
     }
 }
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -326,7 +335,7 @@ mod test {
         ]);
         assert_eq!(t, f);
         let v: Vec<u8> = (&f).into();
-        assert_eq!(&v[..], s.as_bytes());
+        assert_eq!(&*v, s.as_bytes());
     }
 
     #[test]
@@ -347,7 +356,7 @@ mod test {
             Frame::Bulk(world.as_bytes()),
         ]);
         let set: Vec<u8> = (&raw).into();
-        assert_eq!(&set[..], b);
+        assert_eq!(&*set, b);
         let (_, f) = parse_alt(s.as_bytes()).unwrap();
         assert_eq!(raw, f);
     }

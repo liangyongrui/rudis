@@ -13,6 +13,8 @@ pub struct Kvp {
 }
 
 impl Kvp {
+    #[inline]
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
@@ -21,12 +23,14 @@ impl Kvp {
 impl Deref for Kvp {
     type Target = HashMap<Box<[u8]>, DataType, ahash::RandomState>;
 
+    #[inline]
     fn deref(&self) -> &Self::Target {
         &self.inner
     }
 }
 
 impl DerefMut for Kvp {
+    #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.inner
     }

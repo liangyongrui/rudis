@@ -44,6 +44,7 @@ impl NxXx {
 }
 
 impl Default for NxXx {
+    #[inline]
     fn default() -> Self {
         Self::None
     }

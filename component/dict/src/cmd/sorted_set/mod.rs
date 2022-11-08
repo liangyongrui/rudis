@@ -29,7 +29,7 @@ pub(self) fn shape_limit(limit: Limit, len: usize) -> (usize, usize) {
     }
 }
 
-pub(self) fn shape_rank(mut start: i64, mut stop: i64, len: usize) -> (usize, usize) {
+pub(self) const fn shape_rank(mut start: i64, mut stop: i64, len: usize) -> (usize, usize) {
     let len = len as i64;
     if start < 0 {
         start += len;

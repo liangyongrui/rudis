@@ -18,6 +18,7 @@ pub struct Setex {
 }
 
 impl From<Setex> for dict::cmd::simple::set::Req {
+    #[inline]
     fn from(old: Setex) -> Self {
         Self {
             key: old.key,

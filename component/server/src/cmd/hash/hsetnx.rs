@@ -15,6 +15,7 @@ pub struct Hsetnx {
 }
 
 impl From<Hsetnx> for dict::cmd::kvp::set::Req {
+    #[inline]
     fn from(old: Hsetnx) -> Self {
         Self {
             key: old.key,

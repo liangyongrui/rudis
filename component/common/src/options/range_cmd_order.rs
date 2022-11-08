@@ -12,6 +12,7 @@ pub enum RangeCmdOrder {
 }
 
 impl Default for RangeCmdOrder {
+    #[inline]
     fn default() -> Self {
         Self::Byrank
     }
@@ -20,6 +21,7 @@ impl Default for RangeCmdOrder {
 impl RangeCmdOrder {
     /// # Errors
     /// str not float
+    #[inline]
     pub fn parse_float_bound(data: &str) -> crate::Result<Bound<Float>> {
         let res = if data.len() >= 4 && matches!(&data[..3], "-inf" | "+inf") {
             Bound::Unbounded
@@ -33,6 +35,7 @@ impl RangeCmdOrder {
 
     /// # Errors
     /// str is empty
+    #[inline]
     pub fn parse_lex_bound(data: &str) -> crate::Result<Bound<&[u8]>> {
         if data.is_empty() {
             return Err("bound invaild".into());

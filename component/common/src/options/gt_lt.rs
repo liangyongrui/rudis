@@ -8,6 +8,7 @@ pub enum GtLt {
 }
 
 impl Default for GtLt {
+    #[inline]
     fn default() -> Self {
         Self::None
     }

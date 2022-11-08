@@ -8,9 +8,9 @@ fn main() {
         let f = File::create("./target/bincode.test").unwrap();
         bincode::serialize_into(&f, &a).unwrap();
         bincode::serialize_into(&f, &Some("abc".to_owned())).unwrap();
-        bincode::serialize_into(&f, &Some(1.23f64)).unwrap();
+        bincode::serialize_into(&f, &Some(1.23_f64)).unwrap();
         bincode::serialize_into(&f, &Option::<f32>::None).unwrap();
-        bincode::serialize_into(&f, &Some(67i32)).unwrap();
+        bincode::serialize_into(&f, &Some(67_i32)).unwrap();
     }
     {
         let f = File::open("./target/bincode.test").unwrap();

@@ -11,6 +11,7 @@ pub struct Decrby {
 }
 
 impl From<Decrby> for dict::cmd::simple::incr::Req {
+    #[inline]
     fn from(old: Decrby) -> Self {
         Self {
             key: old.key,

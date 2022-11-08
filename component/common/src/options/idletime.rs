@@ -7,6 +7,7 @@ pub enum IdleTime {
 }
 
 impl Default for IdleTime {
+    #[inline]
     fn default() -> Self {
         Self::None
     }

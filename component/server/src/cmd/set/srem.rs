@@ -13,6 +13,7 @@ pub struct Srem {
 }
 
 impl From<Srem> for dict::cmd::set::remove::Req {
+    #[inline]
     fn from(old: Srem) -> Self {
         Self {
             key: old.key,

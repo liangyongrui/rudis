@@ -3,6 +3,8 @@ use tokio::net::TcpListener;
 
 pub const DEFAULT_PORT: &str = "6666";
 
+#[allow(clippy::missing_panics_doc)]
+#[allow(clippy::missing_errors_doc)]
 pub fn main() -> common::Result<()> {
     // enable logging
     // see <https://docs.rs/tracing for more info

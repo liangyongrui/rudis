@@ -4,7 +4,7 @@ use syn::{DeriveInput, Field, Meta, Type, TypeReference};
 use crate::utils;
 
 fn is_simple(field_type: &Type) -> bool {
-    if let syn::Type::Reference(TypeReference { elem, .. }) = field_type {
+    if let syn::Type::Reference(TypeReference { ref elem, .. }) = *field_type {
         if let Type::Slice(_) | Type::Path(_) = **elem {
             return true;
         }
@@ -13,9 +13,9 @@ fn is_simple(field_type: &Type) -> bool {
     if let syn::Type::Path(syn::TypePath {
         path: syn::Path { ref segments, .. },
         ..
-    }) = field_type
+    }) = *field_type
     {
-        if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+        if let Some(&syn::PathSegment { ref ident, .. }) = segments.last() {
             if matches!(
                 ident.to_string().as_str(),
                 "String" | "DataType" | "i64" | "u64" | "usize" | "Float" | "Key" | "Box"
@@ -27,14 +27,14 @@ fn is_simple(field_type: &Type) -> bool {
     false
 }
 
-/// 前一个是optional，has_next才为true
+/// 前一个是 optional, `has_next` 才为 true
 fn parse_simple(field_type: &Type, has_next: bool) -> proc_macro2::TokenStream {
     if !is_simple(field_type) {
         panic!("not a simple type: {:?}", field_type);
     } else if has_next {
         return quote! { std::convert::TryInto::try_into(next?) };
     }
-    if let syn::Type::Reference(TypeReference { elem, .. }) = field_type {
+    if let syn::Type::Reference(TypeReference { ref elem, .. }) = *field_type {
         // &'a [u8]
         if let Type::Slice(_) = **elem {
             return quote!(parse.next_bytes());
@@ -48,9 +48,9 @@ fn parse_simple(field_type: &Type, has_next: bool) -> proc_macro2::TokenStream {
     if let syn::Type::Path(syn::TypePath {
         path: syn::Path { ref segments, .. },
         ..
-    }) = field_type
+    }) = *field_type
     {
-        if let Some(syn::PathSegment { ident, .. }) = segments.last() {
+        if let Some(&syn::PathSegment { ref ident, .. }) = segments.last() {
             if *ident == "String" {
                 return quote! { parse.next_string() };
             }
@@ -109,7 +109,7 @@ fn parse_required_field(field: &Field, mut has_next: bool) -> proc_macro2::Token
         return quote! { let #field_name = #res?; };
     }
     // 复合类型(Tuple)
-    if let syn::Type::Tuple(syn::TypeTuple { ref elems, .. }) = field_type {
+    if let syn::Type::Tuple(syn::TypeTuple { ref elems, .. }) = *field_type {
         let mut tuple = vec![];
         for ty in elems {
             tuple.push(parse_simple(ty, has_next));
@@ -121,18 +121,22 @@ fn parse_required_field(field: &Field, mut has_next: bool) -> proc_macro2::Token
     if let syn::Type::Path(syn::TypePath {
         path: syn::Path { ref segments, .. },
         ..
-    }) = field_type
+    }) = *field_type
     {
-        if let Some(syn::PathSegment { ident, arguments }) = segments.last() {
+        if let Some(&syn::PathSegment {
+            ref ident,
+            ref arguments,
+        }) = segments.last()
+        {
             if *ident == "Vec" {
                 if let syn::PathArguments::AngleBracketed(syn::AngleBracketedGenericArguments {
-                    args,
+                    ref args,
                     ..
-                }) = arguments
+                }) = *arguments
                 {
-                    if let syn::GenericArgument::Type(ty) = args.first().unwrap() {
+                    if let syn::GenericArgument::Type(ref ty) = *args.first().unwrap() {
                         // vec tuple (allow empty vec)
-                        if let syn::Type::Tuple(syn::TypeTuple { ref elems, .. }) = ty {
+                        if let syn::Type::Tuple(syn::TypeTuple { ref elems, .. }) = *ty {
                             let mut tuple1 = vec![];
                             for ty in elems {
                                 let e = parse_simple(ty, has_next);
@@ -203,8 +207,8 @@ fn get_field_type(field: &Field) -> FieldType {
         ..
     }) = field.ty
     {
-        if let Some(syn::PathSegment { ident, .. }) = segments.last() {
-            if *ident == "bool" {
+        if let Some(&syn::PathSegment { ref ident, .. }) = segments.last() {
+            if ident == "bool" {
                 return FieldType::Bool;
             }
         }
@@ -249,10 +253,10 @@ fn parse_optional_fields(fields: &[&Field]) -> proc_macro2::TokenStream {
         if let syn::Type::Path(syn::TypePath {
             path: syn::Path { ref segments, .. },
             ..
-        }) = field_type
+        }) = *field_type
         {
-            if let Some(syn::PathSegment { ident, .. }) = segments.last() {
-                if *ident == "bool" {
+            if let Some(&syn::PathSegment { ref ident, .. }) = segments.last() {
+                if ident == "bool" {
                     let s_field_name = field_name.unwrap().to_string();
                     res2.push(quote! {
                         if #s_field_name == tag {

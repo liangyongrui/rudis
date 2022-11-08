@@ -31,6 +31,7 @@ pub struct ShareStatus {
     pub dict: MemDict,
 }
 impl Slot {
+    #[inline]
     pub fn new(slot_id: usize, bg_task: BgTask) -> Self {
         Self {
             slot_id,
@@ -43,6 +44,7 @@ impl Slot {
     ///
     /// dict 中的过期数据最好提前清理一下,
     /// 如果快照复制过来的, 过期数据并不多
+    #[inline]
     pub fn replace_dict(&self, dict: MemDict) {
         if let Err(e) = self
             .bg_task

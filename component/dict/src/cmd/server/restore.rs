@@ -18,6 +18,7 @@ pub struct Req<'a> {
 }
 
 impl<'a> From<Req<'a>> for WriteCmd {
+    #[inline]
     fn from(_req: Req<'a>) -> Self {
         // todo
         WriteCmd::None

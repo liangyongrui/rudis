@@ -56,7 +56,7 @@ struct Listener {
 }
 
 impl Listener {
-    pub fn new(listener: TcpListener) -> Self {
+    pub const fn new(listener: TcpListener) -> Self {
         Self { listener }
     }
     pub async fn accept(&mut self) -> common::Result<TcpStream> {

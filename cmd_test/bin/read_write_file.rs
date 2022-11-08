@@ -23,7 +23,10 @@ async fn read() {
     loop {
         sleep(Duration::from_secs(1)).await;
         f.read_exact(&mut buffer).await.unwrap();
-        let s: String = buffer.iter().map(|t| t.to_string()).collect();
+        let s: String = buffer
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect();
         dbg!(s);
     }
 }

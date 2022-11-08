@@ -26,6 +26,7 @@ pub enum ServerRole {
 }
 
 impl Default for ServerRole {
+    #[inline]
     fn default() -> Self {
         ServerRole::Leader
     }

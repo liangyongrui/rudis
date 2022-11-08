@@ -16,6 +16,7 @@ pub struct Req {
     pub nx_xx: NxXx,
 }
 impl From<Req> for WriteCmd {
+    #[inline]
     fn from(req: Req) -> Self {
         Self::Set(req)
     }

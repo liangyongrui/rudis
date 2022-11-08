@@ -76,7 +76,7 @@ pub fn server_init(data: &ServerInit) -> common::Result<ServerStatus> {
                     forward_addr: data.forward_addr,
                     join_time: now,
                 };
-                if let ServerRole::Leader = role {
+                if ServerRole::Leader == role {
                     g.leader = Some(LeaderInfo {
                         server_id: server.id,
                         server_addr: server.server_addr,
@@ -182,7 +182,7 @@ pub async fn server_survival_check() {
 }
 
 impl Group {
-    fn new(id: usize) -> Self {
+    const fn new(id: usize) -> Self {
         Self {
             id,
             latest_server_id: 0,

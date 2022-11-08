@@ -12,14 +12,12 @@ pub struct Zrank<'a> {
 impl Zrank<'_> {
     #[tracing::instrument(skip(self, db), level = "debug")]
     pub fn apply(self, db: &Db) -> common::Result<Frame> {
-        let response = match db.sorted_set_rank(dict::cmd::sorted_set::rank::Req {
+        let response = (db.sorted_set_rank(dict::cmd::sorted_set::rank::Req {
             key: self.key,
             member: self.member,
             rev: false,
-        })? {
-            None => Frame::Null,
-            Some(v) => Frame::Integer(v as _),
-        };
+        })?)
+        .map_or(Frame::Null, |v| Frame::Integer(v as _));
         Ok(response)
     }
 }
